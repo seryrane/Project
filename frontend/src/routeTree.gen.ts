@@ -14,8 +14,13 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as MenusRouteImport } from './routes/menus'
+import { Route as NoticeRouteImport } from './routes/notice'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as QnaRouteImport } from './routes/qna'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SpecsRouteImport } from './routes/specs'
 import { Route as ValidationEngineRouteImport } from './routes/validation-engine'
@@ -48,6 +53,16 @@ const DeploysRoute = DeploysRouteImport.update({
   path: '/deploys',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -56,6 +71,21 @@ const MembersRoute = MembersRouteImport.update({
 const MenusRoute = MenusRouteImport.update({
   id: '/menus',
   path: '/menus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticeRoute = NoticeRouteImport.update({
+  id: '/notice',
+  path: '/notice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QnaRoute = QnaRouteImport.update({
+  id: '/qna',
+  path: '/qna',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RolesRoute = RolesRouteImport.update({
@@ -95,8 +125,13 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/faq': typeof FaqRoute
+  '/guide': typeof GuideRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
+  '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
+  '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
@@ -110,8 +145,13 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/faq': typeof FaqRoute
+  '/guide': typeof GuideRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
+  '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
+  '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
@@ -126,8 +166,13 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/faq': typeof FaqRoute
+  '/guide': typeof GuideRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
+  '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
+  '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
@@ -143,8 +188,13 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/faq'
+    | '/guide'
     | '/members'
     | '/menus'
+    | '/notice'
+    | '/privacy'
+    | '/qna'
     | '/roles'
     | '/specs'
     | '/validation-engine'
@@ -158,8 +208,13 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/faq'
+    | '/guide'
     | '/members'
     | '/menus'
+    | '/notice'
+    | '/privacy'
+    | '/qna'
     | '/roles'
     | '/specs'
     | '/validation-engine'
@@ -173,8 +228,13 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/faq'
+    | '/guide'
     | '/members'
     | '/menus'
+    | '/notice'
+    | '/privacy'
+    | '/qna'
     | '/roles'
     | '/specs'
     | '/validation-engine'
@@ -189,8 +249,13 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   DashboardRoute: typeof DashboardRoute
   DeploysRoute: typeof DeploysRoute
+  FaqRoute: typeof FaqRoute
+  GuideRoute: typeof GuideRoute
   MembersRoute: typeof MembersRoute
   MenusRoute: typeof MenusRoute
+  NoticeRoute: typeof NoticeRoute
+  PrivacyRoute: typeof PrivacyRoute
+  QnaRoute: typeof QnaRoute
   RolesRoute: typeof RolesRoute
   SpecsRoute: typeof SpecsRoute
   ValidationEngineRoute: typeof ValidationEngineRoute
@@ -236,6 +301,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeploysRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/members': {
       id: '/members'
       path: '/members'
@@ -248,6 +327,27 @@ declare module '@tanstack/react-router' {
       path: '/menus'
       fullPath: '/menus'
       preLoaderRoute: typeof MenusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notice': {
+      id: '/notice'
+      path: '/notice'
+      fullPath: '/notice'
+      preLoaderRoute: typeof NoticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qna': {
+      id: '/qna'
+      path: '/qna'
+      fullPath: '/qna'
+      preLoaderRoute: typeof QnaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roles': {
@@ -301,8 +401,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   DashboardRoute: DashboardRoute,
   DeploysRoute: DeploysRoute,
+  FaqRoute: FaqRoute,
+  GuideRoute: GuideRoute,
   MembersRoute: MembersRoute,
   MenusRoute: MenusRoute,
+  NoticeRoute: NoticeRoute,
+  PrivacyRoute: PrivacyRoute,
+  QnaRoute: QnaRoute,
   RolesRoute: RolesRoute,
   SpecsRoute: SpecsRoute,
   ValidationEngineRoute: ValidationEngineRoute,

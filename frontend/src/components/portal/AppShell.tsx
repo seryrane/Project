@@ -221,10 +221,10 @@ const nav: Array<NavSection> = [
     id: 'community',
     title: '커뮤니티',
     items: [
-      { key: 'notice', label: '공지사항', icon: 'bell' },
-      { key: 'qna', label: 'Q&A', icon: 'message' },
-      { key: 'faq', label: 'FAQ', icon: 'help' },
-      { key: 'guide', label: '사용자 가이드', icon: 'book' },
+      { key: 'notice', label: '공지사항', icon: 'bell', to: '/notice' },
+      { key: 'qna', label: 'Q&A', icon: 'message', to: '/qna' },
+      { key: 'faq', label: 'FAQ', icon: 'help', to: '/faq' },
+      { key: 'guide', label: '사용자 가이드', icon: 'book', to: '/guide' },
     ],
   },
   {
@@ -232,7 +232,7 @@ const nav: Array<NavSection> = [
     title: '시스템',
     items: [
       { key: 'alerts', label: '시스템 알림', icon: 'bell', badge: 3 },
-      { key: 'privacy', label: '개인정보보호', icon: 'lock' },
+      { key: 'privacy', label: '개인정보보호', icon: 'lock', to: '/privacy' },
     ],
   },
 ]

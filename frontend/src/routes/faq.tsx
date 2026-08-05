@@ -1,0 +1,187 @@
+import { useMemo, useState } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+
+import { AppShell } from '#/components/portal/AppShell'
+import { ChipSelect } from '#/components/portal/Chips'
+import { Modal } from '#/components/portal/Modal'
+import { useToast } from '#/components/portal/toast'
+import { FAQ_CATEGORIES, faqs } from '#/data/community'
+
+export const Route = createFileRoute('/faq')({ component: FaqPage })
+
+function FaqPage() {
+  const toast = useToast()
+  const [category, setCategory] = useState('전체')
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState<string | null>(null)
+  const [voted, setVoted] = useState<Record<string, boolean>>({})
+  const [adding, setAdding] = useState(false)
+  const [newCat, setNewCat] = useState<(typeof FAQ_CATEGORIES)[number]>('계정·권한')
+
+  const filtered = useMemo(
+    () =>
+      faqs.filter(
+        (f) =>
+          (category === '전체' || f.category === category) &&
+          (query === '' ||
+            f.q.toLowerCase().includes(query.toLowerCase()) ||
+            f.a.toLowerCase().includes(query.toLowerCase())),
+      ),
+    [category, query],
+  )
+
+  return (
+    <AppShell active="faq" title="FAQ">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">FAQ</h1>
+          <p className="mt-1 text-[13px] text-ink-subtle">
+            자주 묻는 질문 — 여기 없는 질문은{' '}
+            <Link to="/qna" className="font-medium text-primary hover:underline">
+              Q&A 에 남겨 주세요 →
+            </Link>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+        >
+          + FAQ 추가
+        </button>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="질문·답변 검색..."
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
+        />
+        <ChipSelect options={['전체', ...FAQ_CATEGORIES]} value={category} onChange={setCategory} />
+      </div>
+
+      {/* 아코디언 — 펼침은 reveal-grid, 답 끝은 도움됨 투표로 끝난다 */}
+      <div className="mt-5 space-y-2.5">
+        {filtered.map((f, i) => {
+          const isOpen = open === f.id
+          return (
+            <section
+              key={f.id}
+              style={{ animationDelay: `${i * 50}ms` }}
+              className={`card-spotlight anim-fade-up rounded-2xl border bg-surface transition-colors ${
+                isOpen ? 'border-primary/40' : 'border-hairline hover:border-primary/30'
+              }`}
+            >
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => setOpen(isOpen ? null : f.id)}
+                className="flex w-full items-center gap-3 px-5 py-3.5 text-left"
+              >
+                <span className="shrink-0 rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle">
+                  {f.category}
+                </span>
+                <span className="min-w-0 flex-1 text-[13px] font-medium text-ink">{f.q}</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                  className={`shrink-0 text-ink-subtle transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+              <div className={`reveal-grid ${isOpen ? 'open' : ''}`}>
+                <div>
+                  <div className="reveal-inner border-t border-hairline/60 px-5 py-4">
+                    <p className="text-[13px] leading-relaxed text-ink-muted">{f.a}</p>
+                    <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-subtle">
+                      도움이 되었나요?
+                      <button
+                        type="button"
+                        disabled={voted[f.id]}
+                        onClick={() => {
+                          setVoted((v) => ({ ...v, [f.id]: true }))
+                          toast('의견 감사합니다 — 도움됨으로 기록했습니다')
+                        }}
+                        className={`rounded-full border px-2 py-0.5 font-medium transition-all active:scale-95 ${
+                          voted[f.id]
+                            ? 'border-primary/50 bg-primary/15 text-primary'
+                            : 'border-hairline text-ink-muted hover:border-primary/30 hover:text-ink'
+                        }`}
+                      >
+                        👍 도움됨 {f.helpful + (voted[f.id] ? 1 : 0)}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )
+        })}
+        {filtered.length === 0 && (
+          <p className="rounded-2xl border border-hairline bg-surface px-5 py-10 text-center text-[13px] text-ink-subtle">
+            검색 결과가 없습니다 —{' '}
+            <Link to="/qna" className="font-medium text-primary hover:underline">
+              Q&A 에 질문을 남겨 주세요
+            </Link>
+            .
+          </p>
+        )}
+      </div>
+
+      {/* FAQ 추가 — 운영진용. 짧게 적고 닫는 일이라 모달 */}
+      {adding && (
+        <Modal title="FAQ 추가" onClose={() => setAdding(false)}>
+          <div>
+            <span className="text-xs font-medium text-ink-subtle">카테고리</span>
+            <div className="mt-1.5">
+              <ChipSelect options={FAQ_CATEGORIES} value={newCat} onChange={setNewCat} />
+            </div>
+          </div>
+          <label className="mt-3 block">
+            <span className="text-xs font-medium text-ink-subtle">질문 <b className="text-danger-ink">*</b></span>
+            <input
+              placeholder="사용자 말로 적습니다 — 예: 로그인이 안 됩니다"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+            />
+          </label>
+          <label className="mt-3 block">
+            <span className="text-xs font-medium text-ink-subtle">답변 <b className="text-danger-ink">*</b></span>
+            <textarea
+              rows={4}
+              placeholder="해결 순서대로 — 어디를 눌러 무엇을 하는지"
+              className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+            />
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAdding(false)
+                toast('FAQ 를 추가했습니다')
+              }}
+              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+            >
+              추가
+            </button>
+          </div>
+        </Modal>
+      )}
+    </AppShell>
+  )
+}
