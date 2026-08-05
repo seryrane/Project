@@ -3,8 +3,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
-import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
 import { PIPELINE, deploys } from '#/data/deploys'
 import type { Deploy, DeployStatus } from '#/data/deploys'
@@ -94,7 +94,7 @@ function DeploysPage() {
   const [detail, setDetail] = useState<Deploy | null>(null)
   const [creating, setCreating] = useState(false)
   const [newEnv, setNewEnv] = useState('Production')
-  const [newSpecs, setNewSpecs] = useState<Record<string, boolean>>({ 'SP-001': true, 'SP-002': true })
+  const [newSpecs, setNewSpecs] = useState<Array<string>>(['SP-001', 'SP-002'])
 
   return (
     <AppShell active="deploys" title="배포 관리">
@@ -274,28 +274,24 @@ function DeploysPage() {
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">배포 환경</span>
-            <Select value={newEnv} onChange={(e) => setNewEnv(e.target.value)} className="mt-1 w-full">
-              <option>Production</option>
-              <option>Staging</option>
-            </Select>
-          </label>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">포함 사양서</span>
-            <div className="mt-1.5 space-y-1 rounded-xl border border-hairline p-3">
-              {specs.map((s) => (
-                <label key={s.id} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] transition-colors hover:bg-chip">
-                  <input
-                    type="checkbox"
-                    checked={!!newSpecs[s.id]}
-                    onChange={(e) => setNewSpecs((m) => ({ ...m, [s.id]: e.target.checked }))}
-                    className="accent-[var(--color-primary)]"
-                  />
-                  <span className="text-ink">{s.name}</span>
-                  <span className="font-mono text-xs text-ink-subtle">{s.history[0].version}</span>
-                </label>
-              ))}
+            <span className="text-xs font-medium text-ink-subtle">배포 환경</span>
+            <div className="mt-1.5">
+              <ChipSelect options={['Production', 'Staging']} value={newEnv} onChange={setNewEnv} />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-xs font-medium text-ink-subtle">
+              포함 사양서 <span className="font-normal">({newSpecs.length}건 선택)</span>
+            </span>
+            <div className="mt-1.5">
+              <ChipMulti
+                options={specs.map((s) => `${s.name} ${s.history[0].version}`)}
+                values={specs.filter((s) => newSpecs.includes(s.id)).map((s) => `${s.name} ${s.history[0].version}`)}
+                onChange={(labels) =>
+                  setNewSpecs(specs.filter((s) => labels.includes(`${s.name} ${s.history[0].version}`)).map((s) => s.id))
+                }
+              />
             </div>
           </div>
           <div className="mt-5 flex justify-end gap-2">

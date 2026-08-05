@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
-import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
 import {
   ENGINE_TEMPLATE,
@@ -25,7 +25,6 @@ function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
 
 function ValidationEnginePage() {
   const toast = useToast()
-  const navigate = useNavigate()
   const [engines, setEngines] = useState(validationEngines)
   const [expanded, setExpanded] = useState<string | null>(validationEngines[0].id)
   const [tab, setTab] = useState<'code' | 'schedule'>('code')
@@ -33,7 +32,11 @@ function ValidationEnginePage() {
   const [progress, setProgress] = useState<Record<string, number>>({})
   const timers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
   const [editing, setEditing] = useState<ValidationEngine | 'new' | null>(null)
+  const [engineStatus, setEngineStatus] = useState('활성')
   const [scheduling, setScheduling] = useState(false)
+  const [schedFreq, setSchedFreq] = useState('일간 (매일)')
+  const [schedOn, setSchedOn] = useState(true)
+  const [schedEngine, setSchedEngine] = useState(validationEngines[0].name)
   const [deleting, setDeleting] = useState<ValidationEngine | null>(null)
   const [schedActive, setSchedActive] = useState<Record<string, boolean>>({})
 
@@ -305,13 +308,16 @@ function ValidationEnginePage() {
                 className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
               />
             </label>
-            <label className="block">
+            <div>
               <span className="text-xs font-medium text-ink-subtle">상태</span>
-              <Select defaultValue={editing === 'new' || editing.active ? '활성' : '비활성'} className="mt-1 w-full">
-                <option>활성</option>
-                <option>비활성</option>
-              </Select>
-            </label>
+              <div className="mt-2">
+                <ChipSelect
+                  options={['활성', '비활성']}
+                  value={engineStatus}
+                  onChange={setEngineStatus}
+                />
+              </div>
+            </div>
           </div>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">설명</span>
@@ -381,22 +387,18 @@ function ValidationEnginePage() {
       {/* 스케줄 추가 */}
       {scheduling && (
         <Modal title="스케줄 추가" onClose={() => setScheduling(false)}>
-          <label className="block">
+          <div>
             <span className="text-xs font-medium text-ink-subtle">검증 엔진 <b className="text-danger-ink">*</b></span>
-            <Select defaultValue={engines[0].name} className="mt-1 w-full">
-              {engines.map((e) => (
-                <option key={e.id}>{e.name}</option>
-              ))}
-            </Select>
-          </label>
-          <label className="mt-3 block">
+            <div className="mt-1.5">
+              <ChipSelect options={engines.map((e) => e.name)} value={schedEngine} onChange={setSchedEngine} />
+            </div>
+          </div>
+          <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">실행 주기 <b className="text-danger-ink">*</b></span>
-            <Select defaultValue="일간 (매일)" className="mt-1 w-full">
-              <option>일간 (매일)</option>
-              <option>주간 (매주)</option>
-              <option>시간 (매시)</option>
-            </Select>
-          </label>
+            <div className="mt-1.5">
+              <ChipSelect options={['일간 (매일)', '주간 (매주)', '시간 (매시)']} value={schedFreq} onChange={setSchedFreq} />
+            </div>
+          </div>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">실행 시각 <b className="text-danger-ink">*</b></span>
             <input
@@ -405,13 +407,13 @@ function ValidationEnginePage() {
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
             />
           </label>
-          <label className="mt-4 flex items-center gap-2.5 rounded-xl bg-chip px-3.5 py-3">
-            <input type="checkbox" defaultChecked className="accent-[var(--color-primary)]" />
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-chip px-3.5 py-3">
             <span className="text-[13px]">
               <b className="text-ink">스케줄 활성화</b>
               <span className="block text-xs text-ink-subtle">비활성화 시 자동 실행이 중단됩니다</span>
             </span>
-          </label>
+            <Switch checked={schedOn} onChange={setSchedOn} label="스케줄 활성화" />
+          </div>
           <div className="mt-5 flex justify-end gap-2">
             <button
               type="button"

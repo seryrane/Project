@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
-import { Select } from '#/components/portal/Select'
 import { StatusBadge } from '#/components/portal/StatusBadge'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
@@ -522,23 +522,19 @@ function FieldEditor({
             {field.category} · {field.sub}
           </span>
         </div>
+        <div>
+          <span className="text-xs font-medium text-ink-subtle">타입</span>
+          <div className="mt-1.5">
+            <ChipSelect options={TYPE_OPTIONS} value={draft.type} onChange={(v) => set('type', v)} mono />
+          </div>
+        </div>
+        <div>
+          <span className="text-xs font-medium text-ink-subtle">상태</span>
+          <div className="mt-1.5">
+            <ChipSelect options={STATUS_OPTIONS} value={draft.status} onChange={(v) => set('status', v)} />
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">타입</span>
-            <Select value={draft.type} onChange={(e) => set('type', e.target.value as FieldType)} className="mt-1 w-full">
-              {TYPE_OPTIONS.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </Select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">상태</span>
-            <Select value={draft.status} onChange={(e) => set('status', e.target.value as FieldStatus)} className="mt-1 w-full">
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </Select>
-          </label>
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">최대길이</span>
             <input
@@ -549,15 +545,10 @@ function FieldEditor({
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
             />
           </label>
-          <label className="mt-6 flex items-center gap-2.5">
-            <input
-              type="checkbox"
-              checked={draft.required}
-              onChange={(e) => set('required', e.target.checked)}
-              className="accent-[var(--color-primary)]"
-            />
+          <div className="mt-6 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px] text-ink">필수 입력</span>
-          </label>
+            <Switch checked={draft.required} onChange={(v) => set('required', v)} label="필수 입력" />
+          </div>
         </div>
         <label className="block">
           <span className="text-xs font-medium text-ink-subtle">설명</span>

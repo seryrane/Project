@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
@@ -32,6 +33,7 @@ function MembersPage() {
   const [detail, setDetail] = useState<Member | null>(null)
   const [tab, setTab] = useState<'info' | 'activity' | 'perm'>('info')
   const [creating, setCreating] = useState(false)
+  const [newGrade, setNewGrade] = useState<Grade>('Viewer')
   // 잠금/해제는 화면 상태로만 (프로토타입)
   const [lockOverride, setLockOverride] = useState<Record<string, boolean>>({})
 
@@ -124,26 +126,21 @@ function MembersPage() {
         ))}
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 pc:flex-row pc:items-center">
+      <div className="mt-5 flex flex-col gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름, 이메일, 부서 검색..."
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:flex-1"
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
-        <div className="flex gap-3">
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} className="min-w-0 flex-1 pc:flex-none">
-            <option>전체 상태</option>
-            <option>활성</option>
-            <option>비활성</option>
-            <option>잠금</option>
-          </Select>
-          <Select value={grade} onChange={(e) => setGrade(e.target.value)} className="min-w-0 flex-1 pc:flex-none">
-            <option>전체 등급</option>
-            {GRADES.map((g) => (
-              <option key={g}>{g}</option>
-            ))}
-          </Select>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <ChipSelect
+            options={['전체 상태', '활성', '비활성', '잠금']}
+            value={status}
+            onChange={setStatus}
+          />
+          <span className="hidden h-4 w-px bg-hairline pc:block" aria-hidden />
+          <ChipSelect options={['전체 등급', ...GRADES]} value={grade} onChange={setGrade} />
         </div>
       </div>
 
@@ -326,42 +323,16 @@ function MembersPage() {
                       {/* ① 역할 배정 — 권한은 역할이 정한다 */}
                       <div className="rounded-xl border border-hairline p-3.5">
                         <div className="text-xs font-semibold text-ink">역할 배정</div>
-                        <label className="mt-2 block">
+                        <div className="mt-2">
                           <span className="text-[11px] text-ink-subtle">등급 (단일)</span>
-                          <Select
-                            value={draftGrade}
-                            onChange={(e) => setDraftGrade(e.target.value as Grade)}
-                            className="mt-1 w-full"
-                          >
-                            {GRADES.map((g) => (
-                              <option key={g}>{g}</option>
-                            ))}
-                          </Select>
-                        </label>
+                          <div className="mt-1.5">
+                            <ChipSelect options={GRADES} value={draftGrade} onChange={setDraftGrade} />
+                          </div>
+                        </div>
                         <div className="mt-2.5">
                           <span className="text-[11px] text-ink-subtle">서비스 Role (겸직 가능)</span>
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            {SERVICE_ROLES.map((r) => {
-                              const on = draftRoles.includes(r)
-                              return (
-                                <button
-                                  key={r}
-                                  type="button"
-                                  aria-pressed={on}
-                                  onClick={() =>
-                                    setDraftRoles((rs) => (on ? rs.filter((x) => x !== r) : [...rs, r]))
-                                  }
-                                  className={`rounded-full border px-2.5 py-1 font-mono text-[10px] font-medium transition-all active:scale-95 ${
-                                    on
-                                      ? 'border-primary/50 bg-primary/15 text-primary'
-                                      : 'border-hairline text-ink-subtle hover:border-primary/30 hover:text-ink'
-                                  }`}
-                                >
-                                  {on ? '✓ ' : ''}
-                                  {r}
-                                </button>
-                              )
-                            })}
+                          <div className="mt-1.5">
+                            <ChipMulti options={SERVICE_ROLES} values={draftRoles} onChange={setDraftRoles} mono />
                           </div>
                         </div>
                       </div>
@@ -462,10 +433,11 @@ function MembersPage() {
                               <option key={a}>{a}</option>
                             ))}
                           </Select>
-                          <Select value={exMode} onChange={(e) => setExMode(e.target.value as '허용' | '차단')} className="w-20">
-                            <option>허용</option>
-                            <option>차단</option>
-                          </Select>
+                          <ChipSelect
+                            options={['허용', '차단'] as const}
+                            value={exMode}
+                            onChange={(v) => setExMode(v)}
+                          />
                           <button
                             type="button"
                             onClick={() => setExceptions((xs) => [...xs, { menu: exMenu, action: exAction, mode: exMode }])}
@@ -537,14 +509,12 @@ function MembersPage() {
               <span className="text-xs font-medium text-ink-subtle">부서</span>
               <input placeholder="IT 전략팀" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
-            <label className="block">
+            <div>
               <span className="text-xs font-medium text-ink-subtle">등급</span>
-              <Select defaultValue="Viewer" className="mt-1 w-full">
-                {GRADES.map((g) => (
-                  <option key={g}>{g}</option>
-                ))}
-              </Select>
-            </label>
+              <div className="mt-2">
+                <ChipSelect options={GRADES} value={newGrade} onChange={setNewGrade} />
+              </div>
+            </div>
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <button

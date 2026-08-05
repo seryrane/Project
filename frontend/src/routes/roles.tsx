@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
-import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, roleDefs } from '#/data/roles'
 import type { Action, RoleDef } from '#/data/roles'
@@ -27,6 +27,7 @@ function RolesPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [editing, setEditing] = useState<RoleDef | null>(null)
   const [creating, setCreating] = useState(false)
+  const [newBase, setNewBase] = useState('처음부터 시작')
   const [deleting, setDeleting] = useState<RoleDef | null>(null)
   // 편집 매트릭스 체크 상태
   const [draft, setDraft] = useState<Record<string, boolean>>({})
@@ -242,17 +243,27 @@ function RolesPage() {
                 {MENUS.map((m) => (
                   <tr key={m} className="perm-row border-b border-hairline/60 transition-colors last:border-0">
                     <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{m}</td>
-                    {ACTIONS.map((a) => (
-                      <td key={a} className="px-2 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          aria-label={`${m} ${a}`}
-                          checked={draft[`${m}.${a}`] ?? false}
-                          onChange={(e) => setDraft((d) => ({ ...d, [`${m}.${a}`]: e.target.checked }))}
-                          className="accent-[var(--color-primary)]"
-                        />
-                      </td>
-                    ))}
+                    {ACTIONS.map((a) => {
+                      const on = draft[`${m}.${a}`] ?? false
+                      return (
+                        <td key={a} className="px-2 py-1.5 text-center">
+                          {/* 체크박스 대신 토글 버튼 — 매트릭스에서도 칩 언어를 유지한다 */}
+                          <button
+                            type="button"
+                            aria-label={`${m} ${a}`}
+                            aria-pressed={on}
+                            onClick={() => setDraft((d) => ({ ...d, [`${m}.${a}`]: !on }))}
+                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] leading-none transition-all active:scale-90 ${
+                              on
+                                ? 'border-primary/50 bg-primary/15 text-primary'
+                                : 'border-hairline/70 text-ink-subtle/50 hover:border-primary/30 hover:text-ink-muted'
+                            }`}
+                          >
+                            {on ? '✓' : '─'}
+                          </button>
+                        </td>
+                      )
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -292,15 +303,16 @@ function RolesPage() {
             <span className="text-xs font-medium text-ink-subtle">역할 설명</span>
             <textarea rows={2} placeholder="역할에 대한 설명을 입력하세요" className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
           </label>
-          <label className="mt-3 block">
+          <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">기반 역할 (복사)</span>
-            <Select defaultValue="처음부터 시작" className="mt-1 w-full">
-              <option>처음부터 시작</option>
-              {roles.map((r) => (
-                <option key={r.key}>{r.name} 복사</option>
-              ))}
-            </Select>
-          </label>
+            <div className="mt-1.5">
+              <ChipSelect
+                options={['처음부터 시작', ...roles.map((r) => `${r.name} 복사`)]}
+                value={newBase}
+                onChange={setNewBase}
+              />
+            </div>
+          </div>
           <p className="mt-3 text-[11px] leading-relaxed text-ink-subtle">
             기존 역할을 복사해 시작하면 매트릭스를 처음부터 채우지 않아도 됩니다 — 생성 후 [권한
             편집]에서 다듬으세요.

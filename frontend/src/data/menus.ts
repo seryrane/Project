@@ -46,4 +46,4 @@ export const menuItems: Array<MenuItem> = [
   { id: 'm-privacy', order: 17, name: '개인정보보호', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
 ]
 
-export const MENU_ROLE_OPTIONS = ['Super Admin', 'Admin', 'Editor', 'Viewer'] as const
+// 접근 역할 목록은 여기 두지 않는다 — 권한 관리 정본(data/roles.ts)에서 파생한다

@@ -2,11 +2,17 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { MENU_ROLE_OPTIONS, TEMPLATES, menuItems } from '#/data/menus'
+import { TEMPLATES, menuItems } from '#/data/menus'
 import type { MenuItem, TemplateKey } from '#/data/menus'
+import { roleDefs } from '#/data/roles'
+
+// 접근 가능 역할은 권한 관리 정본(roleDefs)에서 파생한다 — 역할이 추가되면
+// 여기도 자동 노출된다 (본개발에서는 서버 역할 목록으로 교체)
+const ROLE_NAMES = roleDefs.map((r) => r.name)
 
 export const Route = createFileRoute('/menus')({ component: MenusPage })
 
@@ -74,6 +80,7 @@ function MenusPage() {
   const [selected, setSelected] = useState<MenuItem | null>(null)
   const [creating, setCreating] = useState(false)
   const [newTemplate, setNewTemplate] = useState<TemplateKey>('list-detail')
+  const [newRoles, setNewRoles] = useState<Array<string>>([])
   // 선택 메뉴 편집 초안 (우측 패널)
   const [draft, setDraft] = useState<MenuItem | null>(null)
 
@@ -252,19 +259,15 @@ function MenusPage() {
                     <Wireframe t={draft.template} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <Select
-                      value={TEMPLATES.find((t) => t.key === draft.template)?.name}
-                      onChange={(e) => {
-                        const t = TEMPLATES.find((x) => x.name === e.target.value)
+                    <ChipSelect
+                      options={TEMPLATES.map((t) => t.name)}
+                      value={TEMPLATES.find((t) => t.key === draft.template)?.name ?? TEMPLATES[0].name}
+                      onChange={(name) => {
+                        const t = TEMPLATES.find((x) => x.name === name)
                         if (t) setDraft((d) => d && { ...d, template: t.key })
                       }}
-                      className="w-full"
-                    >
-                      {TEMPLATES.map((t) => (
-                        <option key={t.key}>{t.name}</option>
-                      ))}
-                    </Select>
-                    <span className="mt-1 block text-[11px] text-ink-subtle">
+                    />
+                    <span className="mt-1.5 block text-[11px] text-ink-subtle">
                       {TEMPLATES.find((t) => t.key === draft.template)?.desc}
                     </span>
                   </span>
@@ -284,29 +287,15 @@ function MenusPage() {
                 </button>
               </div>
               <div>
-                <span className="text-xs font-medium text-ink-subtle">접근 가능 역할</span>
-                <div className="mt-1.5 space-y-1">
-                  {MENU_ROLE_OPTIONS.map((r) => {
-                    const on = draft.roles.includes(r)
-                    return (
-                      <label
-                        key={r}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors hover:bg-chip"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={on}
-                          onChange={() =>
-                            setDraft(
-                              (d) => d && { ...d, roles: on ? d.roles.filter((x) => x !== r) : [...d.roles, r] },
-                            )
-                          }
-                          className="accent-[var(--color-primary)]"
-                        />
-                        <span className="text-ink">{r}</span>
-                      </label>
-                    )
-                  })}
+                <span className="text-xs font-medium text-ink-subtle">
+                  접근 가능 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+                </span>
+                <div className="mt-1.5">
+                  <ChipMulti
+                    options={ROLE_NAMES}
+                    values={draft.roles}
+                    onChange={(roles) => setDraft((d) => d && { ...d, roles })}
+                  />
                 </div>
                 {draft.roles.length === 0 && (
                   <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-[11px] text-danger-ink">
@@ -409,14 +398,11 @@ function MenusPage() {
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">접근 역할</span>
-            <div className="mt-1.5 grid grid-cols-2 gap-1">
-              {MENU_ROLE_OPTIONS.map((r) => (
-                <label key={r} className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors hover:bg-chip">
-                  <input type="checkbox" className="accent-[var(--color-primary)]" />
-                  <span className="text-ink">{r}</span>
-                </label>
-              ))}
+            <span className="text-xs font-medium text-ink-subtle">
+              접근 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+            </span>
+            <div className="mt-1.5">
+              <ChipMulti options={ROLE_NAMES} values={newRoles} onChange={setNewRoles} />
             </div>
           </div>
           <div className="mt-5 flex justify-end gap-2">

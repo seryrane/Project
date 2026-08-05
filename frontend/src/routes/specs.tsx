@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
-import { Select } from '#/components/portal/Select'
+import { ChipSelect } from '#/components/portal/Chips'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { currentVersion, specs } from '#/data/specs'
@@ -79,16 +79,13 @@ function SpecsPage() {
           placeholder="사양서 명, ID, 태그 검색..."
           className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
-        <Select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="min-w-0 pc:flex-none"
-        >
-          <option>전체 카테고리</option>
-          {categories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </Select>
+        <div className="flex items-center">
+          <ChipSelect
+            options={['전체 카테고리', ...categories]}
+            value={category}
+            onChange={setCategory}
+          />
+        </div>
       </div>
 
       {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}

@@ -189,8 +189,9 @@ select option {
   box-shadow: 0 6px 20px var(--color-glow);
 }
 
-/* 편집 매트릭스 — 체크가 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */
-.perm-row:has(input:checked) {
+/* 편집 매트릭스 — 켜진 칸이 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */
+.perm-row:has(input:checked),
+.perm-row:has(button[aria-pressed='true']) {
   background: color-mix(in oklab, var(--color-primary) 7%, transparent);
 }
 .perm-row:hover {
