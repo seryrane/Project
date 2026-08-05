@@ -100,6 +100,8 @@ test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지
     for (const el of document.querySelectorAll<HTMLElement>('button, select, a[href]')) {
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.height === 0) continue // 안 보이는 것
+      // 토글 스위치는 시각 22px + ::before 히트존 40px — rect 로는 히트존이 안 재진다
+      if (el.getAttribute('role') === 'switch') continue
       if (r.height < 35.5)
         bad.push(`${el.tagName} "${el.textContent.trim().slice(0, 20)}" h=${Math.round(r.height)}`)
     }

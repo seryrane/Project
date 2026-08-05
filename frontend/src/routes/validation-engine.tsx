@@ -100,7 +100,7 @@ function ValidationEnginePage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-hairline bg-surface px-5 py-4">
+          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
             <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
             <div className="mt-0.5 text-xs text-ink-subtle">
               {s.label} · {s.sub}
@@ -118,7 +118,7 @@ function ValidationEnginePage() {
             <li
               key={e.id}
               style={{ animationDelay: `${i * 60}ms` }}
-              className={`anim-fade-up rounded-2xl border bg-surface transition-colors ${
+              className={`card-spotlight anim-fade-up rounded-2xl border bg-surface transition-colors ${
                 open ? 'border-primary/40' : 'border-hairline'
               }`}
             >

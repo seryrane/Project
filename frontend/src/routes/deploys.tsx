@@ -52,7 +52,7 @@ function StatusIcon({ status }: { status: DeployStatus }) {
 function Pipeline() {
   const colors = ['bg-fill-draft/20 text-fill-draft', 'bg-review-bg text-review-ink', 'bg-pending-bg text-pending-ink', 'bg-deployed-bg text-deployed-ink']
   return (
-    <div className="overflow-x-auto rounded-2xl border border-hairline bg-surface p-5">
+    <div className="overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface p-5">
       <div className="text-sm font-semibold text-ink">배포 파이프라인</div>
       <ol className="mt-4 flex min-w-max items-center">
         {PIPELINE.map((p, i) => (
@@ -123,7 +123,7 @@ function DeploysPage() {
             <button
               type="button"
               onClick={() => setDetail(d)}
-              className="flex w-full items-start gap-4 rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
+              className="flex w-full items-start gap-4 card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
             >
               <StatusIcon status={d.status} />
               <span className="min-w-0 flex-1">

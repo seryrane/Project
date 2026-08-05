@@ -23,14 +23,19 @@ function MenusPage() {
     setDraft({ ...m })
   }
 
-  const move = (m: MenuItem, dir: -1 | 1) => {
+  // 드래그로 순서를 바꾼다 — 같은 부모 아래에서만 (계층이 섞이면 뜻이 바뀐다)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dropId, setDropId] = useState<string | null>(null)
+
+  const reorder = (fromId: string, toId: string) => {
     setItems((list) => {
-      const idx = list.findIndex((x) => x.id === m.id)
-      const to = idx + dir
-      if (to < 0 || to >= list.length) return list
-      const next = [...list]
-      ;[next[idx], next[to]] = [next[to], next[idx]]
-      return next.map((x, i) => ({ ...x, order: i + 1 }))
+      const from = list.find((x) => x.id === fromId)
+      const to = list.find((x) => x.id === toId)
+      if (!from || !to || from.parent !== to.parent) return list
+      const without = list.filter((x) => x.id !== fromId)
+      const toIdx = without.findIndex((x) => x.id === toId)
+      without.splice(toIdx, 0, from)
+      return without.map((x, i) => ({ ...x, order: i + 1 }))
     })
   }
 
@@ -43,39 +48,48 @@ function MenusPage() {
   const children = (id: string) => items.filter((x) => x.parent === id)
   const tops = items.filter((x) => !x.parent)
 
-  const Row = ({ m, depth }: { m: MenuItem; depth: number }) => (
-    <li>
+  // ⚠ 컴포넌트가 아니라 렌더 함수다 — 페이지 안에서 컴포넌트를 정의하면 리렌더마다
+  // 타입이 바뀌어 DOM 이 재마운트되고, 진행 중이던 드래그가 끊긴다 (실측으로 잡음)
+  const renderRow = (m: MenuItem, depth: number): React.ReactNode => (
+    <li key={m.id}>
       <div
         onClick={() => select(m)}
+        draggable
+        onDragStart={() => setDragId(m.id)}
+        onDragEnd={() => {
+          setDragId(null)
+          setDropId(null)
+        }}
+        onDragOver={(e) => {
+          if (dragId && dragId !== m.id) {
+            e.preventDefault()
+            setDropId(m.id)
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          if (dragId && dragId !== m.id) reorder(dragId, m.id)
+          setDragId(null)
+          setDropId(null)
+        }}
         className={`group flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all ${
           selected?.id === m.id
             ? 'border-primary/50 bg-primary/8'
-            : 'border-transparent hover:border-hairline hover:bg-chip'
-        } ${depth > 0 ? 'ml-7 border-l-2 border-l-hairline' : ''}`}
+            : dropId === m.id
+              ? 'border-primary border-dashed bg-primary/6'
+              : 'border-transparent hover:border-hairline hover:bg-chip'
+        } ${depth > 0 ? 'ml-7 border-l-2 border-l-hairline' : ''} ${dragId === m.id ? 'opacity-40' : ''}`}
       >
-        <span className="flex flex-col text-ink-subtle opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            type="button"
-            aria-label="위로"
-            onClick={(e) => {
-              e.stopPropagation()
-              move(m, -1)
-            }}
-            className="rounded px-1 text-[9px] hover:bg-chip-strong hover:text-ink"
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            aria-label="아래로"
-            onClick={(e) => {
-              e.stopPropagation()
-              move(m, 1)
-            }}
-            className="rounded px-1 text-[9px] hover:bg-chip-strong hover:text-ink"
-          >
-            ▼
-          </button>
+        {/* 드래그 손잡이 — 평소에도 보인다 (숨기면 옮길 수 있다는 걸 모른다) */}
+        <span aria-hidden className="cursor-grab select-none text-ink-subtle active:cursor-grabbing">
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
+            <circle cx="2.5" cy="2.5" r="1.3" />
+            <circle cx="7.5" cy="2.5" r="1.3" />
+            <circle cx="2.5" cy="8" r="1.3" />
+            <circle cx="7.5" cy="8" r="1.3" />
+            <circle cx="2.5" cy="13.5" r="1.3" />
+            <circle cx="7.5" cy="13.5" r="1.3" />
+          </svg>
         </span>
         <span className="w-6 text-right font-mono text-xs tabular-nums text-ink-subtle">{m.order}</span>
         <span className="min-w-0 flex-1">
@@ -107,11 +121,7 @@ function MenusPage() {
         </button>
       </div>
       {children(m.id).length > 0 && (
-        <ul className="mt-1 space-y-1">
-          {children(m.id).map((c) => (
-            <Row key={c.id} m={c} depth={depth + 1} />
-          ))}
-        </ul>
+        <ul className="mt-1 space-y-1">{children(m.id).map((c) => renderRow(c, depth + 1))}</ul>
       )}
     </li>
   )
@@ -136,20 +146,16 @@ function MenusPage() {
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
         {/* 좌: 메뉴 구조 트리 */}
-        <section className="anim-fade-up rounded-2xl border border-hairline bg-surface">
+        <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface">
           <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">메뉴 구조 ({items.length}개)</h2>
-            <span className="text-xs text-ink-subtle">▲▼ 로 순서 변경 · 행을 누르면 우측에서 설정</span>
+            <span className="text-xs text-ink-subtle">드래그하여 순서 변경 · 행을 누르면 우측에서 설정</span>
           </div>
-          <ul className="space-y-1 p-4">
-            {tops.filter((m) => !m.parent).map((m) => (
-              <Row key={m.id} m={m} depth={0} />
-            ))}
-          </ul>
+          <ul className="space-y-1 p-4">{tops.map((m) => renderRow(m, 0))}</ul>
         </section>
 
         {/* 우: 메뉴 설정 패널 — 목록→상세 짝 (규약 §1의 패널 안 2열) */}
-        <section className="anim-fade-up rounded-2xl border border-hairline bg-surface [animation-delay:80ms]">
+        <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:80ms]">
           <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">메뉴 설정</h2>
           </div>

@@ -117,7 +117,7 @@ function MembersPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-hairline bg-surface px-5 py-4">
+          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
             <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
             <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
           </div>
@@ -147,7 +147,7 @@ function MembersPage() {
         </div>
       </div>
 
-      <div className="anim-fade-up mt-4 overflow-x-auto rounded-2xl border border-hairline bg-surface">
+      <div className="anim-fade-up mt-4 overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface">
         <table className="w-full min-w-[860px] border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">

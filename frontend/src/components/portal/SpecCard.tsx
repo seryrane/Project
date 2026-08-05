@@ -20,7 +20,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
       style={{ animationDelay: `${index * 70}ms` }}
       onClick={onDetail}
       // 카드 전체가 상세로 가는 문이다 — 누를 수 있으면 커서로 말한다 (규약 §9)
-      className="anim-fade-up flex cursor-pointer flex-col rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
+      className="anim-fade-up flex cursor-pointer flex-col card-spotlight rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">

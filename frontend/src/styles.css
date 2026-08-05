@@ -244,5 +244,16 @@ body {
     width: 24px;
     height: 24px;
   }
+  /* 토글 스위치 — 40px 로 늘리면 알약이 뭉개진다(실측 40×40 정사각).
+     시각은 유지하고 히트 영역만 ::before 로 40px 이상 확장한다 */
+  button[role='switch'] {
+    min-height: 0;
+    position: relative;
+  }
+  button[role='switch']::before {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
 }
 

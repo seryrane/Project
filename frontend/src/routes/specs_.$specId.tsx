@@ -260,7 +260,7 @@ function SpecDetailPage() {
       </div>
 
       {/* 필드 목록 — 엑셀 시트(카테고리) = 탭, 표가 정본, 행을 누르면 우측에서 편집 */}
-      <section className="mt-5 rounded-2xl border border-hairline bg-surface p-5">
+      <section className="mt-5 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-ink">필드 목록 ({fields.length}개)</h2>

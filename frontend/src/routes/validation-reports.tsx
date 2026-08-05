@@ -45,7 +45,7 @@ function ValidationReportsPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-hairline bg-surface px-5 py-4">
+          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
             <div className={`truncate text-xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
             <div className="mt-0.5 text-xs text-ink-subtle">
               {s.label} · {s.sub}
@@ -59,7 +59,7 @@ function ValidationReportsPage() {
           const status = published[r.id] ? '발행' : r.status
           return (
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
-              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-hairline bg-surface p-5">
+              <div className="flex flex-wrap items-center gap-3 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
                 <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 text-left">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold text-ink hover:text-primary">{r.title}</span>

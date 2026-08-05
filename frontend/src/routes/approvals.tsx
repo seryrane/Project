@@ -119,7 +119,7 @@ function ApprovalsPage() {
       {/* 요약 — 숫자는 큰 활자 + tabular-nums (규약 §10) */}
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-hairline bg-surface px-5 py-4">
+          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
             <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
             <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
           </div>
@@ -159,7 +159,7 @@ function ApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setDetail(r)}
-                className="w-full rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
+                className="w-full card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
               >
                 <span className="flex flex-wrap items-center gap-2">
                   {r.urgent && <UrgentChip />}
@@ -205,7 +205,7 @@ function ApprovalsPage() {
             .map((r) => (
               <li
                 key={r.id}
-                className="rounded-2xl border border-hairline bg-surface p-5"
+                className="card-spotlight rounded-2xl border border-hairline bg-surface p-5"
               >
                 <span className="flex flex-wrap items-center gap-2">
                   <KindChip kind={r.kind} />
