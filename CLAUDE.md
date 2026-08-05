@@ -4,10 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Monolithic full-stack project with two apps in one repository:
+Monolithic full-stack platform project for HMG (Hyundai Motor Group): a unified portal hosting ICDAP (KPI/data visualization) and IDMS (IBD spec management). Requirements are still being finalized — see `docs/PROJECT_CONTEXT.md` for the full integrated project context and `docs/MEETING_CHECKLIST.md` for open questions. Read `docs/PROJECT_CONTEXT.md` before doing feature work.
 
-- `frontend/` — React 19 + TanStack Start (file-based routing via TanStack Router), Vite 8, TypeScript, Tailwind CSS 4. Scaffolded with `@tanstack/cli`.
+- `frontend/` — React 19 + TanStack Start (file-based routing via TanStack Router), Vite 8, TypeScript, Tailwind CSS 4. Scaffolded with `@tanstack/cli`. React matches the customer standard.
 - `backend/` — Spring Boot 4.1 on Java 21, built with Gradle 9 (wrapper committed). Spring MVC (`spring-boot-starter-webmvc` — note: Boot 4 deprecated `spring-boot-starter-web`), Spring Data JPA with in-memory H2, Bean Validation, Actuator.
+- `backend-python/` — FastAPI candidate scaffold (venv + `pip install -e ".[dev]"`, pytest, ruff).
+
+IMPORTANT: The backend framework is NOT yet decided (customer requirement says "B/E: 협의"; signals lean FastAPI). Both backend scaffolds exist in parallel — do not build business logic into either until the decision is confirmed, then delete the losing one and update this file and CI.
 
 The frontend dev server (port 3000) proxies `/api/*` to the backend (port 8080) — see `frontend/vite.config.ts`. All backend REST endpoints live under the `/api` prefix (`backend/src/main/java/com/example/backend/api/`).
 
@@ -25,6 +28,11 @@ Backend (run from `backend/`):
 - `./gradlew build` — compile + tests
 - `./gradlew test` — tests only
 - `./gradlew bootRun` — run the app on port 8080
+
+Backend candidate (run from `backend-python/`, after `python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"`):
+- `.venv/bin/pytest` — tests
+- `.venv/bin/ruff check .` — lint
+- `.venv/bin/uvicorn app.main:app --reload --port 8080` — run (same port as Spring Boot so the frontend proxy works with either)
 
 ## Conventions
 
