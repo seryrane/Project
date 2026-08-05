@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 /**
  * 모바일 스모크 — 규약(docs/화면_공통규칙.md) §8 이 정한 최소선을 좌표로 지킨다.
@@ -11,7 +12,7 @@ const PAGES = ['/specs', '/dashboard']
 
 /** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이
  *  되지 않게, 상호작용 전에는 네트워크가 잠잠해질 때까지(=수화 완료) 기다린다. */
-async function ready(page: import('@playwright/test').Page, path: string) {
+async function ready(page: Page, path: string) {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
 }
@@ -81,7 +82,8 @@ test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지
     for (const el of document.querySelectorAll<HTMLElement>('button, select, a[href]')) {
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.height === 0) continue // 안 보이는 것
-      if (r.height < 35.5) bad.push(`${el.tagName} "${(el.textContent ?? '').trim().slice(0, 20)}" h=${Math.round(r.height)}`)
+      if (r.height < 35.5)
+        bad.push(`${el.tagName} "${el.textContent.trim().slice(0, 20)}" h=${Math.round(r.height)}`)
     }
     return bad
   })
