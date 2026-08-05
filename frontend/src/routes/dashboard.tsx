@@ -67,7 +67,7 @@ function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-5 xl:grid-cols-4">
+      <div className="anim-fade-up mt-5 grid grid-cols-2 gap-5 xl:grid-cols-4">
         <StatTile label="총 사양서" value="128" delta="+6" deltaGood caption="vs 지난 30일" />
         <StatTile label="승인 대기" value="7" delta="+2" deltaGood={false} caption="vs 지난 30일" />
         <StatTile
@@ -90,24 +90,24 @@ function DashboardPage() {
         <ChartCard
           title="일별 검증 처리량"
           subtitle={`${RANGES.find((r) => r.key === range)?.label} · 단위: 천 건`}
-          className="xl:col-span-2"
+          className="anim-fade-up [animation-delay:80ms] xl:col-span-2"
         >
           <TrendLineChart data={slice} />
         </ChartCard>
 
-        <ChartCard title="사양서 상태 분포" subtitle="전체 128건 기준">
+        <ChartCard title="사양서 상태 분포" subtitle="전체 128건 기준" className="anim-fade-up [animation-delay:140ms]">
           <StatusStackBar data={statusDistribution} />
         </ChartCard>
 
         <ChartCard
           title="오류 유형별 검출 건수"
           subtitle={`${RANGES.find((r) => r.key === range)?.label} 누적`}
-          className="xl:col-span-2"
+          className="anim-fade-up [animation-delay:200ms] xl:col-span-2"
         >
           <ErrorBarChart data={errorTypes} />
         </ChartCard>
 
-        <ChartCard title="최근 활동">
+        <ChartCard title="최근 활동" className="anim-fade-up [animation-delay:260ms]">
           <ol className="space-y-3">
             {recentActivity.map((a) => (
               <li key={a.text} className="flex items-start gap-2.5 text-[13px]">

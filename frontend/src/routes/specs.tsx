@@ -66,35 +66,50 @@ function SpecsPage() {
           placeholder="사양서 명, ID, 태그 검색..."
           className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
-        <div className="flex gap-3">
-          <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="min-w-0 flex-1 pc:flex-none"
-          >
-            <option>전체 카테고리</option>
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </Select>
-          <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="min-w-0 flex-1 pc:flex-none"
-          >
-            <option>전체 상태</option>
-            {allStatuses.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </Select>
-        </div>
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="min-w-0 pc:flex-none"
+        >
+          <option>전체 카테고리</option>
+          {categories.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </Select>
+      </div>
+
+      {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {['전체 상태', ...allStatuses].map((st) => {
+          const count =
+            st === '전체 상태'
+              ? specs.length
+              : specs.filter((sp) => currentVersion(sp).status === st).length
+          const selected = status === st
+          return (
+            <button
+              key={st}
+              type="button"
+              onClick={() => setStatus(st)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                selected
+                  ? 'border-primary/50 bg-primary/15 text-primary'
+                  : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
+              }`}
+            >
+              {st === '전체 상태' ? '전체' : st}
+              <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
+            </button>
+          )
+        })}
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        {filtered.map((spec) => (
+        {filtered.map((spec, i) => (
           <SpecCard
             key={spec.id}
             spec={spec}
+            index={i}
             onDetail={() => setDetail(spec)}
             onCompare={() => openCompare(spec)}
           />
