@@ -15,7 +15,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: '사양서 관리 — HMG 통합 관리자 포털',
       },
     ],
     links: [

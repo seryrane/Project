@@ -6,6 +6,7 @@
 > - **스카이워크 작업분 1** — "AdminPortal 관리자 시스템" (필드 일괄 편집) — https://sys-admin.skywork.website/#/specs
 > - **스카이워크 작업분 2** — Data-Inside 통합 관리자 포털 — https://data-inside.skywork.website/#/dashboard
 > - **디자인 톤 참고(외부)** — Behance "Aivora — AI project workflow management UX/UI" — https://www.behance.net/gallery/252257649/Aivora-AI-project-workflow-management-UX-UI-Design
+> - **디자인 톤 참고(외부)** — Behance "Rentier — SaaS UX/UI Design" (다크 SaaS 파일관리, 라운드 카드·퍼플 액센트·트리 구조 사이드바) — https://www.behance.net/gallery/241446005/Rentier-SaaS-UXUI-Design
 >
 > ※ 본 분석은 제공된 화면 캡처 4장 기준. 위 URL들은 클라우드 개발 환경의 네트워크 정책상 접근 불가하여 직접 열람하지 못함 — 화면 추가 분석이 필요하면 캡처를 제공받거나 로컬에서 열람할 것.
 

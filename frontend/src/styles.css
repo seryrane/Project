@@ -1,6 +1,36 @@
 
 @import "tailwindcss";
 
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Segoe UI', sans-serif;
+
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-hairline: #e5e9f0;
+  --color-ink: #1a1f36;
+  --color-ink-muted: #4f566b;
+  --color-ink-subtle: #8792a2;
+  --color-primary: #635bff;
+  --color-primary-deep: #5148d6;
+  --color-sidebar: #101828;
+  --color-sidebar-ink: #cbd5e1;
+
+  --color-draft-bg: #eef1f5;
+  --color-draft-ink: #5b6472;
+  --color-review-bg: #fff3e0;
+  --color-review-ink: #9a5b00;
+  --color-pending-bg: #efeaff;
+  --color-pending-ink: #6440d4;
+  --color-deployed-bg: #e3f5ea;
+  --color-deployed-ink: #177245;
+  --color-danger-bg: #fdecec;
+  --color-danger-ink: #b3261e;
+  --color-added-bg: #e3f5ea;
+  --color-added-ink: #146c43;
+}
+
 * {
   box-sizing: border-box;
 }
