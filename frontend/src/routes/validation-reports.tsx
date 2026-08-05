@@ -59,7 +59,7 @@ function ValidationReportsPage() {
           const status = published[r.id] ? '발행' : r.status
           return (
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
-              <div className="flex flex-wrap items-center gap-3 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
+              <div className="card-hover flex flex-wrap items-center gap-3 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
                 <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 text-left">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold text-ink hover:text-primary">{r.title}</span>

@@ -159,7 +159,7 @@ function ApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setDetail(r)}
-                className="w-full card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
+                className="card-hover w-full card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left"
               >
                 <span className="flex flex-wrap items-center gap-2">
                   {r.urgent && <UrgentChip />}

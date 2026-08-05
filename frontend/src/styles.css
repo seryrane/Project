@@ -174,6 +174,21 @@ select option {
   opacity: 1;
 }
 
+/* 클릭형 카드 공통 호버 — 살짝 떠오르고 테두리·글로우가 켜진다 (사양서 카드와 동일 감).
+   ⚠ transform 이 아니라 translate 속성이다 — 등장 애니메이션(fill: both)이 transform 을
+   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음). */
+.card-hover {
+  transition:
+    translate 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.card-hover:hover {
+  translate: 0 -2px;
+  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+  box-shadow: 0 6px 20px var(--color-glow);
+}
+
 /* 편집 매트릭스 — 체크가 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */
 .perm-row:has(input:checked) {
   background: color-mix(in oklab, var(--color-primary) 7%, transparent);

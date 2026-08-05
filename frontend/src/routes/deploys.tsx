@@ -123,7 +123,7 @@ function DeploysPage() {
             <button
               type="button"
               onClick={() => setDetail(d)}
-              className="flex w-full items-start gap-4 card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
+              className="card-hover flex w-full items-start gap-4 card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left"
             >
               <StatusIcon status={d.status} />
               <span className="min-w-0 flex-1">

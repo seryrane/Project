@@ -118,7 +118,7 @@ function ValidationEnginePage() {
             <li
               key={e.id}
               style={{ animationDelay: `${i * 60}ms` }}
-              className={`card-spotlight anim-fade-up rounded-2xl border bg-surface transition-colors ${
+              className={`card-hover card-spotlight anim-fade-up rounded-2xl border bg-surface ${
                 open ? 'border-primary/40' : 'border-hairline'
               }`}
             >
