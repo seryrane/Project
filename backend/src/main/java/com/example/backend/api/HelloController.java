@@ -14,4 +14,10 @@ public class HelloController {
         return Map.of("message", "Hello from Spring Boot");
     }
 
+    /** FastAPI 벌과 같은 자리 — 프런트·터널 헬스체크가 벌을 가리지 않게 */
+    @GetMapping("/health")
+    public Map<String, String> health() {
+        return Map.of("status", "ok");
+    }
+
 }

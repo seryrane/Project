@@ -103,5 +103,14 @@
   ⚠ 일부러 안 붙인 것(미확정): 사양서 CRUD · 승인 결재선 · 배포 실행 ·
   검증엔진 실행 · 인증(SSO — 사용자 김현대 고정). 프런트는 서버가 없으면
   mock 으로 조용히 돌아간다(`frontend/src/lib/api.ts` 관문 — 시연 안전).
-- 백엔드 확정 시 한쪽을 제거하고 CLAUDE.md/CI를 갱신할 것 (Spring 채택 시
-  backend-python 의 API 모양을 그대로 이관한다 — 프런트는 관문만 본다)
+- `backend/` — **같은 공통 기능을 Spring Boot 4.1 + PostgreSQL 로 한 벌 더**
+  (2026-08-05, 사용자 지시 — 두 후보를 실물로 나란히 두고 비교). :8081,
+  JdbcTemplate + 공용 schema.sql. 표적은 PG(`postgres` 프로필,
+  HMG_PG_URL/USER/PASSWORD) — 이 PC 엔 PG 가 없어 기본 프로필은 H2 의
+  PostgreSQL 호환 모드(파일 `data/hmg`). 시드는 backend-python 정본을
+  `dump_seeds.py` 로 덤프한 `resources/seed/*.json` (손 복사 금지).
+  테스트 MockMvc 8건 — FastAPI pytest 와 같은 것을 검사한다(두 벌 정합).
+  실행 `gradlew bootJar && java -jar build/libs/backend-*.jar`.
+  프런트 전환 = vite proxy 대상만 8080↔8081.
+- 백엔드 확정 시 한쪽을 제거하고 CLAUDE.md/CI를 갱신할 것 — API 모양(정본)이
+  같아서 프런트는 무변경이다

@@ -24,3 +24,6 @@ __pycache__/
 *.log
 
 backend-python/data/
+backend/data/
+backend/boot.log
+backend/boot-err.log

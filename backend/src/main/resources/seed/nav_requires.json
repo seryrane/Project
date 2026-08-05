@@ -1,0 +1,14 @@
+{
+ "dashboard": "대시보드",
+ "analytics": "통계 & 분석",
+ "members": "회원 관리",
+ "roles": "권한 관리",
+ "menus": "메뉴 관리",
+ "specs": "사양서 관리",
+ "approvals": "승인 관리",
+ "deploys": "배포 관리",
+ "engine": "검증엔진",
+ "results": "검증엔진",
+ "reports": "검증엔진",
+ "privacy": "권한 관리"
+}
