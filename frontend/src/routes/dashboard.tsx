@@ -110,6 +110,9 @@ function DashboardPage() {
   const [range, setRange] = useState(30)
   const navigate = useNavigate()
   const goSpecs = () => navigate({ to: '/specs' })
+  const goResults = () => navigate({ to: '/validation-results' })
+  const goReports = () => navigate({ to: '/validation-reports' })
+  const goApprovals = () => navigate({ to: '/approvals' })
   const openSpec = (id: string) => navigate({ to: '/specs', search: { open: id } })
 
   // 위젯 배치 — 처음엔 관리자 프리셋, 이후엔 저장된 내 배치 (즉시 저장)
@@ -180,7 +183,7 @@ function DashboardPage() {
       <ChartCard
         title="일별 검증 처리량"
         subtitle={`${rangeLabel} · 단위: 천 건 · 점선은 이전 동일 기간`}
-        action={{ label: '검증 결과' }}
+        action={{ label: '검증 결과', onClick: goResults }}
       >
         <TrendLineChart data={slice} compare={prevSlice.length === slice.length ? prevSlice : undefined} />
       </ChartCard>
@@ -194,7 +197,7 @@ function DashboardPage() {
       <ChartCard
         title="검증 실행 히트맵"
         subtitle="최근 25주 · 일별 처리량 (짙을수록 많음)"
-        action={{ label: '검증 리포트' }}
+        action={{ label: '검증 리포트', onClick: goReports }}
       >
         <ActivityHeatmap days={heatmapDays} />
       </ChartCard>
@@ -203,7 +206,7 @@ function DashboardPage() {
       <ChartCard
         title="승인 대기 큐"
         subtitle={`${approvalQueue.length}건이 결재를 기다립니다`}
-        action={{ label: '승인 관리' }}
+        action={{ label: '승인 관리', onClick: goApprovals }}
       >
         <ol className="space-y-1.5">
           {approvalQueue.map((q) => (
@@ -238,7 +241,7 @@ function DashboardPage() {
       <ChartCard
         title="오류 유형별 검출 건수"
         subtitle={`${rangeLabel} 누적 · 증감은 이전 동일 기간 대비`}
-        action={{ label: '검증 결과' }}
+        action={{ label: '검증 결과', onClick: goResults }}
       >
         <ErrorBarChart data={scaledErrors} />
       </ChartCard>

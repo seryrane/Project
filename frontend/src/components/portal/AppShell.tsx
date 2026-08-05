@@ -209,9 +209,9 @@ const nav: Array<NavSection> = [
     id: 'validation',
     title: '검증엔진',
     items: [
-      { key: 'engine', label: '검증엔진 관리', icon: 'engine' },
-      { key: 'results', label: '검증 결과 조회', icon: 'search' },
-      { key: 'reports', label: '검증 리포트', icon: 'report' },
+      { key: 'engine', label: '검증엔진 관리', icon: 'engine', to: '/validation-engine' },
+      { key: 'results', label: '검증 결과 조회', icon: 'search', to: '/validation-results' },
+      { key: 'reports', label: '검증 리포트', icon: 'report', to: '/validation-reports' },
     ],
   },
   {
@@ -315,7 +315,7 @@ const NOTIFICATIONS: Array<{
   search?: Record<string, string>
 }> = [
   { icon: 'approve', text: 'VN7 엔진 사양서 v2.3 승인 요청', time: '10분 전', todo: true, to: '/approvals' },
-  { icon: 'engine', text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true, to: '/dashboard' },
+  { icon: 'engine', text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true, to: '/validation-results' },
   { icon: 'message', text: '전기차 배터리 규격서에 검토 의견이 달렸습니다', time: '42분 전', todo: false, to: '/specs', search: { open: 'SP-002' } },
   { icon: 'deploy', text: '자율주행 센서 통합 규격 v3.1 배포 완료', time: '3시간 전', todo: false, to: '/specs', search: { open: 'SP-003' } },
 ]

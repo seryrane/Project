@@ -15,6 +15,9 @@ import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
 import { Route as SpecsRouteImport } from './routes/specs'
+import { Route as ValidationEngineRouteImport } from './routes/validation-engine'
+import { Route as ValidationReportsRouteImport } from './routes/validation-reports'
+import { Route as ValidationResultsRouteImport } from './routes/validation-results'
 import { Route as SpecsSpecIdRouteImport } from './routes/specs_.$specId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +50,21 @@ const SpecsRoute = SpecsRouteImport.update({
   path: '/specs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ValidationEngineRoute = ValidationEngineRouteImport.update({
+  id: '/validation-engine',
+  path: '/validation-engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidationReportsRoute = ValidationReportsRouteImport.update({
+  id: '/validation-reports',
+  path: '/validation-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidationResultsRoute = ValidationResultsRouteImport.update({
+  id: '/validation-results',
+  path: '/validation-results',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpecsSpecIdRoute = SpecsSpecIdRouteImport.update({
   id: '/specs_/$specId',
   path: '/specs/$specId',
@@ -60,6 +78,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/specs': typeof SpecsRoute
+  '/validation-engine': typeof ValidationEngineRoute
+  '/validation-reports': typeof ValidationReportsRoute
+  '/validation-results': typeof ValidationResultsRoute
   '/specs/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +90,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/specs': typeof SpecsRoute
+  '/validation-engine': typeof ValidationEngineRoute
+  '/validation-reports': typeof ValidationReportsRoute
+  '/validation-results': typeof ValidationResultsRoute
   '/specs/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +103,9 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/specs': typeof SpecsRoute
+  '/validation-engine': typeof ValidationEngineRoute
+  '/validation-reports': typeof ValidationReportsRoute
+  '/validation-results': typeof ValidationResultsRoute
   '/specs_/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +117,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deploys'
     | '/specs'
+    | '/validation-engine'
+    | '/validation-reports'
+    | '/validation-results'
     | '/specs/$specId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +129,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deploys'
     | '/specs'
+    | '/validation-engine'
+    | '/validation-reports'
+    | '/validation-results'
     | '/specs/$specId'
   id:
     | '__root__'
@@ -108,6 +141,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deploys'
     | '/specs'
+    | '/validation-engine'
+    | '/validation-reports'
+    | '/validation-results'
     | '/specs_/$specId'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +154,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DeploysRoute: typeof DeploysRoute
   SpecsRoute: typeof SpecsRoute
+  ValidationEngineRoute: typeof ValidationEngineRoute
+  ValidationReportsRoute: typeof ValidationReportsRoute
+  ValidationResultsRoute: typeof ValidationResultsRoute
   SpecsSpecIdRoute: typeof SpecsSpecIdRoute
 }
 
@@ -165,6 +204,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpecsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/validation-engine': {
+      id: '/validation-engine'
+      path: '/validation-engine'
+      fullPath: '/validation-engine'
+      preLoaderRoute: typeof ValidationEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validation-reports': {
+      id: '/validation-reports'
+      path: '/validation-reports'
+      fullPath: '/validation-reports'
+      preLoaderRoute: typeof ValidationReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validation-results': {
+      id: '/validation-results'
+      path: '/validation-results'
+      fullPath: '/validation-results'
+      preLoaderRoute: typeof ValidationResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/specs_/$specId': {
       id: '/specs_/$specId'
       path: '/specs/$specId'
@@ -182,6 +242,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DeploysRoute: DeploysRoute,
   SpecsRoute: SpecsRoute,
+  ValidationEngineRoute: ValidationEngineRoute,
+  ValidationReportsRoute: ValidationReportsRoute,
+  ValidationResultsRoute: ValidationResultsRoute,
   SpecsSpecIdRoute: SpecsSpecIdRoute,
 }
 export const routeTree = rootRouteImport
