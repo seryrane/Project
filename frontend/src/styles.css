@@ -127,6 +127,36 @@ select option {
   from { opacity: 0; transform: translateY(12px) scale(0.97); }
 }
 
+/* 부드러운 펼침 — height:auto 를 그리드 행 전환으로 푼다 (최신 CSS 관용구).
+   내용은 함께 살짝 떠오른다. 닫힘도 같은 곡선으로 되감긴다. */
+.reveal-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-grid.open {
+  grid-template-rows: 1fr;
+}
+.reveal-grid > * {
+  overflow: hidden;
+  min-height: 0;
+}
+.reveal-grid .reveal-inner {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 220ms ease 60ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1) 40ms;
+}
+.reveal-grid.open .reveal-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 도트 스태거 등장 — --i 로 순번을 준다 */
+@keyframes dot-in {
+  from { opacity: 0; transform: scale(0.4); }
+}
+.anim-dot-in { animation: dot-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 24ms); }
+
 .anim-fade-in { animation: fade-in 160ms ease both; }
 .anim-fade-out { animation: fade-out 140ms ease both; }
 .anim-scale-in { animation: scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
