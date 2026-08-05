@@ -42,7 +42,7 @@ function SpecsPage() {
 
   return (
     <AppShell>
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">사양서 관리</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
@@ -57,33 +57,36 @@ function SpecsPage() {
         </button>
       </div>
 
-      <div className="mt-6 flex gap-3">
+      {/* 좁은 화면: 검색 한 줄 + 필터 한 줄로 접힌다 (규약 §8 — 가로 스크롤 금지) */}
+      <div className="mt-6 flex flex-col gap-3 pc:flex-row">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="사양서 명, ID, 태그 검색..."
-          className="h-10 flex-1 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
+          className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary"
-        >
-          <option>전체 카테고리</option>
-          {categories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary"
-        >
-          <option>전체 상태</option>
-          {allStatuses.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
+        <div className="flex gap-3">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="h-10 min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary pc:flex-none"
+          >
+            <option>전체 카테고리</option>
+            {categories.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="h-10 min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary pc:flex-none"
+          >
+            <option>전체 상태</option>
+            {allStatuses.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">

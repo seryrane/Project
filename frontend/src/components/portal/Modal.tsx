@@ -1,3 +1,11 @@
+import { useEffect } from 'react'
+
+/**
+ * 모달 관문 — 규약(docs/화면_공통규칙.md) §1·§7 을 이 한 곳이 지킨다.
+ * - 좁은 화면(<720px)에서는 아래에서 올라오는 시트가 된다 (닫기가 엄지 자리에 온다)
+ * - 덮은 것은 전부 Esc 로 닫힌다 · MODAL 만 배경막을 눌러 닫는다
+ * - 열려 있는 동안 뒤 화면 스크롤을 잠그고, 안쪽 스크롤은 안에서 끝낸다(overscroll)
+ */
 export function Modal({
   title,
   onClose,
@@ -9,24 +17,38 @@ export function Modal({
   children: React.ReactNode
   wide?: boolean
 }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    // 뒤 화면 잠금 — overscroll 만으로는 안 구르는 자리(배경막·머리)를 잡고 끌 때 뒤가 구른다
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [onClose])
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(16_24_40/55%)] p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(16_24_40/55%)] pc:items-center pc:p-6"
       onClick={onClose}
     >
       <div
-        className={`flex max-h-[85vh] w-full flex-col rounded-xl bg-surface shadow-[0_20px_48px_rgb(16_24_40/24%)] ${
-          wide ? 'max-w-4xl' : 'max-w-2xl'
+        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-xl bg-surface shadow-[0_20px_48px_rgb(16_24_40/24%)] pc:max-h-[85vh] pc:rounded-xl ${
+          wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
-          <h2 className="text-lg font-semibold">{title}</h2>
+        <div className="flex items-center justify-between border-b border-hairline px-5 py-3.5 pc:px-6 pc:py-4">
+          <h2 className="min-w-0 truncate text-lg font-semibold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-canvas hover:text-ink"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-canvas hover:text-ink"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
@@ -38,7 +60,9 @@ export function Modal({
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto px-6 py-5">{children}</div>
+        <div className="overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pc:px-6">
+          {children}
+        </div>
       </div>
     </div>
   )
