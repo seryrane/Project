@@ -418,7 +418,11 @@ function Shell({
         </div>
       </aside>
 
-      <div className={`flex min-h-dvh flex-1 flex-col ${rail ? 'pc:ml-16' : 'pc:ml-60'}`}>
+      {/* ⚠ min-w-0 이 없으면 flex 항목의 min-width:auto 가 안쪽 넓은 표를 따라 컬럼째
+          늘어난다 — 모바일 브라우저는 넘친 페이지를 축소해서 "PC 화면"처럼 보여 주고,
+          innerWidth 도 같이 커져 e2e 넘침 검사가 장님이 된다 (2026-08-05 실기기 실증).
+          overflow-x-clip 은 이중 안전벨트 — clip 은 스크롤 컨테이너를 안 만들어 sticky 가 산다 */}
+      <div className={`flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-clip ${rail ? 'pc:ml-16' : 'pc:ml-60'}`}>
         {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8).
             헤더에는 사용자 관점의 필수 정보(현재 위치·기다리는 일·내 계정)를 상시 노출한다 */}
         {/* 글라스 헤더 — blur 에 saturate 를 얹으면 비쳐 보이는 색이 탁해지지 않는다 */}

@@ -39,10 +39,15 @@ for (const path of PAGES) {
   test(`${path} — 페이지가 가로로 넘치지 않는다`, async ({ page }) => {
     await page.goto(path)
     await page.waitForLoadState('networkidle')
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
+    // ⚠ innerWidth 와 비교하면 안 된다 — 모바일 브라우저는 넘친 페이지를 축소해서
+    //   innerWidth 도 같이 커지고, 검사는 0 을 보고 통과한다(2026-08-05 실기기에서
+    //   상세가 1033px "PC 축소판"으로 보이는데 21건 전부 초록이었다).
+    //   기준은 장치 뷰포트 폭 하나다.
+    const viewport = page.viewportSize()!
+    const scrollW = await page.evaluate(() => document.documentElement.scrollWidth)
+    expect(scrollW, `가로 넘침 — 뷰포트 ${viewport.width}px 을 넘으면 안 된다`).toBeLessThanOrEqual(
+      viewport.width + 1,
     )
-    expect(overflow, '가로 넘침(px) — 표는 자기 상자 안에서만 흐른다').toBeLessThanOrEqual(0)
   })
 }
 
