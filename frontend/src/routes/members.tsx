@@ -10,7 +10,7 @@ import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
 import { GRADE_CLS, SERVICE_ROLES, STATUS_CLS, members } from '#/data/members'
 import type { Grade, Member } from '#/data/members'
-import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, roleDefs } from '#/data/roles'
+import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
 
 export const Route = createFileRoute('/members')({ component: MembersPage })
@@ -361,23 +361,31 @@ function MembersPage() {
                                   {a}
                                 </th>
                               ))}
+                              <th className="w-16 pb-1 text-center font-medium">범위</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {PREVIEW_MENUS.map((m) => (
-                              <tr key={m} className="border-t border-hairline/50">
-                                <td className="py-1.5 text-ink-muted">{m}</td>
-                                {PREVIEW_ACTIONS.map((a) => (
-                                  <td key={a} className="py-1.5 text-center">
-                                    <span
-                                      className={`inline-block h-2.5 w-2.5 rounded-full ${
-                                        (gradeRole?.matrix[m] ?? []).includes(a) ? 'bg-fill-deployed' : 'bg-chip-strong'
-                                      }`}
-                                    />
+                            {PREVIEW_MENUS.map((m) => {
+                              const canRead = (gradeRole?.matrix[m] ?? []).includes('조회')
+                              return (
+                                <tr key={m} className="border-t border-hairline/50">
+                                  <td className="py-1.5 text-ink-muted">{m}</td>
+                                  {PREVIEW_ACTIONS.map((a) => (
+                                    <td key={a} className="py-1.5 text-center">
+                                      <span
+                                        className={`inline-block h-2.5 w-2.5 rounded-full ${
+                                          (gradeRole?.matrix[m] ?? []).includes(a) ? 'bg-fill-deployed' : 'bg-chip-strong'
+                                        }`}
+                                      />
+                                    </td>
+                                  ))}
+                                  {/* 조회 범위도 역할의 파생물 — 정본은 권한 관리 */}
+                                  <td className="py-1.5 text-center text-[10px] text-ink-subtle">
+                                    {canRead && gradeRole ? SCOPE_LABEL[scopeOf(gradeRole, m)] : '—'}
                                   </td>
-                                ))}
-                              </tr>
-                            ))}
+                                </tr>
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>

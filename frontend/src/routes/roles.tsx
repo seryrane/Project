@@ -1,12 +1,23 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
-import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, roleDefs } from '#/data/roles'
-import type { Action, RoleDef } from '#/data/roles'
+import {
+  ACTIONS,
+  ACTION_SPECS,
+  MENUS,
+  PREVIEW_ACTIONS,
+  PREVIEW_MENUS,
+  SCOPES,
+  SCOPE_LABEL,
+  SCOPE_SHORT,
+  roleDefs,
+  scopeOf,
+} from '#/data/roles'
+import type { Action, RoleDef, ScopeKey } from '#/data/roles'
 
 export const Route = createFileRoute('/roles')({ component: RolesPage })
 
@@ -29,20 +40,38 @@ function RolesPage() {
   const [creating, setCreating] = useState(false)
   const [newBase, setNewBase] = useState('처음부터 시작')
   const [deleting, setDeleting] = useState<RoleDef | null>(null)
-  // 편집 매트릭스 체크 상태
+  const [holdersOpen, setHoldersOpen] = useState<string | null>(null)
+  // 편집 매트릭스 체크 상태 + 메뉴별 조회 범위
   const [draft, setDraft] = useState<Record<string, boolean>>({})
+  const [draftScope, setDraftScope] = useState<Record<string, ScopeKey>>({})
 
   const openEdit = (r: RoleDef) => {
     const d: Record<string, boolean> = {}
-    for (const m of MENUS) for (const a of ACTIONS) d[`${m}.${a}`] = has(r, m, a)
+    const s: Record<string, ScopeKey> = {}
+    for (const m of MENUS) {
+      for (const a of ACTIONS) d[`${m}.${a}`] = has(r, m, a)
+      s[m] = scopeOf(r, m)
+    }
     setDraft(d)
+    setDraftScope(s)
     setEditing(r)
   }
   const dirtyCount = editing
     ? MENUS.flatMap((m) => ACTIONS.map((a) => [m, a] as const)).filter(
         ([m, a]) => draft[`${m}.${a}`] !== has(editing, m, a),
-      ).length
+      ).length +
+      MENUS.filter((m) => draft[`${m}.조회`] && draftScope[m] !== scopeOf(editing, m)).length
     : 0
+
+  /**
+   * 자기 잠금 방지 — [권한 관리]를 고칠 수 있는 사람이 0명이 되는 저장은 막는다.
+   * 관리자가 자기 역할에서 이 권한을 빼는 순간, 회사 안의 누구도 되돌릴 수 없다.
+   */
+  const selfLock =
+    editing !== null &&
+    has(editing, '권한 관리', '수정') &&
+    !draft['권한 관리.수정'] &&
+    !roles.some((r) => r.key !== editing.key && r.assigned > 0 && has(r, '권한 관리', '수정'))
 
   return (
     <AppShell active="roles" title="권한 관리">
@@ -80,7 +109,15 @@ function RolesPage() {
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ROLE_BADGE[r.key] ?? 'bg-primary/12 text-primary'}`}>
                   {r.name}
                 </span>
-                <span className="text-xs tabular-nums text-ink-subtle">{r.assigned}명 배정</span>
+                {/* 배정은 이름만으로 부족하다 — 누가 · 어느 범위로 가 함께 와야 뜻이 있다 */}
+                <button
+                  type="button"
+                  aria-expanded={holdersOpen === r.key}
+                  onClick={() => setHoldersOpen(holdersOpen === r.key ? null : r.key)}
+                  className="rounded-md px-1.5 py-0.5 text-xs tabular-nums text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:bg-chip hover:text-ink"
+                >
+                  {r.assigned}명 배정
+                </button>
                 {r.system && (
                   <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle">
                     시스템 역할
@@ -106,6 +143,32 @@ function RolesPage() {
               </div>
               <div className="p-5 pt-3.5">
               <p className="text-[13px] text-ink-muted">{r.desc}</p>
+
+              {/* 보유자 — 이름 옆에 범위("어느 팀의"). 전부 나열하지 않고 대표 + 외 N명 */}
+              <div className={`reveal-grid ${holdersOpen === r.key ? 'open' : ''}`}>
+                <div>
+                  <div className="reveal-inner mt-2.5 flex flex-wrap items-center gap-1.5 rounded-xl border border-hairline/70 bg-canvas/40 px-3 py-2.5">
+                    {r.holders.map((h) => (
+                      <span
+                        key={h.name}
+                        className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-[11px]"
+                      >
+                        <b className="font-medium text-ink">{h.name}</b>
+                        <span className="text-ink-subtle">· {h.scopeLabel}</span>
+                      </span>
+                    ))}
+                    {r.assigned > r.holders.length && (
+                      <span className="text-[11px] text-ink-subtle">외 {r.assigned - r.holders.length}명</span>
+                    )}
+                    <Link
+                      to="/members"
+                      className="ml-auto text-[11px] font-medium text-primary hover:underline"
+                    >
+                      회원 관리에서 보기 →
+                    </Link>
+                  </div>
+                </div>
+              </div>
 
               {/* 미리보기 도트 — 인셋 박스로 본문과 가른다. 스태거 등장 */}
               <div className="mt-3.5 overflow-x-auto rounded-xl border border-hairline/70 bg-canvas/40 px-3.5 py-2.5">
@@ -178,8 +241,15 @@ function RolesPage() {
                             {ACTIONS.map((a) => (
                               <td key={a} className="px-1.5 py-1.5 text-center">
                                 {has(r, m, a) ? (
-                                  <span className="inline-block rounded bg-primary/12 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                  <span
+                                    className="inline-block rounded bg-primary/12 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+                                    title={a === '조회' ? `조회 범위: ${SCOPE_LABEL[scopeOf(r, m)]}` : undefined}
+                                  >
                                     {a}
+                                    {/* 조회는 범위가 함께 와야 뜻이 있다 — 전체가 아니면 표시 */}
+                                    {a === '조회' && scopeOf(r, m) !== 'all' && (
+                                      <span className="ml-0.5 opacity-70">· {SCOPE_SHORT[scopeOf(r, m)]}</span>
+                                    )}
                                   </span>
                                 ) : (
                                   <span className="text-ink-subtle/40">—</span>
@@ -228,15 +298,23 @@ function RolesPage() {
             줄은 밝게 표시됩니다.
           </p>
           <div className="mt-3 overflow-x-auto rounded-xl border border-hairline">
-            <table className="w-full min-w-[640px] border-collapse text-[13px]">
+            <table className="w-full min-w-[720px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
                   <th className="px-3 py-2.5 font-medium">메뉴</th>
+                  {/* 액션 머리에 사람 말 힌트 — 위험 액션은 ⚠ 로 표시한다 */}
                   {ACTIONS.map((a) => (
-                    <th key={a} className="px-2 py-2.5 text-center font-medium">
+                    <th key={a} className="px-2 py-2.5 text-center font-medium" title={ACTION_SPECS[a].hint}>
                       {a}
+                      {ACTION_SPECS[a].danger && <span className="ml-0.5 text-pending-ink">⚠</span>}
                     </th>
                   ))}
+                  <th
+                    className="px-2 py-2.5 text-center font-medium"
+                    title="조회가 켜진 메뉴에서 어디까지 보이는지 — 넓은 범위는 좁은 범위를 포함합니다"
+                  >
+                    조회 범위
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -251,6 +329,7 @@ function RolesPage() {
                           <button
                             type="button"
                             aria-label={`${m} ${a}`}
+                            title={ACTION_SPECS[a].hint}
                             aria-pressed={on}
                             onClick={() => setDraft((d) => ({ ...d, [`${m}.${a}`]: !on }))}
                             className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] leading-none transition-all active:scale-90 ${
@@ -264,11 +343,52 @@ function RolesPage() {
                         </td>
                       )
                     })}
+                    {/* 조회 범위 — 조회가 꺼진 줄에서는 뜻이 없으므로 함께 잠근다 */}
+                    <td className="px-2 py-1.5 text-center">
+                      <div
+                        className={`inline-flex overflow-hidden rounded-md border border-hairline/70 transition-opacity ${
+                          draft[`${m}.조회`] ? '' : 'pointer-events-none opacity-30'
+                        }`}
+                      >
+                        {SCOPES.map((s) => {
+                          const on = draftScope[m] === s
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              aria-label={`${m} 조회 범위 ${SCOPE_LABEL[s]}`}
+                              title={SCOPE_LABEL[s]}
+                              aria-pressed={on}
+                              onClick={() => setDraftScope((d) => ({ ...d, [m]: s }))}
+                              className={`h-6 w-6 text-[10px] leading-none transition-colors ${
+                                on
+                                  ? 'bg-primary/15 font-semibold text-primary'
+                                  : 'text-ink-subtle/60 hover:text-ink-muted'
+                              }`}
+                            >
+                              {SCOPE_SHORT[s]}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+            ⚠ 표시는 되돌리기 어렵거나 밖으로 나가는 액션입니다 — 머리글에 마우스를 올리면
+            설명이 보입니다. 조회 범위는 내 것만 ⊂ 우리 팀 ⊂ 전체 — 넓은 범위가 좁은 범위를
+            포함하므로 하나만 고릅니다.
+          </p>
+          {selfLock && (
+            <p className="mt-3 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-xs leading-relaxed text-danger-ink">
+              <b>[권한 관리 · 수정]을 뺄 수 없습니다</b> — 이 권한을 가진 사람이 회사에{' '}
+              <b>0명</b>이 됩니다. 권한 화면을 여는 열쇠라, 빼고 나면 누구도 되돌릴 수 없습니다.
+              먼저 다른 역할에 이 권한을 부여하세요.
+            </p>
+          )}
           <div className="mt-4 flex justify-end gap-2">
             <button
               type="button"
@@ -279,7 +399,7 @@ function RolesPage() {
             </button>
             <button
               type="button"
-              disabled={dirtyCount === 0}
+              disabled={dirtyCount === 0 || selfLock}
               onClick={() => {
                 setEditing(null)
                 toast(`${editing.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 결재 후 ${editing.assigned}명에게 적용됩니다`)
@@ -338,6 +458,7 @@ function RolesPage() {
                     system: false,
                     assigned: 0,
                     matrix: roles.find((r) => r.key === 'editor')?.matrix ?? {},
+                    holders: [],
                   },
                 ])
                 toast('역할을 생성했습니다 — [권한 편집]에서 매트릭스를 다듬으세요')

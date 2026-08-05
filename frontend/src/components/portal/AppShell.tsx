@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
+import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
+
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
+import { Drawer } from './Drawer'
 import { ToastProvider, useToast } from './toast'
 
 type IconName =
@@ -339,6 +342,8 @@ function Shell({
   // LNB 핀 — 해제하면 아이콘 레일로 접히고, 올리면 다시 펴진다 (데스크톱 전용)
   const [pinned, setPinned] = useState(true)
   const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
+  // 내가 할 수 있는 것 — 권한은 말없이 붙고 회수는 더 조용하다. 받은 본인이 확인할 자리
+  const [abilitiesOpen, setAbilitiesOpen] = useState(false)
   const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
   const [unread, setUnread] = useState(3)
 
@@ -668,6 +673,18 @@ function Shell({
                 <div className="text-[13px] font-semibold">김현대</div>
                 <div className="text-xs text-ink-subtle">hyundae.kim@hmg.com · Super Admin</div>
               </div>
+              {/* 권한은 여러 길로 말없이 붙는다 — 받은 본인이 사람 말로 확인하는 자리 */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(null)
+                  setAbilitiesOpen(true)
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+              >
+                <Icon name="shield" size={15} />
+                내가 할 수 있는 것
+              </button>
               {(
                 [
                   { icon: 'user' as IconName, label: '마이페이지' },
@@ -694,6 +711,72 @@ function Shell({
       )}
 
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
+
+      {/* 내가 할 수 있는 것 — 권한 이름이 아니라 사람 말로. 정본은 권한 관리(roleDefs) 파생 */}
+      {abilitiesOpen && (
+        <Drawer title="내가 할 수 있는 것" onClose={() => setAbilitiesOpen(false)}>
+          {() => <MyAbilities />}
+        </Drawer>
+      )}
+    </div>
+  )
+}
+
+/** 현재 사용자(김현대 · Super Admin)의 권한을 역할에서 파생해 사람 말로 보여 준다.
+ *  ⚠ 본개발에서는 서버 `GET /api/me/abilities` 로 교체 — 화면이 권한을 다시 세면
+ *  "보이는데 눌러도 안 되는 것"이 생긴다. */
+function MyAbilities() {
+  const myRole = roleDefs.find((r) => r.key === 'super')
+  if (!myRole) return null
+  const menus = Object.entries(myRole.matrix).filter(([, actions]) => actions.length > 0)
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-3">
+        <div className="flex items-center gap-2 rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5">
+          <Avatar name="김현대" size={30} />
+          <span className="min-w-0 leading-tight">
+            <span className="block text-[13px] font-semibold text-ink">김현대</span>
+            <span className="block text-[11px] text-ink-subtle">
+              역할 <b className="text-ink-muted">{myRole.name}</b> — 아래 권한은 이 역할에서
+              파생됩니다
+            </span>
+          </span>
+        </div>
+        <ul className="space-y-1.5">
+          {menus.map(([menu, actions]) => (
+            <li key={menu} className="rounded-xl border border-hairline/70 px-3.5 py-2.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[13px] font-medium text-ink">{menu}</span>
+                {actions.includes('조회') && (
+                  <span className="text-[10px] text-ink-subtle">
+                    조회 범위 · {SCOPE_LABEL[scopeOf(myRole, menu)]}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {actions.map((a) => (
+                  <span
+                    key={a}
+                    title={ACTION_SPECS[a].hint}
+                    className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                      ACTION_SPECS[a].danger
+                        ? 'bg-pending-bg text-pending-ink'
+                        : 'bg-primary/10 text-primary'
+                    }`}
+                  >
+                    {a}
+                    {ACTION_SPECS[a].danger && ' ⚠'}
+                  </span>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="mt-3 border-t border-hairline pt-3 text-[11px] leading-relaxed text-ink-subtle">
+        ⚠ 표시는 되돌리기 어려운 권한입니다. 권한이 예상과 다르면 관리자에게 문의하세요 —
+        변경은 [권한 관리]에서 상신으로 처리됩니다.
+      </p>
     </div>
   )
 }

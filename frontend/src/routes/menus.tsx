@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
-import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
+import { ChipMulti, ChipSelect, Switch } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
@@ -81,6 +81,7 @@ function MenusPage() {
   const [creating, setCreating] = useState(false)
   const [newTemplate, setNewTemplate] = useState<TemplateKey>('list-detail')
   const [newRoles, setNewRoles] = useState<Array<string>>([])
+  const [newMinimal, setNewMinimal] = useState(false)
   // 선택 메뉴 편집 초안 (우측 패널)
   const [draft, setDraft] = useState<MenuItem | null>(null)
 
@@ -169,9 +170,18 @@ function MenusPage() {
           </span>
         </span>
         <code className="hidden font-mono text-[11px] text-ink-subtle sm:block">{m.path}</code>
-        <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
-          {m.roles.length}개 역할
-        </span>
+        {m.minimal ? (
+          <span
+            className="rounded-full bg-deployed-bg px-1.5 py-0.5 text-[10px] font-medium text-deployed-ink"
+            title="권한 없이 모든 역할에 보이는 메뉴"
+          >
+            최소 메뉴
+          </span>
+        ) : (
+          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
+            {m.roles.length}개 역할
+          </span>
+        )}
         <button
           type="button"
           role="switch"
@@ -286,27 +296,43 @@ function MenusPage() {
                   <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${draft.active ? 'translate-x-5' : ''}`} />
                 </button>
               </div>
-              <div>
-                <span className="text-xs font-medium text-ink-subtle">
-                  접근 가능 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+              {/* 최소 메뉴 — 권한으로만 가리면 권한 적은 역할의 LNB 가 텅 빈다.
+                  특히 가이드·공지는 권한 없는 사람일수록 필요하다 */}
+              <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
+                <span className="text-[13px]">
+                  <b className="font-medium text-ink">최소 메뉴</b>
+                  <span className="block text-[11px] text-ink-subtle">권한 없이 모든 역할에 보입니다</span>
                 </span>
-                <div className="mt-1.5">
-                  <ChipMulti
-                    options={ROLE_NAMES}
-                    values={draft.roles}
-                    onChange={(roles) => setDraft((d) => d && { ...d, roles })}
-                  />
-                </div>
-                {draft.roles.length === 0 && (
-                  <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-[11px] text-danger-ink">
-                    접근 역할이 없으면 아무도 이 메뉴를 못 봅니다 — 저장 전에 하나 이상 고르세요.
-                  </p>
-                )}
+                <Switch
+                  checked={draft.minimal ?? false}
+                  onChange={(v) => setDraft((d) => d && { ...d, minimal: v })}
+                  label="최소 메뉴"
+                />
               </div>
+              {!draft.minimal && (
+                <div>
+                  <span className="text-xs font-medium text-ink-subtle">
+                    접근 가능 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+                  </span>
+                  <div className="mt-1.5">
+                    <ChipMulti
+                      options={ROLE_NAMES}
+                      values={draft.roles}
+                      onChange={(roles) => setDraft((d) => d && { ...d, roles })}
+                    />
+                  </div>
+                  {draft.roles.length === 0 && (
+                    <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-[11px] text-danger-ink">
+                      접근 역할이 없으면 아무도 이 메뉴를 못 봅니다 — 하나 이상 고르거나 [최소
+                      메뉴]로 전환하세요.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2 border-t border-hairline pt-4">
                 <button
                   type="button"
-                  disabled={draft.roles.length === 0}
+                  disabled={!draft.minimal && draft.roles.length === 0}
                   onClick={() => {
                     setItems((list) => list.map((x) => (x.id === draft.id ? draft : x)))
                     toast(`${draft.name} 메뉴 설정을 저장했습니다 — LNB 에 바로 반영됩니다`)
@@ -397,14 +423,23 @@ function MenusPage() {
               })}
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">
-              접근 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+          <div className="mt-3 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
+            <span className="text-[13px]">
+              <b className="font-medium text-ink">최소 메뉴</b>
+              <span className="block text-[11px] text-ink-subtle">권한 없이 모든 역할에 보입니다</span>
             </span>
-            <div className="mt-1.5">
-              <ChipMulti options={ROLE_NAMES} values={newRoles} onChange={setNewRoles} />
-            </div>
+            <Switch checked={newMinimal} onChange={setNewMinimal} label="최소 메뉴" />
           </div>
+          {!newMinimal && (
+            <div className="mt-3">
+              <span className="text-xs font-medium text-ink-subtle">
+                접근 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+              </span>
+              <div className="mt-1.5">
+                <ChipMulti options={ROLE_NAMES} values={newRoles} onChange={setNewRoles} />
+              </div>
+            </div>
+          )}
           <div className="mt-5 flex justify-end gap-2">
             <button
               type="button"

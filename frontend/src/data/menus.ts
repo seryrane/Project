@@ -24,6 +24,10 @@ export interface MenuItem {
   parent?: string
   /** 이 메뉴가 여는 화면의 템플릿 */
   template: TemplateKey
+  /** 최소 메뉴 — 권한 없이 모든 역할에 보인다. 권한으로만 가리면 Viewer 의 LNB 가
+   *  텅 비어 "로그인해서 볼 게 없는 포털"이 된다. 특히 가이드는 권한이 없는
+   *  사람일수록 필요하므로 여기서 가리면 안 된다. */
+  minimal?: boolean
 }
 
 export const menuItems: Array<MenuItem> = [
@@ -40,10 +44,11 @@ export const menuItems: Array<MenuItem> = [
   { id: 'm-engine', order: 11, name: '검증엔진 관리', path: '/validation-engine', icon: 'engine', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
   { id: 'm-results', order: 12, name: '검증 결과 조회', path: '/validation-results', icon: 'search', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
   { id: 'm-reports', order: 13, name: '검증 리포트', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
-  { id: 'm-notice', order: 14, name: '공지사항', path: '/notice', icon: 'bell', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'board' },
-  { id: 'm-qna', order: 15, name: 'Q&A', path: '/qna', icon: 'message', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'board' },
-  { id: 'm-faq', order: 16, name: 'FAQ', path: '/faq', icon: 'help', active: false, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'board' },
-  { id: 'm-privacy', order: 17, name: '개인정보보호', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
+  { id: 'm-notice', order: 14, name: '공지사항', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
+  { id: 'm-qna', order: 15, name: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
+  { id: 'm-faq', order: 16, name: 'FAQ', path: '/faq', icon: 'help', active: false, roles: [], minimal: true, template: 'board' },
+  { id: 'm-guide', order: 17, name: '사용자 가이드', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
+  { id: 'm-privacy', order: 18, name: '개인정보보호', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
 ]
 
 // 접근 역할 목록은 여기 두지 않는다 — 권한 관리 정본(data/roles.ts)에서 파생한다
