@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
@@ -7,8 +7,10 @@ import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { FEATURES, GRADE_CLS, STATUS_CLS, members } from '#/data/members'
+import { GRADE_CLS, SERVICE_ROLES, STATUS_CLS, members } from '#/data/members'
 import type { Grade, Member } from '#/data/members'
+import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, roleDefs } from '#/data/roles'
+import type { Action } from '#/data/roles'
 
 export const Route = createFileRoute('/members')({ component: MembersPage })
 
@@ -32,8 +34,6 @@ function MembersPage() {
   const [creating, setCreating] = useState(false)
   // 잠금/해제는 화면 상태로만 (프로토타입)
   const [lockOverride, setLockOverride] = useState<Record<string, boolean>>({})
-  // 권한 예외 편집 — 저장이 아니라 "상신"으로 끝난다 (권한 변경은 결재를 탄다)
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({})
 
   const effStatus = (m: Member) => (m.id in lockOverride ? (lockOverride[m.id] ? '잠금' : '활성') : m.status)
 
@@ -65,16 +65,29 @@ function MembersPage() {
     { label: '잠금', value: counts.locked, cls: 'text-review-ink' },
   ]
 
-  const grantedByGrade = (m: Member, key: string) =>
-    (FEATURES.find((f) => f.key === key)?.grades as ReadonlyArray<string> | undefined)?.includes(m.grade) ?? false
+  // 롤베이스 정합: 권한의 원천은 역할이다 — 사용자 쪽에서는 ①역할 배정을 바꾸고
+  // ②명시적 예외(허용/차단)만 목록으로 얹는다. 기능 토글 나열은 하지 않는다.
+  const [draftGrade, setDraftGrade] = useState<Grade>('Viewer')
+  const [draftRoles, setDraftRoles] = useState<Array<string>>([])
+  const [exceptions, setExceptions] = useState<Array<{ menu: string; action: Action; mode: '허용' | '차단' }>>([])
+  const [exMenu, setExMenu] = useState<string>(MENUS[5])
+  const [exAction, setExAction] = useState<Action>('수정')
+  const [exMode, setExMode] = useState<'허용' | '차단'>('허용')
 
-  const overrideKey = (m: Member, key: string) => `${m.id}.${key}`
-  const effective = (m: Member, key: string) => overrides[overrideKey(m, key)] ?? grantedByGrade(m, key)
+  useEffect(() => {
+    if (detail) {
+      setDraftGrade(detail.grade)
+      setDraftRoles(detail.roles)
+      setExceptions([])
+    }
+  }, [detail])
+
+  const gradeRole = roleDefs.find((r) => r.name === draftGrade)
   const dirtyCount = detail
-    ? FEATURES.filter((f) => {
-        const k = overrideKey(detail, f.key)
-        return k in overrides && overrides[k] !== grantedByGrade(detail, f.key)
-      }).length
+    ? (draftGrade !== detail.grade ? 1 : 0) +
+      draftRoles.filter((r) => !detail.roles.includes(r)).length +
+      detail.roles.filter((r) => !draftRoles.includes(r)).length +
+      exceptions.length
     : 0
 
   const toggleLock = (m: Member) => {
@@ -309,45 +322,163 @@ function MembersPage() {
                   )}
 
                   {tab === 'perm' && (
-                    <div className="space-y-1.5">
-                      {FEATURES.map((f) => {
-                        const base = grantedByGrade(detail, f.key)
-                        const eff = effective(detail, f.key)
-                        const isOverride = eff !== base
-                        return (
-                          <div
-                            key={f.key}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-hairline px-3.5 py-2.5 text-[13px]"
+                    <div className="space-y-4">
+                      {/* ① 역할 배정 — 권한은 역할이 정한다 */}
+                      <div className="rounded-xl border border-hairline p-3.5">
+                        <div className="text-xs font-semibold text-ink">역할 배정</div>
+                        <label className="mt-2 block">
+                          <span className="text-[11px] text-ink-subtle">등급 (단일)</span>
+                          <Select
+                            value={draftGrade}
+                            onChange={(e) => setDraftGrade(e.target.value as Grade)}
+                            className="mt-1 w-full"
                           >
-                            <span className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className="text-ink">{f.label}</span>
-                              {isOverride ? (
-                                <span className="rounded-full bg-review-bg px-1.5 py-0.5 text-[10px] font-semibold text-review-ink">
-                                  예외
-                                </span>
-                              ) : (
-                                <span className="rounded-full bg-chip px-1.5 py-0.5 text-[10px] text-ink-subtle">
-                                  등급 기본
-                                </span>
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={eff}
-                              aria-label={f.label}
-                              onClick={() => setOverrides((o) => ({ ...o, [overrideKey(detail, f.key)]: !eff }))}
-                              className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors ${eff ? 'bg-primary' : 'bg-chip-strong'}`}
-                            >
-                              <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${eff ? 'translate-x-5' : ''}`} />
-                            </button>
+                            {GRADES.map((g) => (
+                              <option key={g}>{g}</option>
+                            ))}
+                          </Select>
+                        </label>
+                        <div className="mt-2.5">
+                          <span className="text-[11px] text-ink-subtle">서비스 Role (겸직 가능)</span>
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {SERVICE_ROLES.map((r) => {
+                              const on = draftRoles.includes(r)
+                              return (
+                                <button
+                                  key={r}
+                                  type="button"
+                                  aria-pressed={on}
+                                  onClick={() =>
+                                    setDraftRoles((rs) => (on ? rs.filter((x) => x !== r) : [...rs, r]))
+                                  }
+                                  className={`rounded-full border px-2.5 py-1 font-mono text-[10px] font-medium transition-all active:scale-95 ${
+                                    on
+                                      ? 'border-primary/50 bg-primary/15 text-primary'
+                                      : 'border-hairline text-ink-subtle hover:border-primary/30 hover:text-ink'
+                                  }`}
+                                >
+                                  {on ? '✓ ' : ''}
+                                  {r}
+                                </button>
+                              )
+                            })}
                           </div>
-                        )
-                      })}
-                      <p className="pt-1 text-[11px] leading-relaxed text-ink-subtle">
-                        권한 변경은 즉시 반영되지 않습니다 — <b className="text-ink-muted">상신하면 결재</b>(승인
-                        관리)를 거쳐 적용됩니다. 등급 기본과 다른 항목만 예외로 저장됩니다.
-                      </p>
+                        </div>
+                      </div>
+
+                      {/* ② 역할이 주는 권한 — 읽기 전용. 고치려면 권한 관리로 간다 */}
+                      <div className="rounded-xl border border-hairline bg-canvas/40 p-3.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-ink">역할이 주는 권한 (읽기 전용)</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              close()
+                              navigate({ to: '/roles' })
+                            }}
+                            className="text-[11px] font-medium text-primary transition-opacity hover:opacity-80"
+                          >
+                            권한 관리에서 역할 정의 →
+                          </button>
+                        </div>
+                        <table className="mt-2 w-full border-collapse text-xs">
+                          <thead>
+                            <tr className="text-ink-subtle">
+                              <th className="pb-1 text-left font-medium">메뉴</th>
+                              {PREVIEW_ACTIONS.map((a) => (
+                                <th key={a} className="w-11 pb-1 text-center font-medium">
+                                  {a}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {PREVIEW_MENUS.map((m) => (
+                              <tr key={m} className="border-t border-hairline/50">
+                                <td className="py-1.5 text-ink-muted">{m}</td>
+                                {PREVIEW_ACTIONS.map((a) => (
+                                  <td key={a} className="py-1.5 text-center">
+                                    <span
+                                      className={`inline-block h-2.5 w-2.5 rounded-full ${
+                                        (gradeRole?.matrix[m] ?? []).includes(a) ? 'bg-fill-deployed' : 'bg-chip-strong'
+                                      }`}
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* ③ 사용자 예외 — 명시적 목록만. 없으면 역할이 전부다 */}
+                      <div className="rounded-xl border border-hairline p-3.5">
+                        <div className="text-xs font-semibold text-ink">
+                          사용자 예외 <span className="font-normal text-ink-subtle">(허용/차단 오버라이드)</span>
+                        </div>
+                        {exceptions.length === 0 ? (
+                          <p className="mt-2 text-xs text-ink-subtle">
+                            예외 없음 — 권한은 배정된 역할이 전부 정합니다.
+                          </p>
+                        ) : (
+                          <ul className="mt-2 space-y-1.5">
+                            {exceptions.map((ex, i) => (
+                              <li
+                                key={`${ex.menu}.${ex.action}.${i}`}
+                                className="flex items-center gap-2 rounded-lg bg-canvas/50 px-2.5 py-1.5 text-xs"
+                              >
+                                <span
+                                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                                    ex.mode === '허용'
+                                      ? 'bg-deployed-bg text-deployed-ink'
+                                      : 'bg-danger-bg text-danger-ink'
+                                  }`}
+                                >
+                                  {ex.mode}
+                                </span>
+                                <span className="text-ink">
+                                  {ex.menu} · {ex.action}
+                                </span>
+                                <button
+                                  type="button"
+                                  aria-label="예외 제거"
+                                  onClick={() => setExceptions((xs) => xs.filter((_, j) => j !== i))}
+                                  className="ml-auto rounded px-1.5 text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
+                                >
+                                  ✕
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                          <Select value={exMenu} onChange={(e) => setExMenu(e.target.value)} className="min-w-0 flex-1">
+                            {MENUS.map((m) => (
+                              <option key={m}>{m}</option>
+                            ))}
+                          </Select>
+                          <Select value={exAction} onChange={(e) => setExAction(e.target.value as Action)} className="w-24">
+                            {ACTIONS.map((a) => (
+                              <option key={a}>{a}</option>
+                            ))}
+                          </Select>
+                          <Select value={exMode} onChange={(e) => setExMode(e.target.value as '허용' | '차단')} className="w-20">
+                            <option>허용</option>
+                            <option>차단</option>
+                          </Select>
+                          <button
+                            type="button"
+                            onClick={() => setExceptions((xs) => [...xs, { menu: exMenu, action: exAction, mode: exMode }])}
+                            className="h-10 rounded-lg border border-dashed border-hairline px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                          >
+                            + 추가
+                          </button>
+                        </div>
+                        <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+                          예외는 감사 대상입니다 — 역할로 풀 수 있으면 역할을 고치세요. 변경은{' '}
+                          <b className="text-ink-muted">상신 후 결재</b>를 거쳐 적용됩니다.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -373,12 +504,12 @@ function MembersPage() {
                     disabled={tab !== 'perm' || dirtyCount === 0}
                     onClick={() => {
                       close()
-                      toast(`${detail.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 승인 관리에서 결재 후 적용됩니다`)
+                      toast(`${detail.name} 역할·예외 변경 ${dirtyCount}건을 상신했습니다 — 승인 관리에서 결재 후 적용됩니다`)
                       navigate({ to: '/approvals' })
                     }}
                     className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
-                    권한 변경 상신{dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
+                    변경 상신{dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
                   </button>
                 </div>
               </div>

@@ -193,7 +193,7 @@ const nav: Array<NavSection> = [
     items: [
       { key: 'members', label: '회원 관리', icon: 'users', to: '/members' },
       { key: 'roles', label: '권한 관리', icon: 'shield', to: '/roles' },
-      { key: 'menus', label: '메뉴 관리', icon: 'menu' },
+      { key: 'menus', label: '메뉴 관리', icon: 'menu', to: '/menus' },
     ],
   },
   {
@@ -360,8 +360,21 @@ function Shell({
       }
       if (e.key === 'Escape') setMenu(null)
     }
+    // 스포트라이트 좌표 위임 — .card-spotlight 위에서만 --mx/--my 를 채운다
+    const onMove = (e: PointerEvent) => {
+      const t = e.target instanceof Element ? e.target.closest('.card-spotlight') : null
+      if (t instanceof HTMLElement) {
+        const r = t.getBoundingClientRect()
+        t.style.setProperty('--mx', `${e.clientX - r.left}px`)
+        t.style.setProperty('--my', `${e.clientY - r.top}px`)
+      }
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    document.addEventListener('pointermove', onMove, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointermove', onMove)
+    }
   }, [])
 
   const rail = !pinned

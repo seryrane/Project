@@ -21,7 +21,7 @@ export function ChartCard({
   className?: string
 }) {
   return (
-    <section className={`rounded-2xl border border-hairline bg-surface p-5 ${className}`}>
+    <section className={`card-spotlight rounded-2xl border border-hairline bg-surface p-5 ${className}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
@@ -103,7 +103,7 @@ export function StatTile({
   spark?: Array<number>
 }) {
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-5 transition-colors hover:border-primary/30">
+    <div className="card-spotlight rounded-2xl border border-hairline bg-surface p-5 transition-colors hover:border-primary/30">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-ink-subtle">{label}</span>
         {delta && <DeltaChip delta={delta} good={deltaGood ?? true} />}

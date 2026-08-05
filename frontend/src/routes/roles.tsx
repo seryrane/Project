@@ -68,13 +68,14 @@ function RolesPage() {
             <section
               key={r.key}
               style={{ animationDelay: `${i * 70}ms` }}
-              className={`anim-fade-up rounded-2xl border bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 ${
+              className={`card-spotlight anim-fade-up overflow-hidden rounded-2xl border bg-surface transition-[transform,border-color,box-shadow] duration-200 ${
                 open
                   ? 'border-primary/40 shadow-[0_6px_20px_var(--color-glow)]'
-                  : 'border-hairline hover:-translate-y-0.5 hover:border-primary/30'
+                  : 'border-hairline hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_6px_20px_var(--color-glow)]'
               }`}
             >
-              <div className="flex flex-wrap items-center gap-2">
+              {/* 머리 — 면으로 가른다 (규약 §5: 선 하나로는 약하다) */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ROLE_BADGE[r.key] ?? 'bg-primary/12 text-primary'}`}>
                   {r.name}
                 </span>
@@ -88,7 +89,7 @@ function RolesPage() {
                   <button
                     type="button"
                     onClick={() => openEdit(r)}
-                    className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                    className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                   >
                     권한 편집
                   </button>
@@ -102,10 +103,11 @@ function RolesPage() {
                   </button>
                 </span>
               </div>
-              <p className="mt-1.5 text-[13px] text-ink-muted">{r.desc}</p>
+              <div className="p-5 pt-3.5">
+              <p className="text-[13px] text-ink-muted">{r.desc}</p>
 
-              {/* 미리보기 도트 — 대표 4메뉴 × 3액션, 스태거 등장 */}
-              <div className="mt-4 overflow-x-auto">
+              {/* 미리보기 도트 — 인셋 박스로 본문과 가른다. 스태거 등장 */}
+              <div className="mt-3.5 overflow-x-auto rounded-xl border border-hairline/70 bg-canvas/40 px-3.5 py-2.5">
                 <table className="w-full min-w-[320px] border-collapse text-xs">
                   <thead>
                     <tr className="text-ink-subtle">
@@ -190,6 +192,7 @@ function RolesPage() {
                   </div>
                 </div>
               </div>
+              </div>
             </section>
           )
         })}
@@ -198,9 +201,30 @@ function RolesPage() {
       {/* 권한 편집 — 메뉴 × 액션 7종 풀 매트릭스 (저장은 상신으로 끝난다) */}
       {editing && (
         <Modal title={`권한 편집 — ${editing.name}`} onClose={() => setEditing(null)} wide>
-          <p className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
-            {editing.desc} · 현재 <b className="tabular-nums text-ink">{editing.assigned}명</b> 배정 —
-            변경은 즉시 반영되지 않고 <b className="text-ink">상신 후 결재</b>를 거쳐 적용됩니다.
+          {/* 권한명·설명도 여기서 고친다 — 이름 변경 역시 상신 대상이다 */}
+          <div className="grid grid-cols-1 gap-3 pc:grid-cols-[220px_1fr]">
+            <label className="block">
+              <span className="text-xs font-medium text-ink-subtle">
+                권한명 <b className="text-danger-ink">*</b>
+                {editing.system && <span className="ml-1 text-[10px]">(시스템 역할)</span>}
+              </span>
+              <input
+                defaultValue={editing.name}
+                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] font-semibold outline-none focus:border-primary/60"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-ink-subtle">설명</span>
+              <input
+                defaultValue={editing.desc}
+                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              />
+            </label>
+          </div>
+          <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
+            현재 <b className="tabular-nums text-ink">{editing.assigned}명</b> 배정 — 변경은 즉시
+            반영되지 않고 <b className="text-ink">상신 후 결재</b>를 거쳐 적용됩니다. 체크가 있는
+            줄은 밝게 표시됩니다.
           </p>
           <div className="mt-3 overflow-x-auto rounded-xl border border-hairline">
             <table className="w-full min-w-[640px] border-collapse text-[13px]">
@@ -216,7 +240,7 @@ function RolesPage() {
               </thead>
               <tbody>
                 {MENUS.map((m) => (
-                  <tr key={m} className="border-b border-hairline/60 last:border-0">
+                  <tr key={m} className="perm-row border-b border-hairline/60 transition-colors last:border-0">
                     <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{m}</td>
                     {ACTIONS.map((a) => (
                       <td key={a} className="px-2 py-2 text-center">

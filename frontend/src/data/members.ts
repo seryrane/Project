@@ -174,15 +174,15 @@ export const members: Array<Member> = [
   },
 ]
 
-/** 기능 권한 카탈로그 — 등급이 주는 기본값. 개인 예외는 여기서 어긋난 것만 저장한다.
- *  ⚠ mock — 본개발에서 서버 RBAC(GET /api/roles/features)로 교체 */
-export const FEATURES = [
-  { key: 'spec.read', label: '사양서 조회', grades: ['Super Admin', 'Admin', 'Editor', 'Viewer'] },
-  { key: 'spec.write', label: '사양서 수정', grades: ['Super Admin', 'Admin', 'Editor'] },
-  { key: 'spec.submit', label: '사양서 승인 요청', grades: ['Super Admin', 'Admin', 'Editor'] },
-  { key: 'deploy.approve', label: '배포 승인', grades: ['Super Admin', 'Admin'] },
-  { key: 'member.manage', label: '회원 관리', grades: ['Super Admin', 'Admin'] },
-  { key: 'system.config', label: '시스템 설정', grades: ['Super Admin'] },
+/** 서비스별 Role 카탈로그 — 겸직 가능 (요구사항: 서비스별 Role 분리) */
+export const SERVICE_ROLES = [
+  'KPI_ADMIN',
+  'KPI_EDITOR',
+  'IBD_ADMIN',
+  'IBD_EDITOR',
+  'IBD_APPROVER',
+  'DEPLOY_MANAGER',
+  'VALIDATION_MANAGER',
 ] as const
 
 export const GRADE_CLS: Record<Grade, string> = {

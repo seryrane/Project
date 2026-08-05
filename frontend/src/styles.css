@@ -151,6 +151,37 @@ select option {
   transform: translateY(0);
 }
 
+/* 포인터 추적 스포트라이트 — 커서 좌표(--mx/--my, AppShell 위임 리스너가 채움)를
+   따라 은은한 빛이 카드 위를 흐른다. 호버가 끝나면 잦아든다. */
+.card-spotlight {
+  position: relative;
+}
+.card-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    var(--color-glow),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.card-spotlight:hover::before {
+  opacity: 1;
+}
+
+/* 편집 매트릭스 — 체크가 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */
+.perm-row:has(input:checked) {
+  background: color-mix(in oklab, var(--color-primary) 7%, transparent);
+}
+.perm-row:hover {
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
 /* 도트 스태거 등장 — --i 로 순번을 준다 */
 @keyframes dot-in {
   from { opacity: 0; transform: scale(0.4); }
