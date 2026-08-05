@@ -264,6 +264,165 @@ export function TrendLineChart({
   )
 }
 
+/* ---- 다계열 선 차트: 계열 색은 CVD 검증 fill 토큰에서만, 범례 필수 ---- */
+export interface LineSeries {
+  name: string
+  color: string // var(--color-fill-*) — 검증 통과값만
+  data: Array<TrendPoint>
+}
+
+export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries>; unit?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [hover, setHover] = useState<number | null>(null)
+  const n = series[0].data.length
+  const peak = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)))
+  const max = niceMax(peak * 1.1)
+  const ticks = [0, max / 4, max / 2, (max * 3) / 4, max]
+  const x = (i: number) => PAD.l + (i / (n - 1)) * (W - PAD.l - PAD.r)
+  const y = (v: number) => PAD.t + (1 - v / max) * (H - PAD.t - PAD.b)
+  const path = (s: LineSeries) =>
+    s.data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join('')
+  const labelEvery = Math.max(1, Math.round(n / 6))
+
+  const onMove = (e: React.PointerEvent) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    const px = ((e.clientX - rect.left) / rect.width) * W
+    const i = Math.round(((px - PAD.l) / (W - PAD.l - PAD.r)) * (n - 1))
+    setHover(Math.min(n - 1, Math.max(0, i)))
+  }
+
+  return (
+    <div>
+      {/* 2계열 이상이면 범례는 늘 있다 */}
+      <div className="mb-2 flex flex-wrap items-center gap-4 text-xs text-ink-muted">
+        {series.map((s) => (
+          <span key={s.name} className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: s.color }} /> {s.name}
+          </span>
+        ))}
+      </div>
+      <div ref={ref} className="relative" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
+        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="다계열 추이">
+          {ticks.map((t) => (
+            <g key={t}>
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-hairline)" strokeWidth="1" />
+              <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
+                {Math.round(t)}
+                {t > 0 ? unit : ''}
+              </text>
+            </g>
+          ))}
+          {series[0].data.map((d, i) =>
+            i % labelEvery === 0 ? (
+              <text key={d.date} x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--color-ink-subtle)">
+                {d.date}
+              </text>
+            ) : null,
+          )}
+          {series.map((s) => (
+            <path key={s.name} d={path(s)} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          ))}
+          {hover != null && (
+            <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />
+          )}
+          {hover != null &&
+            series.map((s) => (
+              <circle key={s.name} cx={x(hover)} cy={y(s.data[hover].value)} r="4" fill={s.color} stroke="var(--color-surface)" strokeWidth="2" />
+            ))}
+        </svg>
+        {hover != null && (
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 rounded-lg border border-hairline bg-raised px-3 py-1.5 text-xs shadow-lg"
+            style={{ left: `${(x(hover) / W) * 100}%`, top: '0%' }}
+          >
+            <div className="mb-0.5 text-ink-subtle">{series[0].data[hover].date}</div>
+            {series.map((s) => (
+              <div key={s.name} className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
+                <span className="text-ink-muted">{s.name}</span>
+                <b className="ml-auto pl-2 tabular-nums text-ink">
+                  {s.data[hover].value}
+                  {unit}
+                </b>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ---- 요일×시간 히트맵: 단일 색상 명도 램프 ---- */
+export function TimeHeatmap({
+  rows,
+  cols,
+  values,
+  unit = '건',
+}: {
+  rows: Array<string>
+  cols: Array<string>
+  values: Array<Array<number>> // rows × cols
+  unit?: string
+}) {
+  const [hover, setHover] = useState<[number, number] | null>(null)
+  const flat = values.flat()
+  const min = Math.min(...flat)
+  const max = Math.max(...flat)
+  const span = max - min || 1
+  const CELL_W = 34
+  const CELL_H = 17
+  const GAP = 3
+  const LEFT = 24
+  const TOP = 4
+  const width = LEFT + cols.length * (CELL_W + GAP)
+  const height = TOP + rows.length * (CELL_H + GAP) + 16
+  return (
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" role="img" aria-label="요일·시간 분포">
+        {rows.map((r, ri) => (
+          <text key={r} x={LEFT - 7} y={TOP + ri * (CELL_H + GAP) + CELL_H - 4} textAnchor="end" fontSize="9.5" fill="var(--color-ink-subtle)">
+            {r}
+          </text>
+        ))}
+        {cols.map((c, ci) => (
+          <text key={c} x={LEFT + ci * (CELL_W + GAP) + CELL_W / 2} y={height - 4} textAnchor="middle" fontSize="9" fill="var(--color-ink-subtle)">
+            {c}
+          </text>
+        ))}
+        {values.map((row, ri) =>
+          row.map((v, ci) => (
+            <rect
+              key={`${ri}-${ci}`}
+              x={LEFT + ci * (CELL_W + GAP)}
+              y={TOP + ri * (CELL_H + GAP)}
+              width={CELL_W}
+              height={CELL_H}
+              rx="3"
+              fill="var(--color-primary)"
+              fillOpacity={0.08 + ((v - min) / span) * 0.86}
+              stroke={hover?.[0] === ri && hover[1] === ci ? 'var(--color-ink)' : 'none'}
+              strokeWidth="1.2"
+              onPointerEnter={() => setHover([ri, ci])}
+              onPointerLeave={() => setHover(null)}
+            />
+          )),
+        )}
+      </svg>
+      <div className="mt-1.5 text-xs text-ink-subtle">
+        {hover ? (
+          <>
+            <b className="tabular-nums text-ink">{values[hover[0]][hover[1]]}{unit}</b> · {rows[hover[0]]} {cols[hover[1]]}
+          </>
+        ) : (
+          '칸에 올리면 값이 보입니다 · 짙을수록 많음'
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ---- GitHub 잔디 스타일 히트맵: 단일 색상 명도 램프 (sequential) ---- */
 export interface HeatDay {
   date: string

@@ -16,11 +16,14 @@ import {
   errorTypes,
   heatmapDays,
   kpiSparks,
+  memberRoles,
+  pipelines,
   recentActivity,
+  serverResources,
   statusDistribution,
   validationSeries,
 } from '#/data/dashboard'
-import type { ActivityKind } from '#/data/dashboard'
+import type { ActivityKind, ServerHealth } from '#/data/dashboard'
 import {
   ROLE_PRESETS,
   WIDGET_META,
@@ -97,6 +100,27 @@ function ActivityIcon({ kind }: { kind: ActivityKind }) {
       </svg>
     </span>
   )
+}
+
+/* 리소스 게이지 — 색은 임계값이 정한다 (<70 정상 · 70~84 주의 · 85+ 위험) */
+function Meter({ label, pct }: { label: string; pct: number }) {
+  const color =
+    pct >= 85 ? 'var(--color-danger-ink)' : pct >= 70 ? 'var(--color-review-ink)' : 'var(--color-fill-deployed)'
+  return (
+    <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[10px] text-ink-subtle">
+      {label}
+      <span className="h-1 min-w-6 flex-1 overflow-hidden rounded-full bg-chip">
+        <span className="block h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </span>
+      <span className="w-7 text-right tabular-nums text-ink-muted">{pct}%</span>
+    </span>
+  )
+}
+
+const HEALTH_CLS: Record<ServerHealth, string> = {
+  HEALTHY: 'bg-deployed-bg text-deployed-ink',
+  WARNING: 'bg-review-bg text-review-ink',
+  ERROR: 'bg-danger-bg text-danger-ink',
 }
 
 const SPAN: Record<WidgetSize, string> = {
@@ -244,6 +268,71 @@ function DashboardPage() {
         action={{ label: '검증 결과', onClick: goResults }}
       >
         <ErrorBarChart data={scaledErrors} />
+      </ChartCard>
+    ),
+    system: (
+      <ChartCard
+        title="시스템 현황"
+        subtitle="서버 리소스 · 30초마다 갱신 (Mock)"
+        action={{ label: '시스템 알림' }}
+      >
+        <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
+          {serverResources.map((s) => (
+            <div key={s.name} className="flex items-center gap-3">
+              <span className="w-16 shrink-0 font-mono text-xs font-semibold text-ink">{s.name}</span>
+              <Meter label="CPU" pct={s.cpu} />
+              <Meter label="MEM" pct={s.mem} />
+              <Meter label="DISK" pct={s.disk} />
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${HEALTH_CLS[s.health]}`}>
+                {s.health}
+              </span>
+            </div>
+          ))}
+        </div>
+      </ChartCard>
+    ),
+    pipeline: (
+      <ChartCard title="데이터 파이프라인" subtitle="CDO 수신 · 마트 적재 배치" action={{ label: '검증 결과', onClick: goResults }}>
+        <ol className="space-y-2">
+          {pipelines.map((p) => (
+            <li key={p.name} className="flex items-center gap-2.5 text-[13px]">
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                  p.status === '성공'
+                    ? 'bg-deployed-bg text-deployed-ink'
+                    : p.status === '실행중'
+                      ? 'bg-draft-bg text-draft-ink'
+                      : 'bg-danger-bg text-danger-ink'
+                }`}
+              >
+                {p.status === '성공' ? '✓' : p.status === '실행중' ? '↻' : '✕'}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-ink">{p.name}</span>
+                <span className="block text-xs tabular-nums text-ink-subtle">
+                  마지막: {p.last}
+                  {p.duration ? ` (${p.duration})` : ''}
+                </span>
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  p.status === '성공'
+                    ? 'bg-deployed-bg text-deployed-ink'
+                    : p.status === '실행중'
+                      ? 'bg-draft-bg text-draft-ink'
+                      : 'bg-danger-bg text-danger-ink'
+                }`}
+              >
+                {p.status}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </ChartCard>
+    ),
+    members: (
+      <ChartCard title="권한별 회원 분포" subtitle="전체 66명 기준" action={{ label: '회원 관리' }}>
+        <StatusStackBar data={memberRoles} />
       </ChartCard>
     ),
     activity: (

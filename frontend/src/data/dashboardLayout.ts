@@ -17,6 +17,9 @@ export type WidgetId =
   | 'queue'
   | 'errors'
   | 'activity'
+  | 'system'
+  | 'pipeline'
+  | 'members'
 
 export type WidgetSize = 1 | 2 | 3
 
@@ -37,6 +40,9 @@ export const WIDGET_META: Record<
   queue: { title: '승인 대기 큐', feature: 'approval.read', defaultSize: 1 },
   errors: { title: '오류 유형별 검출', feature: 'validation.errors', defaultSize: 2 },
   activity: { title: '최근 활동', feature: 'activity.read', defaultSize: 1 },
+  system: { title: '시스템 현황', feature: 'monitoring.read', defaultSize: 2 },
+  pipeline: { title: '데이터 파이프라인', feature: 'pipeline.read', defaultSize: 1 },
+  members: { title: '권한별 회원 분포', feature: 'member.read', defaultSize: 1 },
 }
 
 /** 파생 순서의 정본 — 역할과 무관하게 같은 위젯은 같은 자리 감각을 유지한다 */
@@ -48,6 +54,9 @@ const CANONICAL_ORDER: Array<WidgetId> = [
   'queue',
   'errors',
   'activity',
+  'system',
+  'pipeline',
+  'members',
 ]
 
 interface RoleDef {
@@ -73,6 +82,9 @@ const ROLE_DEFS: Array<RoleDef> = [
       'approval.read',
       'validation.errors',
       'activity.read',
+      'monitoring.read',
+      'pipeline.read',
+      'member.read',
     ],
     emphasis: [],
   },
@@ -87,7 +99,14 @@ const ROLE_DEFS: Array<RoleDef> = [
     key: 'engineer',
     label: '검증 엔지니어',
     desc: '처리량·오류 중심',
-    features: ['dashboard.read', 'validation.stats', 'validation.errors', 'validation.history'],
+    features: [
+      'dashboard.read',
+      'validation.stats',
+      'validation.errors',
+      'validation.history',
+      'monitoring.read',
+      'pipeline.read',
+    ],
     emphasis: ['validation.stats', 'validation.history'],
   },
   {

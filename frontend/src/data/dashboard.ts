@@ -68,6 +68,46 @@ export const approvalQueue = [
   { id: 'SP-004', name: '차체 구조 안전 기준서', version: 'v4.0', owner: '최수진', waitingDays: 1 },
 ]
 
+/** 서버 리소스 현황 — 모니터링은 웹 내부 통합이 요구사항이다 (컨텍스트 §2) */
+export type ServerHealth = 'HEALTHY' | 'WARNING' | 'ERROR'
+
+export const serverResources: Array<{
+  name: string
+  health: ServerHealth
+  cpu: number
+  mem: number
+  disk: number
+}> = [
+  { name: 'WEB-01', health: 'HEALTHY', cpu: 42, mem: 58, disk: 71 },
+  { name: 'WEB-02', health: 'HEALTHY', cpu: 38, mem: 54, disk: 69 },
+  { name: 'WAS-01', health: 'WARNING', cpu: 67, mem: 76, disk: 55 },
+  { name: 'WAS-02', health: 'HEALTHY', cpu: 59, mem: 72, disk: 53 },
+  { name: 'DB-01', health: 'WARNING', cpu: 31, mem: 84, disk: 78 },
+  { name: 'DB-02', health: 'HEALTHY', cpu: 28, mem: 81, disk: 76 },
+]
+
+/** 데이터 파이프라인(배치) 현황 — CDO 수신·마트 적재 */
+export const pipelines: Array<{
+  name: string
+  status: '성공' | '실행중' | '실패'
+  last: string
+  duration: string | null
+}> = [
+  { name: 'CDO 수집 배치 (Kafka)', status: '성공', last: '오늘 02:00', duration: '48m 12s' },
+  { name: 'L1 마트 전처리 배치', status: '성공', last: '오늘 03:00', duration: '32m 05s' },
+  { name: 'L3 마트 분석 배치 (주간)', status: '성공', last: '08.04 04:00', duration: '1h 22m' },
+  { name: '검증 결과 집계 배치', status: '실행중', last: '지금', duration: null },
+  { name: 'KPI 집계 배치', status: '실패', last: '오늘 05:10', duration: '2m 41s' },
+]
+
+/** 권한별 회원 분포 — 구성비는 막대로 (fill 토큰 = CVD 검증 통과값) */
+export const memberRoles = [
+  { label: 'Super Admin', value: 2, fill: 'var(--color-fill-draft)' },
+  { label: 'Admin', value: 5, fill: 'var(--color-fill-review)' },
+  { label: 'Editor', value: 18, fill: 'var(--color-fill-pending)' },
+  { label: 'Viewer', value: 41, fill: 'var(--color-fill-deployed)' },
+]
+
 export type ActivityKind = 'approve' | 'review' | 'validate' | 'deploy'
 
 export const recentActivity: Array<{

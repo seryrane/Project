@@ -2,13 +2,24 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
-import { ChartCard, StatTile, TrendLineChart } from '#/components/portal/charts'
+import {
+  ChartCard,
+  MultiLineChart,
+  StatTile,
+  TimeHeatmap,
+  TrendLineChart,
+} from '#/components/portal/charts'
 import {
   analyticsSparks,
+  approvalTimeHeat,
   kpiMonthlyActual,
   kpiMonthlyTarget,
+  monthlyDeploys,
   orgAttainment,
+  qualityMetrics,
+  todayPerformance,
   underperforming,
+  weeklyApprovals,
 } from '#/data/analytics'
 
 export const Route = createFileRoute('/analytics')({ component: AnalyticsPage })
@@ -151,6 +162,89 @@ function AnalyticsPage() {
           className="anim-fade-up [animation-delay:200ms] xl:col-span-3"
         >
           <AttainmentBars />
+        </ChartCard>
+
+        {/* ---- 운영 통계 (IDMS 운영 현황) ---- */}
+        <ChartCard
+          title="주차별 승인 처리 현황"
+          subtitle="최근 5주 · 단위: 건"
+          className="anim-fade-up [animation-delay:260ms] xl:col-span-2"
+        >
+          <MultiLineChart
+            unit="건"
+            series={[
+              { name: '요청', color: 'var(--color-fill-draft)', data: weeklyApprovals.요청 },
+              { name: '승인', color: 'var(--color-fill-deployed)', data: weeklyApprovals.승인 },
+              { name: '반려', color: 'var(--color-fill-review)', data: weeklyApprovals.반려 },
+            ]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="사양서 품질 지표"
+          subtitle="6개 축 · 100점 만점"
+          className="anim-fade-up [animation-delay:320ms]"
+        >
+          <div className="space-y-2">
+            {qualityMetrics.map((q) => (
+              <div key={q.label} className="grid grid-cols-[110px_1fr_auto] items-center gap-3">
+                <span className="truncate text-xs text-ink-muted">{q.label}</span>
+                <span className="h-2 overflow-hidden rounded-full bg-chip">
+                  <span
+                    className="block h-full rounded-full"
+                    style={{
+                      width: `${q.value}%`,
+                      backgroundColor: q.value >= 85 ? 'var(--color-fill-deployed)' : 'var(--color-fill-pending)',
+                    }}
+                  />
+                </span>
+                <span className="w-8 text-right text-xs font-semibold tabular-nums text-ink">{q.value}</span>
+              </div>
+            ))}
+            <p className="pt-1 text-[11px] text-ink-subtle">초록 = 85점 이상 · 보라 = 개선 여지</p>
+          </div>
+        </ChartCard>
+
+        <ChartCard
+          title="오늘 시스템 성능"
+          subtitle="응답시간 (ms) · 08~15시"
+          className="anim-fade-up [animation-delay:380ms] xl:col-span-2"
+        >
+          <MultiLineChart
+            unit="ms"
+            series={[
+              { name: 'API 서버', color: 'var(--color-fill-draft)', data: todayPerformance.api },
+              { name: 'DB', color: 'var(--color-fill-review)', data: todayPerformance.db },
+              { name: '파일 스토리지', color: 'var(--color-fill-deployed)', data: todayPerformance.storage },
+            ]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="월별 배포 이력"
+          subtitle="최근 5개월 · 단위: 회"
+          className="anim-fade-up [animation-delay:440ms]"
+        >
+          <MultiLineChart
+            unit="회"
+            series={[
+              { name: '운영 배포', color: 'var(--color-fill-draft)', data: monthlyDeploys.운영 },
+              { name: '스테이징', color: 'var(--color-fill-deployed)', data: monthlyDeploys.스테이징 },
+              { name: '롤백', color: 'var(--color-fill-review)', data: monthlyDeploys.롤백 },
+            ]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="요일별 승인 처리 시간 분포"
+          subtitle="최근 4주 평균 · 짙을수록 많음"
+          className="anim-fade-up [animation-delay:500ms] xl:col-span-3"
+        >
+          <TimeHeatmap
+            rows={approvalTimeHeat.rows}
+            cols={approvalTimeHeat.cols}
+            values={approvalTimeHeat.values}
+          />
         </ChartCard>
       </div>
     </AppShell>
