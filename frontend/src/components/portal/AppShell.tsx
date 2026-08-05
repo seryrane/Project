@@ -54,17 +54,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           type="button"
           aria-label="메뉴 닫기"
           onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-30 bg-[rgb(16_24_40/55%)] pc:hidden"
+          className="fixed inset-0 z-30 bg-black/65 pc:hidden"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-ink transition-transform duration-200 pc:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-white/5 bg-sidebar text-sidebar-ink transition-transform duration-200 pc:translate-x-0 ${
           navOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#b18cff] text-sm font-bold text-white shadow-[0_4px_16px_rgb(139_124_255/40%)]">
             H
           </span>
           <div className="leading-tight">
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {nav.map((section, i) => (
             <div key={i} className="mt-3 first:mt-0">
               {section.title && (
-                <div className="px-2 pb-1.5 pt-2 text-[11px] font-semibold tracking-wide text-sidebar-ink/50">
+                <div className="px-2 pb-1.5 pt-2 text-[11px] font-semibold tracking-wide text-sidebar-ink/40">
                   {section.title}
                 </div>
               )}
@@ -85,17 +85,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={item.label}
                   type="button"
                   onClick={() => setNavOpen(false)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
+                  className={`mb-0.5 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
                     item.active
-                      ? 'bg-primary font-semibold text-white'
-                      : 'text-sidebar-ink hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-primary to-[#a08cff] font-semibold text-white shadow-[0_4px_18px_rgb(139_124_255/35%)]'
+                      : 'text-sidebar-ink hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <span>{item.label}</span>
                   {item.badge != null && (
                     <span
                       className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
-                        item.active ? 'bg-white/25 text-white' : 'bg-primary text-white'
+                        item.active ? 'bg-white/25 text-white' : 'bg-primary/25 text-primary'
                       }`}
                     >
                       {item.badge}
@@ -106,20 +106,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           ))}
         </nav>
-        <div className="border-t border-white/10 px-5 py-4 text-[11px] text-sidebar-ink/50">
-          프로토타입 v0.1 · 디자인 검토용
+        <div className="border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/40">
+          프로토타입 v0.2 · 디자인 검토용
         </div>
       </aside>
 
       <div className="flex min-h-dvh flex-1 flex-col pc:ml-60">
         {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8) */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-surface px-4 pc:px-8">
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md pc:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               aria-label="메뉴 열기"
               onClick={() => setNavOpen(true)}
-              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-canvas pc:hidden"
+              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-white/5 pc:hidden"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
@@ -140,7 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex shrink-0 items-center gap-3 pc:gap-4">
             <input
               placeholder="전체 검색..."
-              className="hidden h-9 w-56 rounded-lg border border-hairline bg-canvas px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:block"
+              className="hidden h-9 w-56 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:block"
             />
             <span className="relative text-ink-muted">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -163,8 +163,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 pc:px-8 pc:py-8">
-          {children}
+        <main className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-6 pc:px-8 pc:py-8">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 right-16 h-80 w-80 rounded-full bg-primary/15 blur-[140px]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-96 -left-20 h-72 w-72 rounded-full bg-[#5a8bff]/10 blur-[140px]"
+          />
+          <div className="relative">{children}</div>
         </main>
       </div>
     </div>

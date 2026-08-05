@@ -51,7 +51,7 @@ function SpecsPage() {
         </div>
         <button
           type="button"
-          className="h-9 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white transition-colors hover:bg-primary-deep"
+          className="h-9 rounded-lg bg-gradient-to-r from-primary to-[#a08cff] px-4 text-[13px] font-semibold text-white shadow-[0_4px_18px_rgb(139_124_255/35%)] transition-opacity hover:opacity-90"
         >
           + 사양서 등록
         </button>

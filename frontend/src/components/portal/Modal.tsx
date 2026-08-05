@@ -33,11 +33,11 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(16_24_40/55%)] pc:items-center pc:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 backdrop-blur-sm pc:items-center pc:p-6"
       onClick={onClose}
     >
       <div
-        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-xl bg-surface shadow-[0_20px_48px_rgb(16_24_40/24%)] pc:max-h-[85vh] pc:rounded-xl ${
+        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-2xl border border-white/8 bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] pc:max-h-[85vh] pc:rounded-2xl ${
           wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
         }`}
         onClick={(e) => e.stopPropagation()}
