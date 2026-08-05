@@ -5,7 +5,7 @@
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -40,7 +40,7 @@ def toggle_lock(mid: str) -> dict[str, Any]:
 # ── 감사 로그 ────────────────────────────────────────────────────────
 def add_audit(entry: dict[str, Any]) -> None:
     record = {
-        "at": datetime.now().strftime("%Y.%m.%d %H:%M"),
+        "at": datetime.now(UTC).strftime("%Y.%m.%d %H:%M"),
         "user": ME["name"],
         **entry,
     }

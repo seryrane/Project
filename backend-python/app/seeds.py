@@ -4,7 +4,7 @@
 (acrofuture RoleBootstrap 의 규칙 그대로 — docs/RBAC_설계노트.md 4절).
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app import db
 
@@ -303,7 +303,7 @@ WHATSNEW = [
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def seed_if_empty() -> None:

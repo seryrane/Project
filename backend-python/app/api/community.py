@@ -5,7 +5,7 @@ Super Admin 고정이라 검사할 대상이 없다(검사 자리만 주석으�
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 def today() -> str:
-    return datetime.now().strftime("%Y.%m.%d")
+    return datetime.now(UTC).strftime("%Y.%m.%d")
 
 
 # ── 공지 ────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ def create_notice(body: dict[str, Any]) -> dict[str, Any]:
             raise HTTPException(status_code=400, detail="제목을 입력해 주세요.")
         conn.execute(
             "INSERT INTO notices(id, json, created_at) VALUES(?,?,?)",
-            (notice["id"], json.dumps(notice, ensure_ascii=False), datetime.now().isoformat()),
+            (notice["id"], json.dumps(notice, ensure_ascii=False), datetime.now(UTC).isoformat()),
         )
     return notice
 
@@ -77,7 +77,7 @@ def create_question(body: dict[str, Any]) -> dict[str, Any]:
             raise HTTPException(status_code=400, detail="제목을 입력해 주세요.")
         conn.execute(
             "INSERT INTO questions(id, json, created_at) VALUES(?,?,?)",
-            (question["id"], json.dumps(question, ensure_ascii=False), datetime.now().isoformat()),
+            (question["id"], json.dumps(question, ensure_ascii=False), datetime.now(UTC).isoformat()),
         )
     return question
 
