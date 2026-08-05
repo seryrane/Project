@@ -191,7 +191,7 @@ const nav: Array<NavSection> = [
     id: 'admin',
     title: '관리',
     items: [
-      { key: 'members', label: '회원 관리', icon: 'users' },
+      { key: 'members', label: '회원 관리', icon: 'users', to: '/members' },
       { key: 'roles', label: '권한 관리', icon: 'shield' },
       { key: 'menus', label: '메뉴 관리', icon: 'menu' },
     ],

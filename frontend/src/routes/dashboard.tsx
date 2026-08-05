@@ -331,7 +331,11 @@ function DashboardPage() {
       </ChartCard>
     ),
     members: (
-      <ChartCard title="권한별 회원 분포" subtitle="전체 66명 기준" action={{ label: '회원 관리' }}>
+      <ChartCard
+        title="권한별 회원 분포"
+        subtitle="전체 66명 기준"
+        action={{ label: '회원 관리', onClick: () => navigate({ to: '/members' }) }}
+      >
         <StatusStackBar data={memberRoles} />
       </ChartCard>
     ),

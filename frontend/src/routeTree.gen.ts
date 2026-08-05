@@ -14,6 +14,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
+import { Route as MembersRouteImport } from './routes/members'
 import { Route as SpecsRouteImport } from './routes/specs'
 import { Route as ValidationEngineRouteImport } from './routes/validation-engine'
 import { Route as ValidationReportsRouteImport } from './routes/validation-reports'
@@ -43,6 +44,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const DeploysRoute = DeploysRouteImport.update({
   id: '/deploys',
   path: '/deploys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersRoute = MembersRouteImport.update({
+  id: '/members',
+  path: '/members',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpecsRoute = SpecsRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/members': typeof MembersRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/members': typeof MembersRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
+  '/members': typeof MembersRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/members'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/members'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/dashboard'
     | '/deploys'
+    | '/members'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   DashboardRoute: typeof DashboardRoute
   DeploysRoute: typeof DeploysRoute
+  MembersRoute: typeof MembersRoute
   SpecsRoute: typeof SpecsRoute
   ValidationEngineRoute: typeof ValidationEngineRoute
   ValidationReportsRoute: typeof ValidationReportsRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/deploys'
       fullPath: '/deploys'
       preLoaderRoute: typeof DeploysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members': {
+      id: '/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof MembersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/specs': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   DashboardRoute: DashboardRoute,
   DeploysRoute: DeploysRoute,
+  MembersRoute: MembersRoute,
   SpecsRoute: SpecsRoute,
   ValidationEngineRoute: ValidationEngineRoute,
   ValidationReportsRoute: ValidationReportsRoute,
