@@ -6,7 +6,7 @@
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -54,7 +54,7 @@ def submit(body: dict[str, Any]) -> dict[str, Any]:
             (
                 kind,
                 json.dumps({"by": ME["name"], **body}, ensure_ascii=False),
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
             ),
         )
         seq = cursor.lastrowid
