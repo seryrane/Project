@@ -24,12 +24,16 @@ export function Drawer({
       if (e.key === 'Escape') close()
     }
     window.addEventListener('keydown', onKey)
-    // 규약 §7: 덮개가 열려 있는 동안 뒤 화면 스크롤을 잠근다
-    const prev = document.body.style.overflow
+    // 규약 §7: 덮개가 열려 있는 동안 뒤 화면 스크롤을 잠근다 (스크롤바가 html 에
+    // 붙어 있으므로 html 까지 — body 만 잠그면 12px 트랙이 남는다)
+    const prevBody = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      document.body.style.overflow = prevBody
+      document.documentElement.style.overflow = prevHtml
     }
   }, [close])
 

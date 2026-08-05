@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Select } from '#/components/portal/Select'
 import { SpecCard } from '#/components/portal/SpecCard'
-import { SpecDetailModal } from '#/components/portal/SpecDetailModal'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { currentVersion, specs } from '#/data/specs'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
@@ -21,18 +20,18 @@ const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기',
 
 function SpecsPage() {
   const { open } = Route.useSearch()
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('전체 카테고리')
   const [status, setStatus] = useState('전체 상태')
-  const [detail, setDetail] = useState<Spec | null>(null)
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
 
-  // ?open=SP-001 로 들어오면 그 사양서 상세를 바로 연다 (대시보드 승인 큐 → 여기)
+  // ?open=SP-001 은 상세 본문 페이지로 보낸다 (대시보드 승인 큐·알림 → 여기 → 상세)
   useEffect(() => {
     if (!open) return
     const target = specs.find((s) => s.id === open)
-    if (target) setDetail(target)
-  }, [open])
+    if (target) navigate({ to: '/specs/$specId', params: { specId: target.id }, replace: true })
+  }, [open, navigate])
 
   const categories = useMemo(() => Array.from(new Set(specs.map((s) => s.category))), [])
 
@@ -124,7 +123,7 @@ function SpecsPage() {
             key={spec.id}
             spec={spec}
             index={i}
-            onDetail={() => setDetail(spec)}
+            onDetail={() => navigate({ to: '/specs/$specId', params: { specId: spec.id } })}
             onCompare={() => openCompare(spec)}
           />
         ))}
@@ -135,16 +134,6 @@ function SpecsPage() {
         </div>
       )}
 
-      {detail && (
-        <SpecDetailModal
-          spec={detail}
-          onClose={() => setDetail(null)}
-          onCompareWith={(base) => {
-            setCompare({ spec: detail, base })
-            setDetail(null)
-          }}
-        />
-      )}
       {compare && (
         <VersionCompareModal
           spec={compare.spec}

@@ -14,6 +14,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SpecsRouteImport } from './routes/specs'
+import { Route as SpecsSpecIdRouteImport } from './routes/specs_.$specId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const SpecsRoute = SpecsRouteImport.update({
   path: '/specs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpecsSpecIdRoute = SpecsSpecIdRouteImport.update({
+  id: '/specs_/$specId',
+  path: '/specs/$specId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/specs': typeof SpecsRoute
+  '/specs/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/specs': typeof SpecsRoute
+  '/specs/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/specs': typeof SpecsRoute
+  '/specs_/$specId': typeof SpecsSpecIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analytics' | '/approvals' | '/dashboard' | '/specs'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/approvals'
+    | '/dashboard'
+    | '/specs'
+    | '/specs/$specId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/approvals' | '/dashboard' | '/specs'
-  id: '__root__' | '/' | '/analytics' | '/approvals' | '/dashboard' | '/specs'
+  to:
+    | '/'
+    | '/analytics'
+    | '/approvals'
+    | '/dashboard'
+    | '/specs'
+    | '/specs/$specId'
+  id:
+    | '__root__'
+    | '/'
+    | '/analytics'
+    | '/approvals'
+    | '/dashboard'
+    | '/specs'
+    | '/specs_/$specId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   DashboardRoute: typeof DashboardRoute
   SpecsRoute: typeof SpecsRoute
+  SpecsSpecIdRoute: typeof SpecsSpecIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpecsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/specs_/$specId': {
+      id: '/specs_/$specId'
+      path: '/specs/$specId'
+      fullPath: '/specs/$specId'
+      preLoaderRoute: typeof SpecsSpecIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   DashboardRoute: DashboardRoute,
   SpecsRoute: SpecsRoute,
+  SpecsSpecIdRoute: SpecsSpecIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

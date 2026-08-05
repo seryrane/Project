@@ -30,12 +30,17 @@ export function Modal({
       if (e.key === 'Escape') close()
     }
     document.addEventListener('keydown', onKey)
-    // 뒤 화면 잠금 — overscroll 만으로는 안 구르는 자리(배경막·머리)를 잡고 끌 때 뒤가 구른다
-    const prev = document.body.style.overflow
+    // 뒤 화면 잠금 — overscroll 만으로는 안 구르는 자리(배경막·머리)를 잡고 끌 때 뒤가 구른다.
+    // ⚠ 스크롤바는 html 에 붙어 있어서 body 만 잠그면 12px 트랙이 남아 시트가 화면 폭에
+    // 못 미친다(모바일 스모크가 실측으로 잡음) — html 까지 함께 잠근다
+    const prevBody = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      document.body.style.overflow = prevBody
+      document.documentElement.style.overflow = prevHtml
     }
   }, [close])
 

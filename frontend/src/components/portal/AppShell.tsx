@@ -416,7 +416,8 @@ function Shell({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4">
+        {/* 스크롤바는 숨기고, 아래에 더 있다는 신호는 하단 페이드가 말한다 */}
+        <nav className="scrollbar-hidden relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)]">
           {nav.map((section) => {
             const isCollapsed = collapsed[section.id]
             return (
