@@ -4,24 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`geocoder` is a small Node.js library that wraps geocoding web services (Google Geocoding API by default, with GeoNames and Yahoo PlaceFinder as alternative providers). It exposes a singleton with three public methods: `geocode(loc, cbk, opts)`, `reverseGeocode(lat, lng, cbk, opts)`, and `selectProvider(name, opts)`. All providers normalize their responses to roughly match Google's Geocoding JSON output format.
+Monolithic full-stack project with two apps in one repository:
 
-## Architecture
+- `frontend/` — React 19 + TanStack Start (file-based routing via TanStack Router), Vite 8, TypeScript, Tailwind CSS 4. Scaffolded with `@tanstack/cli`.
+- `backend/` — Spring Boot 4.1 on Java 21, built with Gradle 9 (wrapper committed). Spring MVC (`spring-boot-starter-webmvc` — note: Boot 4 deprecated `spring-boot-starter-web`), Spring Data JPA with in-memory H2, Bean Validation, Actuator.
 
-- `index.js` — the `Geocoder` singleton. `selectProvider(name)` does `require("./providers/" + name)` and delegates `geocode`/`reverseGeocode` calls to that module.
-- `providers/google.js` — Google Geocoding API. Uses HTTPS when a `key` option is passed, plain HTTP otherwise.
-- `providers/geonames.js` — GeoNames API; transforms its XML/JSON responses into Google-shaped JSON. Requires `xml2js` (an optional dependency, only needed for this provider).
-- `providers/yahoo.js` — Yahoo PlaceFinder; also transforms responses into Google-shaped JSON.
-
-Adding a provider means dropping a module into `providers/` that exports `geocode(providerOpts, loc, cbk, opts)` and `reverseGeocode(providerOpts, lat, lng, cbk, opts)`.
+The frontend dev server (port 3000) proxies `/api/*` to the backend (port 8080) — see `frontend/vite.config.ts`. All backend REST endpoints live under the `/api` prefix (`backend/src/main/java/com/example/backend/api/`).
 
 ## Commands
 
-- `npm install` — install dependencies.
-- `npm test` — offline smoke test (`test/smoke-test.js`); verifies the module and all providers load and expose the public API. This is what CI runs.
-- `npm run test:live` — nodeunit suites in `test/` that hit the real provider APIs. These need network access and valid API credentials (Google now requires an API key; Yahoo PlaceFinder has been discontinued), so expect failures without them.
+Frontend (run from `frontend/`):
+- `npm install` — install dependencies
+- `npm run dev` — dev server on port 3000
+- `npm run build` — production build
+- `npm run lint` — ESLint
+- `npm run check` / `npm run format` — Prettier check / write
+- `npm run generate-routes` — regenerate `src/routeTree.gen.ts` after adding routes (the Vite plugin also does this automatically during dev)
 
-## Caveats
+Backend (run from `backend/`):
+- `./gradlew build` — compile + tests
+- `./gradlew test` — tests only
+- `./gradlew bootRun` — run the app on port 8080
 
-- The codebase predates modern JavaScript: callback-style APIs, `var`, and the deprecated `request` and old `underscore`/`xml2js` versions are intentional — keep changes consistent with that style unless the task is explicitly a modernization.
-- `index.js` exports a singleton, so `selectProvider` mutates shared state across all requirers.
+## Conventions
+
+- Backend dependency versions come from the `spring-boot-dependencies` platform BOM declared in `backend/build.gradle`; the BOM must be applied to each configuration that needs it (it is applied to both `implementation` and `developmentOnly`).
+- New backend REST controllers go in the `com.example.backend.api` package under the `/api` path prefix so the dev proxy picks them up.
+- Frontend routes are file-based under `frontend/src/routes/`; `src/routeTree.gen.ts` is generated — never edit it by hand.
+- H2 is dev-only; `spring.jpa.hibernate.ddl-auto=update` is a local convenience and a real database/migration story is still to be decided.

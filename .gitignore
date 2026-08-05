@@ -1,4 +1,16 @@
-.*.sw*
-node_modules
-scrap.js
-npm-debug.log*
+# Backend (Gradle / Spring Boot)
+backend/build/
+backend/.gradle/
+backend/bin/
+backend/out/
+
+# IDE
+.idea/
+*.iml
+.vscode/settings.json
+
+# OS
+.DS_Store
+
+# Logs
+*.log
