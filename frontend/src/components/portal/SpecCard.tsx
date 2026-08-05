@@ -18,7 +18,9 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
   return (
     <article
       style={{ animationDelay: `${index * 70}ms` }}
-      className="anim-fade-up flex flex-col rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
+      onClick={onDetail}
+      // 카드 전체가 상세로 가는 문이다 — 누를 수 있으면 커서로 말한다 (규약 §9)
+      className="anim-fade-up flex cursor-pointer flex-col rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">
@@ -73,7 +75,10 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
           </button>
           <button
             type="button"
-            onClick={onCompare}
+            onClick={(e) => {
+              e.stopPropagation()
+              onCompare()
+            }}
             className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
             버전 비교
@@ -81,7 +86,10 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
           {needsApproval && (
             <button
               type="button"
-              onClick={() => toast(`${spec.name} 승인 요청이 전송되었습니다`)}
+              onClick={(e) => {
+                e.stopPropagation()
+                toast(`${spec.name} 승인 요청이 전송되었습니다`)
+              }}
               className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-[opacity,transform] hover:opacity-90 active:scale-95"
             >
               승인 요청

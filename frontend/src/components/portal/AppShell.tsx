@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
@@ -201,7 +201,7 @@ const nav: Array<NavSection> = [
     title: '사양 (IDMS)',
     items: [
       { key: 'specs', label: '사양서 관리', icon: 'doc', to: '/specs' },
-      { key: 'approvals', label: '승인 관리', icon: 'approve', badge: 1 },
+      { key: 'approvals', label: '승인 관리', icon: 'approve', badge: 3, to: '/approvals' },
       { key: 'deploys', label: '배포 관리', icon: 'deploy' },
     ],
   },
@@ -304,12 +304,20 @@ function NavRow({
   )
 }
 
-/* GNB 알림 — 나를 기다리는 일은 종 하나에 모인다 (규약 §2). 배지 숫자는 "안 본 것" */
-const NOTIFICATIONS = [
-  { icon: 'approve' as IconName, text: 'VN7 엔진 사양서 v2.3 승인 요청', time: '10분 전', todo: true },
-  { icon: 'engine' as IconName, text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true },
-  { icon: 'message' as IconName, text: '전기차 배터리 규격서에 검토 의견이 달렸습니다', time: '42분 전', todo: false },
-  { icon: 'deploy' as IconName, text: '자율주행 센서 통합 규격 v3.1 배포 완료', time: '3시간 전', todo: false },
+/* GNB 알림 — 나를 기다리는 일은 종 하나에 모인다 (규약 §2). 배지 숫자는 "안 본 것".
+   누르면 그 일이 있는 화면으로 간다 — 눌렀는데 아무 데도 안 가는 알림이 제일 나쁘다 */
+const NOTIFICATIONS: Array<{
+  icon: IconName
+  text: string
+  time: string
+  todo: boolean
+  to: string
+  search?: Record<string, string>
+}> = [
+  { icon: 'approve', text: 'VN7 엔진 사양서 v2.3 승인 요청', time: '10분 전', todo: true, to: '/approvals' },
+  { icon: 'engine', text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true, to: '/dashboard' },
+  { icon: 'message', text: '전기차 배터리 규격서에 검토 의견이 달렸습니다', time: '42분 전', todo: false, to: '/specs', search: { open: 'SP-002' } },
+  { icon: 'deploy', text: '자율주행 센서 통합 규격 v3.1 배포 완료', time: '3시간 전', todo: false, to: '/specs', search: { open: 'SP-003' } },
 ]
 
 function Shell({
@@ -323,6 +331,7 @@ function Shell({
 }) {
   const { theme, toggle } = useTheme()
   const toast = useToast()
+  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   // 좁은 화면(<720px)에서 사이드바는 본문을 덮는 서랍이다 — 규약 §8.
   const [navOpen, setNavOpen] = useState(false)
@@ -617,7 +626,10 @@ function Shell({
                   <li key={n.text}>
                     <button
                       type="button"
-                      onClick={() => setMenu(null)}
+                      onClick={() => {
+                        setMenu(null)
+                        navigate({ to: n.to, search: n.search })
+                      }}
                       className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-chip"
                     >
                       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">

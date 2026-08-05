@@ -115,6 +115,9 @@ function DashboardPage() {
   // 위젯 배치 — 처음엔 관리자 프리셋, 이후엔 저장된 내 배치 (즉시 저장)
   const [layout, setLayout] = useState<Array<WidgetSlot>>(ROLE_PRESETS[0].layout)
   const [editing, setEditing] = useState(false)
+  // 드래그 이동(데스크톱) — 좁은 화면·키보드는 ◀▶ 버튼이 같은 일을 한다
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [dropIdx, setDropIdx] = useState<number | null>(null)
   useEffect(() => {
     setLayout(loadLayout())
   }, [])
@@ -317,8 +320,9 @@ function DashboardPage() {
             ))}
           </div>
           <p className="mt-2 text-xs text-ink-subtle">
-            프리셋은 추천 구성입니다 — 적용 후 카드의 ◀ ▶(위치)·칸수(크기)·✕(숨김)으로 자유롭게
-            고치세요. 바꾸는 즉시 저장됩니다.
+            프리셋은 역할의 기능(RBAC)에서 파생된 추천 구성입니다 — 역할에 기능이 더해지거나
+            빠지면 프리셋도 따라 바뀝니다. 적용 후 카드를 <b>끌어다 놓거나</b> ◀ ▶(위치)·칸수(크기)·
+            ✕(숨김)으로 자유롭게 고치세요. 바꾸는 즉시 저장됩니다.
           </p>
           {hiddenWidgets.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
@@ -342,9 +346,36 @@ function DashboardPage() {
         {layout.map((slot, idx) => (
           <div
             key={slot.id}
+            draggable={editing}
+            onDragStart={() => setDragIdx(idx)}
+            onDragEnd={() => {
+              setDragIdx(null)
+              setDropIdx(null)
+            }}
+            onDragOver={(e) => {
+              if (dragIdx == null) return
+              e.preventDefault()
+              setDropIdx(idx)
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              if (dragIdx == null || dragIdx === idx) return
+              const next = [...layout]
+              const [moved] = next.splice(dragIdx, 1)
+              next.splice(idx, 0, moved)
+              apply(next)
+              setDragIdx(null)
+              setDropIdx(null)
+            }}
             className={`anim-fade-up relative ${SPAN[slot.size]} ${
-              editing ? 'rounded-2xl ring-2 ring-primary/35' : ''
-            }`}
+              editing ? 'cursor-grab rounded-2xl ring-2 active:cursor-grabbing' : ''
+            } ${
+              editing
+                ? dropIdx === idx && dragIdx !== idx
+                  ? 'ring-primary'
+                  : 'ring-primary/35'
+                : ''
+            } ${dragIdx === idx ? 'opacity-50' : ''}`}
             style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}
           >
             {editing && (
