@@ -9,6 +9,13 @@ import { expect, test } from '@playwright/test'
 
 const PAGES = ['/specs', '/dashboard']
 
+/** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이
+ *  되지 않게, 상호작용 전에는 네트워크가 잠잠해질 때까지(=수화 완료) 기다린다. */
+async function ready(page: import('@playwright/test').Page, path: string) {
+  await page.goto(path)
+  await page.waitForLoadState('networkidle')
+}
+
 for (const path of PAGES) {
   test(`${path} — 페이지가 가로로 넘치지 않는다`, async ({ page }) => {
     await page.goto(path)
@@ -21,7 +28,7 @@ for (const path of PAGES) {
 }
 
 test('서랍 — 열리고, 잎을 고르면 닫힌다 (가지는 그대로)', async ({ page }) => {
-  await page.goto('/specs')
+  await ready(page, '/specs')
   const aside = page.locator('aside')
 
   // 처음에는 접혀 있다 (본문을 가리면 안 된다)
@@ -41,7 +48,7 @@ test('서랍 — 열리고, 잎을 고르면 닫힌다 (가지는 그대로)', a
 })
 
 test('서랍 — 가림막을 누르면 닫힌다', async ({ page }) => {
-  await page.goto('/specs')
+  await ready(page, '/specs')
   await page.getByRole('button', { name: '메뉴 열기' }).click()
   await expect(page.locator('aside')).toBeInViewport()
   await page.getByRole('button', { name: '메뉴 닫기' }).click({ position: { x: 380, y: 400 } })
@@ -49,7 +56,7 @@ test('서랍 — 가림막을 누르면 닫힌다', async ({ page }) => {
 })
 
 test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) => {
-  await page.goto('/specs')
+  await ready(page, '/specs')
   await page.getByRole('button', { name: '상세 보기' }).first().click()
 
   const sheet = page.locator('.fixed.inset-0.z-50 > div')
@@ -67,7 +74,7 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
 })
 
 test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지 않는다', async ({ page }) => {
-  await page.goto('/specs')
+  await ready(page, '/specs')
   await page.waitForLoadState('networkidle')
   const tooSmall = await page.evaluate(() => {
     const bad: Array<string> = []
