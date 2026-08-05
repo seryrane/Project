@@ -132,7 +132,9 @@ function ValidationEnginePage() {
                     <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
                   </svg>
                 </span>
-                <button type="button" onClick={() => setExpanded(open ? null : e.id)} className="min-w-0 flex-1 text-left">
+                {/* basis 가 없으면 flex-wrap 줄에서 이 블록이 줄바꿈 대신 최소폭까지
+                    짓눌린다 — 한 글자 세로줄(실기기 실증). 좁으면 액션이 다음 줄로 간다 */}
+                <button type="button" onClick={() => setExpanded(open ? null : e.id)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold text-ink">{e.name}</span>
                     <span

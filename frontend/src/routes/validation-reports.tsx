@@ -60,7 +60,8 @@ function ValidationReportsPage() {
           return (
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
               <div className="card-hover flex flex-wrap items-center gap-3 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
-                <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 text-left">
+                {/* basis — flex-wrap 줄에서 제목 블록이 짓눌리는 대신 액션이 다음 줄로 */}
+                <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-semibold text-ink hover:text-primary">{r.title}</span>
                     <span
