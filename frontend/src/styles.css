@@ -6,29 +6,40 @@
     'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Segoe UI', sans-serif;
 
-  --color-canvas: #f6f7f9;
-  --color-surface: #ffffff;
-  --color-hairline: #e5e9f0;
-  --color-ink: #1a1f36;
-  --color-ink-muted: #4f566b;
-  --color-ink-subtle: #8792a2;
-  --color-primary: #635bff;
-  --color-primary-deep: #5148d6;
-  --color-sidebar: #101828;
-  --color-sidebar-ink: #cbd5e1;
+  --color-canvas: #0c0e15;
+  --color-surface: #141722;
+  --color-raised: #1a1e2c;
+  --color-hairline: #242938;
+  --color-ink: #eef0f6;
+  --color-ink-muted: #9aa1b5;
+  --color-ink-subtle: #676e84;
+  --color-primary: #8b7cff;
+  --color-primary-deep: #7463f2;
+  --color-sidebar: #090b11;
+  --color-sidebar-ink: #a7adc0;
 
-  --color-draft-bg: #eef1f5;
-  --color-draft-ink: #5b6472;
-  --color-review-bg: #fff3e0;
-  --color-review-ink: #9a5b00;
-  --color-pending-bg: #efeaff;
-  --color-pending-ink: #6440d4;
-  --color-deployed-bg: #e3f5ea;
-  --color-deployed-ink: #177245;
-  --color-danger-bg: #fdecec;
-  --color-danger-ink: #b3261e;
-  --color-added-bg: #e3f5ea;
-  --color-added-ink: #146c43;
+  --color-draft-bg: #232838;
+  --color-draft-ink: #a3aabf;
+  --color-review-bg: #322611;
+  --color-review-ink: #f2b65a;
+  --color-pending-bg: #262047;
+  --color-pending-ink: #b3a4ff;
+  --color-deployed-bg: #12301f;
+  --color-deployed-ink: #57dd92;
+  --color-danger-bg: #391b1f;
+  --color-danger-ink: #f78c95;
+  --color-added-bg: #123023;
+  --color-added-ink: #4fd38a;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
 }
 
 * {

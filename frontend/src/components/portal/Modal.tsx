@@ -11,11 +11,11 @@ export function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(16_24_40/55%)] p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className={`flex max-h-[85vh] w-full flex-col rounded-xl bg-surface shadow-[0_20px_48px_rgb(16_24_40/24%)] ${
+        className={`flex max-h-[85vh] w-full flex-col rounded-2xl border border-white/8 bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] ${
           wide ? 'max-w-4xl' : 'max-w-2xl'
         }`}
         onClick={(e) => e.stopPropagation()}
