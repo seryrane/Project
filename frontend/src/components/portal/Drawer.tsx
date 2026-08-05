@@ -24,7 +24,13 @@ export function Drawer({
       if (e.key === 'Escape') close()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // 규약 §7: 덮개가 열려 있는 동안 뒤 화면 스크롤을 잠근다
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
   }, [close])
 
   return (

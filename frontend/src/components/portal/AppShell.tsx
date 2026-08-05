@@ -222,7 +222,16 @@ function useTheme() {
   return { theme, toggle }
 }
 
-function NavRow({ item, active }: { item: NavItem; active: boolean }) {
+function NavRow({
+  item,
+  active,
+  onSelect,
+}: {
+  item: NavItem
+  active: boolean
+  // 잎(메뉴 항목)을 고르면 좁은 화면 서랍을 닫는다 — 규약 §8. 가지(섹션)는 그대로 둔다.
+  onSelect: () => void
+}) {
   const className = `mb-0.5 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
     active
       ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
@@ -238,7 +247,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
       </span>
       {item.badge != null && (
         <span
-          className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
+          className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
             active ? 'bg-white/25 text-white' : 'bg-primary/25 text-primary'
           }`}
         >
@@ -248,11 +257,11 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
     </>
   )
   return item.to ? (
-    <Link to={item.to} className={className}>
+    <Link to={item.to} className={className} onClick={onSelect}>
       {inner}
     </Link>
   ) : (
-    <button type="button" className={className}>
+    <button type="button" className={className} onClick={onSelect}>
       {inner}
     </button>
   )
@@ -269,6 +278,8 @@ export function AppShell({
 }) {
   const { theme, toggle } = useTheme()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  // 좁은 화면(<720px)에서 사이드바는 본문을 덮는 서랍이다 — 규약 §8.
+  const [navOpen, setNavOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => {
@@ -284,8 +295,22 @@ export function AppShell({
 
   return (
     <ToastProvider>
-    <div className="flex min-h-screen bg-canvas text-ink">
-      <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col border-r border-white/5 bg-sidebar text-sidebar-ink">
+    <div className="flex min-h-dvh bg-canvas text-ink">
+      {/* 서랍 가림막 — 좁은 화면에서 서랍이 열렸을 때만 */}
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-30 bg-black/65 pc:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-white/5 bg-sidebar text-sidebar-ink transition-transform duration-200 pc:translate-x-0 ${
+          navOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="flex items-center gap-2.5 px-5 py-5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white shadow-[0_2px_10px_var(--color-glow)]">
             H
@@ -295,7 +320,7 @@ export function AppShell({
             <div className="text-[11px] text-sidebar-ink/60">통합 관리자 포털</div>
           </div>
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+        <nav className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4">
           {nav.map((section) => {
             const isCollapsed = collapsed[section.id]
             return (
@@ -336,7 +361,12 @@ export function AppShell({
                     }`}
                   >
                     {section.items.map((item) => (
-                      <NavRow key={item.key} item={item} active={item.key === active} />
+                      <NavRow
+                        key={item.key}
+                        item={item}
+                        active={item.key === active}
+                        onSelect={() => setNavOpen(false)}
+                      />
                     ))}
                   </div>
                 </div>
@@ -349,17 +379,38 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="ml-60 flex min-h-screen flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-hairline bg-canvas/75 px-8 backdrop-blur-md">
-          <div className="text-[13px] text-ink-subtle">
-            HMG Admin <span className="mx-1.5">›</span>
-            <span className="font-medium text-ink">{title}</span>
+      <div className="flex min-h-dvh flex-1 flex-col pc:ml-60">
+        {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8) */}
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md pc:px-8">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label="메뉴 열기"
+              onClick={() => setNavOpen(true)}
+              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-white/5 pc:hidden"
+            >
+              <Icon name="menu" size={20} />
+            </button>
+            <div className="truncate text-[13px] text-ink-subtle">
+              <span className="hidden pc:inline">
+                HMG Admin <span className="mx-1.5">›</span>
+              </span>
+              <span className="font-medium text-ink">{title}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-3 pc:gap-4">
+            <button
+              type="button"
+              aria-label="검색"
+              onClick={() => setPaletteOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink pc:hidden"
+            >
+              <Icon name="search" size={16} />
+            </button>
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="flex h-9 w-56 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted"
+              className="hidden h-9 w-56 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
               <span className="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
@@ -395,14 +446,14 @@ export function AppShell({
             </span>
             <span className="flex items-center gap-2.5">
               <Avatar name="김현대" size={30} />
-              <span className="leading-tight">
+              <span className="hidden leading-tight pc:block">
                 <span className="block text-[13px] font-semibold">김현대</span>
                 <span className="block text-[11px] text-ink-subtle">시스템 관리자</span>
               </span>
             </span>
           </div>
         </header>
-        <main className="relative mx-auto w-full max-w-7xl flex-1 px-8 py-8">
+        <main className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-6 pc:px-8 pc:py-8">
           <div
             aria-hidden
             className="pointer-events-none absolute -top-20 right-24 h-64 w-64 rounded-full bg-primary/10 blur-[100px]"

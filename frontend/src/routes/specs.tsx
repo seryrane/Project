@@ -42,7 +42,7 @@ function SpecsPage() {
 
   return (
     <AppShell active="specs" title="사양서 관리">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">사양서 관리</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
@@ -57,17 +57,18 @@ function SpecsPage() {
         </button>
       </div>
 
-      <div className="mt-6 flex gap-3">
+      {/* 좁은 화면: 검색 한 줄 + 필터 한 줄로 접힌다 (규약 §8 — 가로 스크롤 금지) */}
+      <div className="mt-6 flex flex-col gap-3 pc:flex-row">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="사양서 명, ID, 태그 검색..."
-          className="h-10 flex-1 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
+          className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary"
+          className="h-10 min-w-0 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary pc:flex-none"
         >
           <option>전체 카테고리</option>
           {categories.map((c) => (
@@ -76,6 +77,7 @@ function SpecsPage() {
         </select>
       </div>
 
+      {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
       <div className="mt-3 flex flex-wrap gap-2">
         {['전체 상태', ...allStatuses].map((st) => {
           const count =

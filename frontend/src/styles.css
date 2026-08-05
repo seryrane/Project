@@ -1,7 +1,11 @@
 
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 @import "tailwindcss";
 
 @theme {
+  /* 좁은/넓은 화면 경계 720px — docs/화면_공통규칙.md §8, DESIGN.md Mobile 절 */
+  --breakpoint-pc: 45rem;
+
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Segoe UI', sans-serif;
@@ -152,5 +156,23 @@ body,
 
 body {
   margin: 0;
+}
+
+/* 좁은 화면에서만 조작을 키운다 — 규약 §8 (넓은 화면 밀도는 마우스의 이점이라 그대로 둔다).
+   min-height 로만 키운다: height 로 박으면 두 줄짜리 항목이 잘린다. */
+@media (max-width: 719.9px) {
+  button,
+  select {
+    min-height: 40px;
+  }
+  input:not([type='checkbox']):not([type='radio']) {
+    min-height: 40px;
+    font-size: 16px; /* 16px 미만이면 iOS 가 화면을 확대해 버린다 */
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 24px;
+    height: 24px;
+  }
 }
 
