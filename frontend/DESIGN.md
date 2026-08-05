@@ -130,6 +130,32 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 
 원칙: 모든 등장 모션은 `cubic-bezier(0.16, 1, 0.3, 1)`(ease-out-expo 계열) 180~420ms, 퇴장은 ease 120~200ms로 등장보다 짧게. `prefers-reduced-motion: reduce`에서 전부 비활성화.
 
+### 효과 기술 검토 (2026-08-05 — "CSS·라이브러리·SCSS 모두 검토" 지시)
+
+| 기술 | 판단 | 근거 |
+|---|---|---|
+| motion(구 framer-motion) | **채택** | layout 스프링·presence — CSS 로 못 하는 것만. 관문 경유, ~15kb |
+| CSS `linear()` 스프링 | **채택** | card-hover 눌러앉는 감쇠 곡선 — JS 없이 스프링 |
+| CSS `@property`·conic 회전 테두리 | 보류 | 회전 링은 지금 톤에 과함 — 셴(빛 스침)으로 대체 |
+| scroll-driven animations | 보류 | Chrome 한정 + 리뷰 화면에선 과장 위험 |
+| SCSS/Sass | **불채택** | Tailwind v4 `@theme`+네이티브 중첩·color-mix 로 충분 — 빌드층만 는다 |
+| GSAP | 불채택 | motion 과 역할 중복, 유료 플러그인 의존 |
+| styled-components 류 | 불채택 | 토큰 규율과 충돌(런타임 CSS-in-JS), Tailwind 정본 유지 |
+
+적용된 마감 효과: 글라스 헤더(blur+saturate) · CTA 셴(호버 빛 스침 — 조합 선택자
+한 곳이 정본, 마크업 무변경) · `text-wrap: balance`(제목) · `::selection` 브랜드색 ·
+전역 테마 스크롤바 · Drawer/Modal 스프링 presence(등장 스프링·퇴장 짧은 트윈,
+퇴장 완료 후 언마운트는 `onAnimationComplete` — setTimeout 어림 금지).
+
+**로딩 (규약 §3 이행, 관문 `components/portal/Skeleton.tsx`):**
+- `Skeleton`(셔머) — 곧 채워질 자리의 모양대로. `WidgetSkeleton` — 안은 셔머,
+  **겉은 보더 빔**(테두리를 도는 빛, `.card-loading` — `@property` 각도 애니메이션).
+- 보더 빔은 **일하는 중인 카드 전용** — 로딩·실행 중(검증엔진 즉시 실행)에만.
+  장식으로 쓰면 "일하는 중" 신호가 죽는다.
+- `CtaButton` — 누른 그 버튼에 스피너+잠금+busyLabel("상신 중…"). 상신·등록·요청
+  계열은 전부 이것으로(본개발에서 `simulate()` 자리에 실제 요청 Promise).
+- 대시보드 첫 진입 스켈레톤은 세션당 1회 시연 — 본개발에서 실제 조회 상태로 교체.
+
 **motion(구 framer-motion) 은 관문(`components/portal/motion.tsx`)을 지나서만** —
 LazyMotion(domAnimation)+`m` 조합(~15kb gz)에 `MotionConfig reducedMotion="user"`.
 역할 분담: 한 번 일어나고 끝나는 등장·호버는 CSS 토큰(anim-*), **자리가 바뀌는 것**

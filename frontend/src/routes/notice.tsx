@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
+import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
@@ -217,16 +218,17 @@ function NoticePage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={() => {
+            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
+            <CtaButton
+              busyLabel="등록 중…"
+              onAction={async () => {
+                await simulate()
                 setWriting(false)
                 toast('공지를 등록했습니다 — 전체 알림으로도 발송됩니다')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               등록
-            </button>
+            </CtaButton>
           </div>
         </Modal>
       )}

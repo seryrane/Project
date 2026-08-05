@@ -421,7 +421,8 @@ function Shell({
       <div className={`flex min-h-dvh flex-1 flex-col ${rail ? 'pc:ml-16' : 'pc:ml-60'}`}>
         {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8).
             헤더에는 사용자 관점의 필수 정보(현재 위치·기다리는 일·내 계정)를 상시 노출한다 */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md pc:px-8">
+        {/* 글라스 헤더 — blur 에 saturate 를 얹으면 비쳐 보이는 색이 탁해지지 않는다 */}
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md backdrop-saturate-150 pc:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"

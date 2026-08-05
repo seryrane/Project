@@ -123,7 +123,7 @@ function ValidationEnginePage() {
               style={{ animationDelay: `${i * 60}ms` }}
               className={`card-hover card-spotlight anim-fade-up rounded-2xl border bg-surface ${
                 open ? 'border-primary/40' : 'border-hairline'
-              }`}
+              } ${running != null ? 'card-loading' : ''}`}
             >
               <div className="flex flex-wrap items-center gap-3 p-5">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">

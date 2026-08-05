@@ -85,12 +85,17 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   // 바닥에 붙는다 (닫기가 엄지 자리) + 가로 100%.
   // ⚠ 뷰포트 픽셀과 직접 비교하면 DPR 반올림·오버레이 스크롤바로 몇 px 어긋난다 —
   //   불변식은 "시트가 자기 컨테이너(inset-0)를 가로로 가득 채우고 바닥에 붙는다"이다
-  // 열림 애니메이션(scale 0.97→1)이 끝난 뒤에 잰다 — 도중에 재면 3~12px 작게 나온다
-  await sheet.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
-  const box = (await sheet.boundingBox())!
+  // ⚠ 열림 애니메이션이 끝난 뒤에 잰다 — 도중에 재면 3~12px 작게 나온다.
+  //   getAnimations() 는 WAAPI 만 잡아서 motion(rAF 구동) 전환에는 헛대기다 —
+  //   구현에 매이지 않게 "치수가 맞을 때까지" 폴링한다
   const cont = (await page.locator('.fixed.inset-0.z-50').first().boundingBox())!
-  expect(Math.abs(box.y + box.height - (cont.y + cont.height)), '시트 아래 끝 = 컨테이너 아래').toBeLessThan(2)
-  expect(Math.abs(box.width - cont.width), '시트 가로 = 컨테이너 가로').toBeLessThan(2)
+  await expect
+    .poll(async () => {
+      const b = await sheet.boundingBox()
+      if (!b) return 999
+      return Math.max(Math.abs(b.width - cont.width), Math.abs(b.y + b.height - (cont.y + cont.height)))
+    }, { message: '시트가 컨테이너를 가로로 채우고 바닥에 붙는다' })
+    .toBeLessThan(2)
 
   // 덮은 것은 Esc 로 닫힌다
   await page.keyboard.press('Escape')

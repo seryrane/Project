@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
@@ -302,16 +303,17 @@ function DeploysPage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={() => {
+            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
+            <CtaButton
+              busyLabel="요청 보내는 중…"
+              onAction={async () => {
+                await simulate()
                 setCreating(false)
                 toast('배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               배포 승인 요청
-            </button>
+            </CtaButton>
           </div>
         </Modal>
       )}

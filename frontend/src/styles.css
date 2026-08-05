@@ -204,8 +204,14 @@ select option {
    ⚠ transform 이 아니라 translate 속성이다 — 등장 애니메이션(fill: both)이 transform 을
    고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음). */
 .card-hover {
+  /* translate 만 CSS 스프링(linear() 곡선) — 살짝 넘었다 눌러앉는 손맛.
+     linear() 는 기계 곡선(cubic-bezier)로는 못 그리는 감쇠 진동을 표로 편 것 */
   transition:
-    translate 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    translate 380ms
+      linear(
+        0, 0.322 5.2%, 0.646 10.6%, 0.876 15.9%, 1.021 21.3%, 1.098 27%, 1.116 33.2%,
+        1.098 39.9%, 1.062 47.5%, 1.024 56.2%, 1.001 66.4%, 0.994 78.4%, 1
+      ),
     border-color 200ms ease,
     box-shadow 200ms ease;
 }
@@ -213,6 +219,106 @@ select option {
   translate: 0 -2px;
   border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
   box-shadow: 0 6px 20px var(--color-glow);
+}
+
+/* CTA 셴 — 그라디언트 주 버튼에 호버 시 빛이 한 번 스치고 지나간다.
+   정본은 이 조합 선택자 하나: from-primary+to-accent2 유틸 조합이 곧 CTA 표식이라
+   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋 */
+@media (hover: hover) {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled),
+  a[class*='from-primary'][class*='to-accent2'] {
+    position: relative;
+    overflow: hidden;
+  }
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled)::after,
+  a[class*='from-primary'][class*='to-accent2']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 30%) 50%, transparent 68%);
+    transform: translateX(-130%);
+    pointer-events: none;
+  }
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):hover::after,
+  a[class*='from-primary'][class*='to-accent2']:hover::after {
+    transform: translateX(130%);
+    transition: transform 600ms ease;
+  }
+}
+
+/* 제목 줄바꿈 균형 — 두 줄로 꺾일 때 한 낱말만 떨어지는 것을 막는다 */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+/* 드래그 선택도 브랜드로 */
+::selection {
+  background: color-mix(in oklab, var(--color-primary) 35%, transparent);
+}
+
+/* 스켈레톤 — 빛이 쓸고 지나가는 셔머 (규약 §3: 곧 채워질 카드 자리에만).
+   ⚠ 영원히 도는 스켈레톤이 제일 나쁘다 — 실패하면 지우고 이유를 남긴다 */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--color-chip);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-ink-subtle) 14%, transparent) 50%,
+    transparent
+  );
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  to { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
+/* 보더 빔 — **일하는 중인 카드**의 테두리를 빛이 한 바퀴씩 돈다 (로딩·실행 중 전용).
+   @property 로 각도를 등록해야 conic-gradient 각도가 애니메이션된다.
+   마스크 두 장의 XOR 로 테두리 1px 만 남긴다 — 안쪽 내용은 건드리지 않는다 */
+@property --beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.card-loading {
+  position: relative;
+}
+.card-loading::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0 78%,
+    color-mix(in oklab, var(--color-primary) 85%, white) 90%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam-spin 2.2s linear infinite;
+  pointer-events: none;
+}
+@keyframes beam-spin {
+  to { --beam-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-loading::before { animation: none; }
 }
 
 /* 편집 매트릭스 — 켜진 칸이 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */

@@ -3,6 +3,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import {
@@ -397,17 +398,18 @@ function RolesPage() {
             >
               취소
             </button>
-            <button
-              type="button"
+            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
+            <CtaButton
               disabled={dirtyCount === 0 || selfLock}
-              onClick={() => {
+              busyLabel="상신 중…"
+              onAction={async () => {
+                await simulate()
                 setEditing(null)
                 toast(`${editing.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 결재 후 ${editing.assigned}명에게 적용됩니다`)
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              변경 상신{dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
-            </button>
+              변경 상신{dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
+            </CtaButton>
           </div>
         </Modal>
       )}

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
-/* Right-hand slide-over panel with animated open/close.
+import { m } from './motion'
+
+/* Right-hand slide-over panel — motion 스프링 presence.
    Call the `close` render-prop (not the parent's onClose) so the exit
    animation plays before unmounting. Esc closes as well. */
 export function Drawer({
@@ -14,10 +16,7 @@ export function Drawer({
 }) {
   const [closing, setClosing] = useState(false)
 
-  const close = useCallback(() => {
-    setClosing(true)
-    setTimeout(onClose, 190)
-  }, [onClose])
+  const close = useCallback(() => setClosing(true), [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -38,16 +37,27 @@ export function Drawer({
   }, [close])
 
   return (
-    <div
-      className={`fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px] ${
-        closing ? 'anim-fade-out' : 'anim-fade-in'
-      }`}
+    <m.div
+      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: closing ? 0 : 1 }}
+      transition={{ duration: closing ? 0.18 : 0.22 }}
       onClick={close}
     >
-      <div
-        className={`absolute inset-y-0 right-0 flex w-full max-w-[520px] flex-col border-l border-hairline bg-surface shadow-[-24px_0_80px_rgb(0_0_0/40%)] ${
-          closing ? 'anim-slide-out' : 'anim-slide-in'
-        }`}
+      <m.div
+        className="absolute inset-y-0 right-0 flex w-full max-w-[520px] flex-col border-l border-hairline bg-surface shadow-[-24px_0_80px_rgb(0_0_0/40%)]"
+        initial={{ x: '100%' }}
+        animate={{ x: closing ? '100%' : 0 }}
+        // 등장은 스프링(살짝 눌러앉는 감), 퇴장은 짧은 트윈 — 퇴장 스프링은 굼떠 보인다
+        transition={
+          closing
+            ? { duration: 0.2, ease: [0.4, 0, 1, 1] }
+            : { type: 'spring', stiffness: 380, damping: 40 }
+        }
+        // 퇴장 애니메이션이 끝난 뒤 언마운트 — setTimeout 으로 어림잡지 않는다
+        onAnimationComplete={() => {
+          if (closing) onClose()
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 머리는 면(배경)+선으로 가른다 (규약 §7) */}
@@ -65,7 +75,7 @@ export function Drawer({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-5">{children(close)}</div>
-      </div>
-    </div>
+      </m.div>
+    </m.div>
   )
 }

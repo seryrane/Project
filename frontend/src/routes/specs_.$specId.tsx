@@ -3,6 +3,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
+import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { StatusBadge } from '#/components/portal/StatusBadge'
@@ -481,17 +482,18 @@ function SpecDetailPage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={() => {
+            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 상신은 되돌리기 어렵다) */}
+            <CtaButton
+              busyLabel="상신 중…"
+              onAction={async () => {
+                await simulate()
                 setRequesting(false)
                 setSubmitted(true)
                 toast('승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               상신
-            </button>
+            </CtaButton>
           </div>
         </Modal>
       )}

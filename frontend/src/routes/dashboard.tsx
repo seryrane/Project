@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { layoutSpring, m } from '#/components/portal/motion'
+import { WidgetSkeleton } from '#/components/portal/Skeleton'
 import {
   ActivityHeatmap,
   ChartCard,
@@ -147,8 +148,23 @@ function DashboardPage() {
   // 드래그 이동(데스크톱) — 좁은 화면·키보드는 ◀▶ 버튼이 같은 일을 한다
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [dropIdx, setDropIdx] = useState<number | null>(null)
+  /**
+   * 첫 진입 스켈레톤 (규약 §3) — 위젯 데이터가 "집계에서 오는" 화면이라 자리를 먼저
+   * 보여 준다. ⚠ mock 이라 세션당 한 번만 시연한다 — 본개발에서는 실제 조회 상태로 교체.
+   * SSR 과 첫 클라이언트 렌더는 항상 스켈레톤(수화 불일치 방지), 재방문은 즉시 걷힌다.
+   */
+  const [booted, setBooted] = useState(false)
   useEffect(() => {
     setLayout(loadLayout())
+    if (sessionStorage.getItem('dashboard.booted') === '1') {
+      setBooted(true)
+      return
+    }
+    const t = setTimeout(() => {
+      sessionStorage.setItem('dashboard.booted', '1')
+      setBooted(true)
+    }, 850)
+    return () => clearTimeout(t)
   }, [])
   const apply = (next: Array<WidgetSlot>) => {
     setLayout(next)
@@ -467,6 +483,18 @@ function DashboardPage() {
         </div>
       )}
 
+      {/* 첫 진입: 위젯 자리 그대로 스켈레톤(안은 셔머·겉은 보더 빔) — 걷히면 스프링 등장 */}
+      {!booted && (
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
+          {layout.map((slot) => (
+            <div key={slot.id} className={SPAN[slot.size]}>
+              <WidgetSkeleton tall={slot.size > 1} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {booted && (
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
         {layout.map((slot, idx) => (
           /* layout 스프링 — 드래그·화살표·크기 변경으로 자리가 바뀌면 미끄러져 이동한다.
@@ -555,6 +583,7 @@ function DashboardPage() {
           </m.div>
         ))}
       </div>
+      )}
     </AppShell>
   )
 }
