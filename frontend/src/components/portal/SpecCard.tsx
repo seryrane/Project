@@ -1,19 +1,25 @@
 import { Avatar } from './Avatar'
 import { StatusBadge } from './StatusBadge'
+import { useToast } from './toast'
 import { currentVersion } from '#/data/specs'
 import type { Spec } from '#/data/specs'
 
 interface Props {
   spec: Spec
+  index: number
   onDetail: () => void
   onCompare: () => void
 }
 
-export function SpecCard({ spec, onDetail, onCompare }: Props) {
+export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
+  const toast = useToast()
   const cur = currentVersion(spec)
   const needsApproval = cur.status === '초안' || cur.status === '검토 중'
   return (
-    <article className="flex flex-col rounded-2xl border border-hairline bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]">
+    <article
+      style={{ animationDelay: `${index * 70}ms` }}
+      className="anim-fade-up flex flex-col rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
+    >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">
           <span className="font-mono text-xs font-semibold text-ink-subtle">{spec.id}</span>
@@ -75,7 +81,8 @@ export function SpecCard({ spec, onDetail, onCompare }: Props) {
           {needsApproval && (
             <button
               type="button"
-              className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              onClick={() => toast(`${spec.name} 승인 요청이 전송되었습니다`)}
+              className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-[opacity,transform] hover:opacity-90 active:scale-95"
             >
               승인 요청
             </button>

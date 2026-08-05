@@ -74,23 +74,39 @@ function SpecsPage() {
             <option key={c}>{c}</option>
           ))}
         </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary"
-        >
-          <option>전체 상태</option>
-          {allStatuses.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {['전체 상태', ...allStatuses].map((st) => {
+          const count =
+            st === '전체 상태'
+              ? specs.length
+              : specs.filter((sp) => currentVersion(sp).status === st).length
+          const selected = status === st
+          return (
+            <button
+              key={st}
+              type="button"
+              onClick={() => setStatus(st)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                selected
+                  ? 'border-primary/50 bg-primary/15 text-primary'
+                  : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
+              }`}
+            >
+              {st === '전체 상태' ? '전체' : st}
+              <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
+            </button>
+          )
+        })}
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        {filtered.map((spec) => (
+        {filtered.map((spec, i) => (
           <SpecCard
             key={spec.id}
             spec={spec}
+            index={i}
             onDetail={() => setDetail(spec)}
             onCompare={() => openCompare(spec)}
           />

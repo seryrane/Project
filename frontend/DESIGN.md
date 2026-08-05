@@ -1,4 +1,4 @@
-# DESIGN.md — HMG 통합 관리자 포털 (잠정 디자인 언어 v0.3 · Dark SaaS + 테마 전환)
+# DESIGN.md — HMG 통합 관리자 포털 (잠정 디자인 언어 v0.4 · Dark SaaS + 모션 시스템)
 
 > Data-Inside 가이드 수령 전까지의 잠정 표준. 수령 시 토큰만 교체한다.
 > v0.2에서 다크 SaaS 톤으로 전환, v0.3에서 라이트/다크 테마 전환·글로우 절제·트리 사이드바·대시보드 차트 규칙 추가.
@@ -96,3 +96,17 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
   - 다크(surface #141722): 초안 #4e7de0 · 검토 #bd831e · 승인대기 #8b7cff · 배포 #2fae6b
   - 라이트(surface #ffffff): #3f6ad0 · #b8770a · #6d5cf0 · #1d9d5f
   - 배지용 ink 색은 차트 필로 쓰지 않는다 (검증 실패 조합)
+
+## 모션 & 인터랙션 시스템 (v0.4)
+
+원칙: 모든 등장 모션은 `cubic-bezier(0.16, 1, 0.3, 1)`(ease-out-expo 계열) 180~420ms, 퇴장은 ease 120~200ms로 등장보다 짧게. `prefers-reduced-motion: reduce`에서 전부 비활성화.
+
+- **페이지 전환**: TanStack Router `defaultViewTransition` — View Transitions API로 크로스페이드 + 미세 상승
+- **슬라이드 오버(Drawer)**: 사양서 상세는 모달이 아닌 우측 슬라이드 오버 패널(max 520px). 등장 280ms 슬라이드, 퇴장 200ms 후 언마운트(닫힘 애니메이션 보장). ESC/백드롭 클릭 닫기
+- **모달**: scale-in(0.97→1 + 10px 상승) 200ms / scale-out 140ms, ESC 닫기
+- **커맨드 팔레트(⌘K)**: 상단바 검색 버튼 또는 Cmd/Ctrl+K. 페이지·사양서 통합 검색, ↑↓/Enter/ESC 키보드 내비게이션, 그룹 헤더, kbd 힌트 표시
+- **리스트 스태거**: 카드·타일은 `fade-up` 420ms + 항목당 60~80ms 지연
+- **사이드바 접힘**: 섹션은 `grid-template-rows 0fr↔1fr` 트랜지션 200ms + 체브론 회전
+- **토스트**: 우하단 스택, 성공 아이콘 + 220ms 등장, 3.2초 후 자동 소멸. 사용자 액션(승인 요청 등)에는 반드시 피드백 제공
+- **프레스 피드백**: 주요 버튼·칩은 `active:scale-95`
+- **상태 필터 칩**: 셀렉트 대신 카운트 포함 필터 칩 행 (선택: primary 틴트 + 보더)

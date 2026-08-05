@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { Avatar } from './Avatar'
+import { CommandPalette } from './CommandPalette'
+import { ToastProvider } from './toast'
 
 type IconName =
   | 'dashboard'
@@ -267,8 +269,21 @@ export function AppShell({
 }) {
   const { theme, toggle } = useTheme()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [paletteOpen, setPaletteOpen] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
+    <ToastProvider>
     <div className="flex min-h-screen bg-canvas text-ink">
       <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col border-r border-white/5 bg-sidebar text-sidebar-ink">
         <div className="flex items-center gap-2.5 px-5 py-5">
@@ -310,13 +325,21 @@ export function AppShell({
                     </svg>
                   </button>
                 ) : null}
-                {!isCollapsed && (
-                  <div className={section.title ? 'ml-2 border-l border-white/8 pl-2' : ''}>
+                <div
+                  className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                    isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+                  }`}
+                >
+                  <div
+                    className={`min-h-0 overflow-hidden ${
+                      section.title ? 'ml-2 border-l border-white/8 pl-2' : ''
+                    }`}
+                  >
                     {section.items.map((item) => (
                       <NavRow key={item.key} item={item} active={item.key === active} />
                     ))}
                   </div>
-                )}
+                </div>
               </div>
             )
           })}
@@ -333,10 +356,22 @@ export function AppShell({
             <span className="font-medium text-ink">{title}</span>
           </div>
           <div className="flex items-center gap-4">
-            <input
-              placeholder="전체 검색..."
-              className="h-9 w-56 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
-            />
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="flex h-9 w-56 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted"
+            >
+              <span className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+                  <circle cx="10.5" cy="10.5" r="6" />
+                  <path d="M20 20l-5-5" />
+                </svg>
+                전체 검색...
+              </span>
+              <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">
+                ⌘K
+              </kbd>
+            </button>
             <button
               type="button"
               onClick={toggle}
@@ -375,6 +410,8 @@ export function AppShell({
           <div className="relative">{children}</div>
         </main>
       </div>
+      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
     </div>
+    </ToastProvider>
   )
 }
