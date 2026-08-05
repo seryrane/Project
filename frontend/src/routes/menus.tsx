@@ -5,16 +5,75 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { MENU_ROLE_OPTIONS, menuItems } from '#/data/menus'
-import type { MenuItem } from '#/data/menus'
+import { MENU_ROLE_OPTIONS, TEMPLATES, menuItems } from '#/data/menus'
+import type { MenuItem, TemplateKey } from '#/data/menus'
 
 export const Route = createFileRoute('/menus')({ component: MenusPage })
+
+/** 템플릿 미니 와이어프레임 — 이 메뉴가 어떤 화면으로 열릴지 그림으로 말한다 */
+function Wireframe({ t }: { t: TemplateKey }) {
+  const line = 'var(--color-ink-subtle)'
+  const box = 'var(--color-chip-strong)'
+  const accent = 'var(--color-primary)'
+  return (
+    <svg viewBox="0 0 64 44" className="block h-full w-full" aria-hidden>
+      <rect x="0.5" y="0.5" width="63" height="43" rx="3" fill="none" stroke={line} strokeOpacity="0.4" />
+      {t === 'dashboard' && (
+        <>
+          {[3, 19, 35, 51].map((x) => (
+            <rect key={x} x={x} y="4" width="12" height="8" rx="1.5" fill={box} />
+          ))}
+          <rect x="3" y="16" width="37" height="24" rx="2" fill={box} />
+          <path d="M7 34 L14 27 L21 31 L28 23 L36 26" fill="none" stroke={accent} strokeWidth="1.6" strokeLinecap="round" />
+          <rect x="44" y="16" width="17" height="24" rx="2" fill={box} />
+        </>
+      )}
+      {t === 'list-detail' && (
+        <>
+          <rect x="3" y="4" width="37" height="5" rx="1.5" fill={box} />
+          {[13, 20, 27, 34].map((y) => (
+            <rect key={y} x="3" y={y} width="37" height="4.5" rx="1.5" fill={box} opacity={y === 20 ? 1 : 0.55} />
+          ))}
+          <rect x="44" y="4" width="17" height="36" rx="2" fill={box} />
+          <rect x="47" y="8" width="11" height="2.5" rx="1" fill={accent} />
+        </>
+      )}
+      {t === 'board' && (
+        <>
+          <rect x="3" y="4" width="44" height="5" rx="1.5" fill={box} />
+          <rect x="51" y="4" width="10" height="5" rx="1.5" fill={accent} />
+          {[13, 20, 27, 34].map((y) => (
+            <rect key={y} x="3" y={y} width="58" height="4.5" rx="1.5" fill={box} opacity="0.7" />
+          ))}
+        </>
+      )}
+      {t === 'document' && (
+        <>
+          {[4, 10, 16, 22].map((y) => (
+            <rect key={y} x="3" y={y} width="13" height="3" rx="1" fill={box} />
+          ))}
+          <rect x="21" y="4" width="30" height="3.5" rx="1" fill={accent} opacity="0.8" />
+          {[11, 16, 21, 26, 31, 36].map((y) => (
+            <rect key={y} x="21" y={y} width={y % 2 ? 40 : 34} height="2.5" rx="1" fill={box} opacity="0.7" />
+          ))}
+        </>
+      )}
+      {t === 'blank' && (
+        <>
+          <rect x="6" y="6" width="52" height="32" rx="2" fill="none" stroke={line} strokeOpacity="0.5" strokeDasharray="3 2.5" />
+          <path d="M32 17v10M27 22h10" stroke={line} strokeWidth="1.6" strokeLinecap="round" />
+        </>
+      )}
+    </svg>
+  )
+}
 
 function MenusPage() {
   const toast = useToast()
   const [items, setItems] = useState(menuItems)
   const [selected, setSelected] = useState<MenuItem | null>(null)
   const [creating, setCreating] = useState(false)
+  const [newTemplate, setNewTemplate] = useState<TemplateKey>('list-detail')
   // 선택 메뉴 편집 초안 (우측 패널)
   const [draft, setDraft] = useState<MenuItem | null>(null)
 
@@ -185,6 +244,32 @@ function MenusPage() {
                   className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
                 />
               </label>
+              {/* 화면 템플릿 — 이 메뉴가 어떤 UI 로 열리는지 그림으로 확인·변경 */}
+              <div>
+                <span className="text-xs font-medium text-ink-subtle">화면 템플릿</span>
+                <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-3">
+                  <span className="h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                    <Wireframe t={draft.template} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <Select
+                      value={TEMPLATES.find((t) => t.key === draft.template)?.name}
+                      onChange={(e) => {
+                        const t = TEMPLATES.find((x) => x.name === e.target.value)
+                        if (t) setDraft((d) => d && { ...d, template: t.key })
+                      }}
+                      className="w-full"
+                    >
+                      {TEMPLATES.map((t) => (
+                        <option key={t.key}>{t.name}</option>
+                      ))}
+                    </Select>
+                    <span className="mt-1 block text-[11px] text-ink-subtle">
+                      {TEMPLATES.find((t) => t.key === draft.template)?.desc}
+                    </span>
+                  </span>
+                </div>
+              </div>
               <div className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
                 <span className="text-[13px] font-medium text-ink">노출 여부</span>
                 <button
@@ -291,6 +376,38 @@ function MenusPage() {
               ))}
             </Select>
           </label>
+          {/* 화면 템플릿 — 관리자가 새 메뉴의 UI 를 미리 구상한다 */}
+          <div className="mt-3">
+            <span className="text-xs font-medium text-ink-subtle">
+              화면 템플릿 <b className="text-danger-ink">*</b>
+            </span>
+            <div className="mt-1.5 grid grid-cols-2 gap-2 pc:grid-cols-3">
+              {TEMPLATES.map((t) => {
+                const on = newTemplate === t.key
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setNewTemplate(t.key)}
+                    className={`rounded-xl border p-2.5 text-left transition-all active:scale-[0.98] ${
+                      on
+                        ? 'border-primary/60 bg-primary/8 shadow-[0_2px_10px_var(--color-glow)]'
+                        : 'border-hairline hover:border-primary/30 hover:bg-chip'
+                    }`}
+                  >
+                    <span className="block h-16 overflow-hidden rounded-lg bg-canvas/50">
+                      <Wireframe t={t.key} />
+                    </span>
+                    <span className={`mt-1.5 block text-xs font-semibold ${on ? 'text-primary' : 'text-ink'}`}>
+                      {t.name}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] leading-snug text-ink-subtle">{t.desc}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">접근 역할</span>
             <div className="mt-1.5 grid grid-cols-2 gap-1">
@@ -314,7 +431,9 @@ function MenusPage() {
               type="button"
               onClick={() => {
                 setCreating(false)
-                toast('메뉴를 추가했습니다 — 접근 역할이 있는 사람에게 바로 보입니다')
+                toast(
+                  `메뉴를 추가했습니다 (${TEMPLATES.find((t) => t.key === newTemplate)?.name} 템플릿) — 접근 역할이 있는 사람에게 바로 보입니다`,
+                )
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
