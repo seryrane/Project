@@ -13,7 +13,7 @@ export function SpecCard({ spec, onDetail, onCompare }: Props) {
   const cur = currentVersion(spec)
   const needsApproval = cur.status === '초안' || cur.status === '검토 중'
   return (
-    <article className="flex flex-col rounded-2xl border border-hairline bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_40px_rgb(139_124_255/12%)]">
+    <article className="flex flex-col rounded-2xl border border-hairline bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">
           <span className="font-mono text-xs font-semibold text-ink-subtle">{spec.id}</span>
@@ -34,14 +34,14 @@ export function SpecCard({ spec, onDetail, onCompare }: Props) {
         {spec.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] font-medium text-ink-muted"
+            className="rounded-full bg-chip px-2 py-0.5 text-[11px] font-medium text-ink-muted"
           >
             #{tag}
           </span>
         ))}
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border border-white/5 bg-canvas/70 px-4 py-3.5">
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border border-hairline bg-canvas/70 px-4 py-3.5">
         {cur.fields.slice(0, 4).map((f) => (
           <div key={f.label}>
             <dt className="text-[11px] text-ink-subtle">{f.label}</dt>
@@ -61,21 +61,21 @@ export function SpecCard({ spec, onDetail, onCompare }: Props) {
           <button
             type="button"
             onClick={onDetail}
-            className="h-8 rounded-lg border border-hairline bg-white/5 px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-white/10 hover:text-ink"
+            className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
             상세 보기
           </button>
           <button
             type="button"
             onClick={onCompare}
-            className="h-8 rounded-lg border border-hairline bg-white/5 px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-white/10 hover:text-ink"
+            className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
             버전 비교
           </button>
           {needsApproval && (
             <button
               type="button"
-              className="h-8 rounded-lg bg-gradient-to-r from-primary to-[#a08cff] px-3 text-xs font-semibold text-white shadow-[0_4px_16px_rgb(139_124_255/30%)] transition-opacity hover:opacity-90"
+              className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               승인 요청
             </button>

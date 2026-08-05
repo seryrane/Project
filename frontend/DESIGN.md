@@ -1,7 +1,7 @@
-# DESIGN.md — HMG 통합 관리자 포털 (잠정 디자인 언어 v0.2 · Dark SaaS)
+# DESIGN.md — HMG 통합 관리자 포털 (잠정 디자인 언어 v0.3 · Dark SaaS + 테마 전환)
 
 > Data-Inside 가이드 수령 전까지의 잠정 표준. 수령 시 토큰만 교체한다.
-> v0.2에서 밝은 admin 톤 → **다크 SaaS 톤으로 전면 전환** (사용자 결정, 2026-08-05).
+> v0.2에서 다크 SaaS 톤으로 전환, v0.3에서 라이트/다크 테마 전환·글로우 절제·트리 사이드바·대시보드 차트 규칙 추가.
 > 참조: Behance Rentier(다크 SaaS 파일관리) · Aivora(AI 워크플로 admin) · Linear(다크 토큰 구조) · docs/UI_ADOPTION.md(화면 패턴).
 
 ## Overview
@@ -37,11 +37,11 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 
 ## Signature Effects (이 테마의 정체성)
 
-- **퍼플 그라디언트**: 주요 CTA·활성 메뉴는 `linear-gradient(to right, #8b7cff, #a08cff)`
-- **글로우 섀도**: 그라디언트 요소에 `0 4px 16~18px rgb(139 124 255 / 30~35%)`
-- **앰비언트 글로우**: 콘텐츠 배경에 `bg-primary/15 blur(140px)` radial 1~2개 (pointer-events 없음, 장식)
-- **글래스**: 상단바는 `bg-canvas/75 + backdrop-blur`; 모달 오버레이는 `black/65 + blur-sm`
-- 카드 hover: `-translate-y-0.5` + `border-primary/40` + 퍼플 글로우 12%
+- **퍼플 그라디언트**: 주요 CTA·활성 메뉴는 `from-primary to-accent2`
+- **글로우 섀도(절제)**: `0 2px 10px var(--color-glow)` — v0.2보다 blur·강도를 줄여 선명하게
+- **앰비언트 글로우(절제)**: 콘텐츠 배경 radial 1개, `primary/10 blur(100px)` 이하
+- **글래스**: 상단바 `bg-canvas/75 + backdrop-blur`; 모달 오버레이 `black/65 + blur-sm`
+- 카드 hover: `-translate-y-0.5` + `border-primary/40` + `0 6px 20px var(--color-glow)`
 
 ## Typography
 
@@ -90,9 +90,33 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 2. 상태는 배지로만, 카드 전체를 상태색으로 칠하지 않는다
 3. 다크 배경에서 텍스트 대비 WCAG AA 유지 (muted 이하 텍스트를 본문에 쓰지 않기)
 4. 앰비언트 글로우는 화면당 최대 2개, 채도 15% 이하
-5. 라이트 테마는 미정의 — 요구 발생 시 v0.1 토큰(Stripe 계열)을 복원해 테마 토글로 제공
+5. 라이트 테마는 아래 "테마 시스템" 참조 — 콘텐츠 영역에서 white/* 유틸 직접 사용 금지 (토큰만)
 6. **치수·색은 토큰에서만 고른다** — `@theme` 에 없는 값이 필요해 보이면 단계가 틀린 것.
    손 눈대중 값이 쌓이면 하나하나는 그럴듯한데 모아 놓으면 리듬이 없다("촌스럽다"의 정체)
 7. 누를 수 있는 것에는 `:hover` 와 `:focus-visible` 을 **둘 다** 준다
 8. 브라우저 기본 위젯(`<select>`·file input)도 앱의 물건처럼 입힌다 — 기본 모양이 남으면 그 줄만 딴 앱
 9. 상태 칩(점 + 뜻이 정한 색)과 이름표 태그(테두리만, 무색)를 가른다. 모르는 상태는 회색
+
+## 테마 시스템 (v0.3)
+
+- 기본 다크. `<html data-theme="light">`로 라이트 전환 — 모든 색은 CSS 변수 토큰이라 통째로 교체됨. 토글은 상단바(해/달), localStorage `theme`에 저장.
+- **사이드바는 두 테마 모두 다크 유지** (브랜드 아이덴티티). 사이드바 내부는 white/* 유틸 사용 가능, 콘텐츠 영역은 반드시 `chip`/`chip-strong`/`hairline` 토큰 사용 (white/* 금지 — 라이트에서 깨짐).
+- 라이트 토큰: canvas #f4f5f9 · surface #fff · primary #6d5cf0 등 (styles.css `[data-theme='light']` 블록).
+
+## 사이드바 (Rentier 스타일)
+
+- 아이템: 16px 스트로크 아이콘 + 라벨, 활성은 그라디언트 필 + 글로우
+- 섹션: 접이식(체브론), 펼침 시 `ml-2 border-l pl-2` 트리 가이드 라인
+- 대시보드/사양서 관리는 실제 라우트 Link, 나머지는 자리표시자
+
+## 대시보드 차트 규칙 (dataviz 스킬 준수)
+
+- 마크: 라인 2px round, 마커 r4 + surface 2px 링, 바 두께 ≤24px(실사용 16px) + 데이터 끝 4px 라운드(베이스라인은 직각), 스택 세그먼트 사이 2px surface 갭, 그리드는 hairline 1px 실선
+- 영역 필은 시리즈 색 10% 워시. 텍스트(값·레이블·축·범례)는 ink 토큰만 사용 — 시리즈 색 텍스트 금지
+- 단일 시리즈 라인은 범례 없음(제목이 시리즈명), 끝점 직접 레이블. 2+ 시리즈는 범례 필수
+- 호버: 라인 차트는 크로스헤어 스냅 + 툴팁, 바/세그먼트는 마크 자체가 히트 타깃(비호버 마크 dim)
+- 필터(기간 프리셋)는 차트 위 한 줄, 아래 콘텐츠 전체에 적용
+- **차트 상태 필 팔레트는 CVD 검증 통과본만 사용** (validate_palette.js):
+  - 다크(surface #141722): 초안 #4e7de0 · 검토 #bd831e · 승인대기 #8b7cff · 배포 #2fae6b
+  - 라이트(surface #ffffff): #3f6ad0 · #b8770a · #6d5cf0 · #1d9d5f
+  - 배지용 ink 색은 차트 필로 쓰지 않는다 (검증 실패 조합)
