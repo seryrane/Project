@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
+import { nav } from '#/data/nav'
 import { specs } from '#/data/specs'
 
 interface Command {
@@ -10,10 +11,15 @@ interface Command {
   to: string
 }
 
-const pageCommands: Array<Command> = [
-  { group: '페이지', label: '대시보드', hint: '이동', to: '/dashboard' },
-  { group: '페이지', label: '사양서 관리', hint: '이동', to: '/specs' },
-]
+// 페이지 명령은 LNB 정본(nav)에서 파생한다 — 손으로 다시 적으면 새 화면이
+// 생길 때마다 팔레트만 모르는 화면이 남는다 (실제로 두 개만 알고 있었다)
+const pageCommands: Array<Command> = nav.flatMap((section) =>
+  section.items.flatMap((item) =>
+    item.to == null
+      ? []
+      : [{ group: section.title ?? '페이지', label: item.label, hint: '이동', to: item.to }],
+  ),
+)
 
 export function CommandPalette({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()

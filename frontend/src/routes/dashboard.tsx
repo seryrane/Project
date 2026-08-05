@@ -24,6 +24,7 @@ import {
   validationSeries,
 } from '#/data/dashboard'
 import type { ActivityKind, ServerHealth } from '#/data/dashboard'
+import { notices } from '#/data/community'
 import {
   ROLE_PRESETS,
   WIDGET_META,
@@ -337,6 +338,33 @@ function DashboardPage() {
         action={{ label: '회원 관리', onClick: () => navigate({ to: '/members' }) }}
       >
         <StatusStackBar data={memberRoles} />
+      </ChartCard>
+    ),
+    notice: (
+      <ChartCard
+        title="최근 공지"
+        subtitle="고정 공지 우선"
+        action={{ label: '공지사항', onClick: () => navigate({ to: '/notice' }) }}
+      >
+        <ol className="space-y-2.5">
+          {[...notices.filter((n) => n.pinned), ...notices.filter((n) => !n.pinned)]
+            .slice(0, 3)
+            .map((n) => (
+              <li key={n.id} className="flex items-start gap-2 text-[13px]">
+                <span
+                  className={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                    n.pinned ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-subtle'
+                  }`}
+                >
+                  {n.pinned ? '고정' : n.category}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-ink">{n.title}</span>
+                  <span className="block text-xs tabular-nums text-ink-subtle">{n.date}</span>
+                </span>
+              </li>
+            ))}
+        </ol>
       </ChartCard>
     ),
     activity: (

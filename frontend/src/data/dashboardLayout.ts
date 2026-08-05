@@ -20,6 +20,7 @@ export type WidgetId =
   | 'system'
   | 'pipeline'
   | 'members'
+  | 'notice'
 
 export type WidgetSize = 1 | 2 | 3
 
@@ -43,6 +44,8 @@ export const WIDGET_META: Record<
   system: { title: '시스템 현황', feature: 'monitoring.read', defaultSize: 2 },
   pipeline: { title: '데이터 파이프라인', feature: 'pipeline.read', defaultSize: 1 },
   members: { title: '권한별 회원 분포', feature: 'member.read', defaultSize: 1 },
+  // 커뮤니티는 최소 메뉴 — 아래 모든 역할이 이 기능을 가져 전 프리셋에 파생 편입된다
+  notice: { title: '최근 공지', feature: 'community.read', defaultSize: 1 },
 }
 
 /** 파생 순서의 정본 — 역할과 무관하게 같은 위젯은 같은 자리 감각을 유지한다 */
@@ -57,6 +60,7 @@ const CANONICAL_ORDER: Array<WidgetId> = [
   'system',
   'pipeline',
   'members',
+  'notice',
 ]
 
 interface RoleDef {
@@ -85,6 +89,7 @@ const ROLE_DEFS: Array<RoleDef> = [
       'monitoring.read',
       'pipeline.read',
       'member.read',
+      'community.read',
     ],
     emphasis: [],
   },
@@ -92,7 +97,7 @@ const ROLE_DEFS: Array<RoleDef> = [
     key: 'approver',
     label: '결재 담당',
     desc: '기다리는 결재부터',
-    features: ['dashboard.read', 'approval.read', 'spec.read', 'activity.read', 'validation.stats'],
+    features: ['dashboard.read', 'approval.read', 'spec.read', 'activity.read', 'validation.stats', 'community.read'],
     emphasis: ['approval.read'],
   },
   {
@@ -106,6 +111,7 @@ const ROLE_DEFS: Array<RoleDef> = [
       'validation.history',
       'monitoring.read',
       'pipeline.read',
+      'community.read',
     ],
     emphasis: ['validation.stats', 'validation.history'],
   },
@@ -113,7 +119,7 @@ const ROLE_DEFS: Array<RoleDef> = [
     key: 'viewer',
     label: '경영 뷰어',
     desc: '요약만 간결하게',
-    features: ['dashboard.read', 'validation.stats', 'spec.read', 'activity.read'],
+    features: ['dashboard.read', 'validation.stats', 'spec.read', 'activity.read', 'community.read'],
     emphasis: [],
   },
 ]
