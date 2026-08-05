@@ -17,6 +17,9 @@ const config = defineConfig({
     proxy: {
       '/api': 'http://localhost:8080',
     },
+    // 임시 외부 확인용 — cloudflared quick tunnel(*.trycloudflare.com) 이 보내는
+    // Host 를 허용한다. dev 전용 설정이라 배포에는 영향 없다
+    allowedHosts: ['.trycloudflare.com'],
   },
 })
 
