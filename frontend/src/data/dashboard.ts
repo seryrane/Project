@@ -59,12 +59,13 @@ export const statusDistribution = [
   { label: '배포 완료', value: 79, fill: 'var(--color-fill-deployed)' },
 ]
 
-// 승인 대기 큐 — 대시보드는 "다음 행동"으로 끝난다 (규약 §10)
+// 승인 대기 큐 — 대시보드는 "다음 행동"으로 끝난다 (규약 §10).
+// id 는 사양서 mock(specs.ts)과 맞춰 둔다 — 누르면 그 상세가 실제로 열린다.
 export const approvalQueue = [
   { id: 'SP-001', name: 'VN7 엔진 사양서', version: 'v2.3', owner: '김민준', waitingDays: 3 },
-  { id: 'SP-014', name: '충전 커넥터 규격', version: 'v1.1', owner: '이서연', waitingDays: 2 },
-  { id: 'SP-022', name: 'IVI 데이터 수집 항목', version: 'v4.0', owner: '박준혁', waitingDays: 1 },
-  { id: 'SP-031', name: '충돌 센서 임계값', version: 'v1.7', owner: '최수진', waitingDays: 1 },
+  { id: 'SP-002', name: '전기차 배터리 규격서', version: 'v1.5', owner: '이서연', waitingDays: 2 },
+  { id: 'SP-003', name: '자율주행 센서 통합 규격', version: 'v3.1', owner: '박준혁', waitingDays: 1 },
+  { id: 'SP-004', name: '차체 구조 안전 기준서', version: 'v4.0', owner: '최수진', waitingDays: 1 },
 ]
 
 export type ActivityKind = 'approve' | 'review' | 'validate' | 'deploy'

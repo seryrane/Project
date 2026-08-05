@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
-import { ToastProvider } from './toast'
+import { ToastProvider, useToast } from './toast'
 
 type IconName =
   | 'dashboard'
@@ -22,6 +22,11 @@ type IconName =
   | 'help'
   | 'book'
   | 'lock'
+  | 'pin'
+  | 'plus'
+  | 'user'
+  | 'settings'
+  | 'logout'
 
 const iconPaths: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -114,6 +119,31 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
     </>
   ),
+  pin: (
+    <>
+      <path d="M9.5 3.5h5l-.7 6 3.2 3.5H7l3.2-3.5z" />
+      <path d="M12 13v7" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  user: (
+    <>
+      <circle cx="12" cy="8.5" r="3.5" />
+      <path d="M5.5 20c1-3.5 3.5-5.3 6.5-5.3s5.5 1.8 6.5 5.3" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2Z" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 4H5.5v16H9" />
+      <path d="M14 8l4 4-4 4M18 12H9.5" />
+    </>
+  ),
 }
 
 function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
@@ -154,7 +184,7 @@ const nav: Array<NavSection> = [
     id: 'main',
     items: [
       { key: 'dashboard', label: '대시보드', icon: 'dashboard', to: '/dashboard' },
-      { key: 'analytics', label: '통계 & 분석', icon: 'stats' },
+      { key: 'analytics', label: '통계 & 분석', icon: 'stats', to: '/analytics' },
     ],
   },
   {
@@ -225,25 +255,28 @@ function useTheme() {
 function NavRow({
   item,
   active,
+  rail,
   onSelect,
 }: {
   item: NavItem
   active: boolean
+  /** 데스크톱 핀 해제 상태(아이콘 레일). 배지 숫자는 접히므로 점으로 말한다 */
+  rail: boolean
   // 잎(메뉴 항목)을 고르면 좁은 화면 서랍을 닫는다 — 규약 §8. 가지(섹션)는 그대로 둔다.
   onSelect: () => void
 }) {
-  const className = `mb-0.5 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
+  const className = `relative mb-0.5 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
     active
       ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
       : 'text-sidebar-ink hover:bg-white/5 hover:text-white'
   }`
   const inner = (
     <>
-      <span className="flex items-center gap-2.5">
+      <span className="flex min-w-0 items-center gap-2.5">
         <span className={active ? 'text-white' : 'text-sidebar-ink/70'}>
           <Icon name={item.icon} />
         </span>
-        {item.label}
+        <span className="truncate whitespace-nowrap">{item.label}</span>
       </span>
       {item.badge != null && (
         <span
@@ -253,6 +286,10 @@ function NavRow({
         >
           {item.badge}
         </span>
+      )}
+      {/* 레일 모드: 배지가 접혀도 "기다리는 일이 있다"는 신호는 남긴다 */}
+      {rail && item.badge != null && (
+        <span className="absolute right-1 top-1 hidden h-1.5 w-1.5 rounded-full bg-primary pc:block pc:group-hover/rail:hidden" />
       )}
     </>
   )
@@ -267,7 +304,15 @@ function NavRow({
   )
 }
 
-export function AppShell({
+/* GNB 알림 — 나를 기다리는 일은 종 하나에 모인다 (규약 §2). 배지 숫자는 "안 본 것" */
+const NOTIFICATIONS = [
+  { icon: 'approve' as IconName, text: 'VN7 엔진 사양서 v2.3 승인 요청', time: '10분 전', todo: true },
+  { icon: 'engine' as IconName, text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true },
+  { icon: 'message' as IconName, text: '전기차 배터리 규격서에 검토 의견이 달렸습니다', time: '42분 전', todo: false },
+  { icon: 'deploy' as IconName, text: '자율주행 센서 통합 규격 v3.1 배포 완료', time: '3시간 전', todo: false },
+]
+
+function Shell({
   active,
   title,
   children,
@@ -277,10 +322,26 @@ export function AppShell({
   children: React.ReactNode
 }) {
   const { theme, toggle } = useTheme()
+  const toast = useToast()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   // 좁은 화면(<720px)에서 사이드바는 본문을 덮는 서랍이다 — 규약 §8.
   const [navOpen, setNavOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  // LNB 핀 — 해제하면 아이콘 레일로 접히고, 올리면 다시 펴진다 (데스크톱 전용)
+  const [pinned, setPinned] = useState(true)
+  const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
+  const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
+  const [unread, setUnread] = useState(3)
+
+  useEffect(() => {
+    if (localStorage.getItem('lnb-pinned') === '0') setPinned(false)
+  }, [])
+  const togglePin = () => {
+    setPinned((p) => {
+      localStorage.setItem('lnb-pinned', p ? '0' : '1')
+      return !p
+    })
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -288,13 +349,21 @@ export function AppShell({
         e.preventDefault()
         setPaletteOpen((v) => !v)
       }
+      if (e.key === 'Escape') setMenu(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const rail = !pinned
+  // 레일에서 글자·배지는 호버로 펼쳤을 때만 보인다
+  const railHide = rail
+    ? 'pc:opacity-0 pc:pointer-events-none pc:group-hover/rail:opacity-100 pc:group-hover/rail:pointer-events-auto transition-opacity duration-150'
+    : ''
+
+  const bellItems = NOTIFICATIONS.filter((n) => bellTab === 'all' || n.todo)
+
   return (
-    <ToastProvider>
     <div className="flex min-h-dvh bg-canvas text-ink">
       {/* 서랍 가림막 — 좁은 화면에서 서랍이 열렸을 때만 */}
       {navOpen && (
@@ -307,20 +376,38 @@ export function AppShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-white/5 bg-sidebar text-sidebar-ink transition-transform duration-200 pc:translate-x-0 ${
+        className={`group/rail fixed inset-y-0 left-0 z-40 flex w-60 flex-col overflow-x-hidden border-r border-white/5 bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:translate-x-0 ${
           navOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${rail ? 'pc:w-16 pc:hover:w-60 pc:hover:shadow-[12px_0_40px_rgb(0_0_0/40%)]' : 'pc:w-60'}`}
       >
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white shadow-[0_2px_10px_var(--color-glow)]">
+        {/* 로고 영역 — 지금 어느 제품·어느 판인지가 한눈에 */}
+        <div className="flex items-center gap-2.5 px-3.5 py-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white shadow-[0_2px_10px_var(--color-glow)]">
             H
           </span>
-          <div className="leading-tight">
-            <div className="text-sm font-semibold text-white">HMG Admin</div>
+          <div className={`min-w-0 flex-1 leading-tight ${railHide}`}>
+            <div className="flex items-center gap-1.5">
+              <span className="truncate text-sm font-semibold text-white">HMG Admin</span>
+              <span className="rounded-full bg-primary/25 px-1.5 py-px text-[10px] font-semibold text-primary">
+                PoC
+              </span>
+            </div>
             <div className="text-[11px] text-sidebar-ink/60">통합 관리자 포털</div>
           </div>
+          <button
+            type="button"
+            onClick={togglePin}
+            aria-label={pinned ? '메뉴 접기' : '메뉴 고정'}
+            title={pinned ? '메뉴 접기' : '메뉴 고정'}
+            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink/50 transition-colors hover:bg-white/5 hover:text-white pc:flex ${railHide}`}
+          >
+            <span className={pinned ? '' : 'rotate-45'}>
+              <Icon name="pin" size={15} />
+            </span>
+          </button>
         </div>
-        <nav className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4">
+
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4">
           {nav.map((section) => {
             const isCollapsed = collapsed[section.id]
             return (
@@ -328,12 +415,10 @@ export function AppShell({
                 {section.title ? (
                   <button
                     type="button"
-                    onClick={() =>
-                      setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))
-                    }
-                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/45 transition-colors hover:text-sidebar-ink"
+                    onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
+                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/45 transition-colors hover:text-sidebar-ink ${railHide}`}
                   >
-                    {section.title}
+                    <span className="whitespace-nowrap">{section.title}</span>
                     <svg
                       width="12"
                       height="12"
@@ -357,14 +442,15 @@ export function AppShell({
                 >
                   <div
                     className={`min-h-0 overflow-hidden ${
-                      section.title ? 'ml-2 border-l border-white/8 pl-2' : ''
-                    }`}
+                      section.title && !rail ? 'ml-2 border-l border-white/8 pl-2' : ''
+                    } ${section.title && rail ? 'pc:group-hover/rail:ml-2 pc:group-hover/rail:border-l pc:group-hover/rail:border-white/8 pc:group-hover/rail:pl-2' : ''}`}
                   >
                     {section.items.map((item) => (
                       <NavRow
                         key={item.key}
                         item={item}
                         active={item.key === active}
+                        rail={rail}
                         onSelect={() => setNavOpen(false)}
                       />
                     ))}
@@ -374,13 +460,14 @@ export function AppShell({
             )
           })}
         </nav>
-        <div className="border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/40">
-          프로토타입 v0.3 · 디자인 검토용
+        <div className={`whitespace-nowrap border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/40 ${railHide}`}>
+          프로토타입 v0.5 · 디자인 검토용
         </div>
       </aside>
 
-      <div className="flex min-h-dvh flex-1 flex-col pc:ml-60">
-        {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8) */}
+      <div className={`flex min-h-dvh flex-1 flex-col ${rail ? 'pc:ml-16' : 'pc:ml-60'}`}>
+        {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8).
+            헤더에는 사용자 관점의 필수 정보(현재 위치·기다리는 일·내 계정)를 상시 노출한다 */}
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md pc:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -398,7 +485,13 @@ export function AppShell({
               <span className="font-medium text-ink">{title}</span>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-3 pc:gap-4">
+          <div className="flex shrink-0 items-center gap-2.5 pc:gap-3">
+            <Link
+              to="/specs"
+              className="hidden h-9 items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 pc:flex"
+            >
+              <Icon name="plus" size={14} />새 사양서
+            </Link>
             <button
               type="button"
               aria-label="검색"
@@ -410,18 +503,13 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="hidden h-9 w-56 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
+              className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
               <span className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-                  <circle cx="10.5" cy="10.5" r="6" />
-                  <path d="M20 20l-5-5" />
-                </svg>
+                <Icon name="search" size={14} />
                 전체 검색...
               </span>
-              <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">
-                ⌘K
-              </kbd>
+              <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">⌘K</kbd>
             </button>
             <button
               type="button"
@@ -440,17 +528,31 @@ export function AppShell({
                 </svg>
               )}
             </button>
-            <span className="relative text-ink-muted">
-              <Icon name="bell" size={18} />
-              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger-ink" />
-            </span>
-            <span className="flex items-center gap-2.5">
+            <button
+              type="button"
+              aria-label={`알림 ${unread}건`}
+              onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink"
+            >
+              <Icon name="bell" size={17} />
+              {unread > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger-ink px-1 text-[10px] font-bold tabular-nums text-white">
+                  {unread}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              aria-label="계정 메뉴"
+              onClick={() => setMenu(menu === 'user' ? null : 'user')}
+              className="flex items-center gap-2.5 rounded-lg px-1 py-0.5 transition-colors hover:bg-chip"
+            >
               <Avatar name="김현대" size={30} />
-              <span className="hidden leading-tight pc:block">
+              <span className="hidden text-left leading-tight pc:block">
                 <span className="block text-[13px] font-semibold">김현대</span>
                 <span className="block text-[11px] text-ink-subtle">시스템 관리자</span>
               </span>
-            </span>
+            </button>
           </div>
         </header>
         <main className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-6 pc:px-8 pc:py-8">
@@ -461,8 +563,119 @@ export function AppShell({
           <div className="relative">{children}</div>
         </main>
       </div>
+
+      {/* GNB 팝오버 — 배경을 누르면 닫힌다. Esc 도 닫는다 */}
+      {menu && (
+        <>
+          <button
+            type="button"
+            aria-label="메뉴 닫기"
+            onClick={() => setMenu(null)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          {menu === 'bell' && (
+            <div className="anim-scale-in fixed right-3 top-16 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-24">
+              <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
+                <span className="text-sm font-semibold">알림</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUnread(0)
+                    toast('알림을 모두 읽음 처리했습니다')
+                  }}
+                  className="rounded-md px-2 py-1 text-xs text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+                >
+                  모두 읽음
+                </button>
+              </div>
+              <div className="flex gap-1 border-b border-hairline px-3 py-2">
+                {(
+                  [
+                    { key: 'all', label: '전체' },
+                    { key: 'todo', label: '해야 할 일' },
+                  ] as const
+                ).map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setBellTab(t.key)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      bellTab === t.key
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-ink-muted hover:bg-chip hover:text-ink'
+                    }`}
+                  >
+                    {t.label}
+                    {t.key === 'todo' && (
+                      <span className="ml-1 tabular-nums">{NOTIFICATIONS.filter((n) => n.todo).length}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <ol className="max-h-80 overflow-y-auto overscroll-contain py-1">
+                {bellItems.map((n) => (
+                  <li key={n.text}>
+                    <button
+                      type="button"
+                      onClick={() => setMenu(null)}
+                      className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-chip"
+                    >
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
+                        <Icon name={n.icon} size={14} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[13px] leading-snug text-ink">{n.text}</span>
+                        <span className="mt-0.5 block text-xs text-ink-subtle">{n.time}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <div className="border-t border-hairline px-4 py-2.5 text-[11px] text-ink-subtle">
+                알림 수신 설정은 마이페이지에서 바꿉니다
+              </div>
+            </div>
+          )}
+          {menu === 'user' && (
+            <div className="anim-scale-in fixed right-3 top-16 z-50 w-56 rounded-xl border border-hairline bg-surface py-1.5 shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-8">
+              <div className="border-b border-hairline px-4 pb-2.5 pt-1.5">
+                <div className="text-[13px] font-semibold">김현대</div>
+                <div className="text-xs text-ink-subtle">hyundae.kim@hmg.com · Super Admin</div>
+              </div>
+              {(
+                [
+                  { icon: 'user' as IconName, label: '마이페이지' },
+                  { icon: 'settings' as IconName, label: '개인 설정' },
+                  { icon: 'logout' as IconName, label: '로그아웃' },
+                ] as const
+              ).map((m) => (
+                <button
+                  key={m.label}
+                  type="button"
+                  onClick={() => {
+                    setMenu(null)
+                    toast(`${m.label} — 본개발에서 연결됩니다`)
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+                >
+                  <Icon name={m.icon} size={15} />
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
     </div>
+  )
+}
+
+export function AppShell(props: { active: string; title: string; children: React.ReactNode }) {
+  return (
+    <ToastProvider>
+      <Shell {...props} />
     </ToastProvider>
   )
 }

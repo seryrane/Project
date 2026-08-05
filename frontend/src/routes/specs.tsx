@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
@@ -9,16 +9,30 @@ import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { currentVersion, specs } from '#/data/specs'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
 
-export const Route = createFileRoute('/specs')({ component: SpecsPage })
+export const Route = createFileRoute('/specs')({
+  component: SpecsPage,
+  // 대시보드 승인 큐 등에서 특정 사양서를 바로 연다: /specs?open=SP-001
+  validateSearch: (search: Record<string, unknown>): { open?: string } => ({
+    open: typeof search.open === 'string' ? search.open : undefined,
+  }),
+})
 
 const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
 
 function SpecsPage() {
+  const { open } = Route.useSearch()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('전체 카테고리')
   const [status, setStatus] = useState('전체 상태')
   const [detail, setDetail] = useState<Spec | null>(null)
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
+
+  // ?open=SP-001 로 들어오면 그 사양서 상세를 바로 연다 (대시보드 승인 큐 → 여기)
+  useEffect(() => {
+    if (!open) return
+    const target = specs.find((s) => s.id === open)
+    if (target) setDetail(target)
+  }, [open])
 
   const categories = useMemo(() => Array.from(new Set(specs.map((s) => s.category))), [])
 

@@ -129,8 +129,14 @@ const H = 232
 const PAD = { l: 44, r: 20, t: 14, b: 26 }
 
 function niceMax(v: number): number {
+  // 10의 거듭제곱으로만 올리면 105 가 200 이 되어 차트 절반이 빈다 —
+  // 1.2/1.5/2/2.5/3/4/5/6/8/10 단계로 올린다 (달성률 % 축에서 실측한 문제)
   const step = Math.pow(10, Math.floor(Math.log10(v)))
-  return Math.ceil(v / step) * step
+  const frac = v / step
+  const nice =
+    frac <= 1.2 ? 1.2 : frac <= 1.5 ? 1.5 : frac <= 2 ? 2 : frac <= 2.5 ? 2.5
+    : frac <= 3 ? 3 : frac <= 4 ? 4 : frac <= 5 ? 5 : frac <= 6 ? 6 : frac <= 8 ? 8 : 10
+  return nice * step
 }
 
 /** 시계열은 선. compare(이전 동일 기간)를 주면 중립 점선 + 범례가 함께 선다 —
@@ -139,10 +145,12 @@ export function TrendLineChart({
   data,
   compare,
   unit = 'K',
+  labels = { main: '현재 기간', compare: '이전 기간' },
 }: {
   data: Array<TrendPoint>
   compare?: Array<TrendPoint>
   unit?: string
+  labels?: { main: string; compare: string }
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const gid = useId()
@@ -176,13 +184,13 @@ export function TrendLineChart({
       {cmp && (
         <div className="mb-2 flex items-center gap-4 text-xs text-ink-muted">
           <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full bg-primary" /> 현재 기간
+            <span className="h-0.5 w-4 rounded-full bg-primary" /> {labels.main}
           </span>
           <span className="flex items-center gap-1.5">
             <svg width="16" height="2" aria-hidden>
               <line x1="0" y1="1" x2="16" y2="1" stroke="var(--color-ink-subtle)" strokeWidth="2" strokeDasharray="3 3" />
             </svg>
-            이전 기간
+            {labels.compare}
           </span>
         </div>
       )}
@@ -246,7 +254,7 @@ export function TrendLineChart({
               {unit}
             </span>
             {cmp && (
-              <span className="ml-1.5 tabular-nums text-ink-subtle">(이전 {cmp[hover].value}{unit})</span>
+              <span className="ml-1.5 tabular-nums text-ink-subtle">({labels.compare} {cmp[hover].value}{unit})</span>
             )}
             <span className="ml-1.5 text-ink-subtle">{data[hover].date}</span>
           </div>
