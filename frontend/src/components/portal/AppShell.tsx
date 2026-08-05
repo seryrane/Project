@@ -4,10 +4,12 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { nav } from '#/data/nav'
 import type { IconName, NavItem } from '#/data/nav'
 import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
+import { unseenCount } from '#/data/whatsnew'
 
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
 import { Drawer } from './Drawer'
+import { MotionRoot } from './motion'
 import { ToastProvider, useToast } from './toast'
 
 const iconPaths: Record<IconName, React.ReactNode> = {
@@ -256,6 +258,17 @@ function Shell({
   const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
   // 내가 할 수 있는 것 — 권한은 말없이 붙고 회수는 더 조용하다. 받은 본인이 확인할 자리
   const [abilitiesOpen, setAbilitiesOpen] = useState(false)
+  // 새 기능 배지 (규약 19절) — localStorage 는 서버에 없으므로 수화 뒤에 센다
+  const [whatsNew, setWhatsNew] = useState(0)
+  useEffect(() => {
+    setWhatsNew(unseenCount())
+  }, [])
+  const displayNav = nav.map((s) => ({
+    ...s,
+    items: s.items.map((it) =>
+      it.key === 'guide' && whatsNew > 0 ? { ...it, badge: whatsNew } : it,
+    ),
+  }))
   const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
   const [unread, setUnread] = useState(3)
 
@@ -348,7 +361,7 @@ function Shell({
 
         {/* 스크롤바는 숨기고, 아래에 더 있다는 신호는 하단 페이드가 말한다 */}
         <nav className="scrollbar-hidden relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)]">
-          {nav.map((section) => {
+          {displayNav.map((section) => {
             const isCollapsed = collapsed[section.id]
             return (
               <div key={section.id} className="mt-2 first:mt-0">
@@ -696,7 +709,9 @@ function MyAbilities() {
 export function AppShell(props: { active: string; title: string; children: React.ReactNode }) {
   return (
     <ToastProvider>
-      <Shell {...props} />
+      <MotionRoot>
+        <Shell {...props} />
+      </MotionRoot>
     </ToastProvider>
   )
 }

@@ -3,6 +3,8 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipMulti, ChipSelect, Switch } from '#/components/portal/Chips'
+// 이 파일은 `m` 이 메뉴 항목 변수라 모션 관문을 fx 로 별칭한다
+import { layoutSpring, m as fx } from '#/components/portal/motion'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
@@ -118,7 +120,8 @@ function MenusPage() {
   // ⚠ 컴포넌트가 아니라 렌더 함수다 — 페이지 안에서 컴포넌트를 정의하면 리렌더마다
   // 타입이 바뀌어 DOM 이 재마운트되고, 진행 중이던 드래그가 끊긴다 (실측으로 잡음)
   const renderRow = (m: MenuItem, depth: number): React.ReactNode => (
-    <li key={m.id}>
+    // layout 스프링 — 드래그로 순서가 바뀌면 행이 미끄러져 자리를 잡는다
+    <fx.li key={m.id} layout transition={{ layout: layoutSpring }}>
       <div
         onClick={() => select(m)}
         draggable
@@ -199,7 +202,7 @@ function MenusPage() {
       {children(m.id).length > 0 && (
         <ul className="mt-1 space-y-1">{children(m.id).map((c) => renderRow(c, depth + 1))}</ul>
       )}
-    </li>
+    </fx.li>
   )
 
   return (
@@ -414,8 +417,10 @@ function MenusPage() {
                     <span className="block h-16 overflow-hidden rounded-lg bg-canvas/50">
                       <Wireframe t={t.key} />
                     </span>
-                    <span className={`mt-1.5 block text-xs font-semibold ${on ? 'text-primary' : 'text-ink'}`}>
+                    <span className={`mt-1.5 flex items-center justify-between text-xs font-semibold ${on ? 'text-primary' : 'text-ink'}`}>
                       {t.name}
+                      {/* 규약 16절 — 선택은 색만으로 말하지 않는다 */}
+                      {on && <span className="text-[10px] font-medium">✓ 선택됨</span>}
                     </span>
                     <span className="mt-0.5 block text-[10px] leading-snug text-ink-subtle">{t.desc}</span>
                   </button>

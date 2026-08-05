@@ -94,7 +94,9 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 6. **치수·색은 토큰에서만 고른다** — `@theme` 에 없는 값이 필요해 보이면 단계가 틀린 것.
    손 눈대중 값이 쌓이면 하나하나는 그럴듯한데 모아 놓으면 리듬이 없다("촌스럽다"의 정체)
 7. 누를 수 있는 것에는 `:hover` 와 `:focus-visible` 을 **둘 다** 준다
-8. 브라우저 기본 위젯(`<select>`·file input)도 앱의 물건처럼 입힌다 — 기본 모양이 남으면 그 줄만 딴 앱
+8. 브라우저 기본 위젯(`<select>`·file input·**스크롤바**)도 앱의 물건처럼 입힌다 — 기본 모양이
+   남으면 그 줄만 딴 앱. 스크롤바는 전역 얇은 테마(styles.css `scrollbar-color`)라 화면이
+   따로 할 일 없음. 숨겨야 하면 `.scrollbar-hidden` + 가장자리 페이드
 9. 상태 칩(점 + 뜻이 정한 색)과 이름표 태그(테두리만, 무색)를 가른다. 모르는 상태는 회색
 10. **입력 컨트롤 위계** (관문: `components/portal/Chips.tsx`) — 옵션이 한눈에 들어오면(≤6) 단일 선택은
     `ChipSelect`, 다중 선택은 `ChipMulti`. on/off 하나짜리는 `Switch`. `<Select>` 는 옵션이 많을 때만
@@ -127,6 +129,13 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 ## 모션 & 인터랙션 시스템 (v0.4)
 
 원칙: 모든 등장 모션은 `cubic-bezier(0.16, 1, 0.3, 1)`(ease-out-expo 계열) 180~420ms, 퇴장은 ease 120~200ms로 등장보다 짧게. `prefers-reduced-motion: reduce`에서 전부 비활성화.
+
+**motion(구 framer-motion) 은 관문(`components/portal/motion.tsx`)을 지나서만** —
+LazyMotion(domAnimation)+`m` 조합(~15kb gz)에 `MotionConfig reducedMotion="user"`.
+역할 분담: 한 번 일어나고 끝나는 등장·호버는 CSS 토큰(anim-*), **자리가 바뀌는 것**
+(위젯·행 재정렬의 layout 스프링, 목록 스태거)만 motion. 공통 스프링은 `layoutSpring` 하나.
+⚠ `layout` 을 쓰는 요소에 `anim-fade-up` 을 같이 얹지 않는다 — fill:both 가 transform 을
+고정해 layout 이동(transform 기반)이 조용히 죽는다(.card-hover 때 실증한 함정).
 
 - **페이지 전환**: TanStack Router `defaultViewTransition` — View Transitions API로 크로스페이드 + 미세 상승
 - **슬라이드 오버(Drawer)**: 사양서 상세는 모달이 아닌 우측 슬라이드 오버 패널(max 520px). 등장 280ms 슬라이드, 퇴장 200ms 후 언마운트(닫힘 애니메이션 보장). ESC/백드롭 클릭 닫기

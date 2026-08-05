@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { layoutSpring, m } from '#/components/portal/motion'
 import {
   ActivityHeatmap,
   ChartCard,
@@ -468,8 +469,19 @@ function DashboardPage() {
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
         {layout.map((slot, idx) => (
-          <div
+          /* layout 스프링 — 드래그·화살표·크기 변경으로 자리가 바뀌면 미끄러져 이동한다.
+             ⚠ CSS anim-fade-up 을 여기 쓰면 안 된다 — fill:both 가 transform 을 고정해
+             motion 의 layout 이동(transform 기반)을 죽인다(.card-hover 때 실증한 함정) */
+          <m.div
             key={slot.id}
+            layout
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              layout: layoutSpring,
+              opacity: { duration: 0.35, delay: Math.min(idx, 6) * 0.06 },
+              y: { ...layoutSpring, delay: Math.min(idx, 6) * 0.06 },
+            }}
             draggable={editing}
             onDragStart={() => setDragIdx(idx)}
             onDragEnd={() => {
@@ -491,7 +503,7 @@ function DashboardPage() {
               setDragIdx(null)
               setDropIdx(null)
             }}
-            className={`anim-fade-up relative ${SPAN[slot.size]} ${
+            className={`relative ${SPAN[slot.size]} ${
               editing ? 'cursor-grab rounded-2xl ring-2 active:cursor-grabbing' : ''
             } ${
               editing
@@ -500,7 +512,6 @@ function DashboardPage() {
                   : 'ring-primary/35'
                 : ''
             } ${dragIdx === idx ? 'opacity-50' : ''}`}
-            style={{ animationDelay: `${Math.min(idx, 6) * 60}ms` }}
           >
             {editing && (
               <div className="absolute -top-3 right-3 z-10 flex items-center gap-1 rounded-full border border-hairline bg-raised px-1.5 py-1 shadow-lg">
@@ -541,7 +552,7 @@ function DashboardPage() {
               </div>
             )}
             {widgetBody[slot.id]}
-          </div>
+          </m.div>
         ))}
       </div>
     </AppShell>

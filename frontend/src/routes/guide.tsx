@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { m } from '#/components/portal/motion'
 import { useToast } from '#/components/portal/toast'
+import { WHATSNEW, markSeen } from '#/data/whatsnew'
 
 export const Route = createFileRoute('/guide')({ component: GuidePage })
 
 /** 목차 정본 — 목차와 본문이 같은 목록을 본다 (손으로 두 벌 적으면 어긋난다) */
 const SECTIONS = [
+  { id: 'whatsnew', title: '새 기능' },
   { id: 'start', title: '시작하기' },
   { id: 'roles', title: '역할과 권한' },
   { id: 'spec-flow', title: '사양서 작업 흐름' },
@@ -18,7 +21,12 @@ const SECTIONS = [
 
 function GuidePage() {
   const toast = useToast()
-  const [active, setActive] = useState<string>('start')
+  const [active, setActive] = useState<string>('whatsnew')
+
+  // 목록을 한 번 열면 LNB 배지가 내려간다 (규약 19절 — 배지는 알림이지 체크리스트가 아니다)
+  useEffect(() => {
+    markSeen()
+  }, [])
 
   const jump = (id: string) => {
     setActive(id)
@@ -62,12 +70,47 @@ function GuidePage() {
 
         {/* 본문 */}
         <div className="min-w-0 space-y-5">
+          {/* 새 기능 — 정본은 data/whatsnew.ts. 기능을 배포하면 거기에 같이 적는다 */}
+          <section
+            id="guide-whatsnew"
+            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-primary/30 bg-surface"
+          >
+            <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+              <h2 className="text-sm font-semibold text-ink">1. 새 기능</h2>
+              <span className="text-[11px] text-ink-subtle">최근 배포 순 — 여기를 열면 배지가 내려갑니다</span>
+            </div>
+            <ol className="p-5 pt-3.5">
+              {WHATSNEW.map((e, i) => (
+                <m.li
+                  key={`${e.date}.${e.title}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.06 }}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline/50 py-3 first:pt-0 last:border-0 last:pb-0"
+                >
+                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{e.date}</span>
+                  <span className="min-w-0 flex-1 basis-64">
+                    <span className="block text-[13px] font-semibold text-ink">{e.title}</span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">{e.desc}</span>
+                  </span>
+                  {/* 칸마다 갈 곳을 준다 — "생겼대요"만으로는 안내가 아니다 */}
+                  <Link
+                    to={e.to}
+                    className="shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1.5 text-[11px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                  >
+                    {e.toLabel} →
+                  </Link>
+                </m.li>
+              ))}
+            </ol>
+          </section>
+
           <section
             id="guide-start"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">1. 시작하기</h2>
+              <h2 className="text-sm font-semibold text-ink">2. 시작하기</h2>
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               <p>
@@ -90,7 +133,7 @@ function GuidePage() {
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:60ms]"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">2. 역할과 권한</h2>
+              <h2 className="text-sm font-semibold text-ink">3. 역할과 권한</h2>
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               <p>
@@ -135,7 +178,7 @@ function GuidePage() {
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">3. 사양서 작업 흐름</h2>
+              <h2 className="text-sm font-semibold text-ink">4. 사양서 작업 흐름</h2>
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               {/* 흐름은 그림으로 — 단계 띠 하나가 문단 셋을 대신한다 */}
@@ -170,7 +213,7 @@ function GuidePage() {
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">4. 승인과 배포</h2>
+              <h2 className="text-sm font-semibold text-ink">5. 승인과 배포</h2>
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               <p>
@@ -192,7 +235,7 @@ function GuidePage() {
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:240ms]"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">5. 검증엔진</h2>
+              <h2 className="text-sm font-semibold text-ink">6. 검증엔진</h2>
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               <p>
@@ -212,7 +255,7 @@ function GuidePage() {
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:300ms]"
           >
             <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">6. 더 묻기</h2>
+              <h2 className="text-sm font-semibold text-ink">7. 더 묻기</h2>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

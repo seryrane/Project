@@ -33,6 +33,8 @@ export function ChipSelect<T extends string>({
                 : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
             }`}
           >
+            {/* 규약 16절 — 고른 것은 색만으로 말하지 않는다. 글자로도 남긴다 */}
+            {on ? '✓ ' : ''}
             {o}
           </button>
         )
