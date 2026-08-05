@@ -65,6 +65,9 @@ function SpecDetailPage() {
   const [editing, setEditing] = useState<FieldDef | null>(null)
   const [history, setHistory] = useState(false)
   const [compare, setCompare] = useState(false)
+  // 승인 요청 흐름 — 상신하면 워크플로우가 승인요청 단계로 이동한다 (화면 상태)
+  const [requesting, setRequesting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   // 임시저장본은 묻는다 — 자동으로 덮지 않는다 (규약 §2 초안 규칙)
   useEffect(() => {
@@ -168,6 +171,24 @@ function SpecDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* 흐름 연결 — 이 문서가 결재 중이면 결재로, 아니면 승인 요청으로 가는 길 */}
+          {cur.status === '승인 대기' || submitted ? (
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/approvals' })}
+              className="h-9 rounded-lg border border-pending-ink/40 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
+            >
+              결재 진행 보기 →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRequesting(true)}
+              className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              승인 요청
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setCompare(true)}
@@ -234,7 +255,7 @@ function SpecDetailPage() {
       <div className="mt-4 rounded-xl border border-hairline bg-surface px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="text-xs font-medium text-ink-subtle">배포 워크플로우</span>
-          <WorkflowStepper current={workflowIndex(cur.status)} />
+          <WorkflowStepper current={submitted ? 4 : workflowIndex(cur.status)} />
         </div>
       </div>
 
@@ -433,6 +454,46 @@ function SpecDetailPage() {
           base={spec.history.find((v, i) => i > 0 && v.status === '배포 완료') ?? spec.history[1]}
           onClose={() => setCompare(false)}
         />
+      )}
+
+      {/* 승인 요청 상신 — 무엇이 올라가는지 확인시키고 상신한다 (사양서 → 승인 관리 연결) */}
+      {requesting && (
+        <Modal title="승인 요청 상신" onClose={() => setRequesting(false)}>
+          <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5 text-[13px]">
+            <b className="text-ink">
+              {spec.name} {cur.version}
+            </b>
+            <span className="ml-2 text-ink-subtle">필드 {fields.length}개 · 수정 {dirty}건 포함</span>
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
+            상신하면 결재선(검토 → 최종 승인)을 따라 승인 관리에 등록되고, 승인 완료 전까지
+            배포에 포함할 수 없습니다.
+          </p>
+          <div className="mt-3 rounded-xl border border-hairline px-4 py-3 text-[13px]">
+            <div className="text-xs text-ink-subtle">승인자</div>
+            <div className="mt-1 font-medium text-ink">한동현 (1차) → 김현대 (최종)</div>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setRequesting(false)}
+              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRequesting(false)
+                setSubmitted(true)
+                toast('승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요')
+              }}
+              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+            >
+              상신
+            </button>
+          </div>
+        </Modal>
       )}
     </AppShell>
   )

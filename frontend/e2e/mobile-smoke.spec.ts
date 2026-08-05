@@ -8,7 +8,7 @@ import type { Page } from '@playwright/test'
  * ⚠ skip 은 통과가 아니다 — 요소를 못 찾으면 실패로 남겨 셀렉터를 고친다.
  */
 
-const PAGES = ['/specs', '/dashboard', '/analytics', '/approvals', '/specs/SP-001']
+const PAGES = ['/specs', '/dashboard', '/analytics', '/approvals', '/specs/SP-001', '/deploys']
 
 /** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이
  *  되지 않게, 상호작용 전에는 네트워크가 잠잠해질 때까지(=수화 완료) 기다린다. */

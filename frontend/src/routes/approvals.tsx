@@ -5,17 +5,10 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
-import { approvalRequests, processedRequests } from '#/data/approvals'
-import type { ApprovalRequest, RequestType } from '#/data/approvals'
+import { KIND_CLS, approvalRequests, myRequests, processedRequests } from '#/data/approvals'
+import type { ApprovalRequest } from '#/data/approvals'
 
 export const Route = createFileRoute('/approvals')({ component: ApprovalsPage })
-
-/* 유형은 이름표지만 삭제만은 위험을 함께 말한다 */
-const TYPE_CLS: Record<RequestType, string> = {
-  신규: 'bg-deployed-bg text-deployed-ink',
-  수정: 'bg-draft-bg text-draft-ink',
-  삭제: 'bg-danger-bg text-danger-ink',
-}
 
 /** 결재 단계 점 — ● 지난 단계 · ◉ 현재 · ○ 남은 단계 */
 function StepDots({ step }: { step: [number, number] }) {
@@ -37,35 +30,77 @@ function StepDots({ step }: { step: [number, number] }) {
   )
 }
 
-type Tab = 'mine' | 'all' | 'done'
+function KindChip({ kind }: { kind: keyof typeof KIND_CLS }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${KIND_CLS[kind]}`}>{kind}</span>
+  )
+}
+
+function UrgentChip() {
+  return (
+    <span className="rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-ink">
+      긴급
+    </span>
+  )
+}
+
+type Tab = 'mine' | 'all' | 'requested' | 'done'
 
 function ApprovalsPage() {
   const toast = useToast()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('mine')
+  const [query, setQuery] = useState('')
   // 프로토타입: 처리 결과는 화면 상태로만 든다
   const [decided, setDecided] = useState<Record<string, '승인' | '반려'>>({})
-  const [confirming, setConfirming] = useState<{ req: ApprovalRequest; action: '승인' | '반려' } | null>(null)
-  const [reason, setReason] = useState('')
+  const [detail, setDetail] = useState<ApprovalRequest | null>(null)
+  const [opinion, setOpinion] = useState('')
 
   const pending = approvalRequests.filter((r) => !(r.id in decided))
+  const matches = (text: string) => query.trim() === '' || text.includes(query.trim())
+
   const rows = useMemo(() => {
-    if (tab === 'mine') return pending.filter((r) => r.myTurn)
-    if (tab === 'all') return pending
-    return []
-  }, [tab, decided])
+    const base = tab === 'mine' ? pending.filter((r) => r.myTurn) : pending
+    return base.filter((r) => matches(`${r.title} ${r.id} ${r.requester}`))
+  }, [tab, decided, query])
 
   const decide = (req: ApprovalRequest, action: '승인' | '반려') => {
     setDecided((d) => ({ ...d, [req.id]: action }))
-    setConfirming(null)
-    setReason('')
-    // 되돌릴 수 있으면 묻지 말고 되돌릴 길을 준다 — 프로토타입에서는 문구로만 시늉한다
-    toast(`${req.specName} ${req.version} — ${action} 처리했습니다`)
+    setDetail(null)
+    setOpinion('')
+    // 승인은 끝이 아니라 다음 단계의 시작이다 — 무엇이 이어지는지 함께 말한다
+    if (action === '승인' && req.kind === '배포') {
+      toast(`${req.title} 승인 완료 — 배포 관리에서 예정 시각에 실행됩니다`)
+    } else if (action === '승인' && req.kind === '사양서') {
+      toast(`${req.title} 승인 완료 — 배포에 포함하려면 배포 관리에서 요청하세요`)
+    } else {
+      toast(`${req.title} — ${action} 처리했습니다`)
+    }
   }
+
+  const stats = [
+    { label: '전체 요청', value: approvalRequests.length + processedRequests.length },
+    { label: '대기 중', value: pending.length, cls: 'text-review-ink' },
+    {
+      label: '승인 완료',
+      value:
+        processedRequests.filter((p) => p.result === '승인').length +
+        Object.values(decided).filter((v) => v === '승인').length,
+      cls: 'text-deployed-ink',
+    },
+    {
+      label: '반려',
+      value:
+        processedRequests.filter((p) => p.result === '반려').length +
+        Object.values(decided).filter((v) => v === '반려').length,
+      cls: 'text-danger-ink',
+    },
+  ]
 
   const TABS: Array<{ key: Tab; label: string; count?: number }> = [
     { key: 'mine', label: '내 차례', count: pending.filter((r) => r.myTurn).length },
     { key: 'all', label: '전체 대기', count: pending.length },
+    { key: 'requested', label: '내 요청', count: myRequests.length },
     { key: 'done', label: '처리됨' },
   ]
 
@@ -75,99 +110,86 @@ function ApprovalsPage() {
         <div>
           <h1 className="text-2xl font-bold">승인 관리</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            사양서 신규·수정·삭제 요청 결재 (Mock 데이터) · 내 차례{' '}
+            사양서·배포·메뉴·권한 결재 (Mock 데이터) · 내 차례{' '}
             <b className="tabular-nums text-ink">{pending.filter((r) => r.myTurn).length}건</b>
           </p>
         </div>
       </div>
 
-      <div className="mt-5 flex gap-1 rounded-lg border border-hairline bg-surface p-1 text-[13px] w-fit">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`rounded-md px-3 py-1.5 transition-colors ${
-              tab === t.key
-                ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
-                : 'text-ink-muted hover:text-ink'
-            }`}
-          >
-            {t.label}
-            {t.count != null && <span className="ml-1.5 tabular-nums">{t.count}</span>}
-          </button>
+      {/* 요약 — 숫자는 큰 활자 + tabular-nums (규약 §10) */}
+      <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="rounded-2xl border border-hairline bg-surface px-5 py-4">
+            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+            <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
+          </div>
         ))}
       </div>
 
-      {tab !== 'done' ? (
+      <div className="mt-5 flex flex-col gap-3 pc:flex-row pc:items-center">
+        <div className="flex w-fit gap-1 rounded-lg border border-hairline bg-surface p-1 text-[13px]">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`rounded-md px-3 py-1.5 transition-colors ${
+                tab === t.key
+                  ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
+                  : 'text-ink-muted hover:text-ink'
+              }`}
+            >
+              {t.label}
+              {t.count != null && <span className="ml-1.5 tabular-nums">{t.count}</span>}
+            </button>
+          ))}
+        </div>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="제목, ID, 요청자 검색..."
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
+        />
+      </div>
+
+      {tab === 'mine' || tab === 'all' ? (
         <ol className="mt-5 space-y-3">
           {rows.map((r, i) => (
-            <li
-              key={r.id}
-              style={{ animationDelay: `${i * 60}ms` }}
-              className="anim-fade-up rounded-2xl border border-hairline bg-surface p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate({ to: '/specs', search: { open: r.specId } })}
-                  className="min-w-0 text-left"
-                >
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${TYPE_CLS[r.type]}`}>
-                      {r.type}
-                    </span>
-                    <span className="text-[15px] font-semibold text-ink hover:text-primary">
-                      {r.specName}
-                    </span>
-                    <span className="rounded-full bg-primary/12 px-2 py-0.5 font-mono text-xs font-semibold text-primary">
-                      {r.version}
-                    </span>
-                    {r.myTurn && (
-                      <span className="rounded-full bg-pending-bg px-2 py-0.5 text-[11px] font-semibold text-pending-ink">
-                        내 차례
-                      </span>
-                    )}
+            <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
+              <button
+                type="button"
+                onClick={() => setDetail(r)}
+                className="w-full rounded-2xl border border-hairline bg-surface p-5 text-left transition-colors hover:border-primary/40"
+              >
+                <span className="flex flex-wrap items-center gap-2">
+                  {r.urgent && <UrgentChip />}
+                  <KindChip kind={r.kind} />
+                  <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
+                  <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
+                    대기
                   </span>
-                  <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-muted">
-                    {r.summary}
-                  </span>
-                  <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink-subtle">
-                    <span className="flex items-center gap-1.5">
-                      <Avatar name={r.requester} size={16} />
-                      {r.requester}
+                  {r.myTurn && (
+                    <span className="rounded-full bg-pending-bg px-2 py-0.5 text-[11px] font-semibold text-pending-ink">
+                      내 차례
                     </span>
-                    <span className="font-mono">{r.id}</span>
-                    <span>{r.requestedAt} 상신</span>
-                    <StepDots step={r.step} />
-                    <span
-                      className={`rounded-full px-2 py-0.5 font-semibold tabular-nums ${
-                        r.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-chip text-ink-muted'
-                      }`}
-                    >
-                      {r.waitingDays}일 경과
+                  )}
+                  <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-subtle">
+                    <Avatar name={r.requester} size={16} />
+                    {r.requester} · {r.requestedAt} · 기한{' '}
+                    <b className={r.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{r.deadline}</b>
+                  </span>
+                </span>
+                <span className="mt-2 block text-[15px] font-semibold text-ink">{r.title}</span>
+                <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">{r.summary}</span>
+                <span className="mt-3 flex items-center justify-between gap-3">
+                  <StepDots step={r.step} />
+                  {r.myTurn && (
+                    <span className="flex-1 rounded-lg bg-deployed-bg/60 py-1.5 text-center text-xs font-medium text-deployed-ink">
+                      상세 검토 후 처리
                     </span>
-                  </span>
-                </button>
-                {r.myTurn && (
-                  <span className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirming({ req: r, action: '반려' })}
-                      className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-danger-bg hover:text-danger-ink"
-                    >
-                      반려
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirming({ req: r, action: '승인' })}
-                      className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-                    >
-                      승인
-                    </button>
-                  </span>
-                )}
-              </div>
+                  )}
+                </span>
+              </button>
             </li>
           ))}
           {rows.length === 0 && (
@@ -176,29 +198,62 @@ function ApprovalsPage() {
             </li>
           )}
         </ol>
+      ) : tab === 'requested' ? (
+        <ol className="mt-5 space-y-2.5">
+          {myRequests
+            .filter((r) => matches(`${r.title} ${r.id}`))
+            .map((r) => (
+              <li
+                key={r.id}
+                className="rounded-2xl border border-hairline bg-surface p-5"
+              >
+                <span className="flex flex-wrap items-center gap-2">
+                  <KindChip kind={r.kind} />
+                  <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      r.status === '승인'
+                        ? 'bg-deployed-bg text-deployed-ink'
+                        : 'bg-review-bg text-review-ink'
+                    }`}
+                  >
+                    {r.status}
+                  </span>
+                  <span className="ml-auto text-xs text-ink-subtle">
+                    승인자 {r.approver} · {r.requestedAt} · 기한 {r.deadline}
+                  </span>
+                </span>
+                <span className="mt-2 block text-[15px] font-semibold text-ink">{r.title}</span>
+                <span className="mt-1 block text-[13px] text-ink-muted">{r.summary}</span>
+              </li>
+            ))}
+        </ol>
       ) : (
         <ol className="mt-5 space-y-2.5">
           {[
             ...Object.entries(decided).map(([id, result]) => {
               const r = approvalRequests.find((x) => x.id === id)
-              const fallback: RequestType = '수정'
-              return { id, specName: r?.specName ?? id, version: r?.version ?? '', type: r?.type ?? fallback, result, by: '김현대', at: '방금', reason: undefined as string | undefined }
+              return {
+                id,
+                kind: r?.kind ?? ('사양서' as const),
+                title: r?.title ?? id,
+                result,
+                by: '김현대',
+                at: '방금',
+                reason: result === '반려' ? opinion || undefined : undefined,
+              }
             }),
-            ...processedRequests,
+            ...processedRequests.map((p) => ({ ...p, reason: 'reason' in p ? p.reason : undefined })),
           ].map((p) => (
             <li
               key={p.id}
               className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hairline bg-surface px-4 py-3"
             >
               <span className="flex min-w-0 flex-wrap items-center gap-2 text-[13px]">
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${TYPE_CLS[p.type]}`}>
-                  {p.type}
-                </span>
-                <span className="font-medium text-ink">{p.specName}</span>
-                {p.version && <span className="font-mono text-xs text-ink-subtle">{p.version}</span>}
-                {'reason' in p && p.reason && (
-                  <span className="w-full text-xs text-ink-subtle">└ {p.reason}</span>
-                )}
+                <KindChip kind={p.kind} />
+                <span className="font-mono text-xs text-ink-subtle">{p.id}</span>
+                <span className="font-medium text-ink">{p.title}</span>
+                {p.reason && <span className="w-full text-xs text-ink-subtle">└ {p.reason}</span>}
               </span>
               <span className="flex items-center gap-2.5 text-xs text-ink-subtle">
                 <span
@@ -215,65 +270,152 @@ function ApprovalsPage() {
         </ol>
       )}
 
-      {/* 확인 모달 — 승인·반려는 되돌릴 수 없는 것이라 여기만 묻는다 (규약 §2) */}
-      {confirming && (
+      {/* 승인 요청 상세 — 변경 전/후를 갈라 보여 주고, 처리도 여기서 한다 */}
+      {detail && (
         <Modal
-          title={`${confirming.action} 확인`}
+          title="승인 요청 상세"
           onClose={() => {
-            setConfirming(null)
-            setReason('')
+            setDetail(null)
+            setOpinion('')
           }}
+          wide
         >
-          <p className="text-[13px] leading-relaxed text-ink-muted">
-            <b className="text-ink">
-              {confirming.req.specName} {confirming.req.version}
-            </b>{' '}
-            ({confirming.req.type} 요청)을 <b className="text-ink">{confirming.action}</b>
-            합니다. 처리 후에는 되돌릴 수 없고, {confirming.action === '승인'
-              ? confirming.req.step[0] === confirming.req.step[1]
-                ? '마지막 단계라 즉시 확정됩니다.'
-                : `다음 단계(${confirming.req.step[0] + 1}/${confirming.req.step[1]}) 결재자에게 넘어갑니다.`
-              : '요청자가 보완 후 재상신해야 합니다.'}
-          </p>
-          {confirming.action === '반려' && (
-            <div className="mt-4">
-              <label className="text-xs font-medium text-ink-subtle" htmlFor="reject-reason">
-                반려 사유 <span className="text-danger-ink">*</span> — 무엇이 · 왜 · 다음에 무엇을
-              </label>
-              <textarea
-                id="reject-reason"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={3}
-                placeholder="예) 수집 주기 근거 자료 누락 — 첨부 보완 후 재상신해 주세요"
-                className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas/70 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
-              />
+          <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
+            <div className="flex flex-wrap items-center gap-2">
+              {detail.urgent && <UrgentChip />}
+              <KindChip kind={detail.kind} />
+              <span className="font-mono text-xs text-ink-subtle">{detail.id}</span>
+              <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
+                대기
+              </span>
+              <StepDots step={detail.step} />
             </div>
-          )}
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setConfirming(null)
-                setReason('')
-              }}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              disabled={confirming.action === '반려' && reason.trim() === ''}
-              onClick={() => decide(confirming.req, confirming.action)}
-              className={`h-9 rounded-lg px-4 text-[13px] font-semibold text-white transition-opacity disabled:opacity-40 ${
-                confirming.action === '승인'
-                  ? 'bg-gradient-to-r from-primary to-accent2 shadow-[0_2px_10px_var(--color-glow)] hover:opacity-90'
-                  : 'bg-danger-ink hover:opacity-90'
-              }`}
-            >
-              {confirming.action} 확정
-            </button>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-[15px] font-semibold text-ink">{detail.title}</span>
+              {detail.specId && (
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/specs/$specId', params: { specId: detail.specId! } })}
+                  className="rounded-full bg-primary/12 px-2.5 py-0.5 text-xs font-medium text-primary transition-opacity hover:opacity-80"
+                >
+                  사양서 열기 →
+                </button>
+              )}
+              {detail.kind === '배포' && (
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/deploys' })}
+                  className="rounded-full bg-primary/12 px-2.5 py-0.5 text-xs font-medium text-primary transition-opacity hover:opacity-80"
+                >
+                  배포 관리 열기 →
+                </button>
+              )}
+            </div>
           </div>
+
+          <div className="mt-4">
+            <div className="text-xs font-medium text-ink-subtle">요청 내용</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{detail.summary}</p>
+          </div>
+
+          <div className="mt-4">
+            <div className="text-xs font-medium text-ink-subtle">변경 항목</div>
+            <div className="mt-1.5 overflow-x-auto rounded-xl border border-hairline">
+              <table className="w-full min-w-[480px] border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
+                    <th className="px-3 py-2 font-medium">항목</th>
+                    <th className="px-3 py-2 font-medium">변경 전</th>
+                    <th className="px-3 py-2 font-medium">변경 후</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.changes.map((c) => (
+                    <tr key={c.item} className="border-b border-hairline/60 last:border-0">
+                      <td className="px-3 py-2.5 font-medium text-ink">{c.item}</td>
+                      <td className="px-3 py-2.5">
+                        {c.before ? (
+                          <span className="rounded bg-danger-bg px-1.5 py-0.5 text-danger-ink line-through">
+                            {c.before}
+                          </span>
+                        ) : (
+                          <span className="text-ink-subtle">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className="rounded bg-added-bg px-1.5 py-0.5 font-medium text-added-ink">
+                          {c.after}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 pc:grid-cols-2">
+            <div className="rounded-xl border border-hairline px-4 py-3">
+              <div className="text-xs font-medium text-ink-subtle">요청자</div>
+              <div className="mt-1.5 flex items-center gap-2 text-[13px]">
+                <Avatar name={detail.requester} size={24} />
+                <span>
+                  <b className="text-ink">{detail.requester}</b>
+                  <span className="ml-1.5 text-ink-subtle">{detail.requesterTeam}</span>
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-ink-subtle">요청일 {detail.requestedAt}</div>
+            </div>
+            <div className="rounded-xl border border-hairline px-4 py-3">
+              <div className="text-xs font-medium text-ink-subtle">승인자</div>
+              <div className="mt-1.5 flex items-center gap-2 text-[13px]">
+                <Avatar name={detail.approver} size={24} />
+                <b className="text-ink">{detail.approver}</b>
+              </div>
+              <div className="mt-1 text-xs text-ink-subtle">
+                처리 기한 <b className={detail.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{detail.deadline}</b>
+              </div>
+            </div>
+          </div>
+
+          {detail.myTurn ? (
+            <>
+              <div className="mt-4">
+                <label className="text-xs font-medium text-ink-subtle" htmlFor="opinion">
+                  승인 의견 <span className="text-ink-subtle">(반려 시 필수 — 무엇이 · 왜 · 다음에 무엇을)</span>
+                </label>
+                <textarea
+                  id="opinion"
+                  value={opinion}
+                  onChange={(e) => setOpinion(e.target.value)}
+                  rows={3}
+                  placeholder="승인/반려 의견을 입력하세요..."
+                  className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
+                />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={opinion.trim() === ''}
+                  onClick={() => decide(detail, '반려')}
+                  className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  ✕ 반려
+                </button>
+                <button
+                  type="button"
+                  onClick={() => decide(detail, '승인')}
+                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+                >
+                  ✓ 승인
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="mt-4 rounded-lg bg-chip px-3 py-2 text-xs text-ink-subtle">
+              지금은 내 차례가 아닙니다 — {detail.step[0]}/{detail.step[1]} 단계 결재자 처리를 기다립니다.
+            </p>
+          )}
         </Modal>
       )}
     </AppShell>

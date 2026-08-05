@@ -202,7 +202,7 @@ const nav: Array<NavSection> = [
     items: [
       { key: 'specs', label: '사양서 관리', icon: 'doc', to: '/specs' },
       { key: 'approvals', label: '승인 관리', icon: 'approve', badge: 3, to: '/approvals' },
-      { key: 'deploys', label: '배포 관리', icon: 'deploy' },
+      { key: 'deploys', label: '배포 관리', icon: 'deploy', to: '/deploys' },
     ],
   },
   {
