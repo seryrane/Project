@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint",
+    "e2e": "playwright test",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check ."
   },
@@ -26,6 +27,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/eslint-config": "latest",
     "@tanstack/router-cli": "^1.132.0",

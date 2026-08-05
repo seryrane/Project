@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Select } from '#/components/portal/Select'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { SpecDetailModal } from '#/components/portal/SpecDetailModal'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
@@ -66,26 +67,26 @@ function SpecsPage() {
           className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
         <div className="flex gap-3">
-          <select
+          <Select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="h-10 min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary pc:flex-none"
+            className="min-w-0 flex-1 pc:flex-none"
           >
             <option>전체 카테고리</option>
             {categories.map((c) => (
               <option key={c}>{c}</option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="h-10 min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-muted outline-none focus:border-primary pc:flex-none"
+            className="min-w-0 flex-1 pc:flex-none"
           >
             <option>전체 상태</option>
             {allStatuses.map((s) => (
               <option key={s}>{s}</option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
