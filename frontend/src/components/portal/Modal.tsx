@@ -15,7 +15,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`flex max-h-[85vh] w-full flex-col rounded-2xl border border-white/8 bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] ${
+        className={`flex max-h-[85vh] w-full flex-col rounded-2xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] ${
           wide ? 'max-w-4xl' : 'max-w-2xl'
         }`}
         onClick={(e) => e.stopPropagation()}

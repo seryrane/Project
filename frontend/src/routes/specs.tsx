@@ -41,7 +41,7 @@ function SpecsPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell active="specs" title="사양서 관리">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">사양서 관리</h1>
@@ -51,7 +51,7 @@ function SpecsPage() {
         </div>
         <button
           type="button"
-          className="h-9 rounded-lg bg-gradient-to-r from-primary to-[#a08cff] px-4 text-[13px] font-semibold text-white shadow-[0_4px_18px_rgb(139_124_255/35%)] transition-opacity hover:opacity-90"
+          className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
           + 사양서 등록
         </button>

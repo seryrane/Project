@@ -15,8 +15,12 @@
   --color-ink-subtle: #676e84;
   --color-primary: #8b7cff;
   --color-primary-deep: #7463f2;
+  --color-accent2: #a08cff;
   --color-sidebar: #090b11;
   --color-sidebar-ink: #a7adc0;
+  --color-chip: rgb(255 255 255 / 6%);
+  --color-chip-strong: rgb(255 255 255 / 11%);
+  --color-glow: rgb(139 124 255 / 25%);
 
   --color-draft-bg: #232838;
   --color-draft-ink: #a3aabf;
@@ -30,6 +34,47 @@
   --color-danger-ink: #f78c95;
   --color-added-bg: #123023;
   --color-added-ink: #4fd38a;
+
+  /* chart-only status fills — CVD-validated against each theme's surface */
+  --color-fill-draft: #4e7de0;
+  --color-fill-review: #bd831e;
+  --color-fill-pending: #8b7cff;
+  --color-fill-deployed: #2fae6b;
+}
+
+/* Light theme — overrides the same tokens; the sidebar stays dark in both themes */
+[data-theme='light'] {
+  --color-canvas: #f4f5f9;
+  --color-surface: #ffffff;
+  --color-raised: #eef0f6;
+  --color-hairline: #e3e7f0;
+  --color-ink: #1b2033;
+  --color-ink-muted: #4d566e;
+  --color-ink-subtle: #8791a5;
+  --color-primary: #6d5cf0;
+  --color-primary-deep: #5a49dd;
+  --color-accent2: #8a76ff;
+  --color-chip: rgb(27 32 51 / 6%);
+  --color-chip-strong: rgb(27 32 51 / 11%);
+  --color-glow: rgb(109 92 240 / 20%);
+
+  --color-draft-bg: #e9edf4;
+  --color-draft-ink: #5b6472;
+  --color-review-bg: #fdf0dc;
+  --color-review-ink: #96570a;
+  --color-pending-bg: #ece7ff;
+  --color-pending-ink: #5f43d6;
+  --color-deployed-bg: #dff3e8;
+  --color-deployed-ink: #177245;
+  --color-danger-bg: #fcebeb;
+  --color-danger-ink: #b3261e;
+  --color-added-bg: #dff3e8;
+  --color-added-ink: #12703f;
+
+  --color-fill-draft: #3f6ad0;
+  --color-fill-review: #b8770a;
+  --color-fill-pending: #6d5cf0;
+  --color-fill-deployed: #1d9d5f;
 }
 
 body {

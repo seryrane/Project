@@ -35,7 +35,7 @@ export function SpecDetailModal({ spec, onClose, onCompareWith }: Props) {
         </TabButton>
         <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
           수정 이력
-          <span className="ml-1.5 rounded-full bg-white/8 px-1.5 py-0.5 text-[11px] text-ink-muted">
+          <span className="ml-1.5 rounded-full bg-chip-strong px-1.5 py-0.5 text-[11px] text-ink-muted">
             {spec.history.length}
           </span>
         </TabButton>
@@ -59,7 +59,7 @@ export function SpecDetailModal({ spec, onClose, onCompareWith }: Props) {
                   <span className="font-mono text-sm font-semibold">{v.version}</span>
                   <StatusBadge status={v.status} />
                   {i === 0 && (
-                    <span className="rounded-full bg-white/8 px-2 py-0.5 text-[11px] font-medium text-ink-muted">
+                    <span className="rounded-full bg-chip-strong px-2 py-0.5 text-[11px] font-medium text-ink-muted">
                       현재
                     </span>
                   )}
