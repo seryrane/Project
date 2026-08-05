@@ -144,7 +144,80 @@ function MembersPage() {
         </div>
       </div>
 
-      <div className="anim-fade-up mt-4 overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface">
+      {/* 좁은 화면: 표 대신 카드 — 회원은 행마다 독립 개체라 열 비교가 필요 없다.
+          가로 스크롤 표는 시트성(필드·매트릭스)에만 남긴다 (2026-08-05 모바일 리뷰) */}
+      <ol className="mt-4 space-y-2.5 pc:hidden">
+        {rows.map((m) => {
+          const st = effStatus(m)
+          return (
+            <li key={m.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setDetail(m)
+                  setTab('info')
+                }}
+                className="card-hover w-full rounded-2xl border border-hairline bg-surface p-4 text-left"
+              >
+                <span className="flex items-start gap-2.5">
+                  <Avatar name={m.name} size={34} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <b className="font-medium text-ink">{m.name}</b>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>
+                        {st}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-ink-subtle">
+                      {m.email} · {m.dept}
+                    </span>
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={st === '잠금' ? '잠금 해제' : '계정 잠금'}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLock(m)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation()
+                        toggleLock(m)
+                      }
+                    }}
+                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs ${
+                      st === '잠금' ? 'bg-review-bg text-review-ink' : 'text-ink-subtle'
+                    }`}
+                  >
+                    {st === '잠금' ? '🔒 해제' : '🔓'}
+                  </span>
+                </span>
+                <span className="mt-2.5 flex flex-wrap items-center gap-1">
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[m.grade]}`}>
+                    {m.grade}
+                  </span>
+                  {m.roles.map((r) => (
+                    <span key={r} className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
+                      {r}
+                    </span>
+                  ))}
+                  <span className="ml-auto font-mono text-[11px] tabular-nums text-ink-subtle">
+                    FIDO {m.fido ? 'ON' : 'OFF'} · {m.lastLogin}
+                  </span>
+                </span>
+              </button>
+            </li>
+          )
+        })}
+        {rows.length === 0 && (
+          <li className="rounded-2xl border border-hairline bg-surface px-4 py-10 text-center text-sm text-ink-subtle">
+            조건에 맞는 회원이 없습니다.
+          </li>
+        )}
+      </ol>
+
+      <div className="anim-fade-up mt-4 hidden overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface pc:block">
         <table className="w-full min-w-[860px] border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">

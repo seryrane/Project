@@ -88,7 +88,35 @@ function PrivacyPage() {
               다운로드·마스킹 해제는 사유가 필수로 남습니다
             </span>
           </div>
-          <div className="overflow-x-auto">
+          {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
+          <ol className="space-y-2 p-4 pc:hidden">
+            {AUDIT_LOG.map((l) => {
+              const danger = l.action !== '열람'
+              return (
+                <li
+                  key={`${l.at}.${l.target}`}
+                  className={`rounded-xl border border-hairline/70 p-3 ${danger ? 'bg-pending-bg/20' : ''}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        danger ? 'bg-pending-bg text-pending-ink' : 'bg-chip text-ink-muted'
+                      }`}
+                    >
+                      {l.action}
+                      {danger && ' ⚠'}
+                    </span>
+                    <b className="text-xs font-medium text-ink">{l.user}</b>
+                    <span className="ml-auto font-mono text-[10px] tabular-nums text-ink-subtle">{l.at}</span>
+                  </div>
+                  <div className="mt-1.5 text-xs text-ink-muted">{l.target}</div>
+                  <div className="mt-0.5 text-[11px] text-ink-subtle">사유: {l.reason}</div>
+                </li>
+              )
+            })}
+          </ol>
+
+          <div className="hidden overflow-x-auto pc:block">
             <table className="w-full min-w-[560px] border-collapse text-xs">
               <thead>
                 <tr className="border-b border-hairline bg-canvas/60 text-left text-ink-subtle">

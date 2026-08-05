@@ -223,7 +223,7 @@ function RolesPage() {
               {/* 펼침 — grid-rows 0fr→1fr 전환, 내용은 살짝 떠오른다 */}
               <div className={`reveal-grid ${open ? 'open' : ''}`}>
                 <div>
-                  <div className="reveal-inner mt-3 overflow-x-auto rounded-xl border border-hairline">
+                  <div className="reveal-inner table-scroll mt-3 rounded-xl border border-hairline">
                     <table className="w-full min-w-[560px] border-collapse text-xs">
                       <thead>
                         <tr className="border-b border-hairline bg-canvas/60 text-ink-subtle">
@@ -298,7 +298,7 @@ function RolesPage() {
             반영되지 않고 <b className="text-ink">상신 후 결재</b>를 거쳐 적용됩니다. 체크가 있는
             줄은 밝게 표시됩니다.
           </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-hairline">
+          <div className="table-scroll mt-3 rounded-xl border border-hairline">
             <table className="w-full min-w-[720px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">

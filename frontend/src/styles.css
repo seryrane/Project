@@ -256,6 +256,20 @@ h1, h2, h3 {
   background: color-mix(in oklab, var(--color-primary) 35%, transparent);
 }
 
+/* 시트성 표의 가로 스크롤 상자 — 오른쪽에 열이 더 있다는 걸 가장자리 그림자로 말한다
+   (규약 §8: 표시가 없으면 사람은 "열이 이것뿐"이라고 읽는다).
+   background-attachment: local 인 덮개가 스크롤을 따라 움직여 그림자를 걷어 낸다 —
+   끝에 닿으면 그림자가 사라진다. ⚠ 행에 불투명 배경을 깔면 그림자가 가려진다 */
+.table-scroll {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--color-surface) 40%, transparent) left / 36px 100% no-repeat,
+    linear-gradient(to left, var(--color-surface) 40%, transparent) right / 36px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 40%), transparent) left / 12px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 40%), transparent) right / 12px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
 /* 스켈레톤 — 빛이 쓸고 지나가는 셔머 (규약 §3: 곧 채워질 카드 자리에만).
    ⚠ 영원히 도는 스켈레톤이 제일 나쁘다 — 실패하면 지우고 이유를 남긴다 */
 .skeleton {

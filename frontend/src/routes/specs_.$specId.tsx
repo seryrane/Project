@@ -329,7 +329,8 @@ function SpecDetailPage() {
           />
         </div>
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-hairline">
+        {/* 시트성 표 — 카드로 펴면 열 비교가 죽는다. 자기 상자 스크롤 + 가장자리 그림자 */}
+        <div className="table-scroll mt-4 rounded-xl border border-hairline">
           <table className="w-full min-w-[880px] border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">

@@ -63,7 +63,10 @@ function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
 }
 
 /* ---- 스파크라인: 타일 숫자와 같은 이야기를 하는 미니 추이 ---- */
-function Sparkline({ points, width = 110, height = 34 }: { points: Array<number>; width?: number; height?: number }) {
+/** ⚠ viewBox 가 좁으면(110) 넓은 카드에서 svg 는 채워져도 그림은 가운데 조각으로
+ *  축소된다(preserveAspectRatio 기본 meet — 모바일 실기기에서 "차트가 너무 작아").
+ *  넓은 비율(260×40)로 그리고 h-auto 로 두면 카드 폭을 그대로 채운다 */
+function Sparkline({ points, width = 260, height = 40 }: { points: Array<number>; width?: number; height?: number }) {
   const gid = useId()
   const min = Math.min(...points)
   const max = Math.max(...points)
@@ -73,7 +76,7 @@ function Sparkline({ points, width = 110, height = 34 }: { points: Array<number>
   const line = points.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('')
   const area = `${line}L${x(points.length - 1).toFixed(1)},${height - 1}L${x(0).toFixed(1)},${height - 1}Z`
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="block h-[34px] w-full" aria-hidden>
+    <svg viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" aria-hidden>
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.28" />
