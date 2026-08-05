@@ -12,6 +12,7 @@ import { GRADE_CLS, SERVICE_ROLES, STATUS_CLS, members } from '#/data/members'
 import type { Grade, Member } from '#/data/members'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
+import { apiSend, useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/members')({ component: MembersPage })
 
@@ -34,14 +35,17 @@ function MembersPage() {
   const [tab, setTab] = useState<'info' | 'activity' | 'perm'>('info')
   const [creating, setCreating] = useState(false)
   const [newGrade, setNewGrade] = useState<Grade>('Viewer')
-  // 잠금/해제는 화면 상태로만 (프로토타입)
+  // 잠금/해제 — 서버가 있으면 즉시 반영(감사 로그도 서버가 남긴다), 없으면 화면 상태
   const [lockOverride, setLockOverride] = useState<Record<string, boolean>>({})
+
+  // 정본은 서버 — 서버가 없으면 mock 으로 돌아간다 (관문 lib/api.ts)
+  const { data: memberList } = useApi<Array<Member>>('/members', members)
 
   const effStatus = (m: Member) => (m.id in lockOverride ? (lockOverride[m.id] ? '잠금' : '활성') : m.status)
 
   const rows = useMemo(
     () =>
-      members.filter((m) => {
+      memberList.filter((m) => {
         const st = effStatus(m)
         const q = query.trim()
         return (
@@ -50,14 +54,14 @@ function MembersPage() {
           (grade === '전체 등급' || m.grade === grade)
         )
       }),
-    [query, status, grade, lockOverride],
+    [memberList, query, status, grade, lockOverride],
   )
 
   const counts = {
-    all: members.length,
-    active: members.filter((m) => effStatus(m) === '활성').length,
-    inactive: members.filter((m) => effStatus(m) === '비활성').length,
-    locked: members.filter((m) => effStatus(m) === '잠금').length,
+    all: memberList.length,
+    active: memberList.filter((m) => effStatus(m) === '활성').length,
+    inactive: memberList.filter((m) => effStatus(m) === '비활성').length,
+    locked: memberList.filter((m) => effStatus(m) === '잠금').length,
   }
 
   const stats = [
@@ -95,6 +99,8 @@ function MembersPage() {
   const toggleLock = (m: Member) => {
     const locking = effStatus(m) !== '잠금'
     setLockOverride((o) => ({ ...o, [m.id]: locking }))
+    // 서버에도 반영 — 잠금 처리 사실은 서버가 감사 로그로 남긴다
+    void apiSend('POST', `/members/${m.id}/lock-toggle`)
     // 되돌릴 수 있으면 묻지 않는다 — 되돌릴 길을 문구로 준다 (규약 §2)
     toast(locking ? `${m.name} 계정을 잠갔습니다 — 같은 버튼으로 해제할 수 있습니다` : `${m.name} 계정 잠금을 해제했습니다`)
   }

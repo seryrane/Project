@@ -94,5 +94,14 @@
 
 - `frontend/` — React 19 + TanStack Start. 고객 표준(React)과 일치. 유효
 - `backend/` — Spring Boot 4.1 스캐폴드. 백엔드 표준 확정 전까지 업무 로직 적재 보류
-- `backend-python/` — FastAPI 스캐폴드 (백엔드 표준이 FastAPI로 확정될 경우 대비)
-- 백엔드 확정 시 한쪽을 제거하고 CLAUDE.md/CI를 갱신할 것
+- `backend-python/` — FastAPI. **2026-08-05 부터 확정된 공통 기능을 적재 중**
+  (정황 우세 판단 — 기존 KPI 플랫폼 FastAPI·검증엔진 Python·Airflow):
+  내 정보 파생(me/menu/features/abilities) · 대시보드 배치 계정 저장 · RBAC 정본
+  조회+상신 접수 · 커뮤니티(공지/Q&A/FAQ) · 회원/잠금 · 감사 로그 · whatsnew.
+  실행 `uvicorn app.main:app --port 8080` (vite proxy /api). 저장은 SQLite
+  (`data/app.db`, gitignore) — 시드는 비어 있을 때만 채운다.
+  ⚠ 일부러 안 붙인 것(미확정): 사양서 CRUD · 승인 결재선 · 배포 실행 ·
+  검증엔진 실행 · 인증(SSO — 사용자 김현대 고정). 프런트는 서버가 없으면
+  mock 으로 조용히 돌아간다(`frontend/src/lib/api.ts` 관문 — 시연 안전).
+- 백엔드 확정 시 한쪽을 제거하고 CLAUDE.md/CI를 갱신할 것 (Spring 채택 시
+  backend-python 의 API 모양을 그대로 이관한다 — 프런트는 관문만 본다)

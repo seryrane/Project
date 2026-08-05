@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
+import { apiGet, apiSend } from '#/lib/api'
 import {
   ActivityHeatmap,
   ChartCard,
@@ -156,6 +157,14 @@ function DashboardPage() {
   const [booted, setBooted] = useState(false)
   useEffect(() => {
     setLayout(loadLayout())
+    // 배치 정본은 계정 단위(서버) — 브라우저 저장은 다른 PC 에서 초기화된다.
+    // 서버가 없으면 localStorage 그대로 (관문 lib/api.ts 의 시연 모드)
+    void apiGet<{ layout: Array<WidgetSlot> | null }>('/me/dashboard-layout').then((res) => {
+      const server = res?.layout
+      if (server && server.length > 0) {
+        setLayout(server.filter((s) => s.id in WIDGET_META && [1, 2, 3].includes(s.size)))
+      }
+    })
     if (sessionStorage.getItem('dashboard.booted') === '1') {
       setBooted(true)
       return
@@ -169,6 +178,8 @@ function DashboardPage() {
   const apply = (next: Array<WidgetSlot>) => {
     setLayout(next)
     saveLayout(next)
+    // 즉시 저장 — 서버(계정 단위)에도. 실패해도 로컬 저장이 남는다
+    void apiSend('PUT', '/me/dashboard-layout', { layout: next })
   }
 
   const move = (idx: number, dir: -1 | 1) => {

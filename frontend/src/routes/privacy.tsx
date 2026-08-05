@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
 import { useToast } from '#/components/portal/toast'
+import { useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/privacy')({ component: PrivacyPage })
 
@@ -33,7 +34,10 @@ function PrivacyPage() {
   const [maskEmail, setMaskEmail] = useState(false)
   const [retention, setRetention] = useState('365일')
 
-  const downloads30d = AUDIT_LOG.filter((l) => l.action === '다운로드').length
+  // 감사 로그 정본은 서버 — 잠금 처리 등 실제 행위가 쌓인다 (없으면 mock)
+  const { data: auditList } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
+
+  const downloads30d = auditList.filter((l) => l.action === '다운로드').length
 
   return (
     <AppShell active="privacy" title="개인정보보호">
@@ -90,7 +94,7 @@ function PrivacyPage() {
           </div>
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
           <ol className="space-y-2 p-4 pc:hidden">
-            {AUDIT_LOG.map((l) => {
+            {auditList.map((l) => {
               const danger = l.action !== '열람'
               return (
                 <li
@@ -128,7 +132,7 @@ function PrivacyPage() {
                 </tr>
               </thead>
               <tbody>
-                {AUDIT_LOG.map((l) => {
+                {auditList.map((l) => {
                   const danger = l.action !== '열람'
                   return (
                     <tr

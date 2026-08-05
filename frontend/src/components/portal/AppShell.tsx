@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
-import type { IconName, NavItem } from '#/data/nav'
+import type { IconName, NavItem, NavSection } from '#/data/nav'
+import { useApi } from '#/lib/api'
 import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import { unseenCount } from '#/data/whatsnew'
 
@@ -263,7 +264,16 @@ function Shell({
   useEffect(() => {
     setWhatsNew(unseenCount())
   }, [])
-  const displayNav = nav.map((s) => ({
+  // 메뉴는 권한의 파생물 — 서버(/api/me/menu)가 걸러서 준다. 없으면 정적 정본(시연 모드)
+  const { data: serverNav } = useApi<Array<NavSection>>('/me/menu', nav)
+  // 내 정보도 서버에서 — SSO 확정 전엔 서버가 김현대로 고정해 준다
+  const { data: meInfo } = useApi('/me', {
+    name: '김현대',
+    email: 'hyundae.kim@hmg.com',
+    title: '시스템 관리자',
+    gradeName: 'Super Admin',
+  })
+  const displayNav = serverNav.map((s) => ({
     ...s,
     items: s.items.map((it) =>
       it.key === 'guide' && whatsNew > 0 ? { ...it, badge: whatsNew } : it,
@@ -505,10 +515,10 @@ function Shell({
               onClick={() => setMenu(menu === 'user' ? null : 'user')}
               className="flex items-center gap-2.5 rounded-lg px-1 py-0.5 transition-colors hover:bg-chip"
             >
-              <Avatar name="김현대" size={30} />
+              <Avatar name={meInfo.name} size={30} />
               <span className="hidden text-left leading-tight pc:block">
-                <span className="block text-[13px] font-semibold">김현대</span>
-                <span className="block text-[11px] text-ink-subtle">시스템 관리자</span>
+                <span className="block text-[13px] font-semibold">{meInfo.name}</span>
+                <span className="block text-[11px] text-ink-subtle">{meInfo.title}</span>
               </span>
             </button>
           </div>
@@ -600,8 +610,8 @@ function Shell({
           {menu === 'user' && (
             <div className="anim-scale-in fixed right-3 top-16 z-50 w-56 rounded-xl border border-hairline bg-surface py-1.5 shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-8">
               <div className="border-b border-hairline px-4 pb-2.5 pt-1.5">
-                <div className="text-[13px] font-semibold">김현대</div>
-                <div className="text-xs text-ink-subtle">hyundae.kim@hmg.com · Super Admin</div>
+                <div className="text-[13px] font-semibold">{meInfo.name}</div>
+                <div className="text-xs text-ink-subtle">{meInfo.email} · {meInfo.gradeName}</div>
               </div>
               {/* 권한은 여러 길로 말없이 붙는다 — 받은 본인이 사람 말로 확인하는 자리 */}
               <button

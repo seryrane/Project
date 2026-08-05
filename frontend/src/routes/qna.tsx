@@ -4,11 +4,13 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipSelect } from '#/components/portal/Chips'
+import { CtaButton } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { QNA_CATEGORIES, questions } from '#/data/community'
 import type { Question } from '#/data/community'
+import { apiSend, useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/qna')({ component: QnaPage })
 
@@ -22,19 +24,24 @@ function QnaPage() {
   const [writing, setWriting] = useState(false)
   const [newCat, setNewCat] = useState<(typeof QNA_CATEGORIES)[number]>('사양서')
   const [answerDraft, setAnswerDraft] = useState('')
+  const [newTitle, setNewTitle] = useState('')
+  const [newBody, setNewBody] = useState('')
+
+  // 정본은 서버 — 서버가 없으면 mock 으로 돌아간다 (관문 lib/api.ts)
+  const { data: questionList, reload } = useApi<Array<Question>>('/questions', questions)
 
   const filtered = useMemo(
     () =>
-      questions.filter((q) => {
+      questionList.filter((q) => {
         const st = q.answers.length > 0 ? '답변 완료' : '답변 대기'
         return (
           (filter === '전체' || st === filter) &&
           (query === '' || q.title.toLowerCase().includes(query.toLowerCase()))
         )
       }),
-    [filter, query],
+    [questionList, filter, query],
   )
-  const waiting = questions.filter((q) => q.answers.length === 0).length
+  const waiting = questionList.filter((q) => q.answers.length === 0).length
 
   return (
     <AppShell active="qna" title="Q&A">
@@ -177,18 +184,19 @@ function QnaPage() {
                   className="w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
                 />
                 <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
+                  <CtaButton
                     disabled={answerDraft.trim() === ''}
-                    onClick={() => {
+                    busyLabel="등록 중…"
+                    onAction={async () => {
+                      await apiSend('POST', `/questions/${reading.id}/answers`, { body: answerDraft })
                       setAnswerDraft('')
                       close()
+                      reload()
                       toast('답변을 등록했습니다 — 질문자에게 알림이 갑니다')
                     }}
-                    className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     답변 등록
-                  </button>
+                  </CtaButton>
                 </div>
               </div>
             </div>
@@ -202,6 +210,8 @@ function QnaPage() {
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">제목 <b className="text-danger-ink">*</b></span>
             <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
               placeholder="무엇이 궁금한가요?"
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
@@ -216,6 +226,8 @@ function QnaPage() {
             <span className="text-xs font-medium text-ink-subtle">내용 <b className="text-danger-ink">*</b></span>
             <textarea
               rows={4}
+              value={newBody}
+              onChange={(e) => setNewBody(e.target.value)}
               placeholder="상황을 구체적으로 적을수록 답이 빨라집니다 — 화면·시각·메시지"
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
@@ -231,16 +243,24 @@ function QnaPage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={() => {
+            <CtaButton
+              disabled={newTitle.trim() === ''}
+              busyLabel="등록 중…"
+              onAction={async () => {
+                await apiSend('POST', '/questions', {
+                  title: newTitle,
+                  category: newCat,
+                  body: newBody,
+                })
                 setWriting(false)
+                setNewTitle('')
+                setNewBody('')
+                reload()
                 toast('질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               등록
-            </button>
+            </CtaButton>
           </div>
         </Modal>
       )}

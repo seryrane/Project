@@ -9,6 +9,7 @@ import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { NOTICE_CATEGORIES, notices } from '#/data/community'
 import type { Notice } from '#/data/community'
+import { apiSend, useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/notice')({ component: NoticePage })
 
@@ -30,15 +31,20 @@ function NoticePage() {
   const [writing, setWriting] = useState(false)
   const [newCat, setNewCat] = useState<(typeof NOTICE_CATEGORIES)[number]>('시스템')
   const [newPinned, setNewPinned] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newBody, setNewBody] = useState('')
+
+  // 정본은 서버 — 서버가 없으면 mock 으로 돌아간다 (관문 lib/api.ts)
+  const { data: noticeList, reload } = useApi<Array<Notice>>('/notices', notices)
 
   const filtered = useMemo(
     () =>
-      notices.filter(
+      noticeList.filter(
         (n) =>
           (category === '전체' || n.category === category) &&
           (query === '' || n.title.toLowerCase().includes(query.toLowerCase())),
       ),
-    [category, query],
+    [noticeList, category, query],
   )
   const pinned = filtered.filter((n) => n.pinned)
   const rest = filtered.filter((n) => !n.pinned)
@@ -185,6 +191,8 @@ function NoticePage() {
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">제목 <b className="text-danger-ink">*</b></span>
             <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
               placeholder="공지 제목"
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
@@ -199,6 +207,8 @@ function NoticePage() {
             <span className="text-xs font-medium text-ink-subtle">본문 <b className="text-danger-ink">*</b></span>
             <textarea
               rows={5}
+              value={newBody}
+              onChange={(e) => setNewBody(e.target.value)}
               placeholder="공지 내용을 입력하세요"
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
@@ -220,10 +230,20 @@ function NoticePage() {
             </button>
             {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
             <CtaButton
+              disabled={newTitle.trim() === ''}
               busyLabel="등록 중…"
               onAction={async () => {
-                await simulate()
+                const ok = await apiSend('POST', '/notices', {
+                  title: newTitle,
+                  category: newCat,
+                  body: newBody,
+                  pinned: newPinned,
+                })
+                if (!ok) await simulate() // 서버 없는 시연 모드 — 버튼 로딩 감각만 유지
                 setWriting(false)
+                setNewTitle('')
+                setNewBody('')
+                reload()
                 toast('공지를 등록했습니다 — 전체 알림으로도 발송됩니다')
               }}
             >

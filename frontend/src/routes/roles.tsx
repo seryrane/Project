@@ -4,6 +4,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
+import { apiSend } from '#/lib/api'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import {
@@ -403,7 +404,17 @@ function RolesPage() {
               disabled={dirtyCount === 0 || selfLock}
               busyLabel="상신 중…"
               onAction={async () => {
-                await simulate()
+                // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
+                // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
+                const matrix: Record<string, Array<string>> = {}
+                for (const menu of MENUS) {
+                  matrix[menu] = ACTIONS.filter((a) => draft[`${menu}.${a}`])
+                }
+                const ok = await apiSend('POST', '/submissions', {
+                  kind: 'role-change',
+                  payload: { roleKey: editing.key, matrix, scope: draftScope },
+                })
+                if (!ok) await simulate() // 서버 없는 시연 모드
                 setEditing(null)
                 toast(`${editing.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 결재 후 ${editing.assigned}명에게 적용됩니다`)
               }}

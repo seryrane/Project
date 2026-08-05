@@ -4,8 +4,11 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
+import { CtaButton } from '#/components/portal/Skeleton'
 import { useToast } from '#/components/portal/toast'
 import { FAQ_CATEGORIES, faqs } from '#/data/community'
+import type { Faq } from '#/data/community'
+import { apiSend, useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/faq')({ component: FaqPage })
 
@@ -17,17 +20,22 @@ function FaqPage() {
   const [voted, setVoted] = useState<Record<string, boolean>>({})
   const [adding, setAdding] = useState(false)
   const [newCat, setNewCat] = useState<(typeof FAQ_CATEGORIES)[number]>('계정·권한')
+  const [newQ, setNewQ] = useState('')
+  const [newA, setNewA] = useState('')
+
+  // 정본은 서버 — 서버가 없으면 mock 으로 돌아간다 (관문 lib/api.ts)
+  const { data: faqList, reload } = useApi<Array<Faq>>('/faqs', faqs)
 
   const filtered = useMemo(
     () =>
-      faqs.filter(
+      faqList.filter(
         (f) =>
           (category === '전체' || f.category === category) &&
           (query === '' ||
             f.q.toLowerCase().includes(query.toLowerCase()) ||
             f.a.toLowerCase().includes(query.toLowerCase())),
       ),
-    [category, query],
+    [faqList, category, query],
   )
 
   return (
@@ -109,6 +117,7 @@ function FaqPage() {
                         disabled={voted[f.id]}
                         onClick={() => {
                           setVoted((v) => ({ ...v, [f.id]: true }))
+                          void apiSend('POST', `/faqs/${f.id}/helpful`)
                           toast('의견 감사합니다 — 도움됨으로 기록했습니다')
                         }}
                         className={`rounded-full border px-2 py-0.5 font-medium transition-all active:scale-95 ${
@@ -149,6 +158,8 @@ function FaqPage() {
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">질문 <b className="text-danger-ink">*</b></span>
             <input
+              value={newQ}
+              onChange={(e) => setNewQ(e.target.value)}
               placeholder="사용자 말로 적습니다 — 예: 로그인이 안 됩니다"
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
@@ -157,6 +168,8 @@ function FaqPage() {
             <span className="text-xs font-medium text-ink-subtle">답변 <b className="text-danger-ink">*</b></span>
             <textarea
               rows={4}
+              value={newA}
+              onChange={(e) => setNewA(e.target.value)}
               placeholder="해결 순서대로 — 어디를 눌러 무엇을 하는지"
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
@@ -169,16 +182,20 @@ function FaqPage() {
             >
               취소
             </button>
-            <button
-              type="button"
-              onClick={() => {
+            <CtaButton
+              disabled={newQ.trim() === '' || newA.trim() === ''}
+              busyLabel="추가 중…"
+              onAction={async () => {
+                await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
                 setAdding(false)
+                setNewQ('')
+                setNewA('')
+                reload()
                 toast('FAQ 를 추가했습니다')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               추가
-            </button>
+            </CtaButton>
           </div>
         </Modal>
       )}
