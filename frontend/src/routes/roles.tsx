@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { apiSend } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import {
@@ -35,12 +36,14 @@ function has(role: RoleDef, menu: string, action: Action) {
 }
 
 function RolesPage() {
+  const { t, tf } = useI18n()
   const toast = useToast()
   const [roles, setRoles] = useState(roleDefs)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [editing, setEditing] = useState<RoleDef | null>(null)
   const [creating, setCreating] = useState(false)
-  const [newBase, setNewBase] = useState('처음부터 시작')
+  // 기반 역할 칩 — 라벨이 언어를 따라 바뀌므로 상태는 라벨이 아니라 순번으로 든다
+  const [newBaseIdx, setNewBaseIdx] = useState(0)
   const [deleting, setDeleting] = useState<RoleDef | null>(null)
   const [holdersOpen, setHoldersOpen] = useState<string | null>(null)
   // 편집 매트릭스 체크 상태 + 메뉴별 조회 범위
@@ -75,13 +78,16 @@ function RolesPage() {
     !draft['권한 관리.수정'] &&
     !roles.some((r) => r.key !== editing.key && r.assigned > 0 && has(r, '권한 관리', '수정'))
 
+  // 기반 역할 칩 라벨 — 역할 이름(데이터)은 그대로, "복사"(UI 어휘)만 언어를 입힌다
+  const baseOptions = [t('roles.fromScratch'), ...roles.map((r) => tf('roles.copy', { name: r.name }))]
+
   return (
     <AppShell active="roles" title="권한 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">권한 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.roles', '권한 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            역할 기반 접근 제어(RBAC) · 메뉴 × 액션 7종 (Mock 데이터)
+            {t('page.roles.subtitle', '역할 기반 접근 제어(RBAC) · 메뉴 × 액션 7종 (Mock 데이터)')}
           </p>
         </div>
         <button
@@ -89,7 +95,7 @@ function RolesPage() {
           onClick={() => setCreating(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 역할 추가
+          + {t('roles.add')}
         </button>
       </div>
 
@@ -118,7 +124,7 @@ function RolesPage() {
                   onClick={() => setHoldersOpen(holdersOpen === r.key ? null : r.key)}
                   className="rounded-md px-1.5 py-0.5 text-xs tabular-nums text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:bg-chip hover:text-ink"
                 >
-                  {r.assigned}명 배정
+                  {tf('roles.assigned', { n: r.assigned })}
                 </button>
                 {r.system && (
                   <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle">
@@ -131,11 +137,11 @@ function RolesPage() {
                     onClick={() => openEdit(r)}
                     className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                   >
-                    권한 편집
+                    {t('roles.editPerms')}
                   </button>
                   <button
                     type="button"
-                    aria-label="역할 삭제"
+                    aria-label={t('roles.delete')}
                     onClick={() => setDeleting(r)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
@@ -166,7 +172,7 @@ function RolesPage() {
                       to="/members"
                       className="ml-auto text-[11px] font-medium text-primary hover:underline"
                     >
-                      회원 관리에서 보기 →
+                      {t('roles.viewMembers')}
                     </Link>
                   </div>
                 </div>
@@ -215,7 +221,7 @@ function RolesPage() {
                 aria-expanded={open}
                 className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-hairline py-2 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
               >
-                전체 매트릭스 {open ? '접기' : '보기'}
+                {open ? t('roles.matrixHide') : t('roles.matrixShow')}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} aria-hidden>
                   <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -397,12 +403,12 @@ function RolesPage() {
               onClick={() => setEditing(null)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
             <CtaButton
               disabled={dirtyCount === 0 || selfLock}
-              busyLabel="상신 중…"
+              busyLabel={t('roles.submitting')}
               onAction={async () => {
                 // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
                 // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
@@ -419,7 +425,8 @@ function RolesPage() {
                 toast(`${editing.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 결재 후 ${editing.assigned}명에게 적용됩니다`)
               }}
             >
-              변경 상신{dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
+              {t('roles.submit')}
+              {dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
             </CtaButton>
           </div>
         </Modal>
@@ -430,19 +437,19 @@ function RolesPage() {
         <Modal title="새 역할 추가" onClose={() => setCreating(false)}>
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">역할 이름 <b className="text-danger-ink">*</b></span>
-            <input placeholder="예: 시니어 편집자" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+            <input placeholder={t('roles.namePlaceholder')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">역할 설명</span>
-            <textarea rows={2} placeholder="역할에 대한 설명을 입력하세요" className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
+            <textarea rows={2} placeholder={t('roles.descPlaceholder')} className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">기반 역할 (복사)</span>
             <div className="mt-1.5">
               <ChipSelect
-                options={['처음부터 시작', ...roles.map((r) => `${r.name} 복사`)]}
-                value={newBase}
-                onChange={setNewBase}
+                options={baseOptions}
+                value={baseOptions[newBaseIdx]}
+                onChange={(v) => setNewBaseIdx(baseOptions.indexOf(v))}
               />
             </div>
           </div>
@@ -456,7 +463,7 @@ function RolesPage() {
               onClick={() => setCreating(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -478,7 +485,7 @@ function RolesPage() {
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
-              생성
+              {t('roles.create')}
             </button>
           </div>
         </Modal>
@@ -511,7 +518,7 @@ function RolesPage() {
               onClick={() => setDeleting(null)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              닫기
+              {t('common.close')}
             </button>
             {!deleting.system && deleting.assigned === 0 && (
               <button
@@ -523,7 +530,7 @@ function RolesPage() {
                 }}
                 className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
               >
-                삭제
+                {t('common.delete')}
               </button>
             )}
           </div>

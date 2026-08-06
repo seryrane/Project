@@ -128,39 +128,41 @@ ROLES = [
 
 # ── LNB 정본 (frontend/src/data/nav.ts 와 같은 모양) ─────────────────────
 # ⚠ 두 프로젝트(센터 KPI 품질 ICDAP + IBD 사양서 IDMS)의 합본 — 메뉴가 가른다
+# labelEn 은 관리자가 메뉴 관리에서 고치는 값 — 여기 값은 초기값(기본 번역과 같다).
+# nav 는 코드 정본이라 시드가 항상 덮으므로, 관리자 편집은 재기동 전까지 산다(프로토타입).
 NAV = [
     {"id": "main", "items": [
-        {"key": "dashboard", "label": "대시보드", "icon": "dashboard", "to": "/dashboard"},
+        {"key": "dashboard", "label": "대시보드", "labelEn": "Dashboard", "icon": "dashboard", "to": "/dashboard"},
     ]},
     {"id": "kpi", "title": "센터 KPI (ICDAP)", "items": [
-        {"key": "analytics", "label": "센터 KPI 대시보드", "icon": "stats", "to": "/analytics"},
-        {"key": "kpi-ivi", "label": "인포 IVI KPI", "icon": "report", "to": "/kpi-ivi"},
-        {"key": "kpi-metrics", "label": "지표 관리", "icon": "doc", "to": "/kpi-metrics"},
+        {"key": "analytics", "label": "센터 KPI 대시보드", "labelEn": "Center KPI Dashboard", "icon": "stats", "to": "/analytics"},
+        {"key": "kpi-ivi", "label": "인포 IVI KPI", "labelEn": "Info IVI KPI", "icon": "report", "to": "/kpi-ivi"},
+        {"key": "kpi-metrics", "label": "지표 관리", "labelEn": "KPI Metrics", "icon": "doc", "to": "/kpi-metrics"},
     ]},
     {"id": "admin", "title": "관리", "items": [
-        {"key": "members", "label": "회원 관리", "icon": "users", "to": "/members"},
-        {"key": "roles", "label": "권한 관리", "icon": "shield", "to": "/roles"},
-        {"key": "menus", "label": "메뉴 관리", "icon": "menu", "to": "/menus"},
+        {"key": "members", "label": "회원 관리", "labelEn": "Members", "icon": "users", "to": "/members"},
+        {"key": "roles", "label": "권한 관리", "labelEn": "Roles & Permissions", "icon": "shield", "to": "/roles"},
+        {"key": "menus", "label": "메뉴 관리", "labelEn": "Menus", "icon": "menu", "to": "/menus"},
     ]},
     {"id": "idms", "title": "사양서 (IDMS)", "items": [
-        {"key": "specs", "label": "사양서 관리", "icon": "doc", "to": "/specs"},
-        {"key": "approvals", "label": "승인 관리", "icon": "approve", "badge": 3, "to": "/approvals"},
-        {"key": "deploys", "label": "배포 관리", "icon": "deploy", "to": "/deploys"},
+        {"key": "specs", "label": "사양서 관리", "labelEn": "Specifications", "icon": "doc", "to": "/specs"},
+        {"key": "approvals", "label": "승인 관리", "labelEn": "Approvals", "icon": "approve", "badge": 3, "to": "/approvals"},
+        {"key": "deploys", "label": "배포 관리", "labelEn": "Deployments", "icon": "deploy", "to": "/deploys"},
     ]},
     {"id": "validation", "title": "검증엔진", "items": [
-        {"key": "engine", "label": "검증엔진 관리", "icon": "engine", "to": "/validation-engine"},
-        {"key": "results", "label": "검증 결과 조회", "icon": "search", "to": "/validation-results"},
-        {"key": "reports", "label": "검증 리포트", "icon": "report", "to": "/validation-reports"},
+        {"key": "engine", "label": "검증엔진 관리", "labelEn": "Validation Engines", "icon": "engine", "to": "/validation-engine"},
+        {"key": "results", "label": "검증 결과 조회", "labelEn": "Validation Results", "icon": "search", "to": "/validation-results"},
+        {"key": "reports", "label": "검증 리포트", "labelEn": "Validation Reports", "icon": "report", "to": "/validation-reports"},
     ]},
     {"id": "community", "title": "커뮤니티", "items": [
-        {"key": "notice", "label": "공지사항", "icon": "bell", "to": "/notice"},
-        {"key": "qna", "label": "Q&A", "icon": "message", "to": "/qna"},
-        {"key": "faq", "label": "FAQ", "icon": "help", "to": "/faq"},
-        {"key": "guide", "label": "사용자 가이드", "icon": "book", "to": "/guide"},
+        {"key": "notice", "label": "공지사항", "labelEn": "Notices", "icon": "bell", "to": "/notice"},
+        {"key": "qna", "label": "Q&A", "labelEn": "Q&A", "icon": "message", "to": "/qna"},
+        {"key": "faq", "label": "FAQ", "labelEn": "FAQ", "icon": "help", "to": "/faq"},
+        {"key": "guide", "label": "사용자 가이드", "labelEn": "User Guide", "icon": "book", "to": "/guide"},
     ]},
     {"id": "system", "title": "시스템", "items": [
-        {"key": "alerts", "label": "시스템 알림", "icon": "bell", "badge": 3},
-        {"key": "privacy", "label": "개인정보보호", "icon": "lock", "to": "/privacy"},
+        {"key": "alerts", "label": "시스템 알림", "labelEn": "System Alerts", "icon": "bell", "badge": 3},
+        {"key": "privacy", "label": "개인정보보호", "labelEn": "Privacy", "icon": "lock", "to": "/privacy"},
     ]},
 ]
 

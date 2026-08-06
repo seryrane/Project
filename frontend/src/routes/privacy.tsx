@@ -6,6 +6,7 @@ import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
 import { useToast } from '#/components/portal/toast'
 import { useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/privacy')({ component: PrivacyPage })
 
@@ -27,8 +28,13 @@ const POLICY_BODY = [
   '제5조 (열람 요청) 정보 주체의 열람·정정 요청은 접수 후 10일 이내 처리한다.',
 ] as const
 
+/* 보존 기간 옵션 — 상태값은 한국어 상수 그대로, 라벨만 렌더 자리에서 사전을 입힌다 (규약 §4) */
+const RETENTION_OPTIONS = ['90일', '180일', '365일'] as const
+
 function PrivacyPage() {
   const toast = useToast()
+  const { t } = useI18n()
+  const retentionLabel = (d: string) => t(`privacy.days.${d.replace('일', '')}`, d)
   const [policyOpen, setPolicyOpen] = useState(false)
   const [maskPhone, setMaskPhone] = useState(true)
   const [maskEmail, setMaskEmail] = useState(false)
@@ -43,9 +49,9 @@ function PrivacyPage() {
     <AppShell active="privacy" title="개인정보보호">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">개인정보보호</h1>
+          <h1 className="text-2xl font-bold">{t('nav.privacy', '개인정보보호')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            처리방침 · 반출 감사 · 마스킹 정책 — Super Admin 전용 화면
+            {t('page.privacy.subtitle', '처리방침 · 반출 감사 · 마스킹 정책 — Super Admin 전용 화면')}
           </p>
         </div>
         <button
@@ -53,7 +59,7 @@ function PrivacyPage() {
           onClick={() => setPolicyOpen(true)}
           className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
-          처리방침 전문 보기
+          {t('privacy.viewPolicy', '처리방침 전문 보기')}
         </button>
       </div>
 
@@ -66,19 +72,19 @@ function PrivacyPage() {
             { label: '열람 요청 대기', value: '1건', sub: '기한 10일 — 8/12 까지', warn: true },
             { label: '파기 예정 계정', value: '3건', sub: '비활성 90일 경과' },
           ] as const
-        ).map((t, i) => (
+        ).map((tile, i) => (
           <div
-            key={t.label}
+            key={tile.label}
             style={{ animationDelay: `${i * 60}ms` }}
             className="card-spotlight card-hover anim-fade-up rounded-2xl border border-hairline bg-surface p-4"
           >
-            <div className="text-xs text-ink-subtle">{t.label}</div>
+            <div className="text-xs text-ink-subtle">{tile.label}</div>
             <div
-              className={`mt-1 text-xl font-bold tabular-nums ${'warn' in t ? 'text-pending-ink' : 'text-ink'}`}
+              className={`mt-1 text-xl font-bold tabular-nums ${'warn' in tile ? 'text-pending-ink' : 'text-ink'}`}
             >
-              {t.value}
+              {tile.value}
             </div>
-            <div className="mt-0.5 text-[11px] text-ink-subtle">{t.sub}</div>
+            <div className="mt-0.5 text-[11px] text-ink-subtle">{tile.sub}</div>
           </div>
         ))}
       </div>
@@ -208,11 +214,12 @@ function PrivacyPage() {
               <span className="text-xs font-medium text-ink-subtle">접속기록 보존 기간</span>
               <div className="mt-1.5">
                 <ChipSelect
-                  options={['90일', '180일', '365일']}
-                  value={retention}
+                  options={RETENTION_OPTIONS.map(retentionLabel)}
+                  value={retentionLabel(retention)}
                   onChange={(v) => {
-                    setRetention(v)
-                    toast(`보존 기간을 ${v}로 저장했습니다`)
+                    const raw = RETENTION_OPTIONS.find((d) => retentionLabel(d) === v) ?? '365일'
+                    setRetention(raw)
+                    toast(`보존 기간을 ${raw}로 저장했습니다`)
                   }}
                 />
               </div>
@@ -249,7 +256,7 @@ function PrivacyPage() {
                   onClick={close}
                   className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                 >
-                  닫기
+                  {t('common.close')}
                 </button>
               </div>
             </div>

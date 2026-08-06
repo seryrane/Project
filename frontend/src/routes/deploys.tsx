@@ -7,6 +7,7 @@ import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import { PIPELINE, deploys } from '#/data/deploys'
 import type { Deploy, DeployStatus } from '#/data/deploys'
 import { specs } from '#/data/specs'
@@ -90,6 +91,7 @@ function Pipeline() {
 }
 
 function DeploysPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<Deploy | null>(null)
@@ -101,15 +103,17 @@ function DeploysPage() {
     <AppShell active="deploys" title="배포 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">배포 관리</h1>
-          <p className="mt-1 text-[13px] text-ink-subtle">사양서 통합 배포 · 승인 기반 릴리즈 관리 (Mock 데이터)</p>
+          <h1 className="text-2xl font-bold">{t('nav.deploys', '배포 관리')}</h1>
+          <p className="mt-1 text-[13px] text-ink-subtle">
+            {t('page.deploys.subtitle', '사양서 통합 배포 · 승인 기반 릴리즈 관리 (Mock 데이터)')}
+          </p>
         </div>
         <button
           type="button"
           onClick={() => setCreating(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          → 새 배포 요청
+          {t('deploys.newRequest', '→ 새 배포 요청')}
         </button>
       </div>
 
@@ -211,7 +215,7 @@ function DeploysPage() {
                 }}
                 className="rounded-lg bg-review-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
               >
-                승인 관리에서 처리 →
+                {t('deploys.goApprovals', '승인 관리에서 처리 →')}
               </button>
             </div>
           )}
@@ -301,18 +305,18 @@ function DeploysPage() {
               onClick={() => setCreating(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel', '취소')}
             </button>
             {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
             <CtaButton
-              busyLabel="요청 보내는 중…"
+              busyLabel={t('deploys.submitting', '요청 보내는 중…')}
               onAction={async () => {
                 await simulate()
                 setCreating(false)
                 toast('배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요')
               }}
             >
-              배포 승인 요청
+              {t('deploys.submitRequest', '배포 승인 요청')}
             </CtaButton>
           </div>
         </Modal>

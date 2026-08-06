@@ -16,6 +16,8 @@ export interface MenuItem {
   id: string
   order: number
   name: string
+  /** 영문명 — EN 화면의 LNB·팔레트가 쓴다. 비우면 기본 번역(사전)으로 나간다 */
+  nameEn?: string
   path: string
   icon: string
   active: boolean
@@ -59,24 +61,24 @@ export interface MenuConfig {
 export const COLUMN_OPTIONS = ['이름', '상태', '담당자', '수정일', '버전', '카테고리', '태그'] as const
 
 export const menuItems: Array<MenuItem> = [
-  { id: 'm-dash', order: 1, name: '대시보드', path: '/dashboard', icon: 'dashboard', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
-  { id: 'm-stats', order: 2, name: '통계 & 분석', path: '/analytics', icon: 'stats', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
-  { id: 'm-members', order: 3, name: '회원 관리', path: '/members', icon: 'users', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
-  { id: 'm-roles', order: 4, name: '권한 관리', path: '/roles', icon: 'shield', active: true, roles: ['Super Admin'] , template: 'list-detail' },
-  { id: 'm-menus', order: 5, name: '메뉴 관리', path: '/menus', icon: 'menu', active: true, roles: ['Super Admin'] , template: 'list-detail' },
-  { id: 'm-specs', order: 6, name: '사양서 관리', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'list-detail' },
-  { id: 'm-specs-list', order: 7, name: '사양서 목록', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'list-detail' },
-  { id: 'm-specs-detail', order: 8, name: '사양서 상세', path: '/specs/:id', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'document' },
-  { id: 'm-approvals', order: 9, name: '승인 관리', path: '/approvals', icon: 'approve', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
-  { id: 'm-deploys', order: 10, name: '배포 관리', path: '/deploys', icon: 'deploy', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
-  { id: 'm-engine', order: 11, name: '검증엔진 관리', path: '/validation-engine', icon: 'engine', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
-  { id: 'm-results', order: 12, name: '검증 결과 조회', path: '/validation-results', icon: 'search', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
-  { id: 'm-reports', order: 13, name: '검증 리포트', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
-  { id: 'm-notice', order: 14, name: '공지사항', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
-  { id: 'm-qna', order: 15, name: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
-  { id: 'm-faq', order: 16, name: 'FAQ', path: '/faq', icon: 'help', active: false, roles: [], minimal: true, template: 'board' },
-  { id: 'm-guide', order: 17, name: '사용자 가이드', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
-  { id: 'm-privacy', order: 18, name: '개인정보보호', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
+  { id: 'm-dash', order: 1, name: '대시보드', nameEn: 'Dashboard', path: '/dashboard', icon: 'dashboard', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
+  { id: 'm-stats', order: 2, name: '통계 & 분석', nameEn: 'Center KPI Dashboard', path: '/analytics', icon: 'stats', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
+  { id: 'm-members', order: 3, name: '회원 관리', nameEn: 'Members', path: '/members', icon: 'users', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  { id: 'm-roles', order: 4, name: '권한 관리', nameEn: 'Roles & Permissions', path: '/roles', icon: 'shield', active: true, roles: ['Super Admin'] , template: 'list-detail' },
+  { id: 'm-menus', order: 5, name: '메뉴 관리', nameEn: 'Menus', path: '/menus', icon: 'menu', active: true, roles: ['Super Admin'] , template: 'list-detail' },
+  { id: 'm-specs', order: 6, name: '사양서 관리', nameEn: 'Specifications', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'list-detail' },
+  { id: 'm-specs-list', order: 7, name: '사양서 목록', nameEn: 'Spec List', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'list-detail' },
+  { id: 'm-specs-detail', order: 8, name: '사양서 상세', nameEn: 'Spec Detail', path: '/specs/:id', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'document' },
+  { id: 'm-approvals', order: 9, name: '승인 관리', nameEn: 'Approvals', path: '/approvals', icon: 'approve', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
+  { id: 'm-deploys', order: 10, name: '배포 관리', nameEn: 'Deployments', path: '/deploys', icon: 'deploy', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  { id: 'm-engine', order: 11, name: '검증엔진 관리', nameEn: 'Validation Engines', path: '/validation-engine', icon: 'engine', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  { id: 'm-results', order: 12, name: '검증 결과 조회', nameEn: 'Validation Results', path: '/validation-results', icon: 'search', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
+  { id: 'm-reports', order: 13, name: '검증 리포트', nameEn: 'Validation Reports', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
+  { id: 'm-notice', order: 14, name: '공지사항', nameEn: 'Notices', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
+  { id: 'm-qna', order: 15, name: 'Q&A', nameEn: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
+  { id: 'm-faq', order: 16, name: 'FAQ', nameEn: 'FAQ', path: '/faq', icon: 'help', active: false, roles: [], minimal: true, template: 'board' },
+  { id: 'm-guide', order: 17, name: '사용자 가이드', nameEn: 'User Guide', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
+  { id: 'm-privacy', order: 18, name: '개인정보보호', nameEn: 'Privacy', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
 ]
 
 // 접근 역할 목록은 여기 두지 않는다 — 권한 관리 정본(data/roles.ts)에서 파생한다

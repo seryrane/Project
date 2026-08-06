@@ -81,6 +81,73 @@
   --color-fill-deployed: #1d9d5f;
 }
 
+/* ── 포인트 색상 (개인 설정) ─────────────────────────────────────────
+   data-accent 가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 —
+   그라디언트·CTA·스포트라이트·차트가 전부 토큰을 보므로 이 블록이 전체를 바꾼다.
+   violet(기본)은 :root/[data-theme='light'] 값 그대로라 블록이 없다.
+   ⚠ 라이트 조합 선택자는 반드시 이 자리(라이트 테마 블록 뒤)에 — 순서가 명세다.
+   선택지 정본은 lib/accent.ts (여기와 1:1). */
+[data-accent='blue'] {
+  --color-primary: #63a3ff;
+  --color-primary-deep: #4a8bf5;
+  --color-accent2: #8ab9ff;
+  --color-glow: rgb(99 163 255 / 25%);
+}
+[data-theme='light'][data-accent='blue'] {
+  --color-primary: #3b82f6;
+  --color-primary-deep: #2563eb;
+  --color-accent2: #60a5fa;
+  --color-glow: rgb(59 130 246 / 20%);
+}
+[data-accent='teal'] {
+  --color-primary: #3ecfbe;
+  --color-primary-deep: #22b3a2;
+  --color-accent2: #6adfd2;
+  --color-glow: rgb(62 207 190 / 25%);
+}
+[data-theme='light'][data-accent='teal'] {
+  --color-primary: #0d9488;
+  --color-primary-deep: #0f766e;
+  --color-accent2: #14b8a6;
+  --color-glow: rgb(13 148 136 / 20%);
+}
+[data-accent='green'] {
+  --color-primary: #55cf85;
+  --color-primary-deep: #38b46c;
+  --color-accent2: #7fdfa5;
+  --color-glow: rgb(85 207 133 / 25%);
+}
+[data-theme='light'][data-accent='green'] {
+  --color-primary: #16a34a;
+  --color-primary-deep: #15803d;
+  --color-accent2: #22c55e;
+  --color-glow: rgb(22 163 74 / 20%);
+}
+[data-accent='amber'] {
+  --color-primary: #f0a84e;
+  --color-primary-deep: #dd9032;
+  --color-accent2: #f8c078;
+  --color-glow: rgb(240 168 78 / 25%);
+}
+[data-theme='light'][data-accent='amber'] {
+  --color-primary: #d97706;
+  --color-primary-deep: #b45309;
+  --color-accent2: #f59e0b;
+  --color-glow: rgb(217 119 6 / 20%);
+}
+[data-accent='rose'] {
+  --color-primary: #f27a9d;
+  --color-primary-deep: #e25a83;
+  --color-accent2: #f79cb6;
+  --color-glow: rgb(242 122 157 / 25%);
+}
+[data-theme='light'][data-accent='rose'] {
+  --color-primary: #db2777;
+  --color-primary-deep: #be185d;
+  --color-accent2: #ec4899;
+  --color-glow: rgb(219 39 119 / 20%);
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);

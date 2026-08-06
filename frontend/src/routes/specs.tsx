@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
+import { useI18n } from '#/lib/i18n'
 import { currentVersion, specs } from '#/data/specs'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
 
@@ -18,11 +19,15 @@ export const Route = createFileRoute('/specs')({
 
 const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
 
+// 필터 내부 값(sentinel)은 한국어 원문 그대로 — 화면에 보일 때만 사전을 입힌다
+const ALL_CATEGORY = '전체 카테고리'
+
 function SpecsPage() {
+  const { t, tf } = useI18n()
   const { open } = Route.useSearch()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('전체 카테고리')
+  const [category, setCategory] = useState(ALL_CATEGORY)
   const [status, setStatus] = useState('전체 상태')
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
 
@@ -41,8 +46,8 @@ function SpecsPage() {
       q === '' ||
       s.name.toLowerCase().includes(q) ||
       s.id.toLowerCase().includes(q) ||
-      s.tags.some((t) => t.toLowerCase().includes(q))
-    const matchesCategory = category === '전체 카테고리' || s.category === category
+      s.tags.some((tag) => tag.toLowerCase().includes(q))
+    const matchesCategory = category === ALL_CATEGORY || s.category === category
     const matchesStatus = status === '전체 상태' || currentVersion(s).status === status
     return matchesQuery && matchesCategory && matchesStatus
   })
@@ -58,16 +63,20 @@ function SpecsPage() {
     <AppShell active="specs" title="사양서 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">사양서 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.specs', '사양서 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            총 {specs.length}개 사양서 · {pendingCount}개 승인 대기
+            {tf(
+              'page.specs.subtitle',
+              { total: specs.length, pending: pendingCount },
+              '총 {total}개 사양서 · {pending}개 승인 대기',
+            )}
           </p>
         </div>
         <button
           type="button"
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 사양서 등록
+          {t('specs.register', '+ 사양서 등록')}
         </button>
       </div>
 
@@ -76,14 +85,17 @@ function SpecsPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="사양서 명, ID, 태그 검색..."
+          placeholder={t('specs.searchPlaceholder', '사양서 명, ID, 태그 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
         <div className="flex items-center">
+          {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
           <ChipSelect
-            options={['전체 카테고리', ...categories]}
-            value={category}
-            onChange={setCategory}
+            options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
+            value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
+            onChange={(v) =>
+              setCategory(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v)
+            }
           />
         </div>
       </div>
@@ -107,7 +119,7 @@ function SpecsPage() {
                   : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
               }`}
             >
-              {st === '전체 상태' ? '전체' : st}
+              {st === '전체 상태' ? t('common.all', '전체') : st}
               <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
             </button>
           )

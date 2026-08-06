@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
 import { specs } from '#/data/specs'
+import { useI18n } from '#/lib/i18n'
 
 interface Command {
   group: string
@@ -11,35 +12,45 @@ interface Command {
   to: string
 }
 
-// 페이지 명령은 LNB 정본(nav)에서 파생한다 — 손으로 다시 적으면 새 화면이
-// 생길 때마다 팔레트만 모르는 화면이 남는다 (실제로 두 개만 알고 있었다)
-const pageCommands: Array<Command> = nav.flatMap((section) =>
-  section.items.flatMap((item) =>
-    item.to == null
-      ? []
-      : [{ group: section.title ?? '페이지', label: item.label, hint: '이동', to: item.to }],
-  ),
-)
-
 export function CommandPalette({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
+  const { locale, t } = useI18n()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => inputRef.current?.focus(), [])
 
+  // 페이지 명령은 LNB 정본(nav)에서 파생한다 — 손으로 다시 적으면 새 화면이
+  // 생길 때마다 팔레트만 모르는 화면이 남는다 (실제로 두 개만 알고 있었다).
+  // 라벨은 LNB 와 같은 규칙으로 언어를 입힌다 (EN: labelEn → 사전 → ko).
   const commands = useMemo<Array<Command>>(
     () => [
-      ...pageCommands,
+      ...nav.flatMap((section) =>
+        section.items.flatMap((item) =>
+          item.to == null
+            ? []
+            : [{
+                group: section.title
+                  ? t(`nav.section.${section.id}`, section.title)
+                  : t('palette.pages'),
+                label:
+                  locale === 'en'
+                    ? (item.labelEn ?? t(`nav.${item.key}`, item.label))
+                    : item.label,
+                hint: t('palette.go'),
+                to: item.to,
+              }],
+        ),
+      ),
       ...specs.map((s) => ({
-        group: '사양서',
+        group: t('palette.specs'),
         label: s.name,
         hint: s.id,
         to: '/specs',
       })),
     ],
-    [],
+    [locale, t],
   )
 
   const q = query.trim().toLowerCase()

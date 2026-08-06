@@ -103,7 +103,7 @@ function LoginPage() {
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-white">HMG Admin</span>
-            <span className="block text-[11px] text-sidebar-ink/60">통합 관리자 포털</span>
+            <span className="block text-[11px] text-sidebar-ink/60">{t('brand.tagline')}</span>
           </span>
         </div>
         <m.div
@@ -120,7 +120,7 @@ function LoginPage() {
             {t('login.brand.desc')}
           </p>
         </m.div>
-        <p className="text-[11px] text-sidebar-ink/50">© HMG · 프로토타입 v0.5</p>
+        <p className="text-[11px] text-sidebar-ink/50">{t('brand.loginFooter')}</p>
       </div>
 
       {/* 우: 로그인 카드 */}

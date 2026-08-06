@@ -16,7 +16,7 @@
 from fastapi import FastAPI
 
 from app import db, seeds
-from app.api import auth, community, directory, embeds, hello, me, rbac
+from app.api import auth, community, directory, embeds, hello, me, navs, rbac
 
 app = FastAPI(title="hmg-portal-backend", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
@@ -30,6 +30,7 @@ app.include_router(community.router, prefix="/api")
 app.include_router(directory.router, prefix="/api")
 app.include_router(rbac.router, prefix="/api")
 app.include_router(embeds.router, prefix="/api")
+app.include_router(navs.router, prefix="/api")
 
 
 @app.get("/api/health")

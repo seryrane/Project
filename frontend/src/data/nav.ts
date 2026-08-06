@@ -29,6 +29,8 @@ export type IconName =
 export interface NavItem {
   key: string
   label: string
+  /** 영문명 — 메뉴 관리에서 관리자가 넣는다(서버 nav 정본). 없으면 사전(nav.<key>)이 입힌다 */
+  labelEn?: string
   icon: IconName
   to?: string
   badge?: number

@@ -9,6 +9,7 @@ import { TableauEmbed } from '#/components/portal/TableauEmbed'
 import { useToast } from '#/components/portal/toast'
 import { iviTrend } from '#/data/kpi'
 import { apiSend, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/kpi-ivi')({ component: KpiIviPage })
 
@@ -26,6 +27,7 @@ interface EmbedItem {
  * 따서 아이프레임으로"). ⚠ SSO 확정 전에는 공개/티켓 링크만 표출된다.
  */
 function KpiIviPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const [mode, setMode] = useState<'tableau' | 'native'>('tableau')
   const [current, setCurrent] = useState(0)
@@ -47,10 +49,12 @@ function KpiIviPage() {
     <AppShell active="kpi-ivi" title="인포 IVI KPI">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">인포 IVI KPI</h1>
+          <h1 className="text-2xl font-bold">{t('nav.kpi-ivi', '인포 IVI KPI')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            IVI 지표 — Tableau 임베딩과 자체 UI 를 병행 제공 (FR-075) · SSO 연계 전에는
-            공개·티켓 링크만 표출됩니다
+            {t(
+              'page.kpi-ivi.subtitle',
+              'IVI 지표 — Tableau 임베딩과 자체 UI 를 병행 제공 (FR-075) · SSO 연계 전에는 공개·티켓 링크만 표출됩니다',
+            )}
           </p>
         </div>
         {/* 표출 방식 전환 — 1차는 임베딩으로 빠르게, 2차부터 웹 전환(전환 전략) */}
@@ -60,17 +64,17 @@ function KpiIviPage() {
               { key: 'tableau', label: 'Tableau 임베딩' },
               { key: 'native', label: '자체 UI' },
             ] as const
-          ).map((t) => (
+          ).map((tb) => (
             <button
-              key={t.key}
+              key={tb.key}
               type="button"
-              aria-pressed={mode === t.key}
-              onClick={() => setMode(t.key)}
+              aria-pressed={mode === tb.key}
+              onClick={() => setMode(tb.key)}
               className={`h-9 px-3.5 text-[13px] font-medium transition-colors ${
-                mode === t.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:bg-chip hover:text-ink'
+                mode === tb.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:bg-chip hover:text-ink'
               }`}
             >
-              {t.label}
+              {t(`kpi-ivi.mode.${tb.key}`, tb.label)}
             </button>
           ))}
         </div>
@@ -103,7 +107,7 @@ function KpiIviPage() {
               onClick={() => setAdding(true)}
               className="h-8 shrink-0 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
             >
-              + 워크북 등록
+              + {t('kpi-ivi.addWorkbook')}
             </button>
           </div>
 
@@ -134,7 +138,7 @@ function KpiIviPage() {
                 }}
                 className="shrink-0 text-[11px] text-ink-subtle transition-colors hover:text-danger-ink"
               >
-                이 워크북 내리기
+                {t('kpi-ivi.removeWorkbook')}
               </button>
             </div>
           )}
@@ -168,7 +172,7 @@ function KpiIviPage() {
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="예: IVI 주간 사용성 워크북"
+              placeholder={t('kpi-ivi.titlePlaceholder')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -190,11 +194,11 @@ function KpiIviPage() {
               onClick={() => setAdding(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <CtaButton
               disabled={newTitle.trim() === '' || !newUrl.startsWith('https://')}
-              busyLabel="등록 중…"
+              busyLabel={t('kpi-ivi.registering')}
               onAction={async () => {
                 const next = [
                   ...workbooks,
@@ -209,7 +213,7 @@ function KpiIviPage() {
                 toast('워크북을 등록했습니다 — 바로 표시됩니다')
               }}
             >
-              등록
+              {t('kpi-ivi.register')}
             </CtaButton>
           </div>
         </Modal>

@@ -152,3 +152,27 @@ def test_self_lock_submission_rejected() -> None:
         },
     )
     assert ok.json()["status"] == "접수"
+
+
+def test_prefs_roundtrip() -> None:
+    """언어·포인트 색상은 계정 설정 — 저장하면 /me 가 돌려준다. 엉뚱한 값은 기본값으로."""
+    assert client.put("/api/me/locale", json={"locale": "en"}).status_code == 200
+    assert client.put("/api/me/accent", json={"accent": "teal"}).status_code == 200
+    me = client.get("/api/me").json()
+    assert me["locale"] == "en" and me["accent"] == "teal"
+    client.put("/api/me/locale", json={"locale": "xx"})
+    client.put("/api/me/accent", json={"accent": "neon"})
+    me = client.get("/api/me").json()
+    assert me["locale"] == "ko" and me["accent"] == "violet"
+
+
+def test_nav_label_en_edit() -> None:
+    """메뉴 영문명 — 관리화면 편집이 /me/menu 의 labelEn 으로 나간다. 비우면 지운다."""
+    assert client.put("/api/nav/label", json={"key": "members", "labelEn": "People"}).status_code == 200
+    items = [i for s in client.get("/api/me/menu").json() for i in s["items"]]
+    assert next(i for i in items if i["key"] == "members")["labelEn"] == "People"
+    client.put("/api/nav/label", json={"key": "members", "labelEn": ""})
+    assert "labelEn" not in next(
+        i for i in [i for s in client.get("/api/me/menu").json() for i in s["items"]] if i["key"] == "members"
+    )
+    assert client.put("/api/nav/label", json={"key": "no-such", "labelEn": "X"}).status_code == 404

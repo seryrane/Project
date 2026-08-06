@@ -9,11 +9,13 @@ import { useToast } from '#/components/portal/toast'
 import { FAQ_CATEGORIES, faqs } from '#/data/community'
 import type { Faq } from '#/data/community'
 import { apiSend, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/faq')({ component: FaqPage })
 
 function FaqPage() {
   const toast = useToast()
+  const { t } = useI18n()
   const [category, setCategory] = useState('전체')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<string | null>(null)
@@ -42,11 +44,11 @@ function FaqPage() {
     <AppShell active="faq" title="FAQ">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">FAQ</h1>
+          <h1 className="text-2xl font-bold">{t('nav.faq', 'FAQ')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            자주 묻는 질문 — 여기 없는 질문은{' '}
+            {t('page.faq.subtitle', '자주 묻는 질문 — 여기 없는 질문은')}{' '}
             <Link to="/qna" className="font-medium text-primary hover:underline">
-              Q&A 에 남겨 주세요 →
+              {t('page.faq.goQna', 'Q&A 에 남겨 주세요 →')}
             </Link>
           </p>
         </div>
@@ -55,7 +57,7 @@ function FaqPage() {
           onClick={() => setAdding(true)}
           className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
-          + FAQ 추가
+          + {t('faq.add', 'FAQ 추가')}
         </button>
       </div>
 
@@ -63,10 +65,15 @@ function FaqPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="질문·답변 검색..."
+          placeholder={t('faq.searchPh', '질문·답변 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
-        <ChipSelect options={['전체', ...FAQ_CATEGORIES]} value={category} onChange={setCategory} />
+        {/* '전체'만 UI 어휘라 번역 — 카테고리 이름은 데이터 값이라 그대로 (규약 §4-4) */}
+        <ChipSelect
+          options={[t('common.all'), ...FAQ_CATEGORIES]}
+          value={category === '전체' ? t('common.all') : category}
+          onChange={(v) => setCategory(v === t('common.all') ? '전체' : v)}
+        />
       </div>
 
       {/* 아코디언 — 펼침은 reveal-grid, 답 끝은 도움됨 투표로 끝난다 */}
@@ -126,7 +133,7 @@ function FaqPage() {
                             : 'border-hairline text-ink-muted hover:border-primary/30 hover:text-ink'
                         }`}
                       >
-                        👍 도움됨 {f.helpful + (voted[f.id] ? 1 : 0)}
+                        👍 {t('faq.helpful', '도움됨')} {f.helpful + (voted[f.id] ? 1 : 0)}
                       </button>
                     </div>
                   </div>
@@ -160,7 +167,7 @@ function FaqPage() {
             <input
               value={newQ}
               onChange={(e) => setNewQ(e.target.value)}
-              placeholder="사용자 말로 적습니다 — 예: 로그인이 안 됩니다"
+              placeholder={t('faq.qPh', '사용자 말로 적습니다 — 예: 로그인이 안 됩니다')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -170,7 +177,7 @@ function FaqPage() {
               rows={4}
               value={newA}
               onChange={(e) => setNewA(e.target.value)}
-              placeholder="해결 순서대로 — 어디를 눌러 무엇을 하는지"
+              placeholder={t('faq.aPh', '해결 순서대로 — 어디를 눌러 무엇을 하는지')}
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -180,11 +187,11 @@ function FaqPage() {
               onClick={() => setAdding(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <CtaButton
               disabled={newQ.trim() === '' || newA.trim() === ''}
-              busyLabel="추가 중…"
+              busyLabel={t('faq.adding', '추가 중…')}
               onAction={async () => {
                 await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
                 setAdding(false)
@@ -194,7 +201,7 @@ function FaqPage() {
                 toast('FAQ 를 추가했습니다')
               }}
             >
-              추가
+              {t('common.add')}
             </CtaButton>
           </div>
         </Modal>

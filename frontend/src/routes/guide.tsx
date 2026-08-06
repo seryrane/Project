@@ -4,6 +4,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { m } from '#/components/portal/motion'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import { WHATSNEW, markSeen } from '#/data/whatsnew'
 
 export const Route = createFileRoute('/guide')({ component: GuidePage })
@@ -21,6 +22,7 @@ const SECTIONS = [
 
 function GuidePage() {
   const toast = useToast()
+  const { t } = useI18n()
   const [active, setActive] = useState<string>('whatsnew')
 
   // 목록을 한 번 열면 LNB 배지가 내려간다 (규약 19절 — 배지는 알림이지 체크리스트가 아니다)
@@ -37,10 +39,12 @@ function GuidePage() {
     <AppShell active="guide" title="사용자 가이드">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">사용자 가이드</h1>
+          <h1 className="text-2xl font-bold">{t('nav.guide', '사용자 가이드')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            처음 온 사람과 권한이 새로 붙은 사람이 찾아오는 자리 — 그래서 권한 없이 모두에게
-            보입니다
+            {t(
+              'page.guide.subtitle',
+              '처음 온 사람과 권한이 새로 붙은 사람이 찾아오는 자리 — 그래서 권한 없이 모두에게 보입니다',
+            )}
           </p>
         </div>
       </div>
@@ -61,7 +65,7 @@ function GuidePage() {
                   }`}
                 >
                   <span className="font-mono text-[10px] tabular-nums opacity-60">{i + 1}</span>
-                  {s.title}
+                  {t(`guide.toc.${s.id}`, s.title)}
                 </button>
               </li>
             ))}
@@ -285,7 +289,7 @@ function GuidePage() {
                 onClick={() => toast('가이드 개선 의견을 접수했습니다 — 감사합니다')}
                 className="mt-3 text-[11px] text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:text-ink"
               >
-                이 가이드에서 부족한 부분 알려 주기
+                {t('guide.feedback', '이 가이드에서 부족한 부분 알려 주기')}
               </button>
             </div>
           </section>

@@ -9,6 +9,7 @@ import { Modal } from '#/components/portal/Modal'
 import { StatusBadge } from '#/components/portal/StatusBadge'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import { currentVersion, specs } from '#/data/specs'
 import {
   FIELD_CATEGORIES,
@@ -51,6 +52,7 @@ const TYPE_OPTIONS: Array<FieldType> = ['string', 'number', 'select', 'text', 'b
 const STATUS_OPTIONS: Array<FieldStatus> = ['완료', '진행중', '검토중', '미완료']
 
 function SpecDetailPage() {
+  const { t, tf } = useI18n()
   const { specId } = Route.useParams()
   const navigate = useNavigate()
   const toast = useToast()
@@ -102,7 +104,7 @@ function SpecDetailPage() {
         <p className="text-sm text-ink-subtle">
           사양서를 찾을 수 없습니다.{' '}
           <Link to="/specs" className="text-primary underline">
-            목록으로
+            {t('specDetail.toList', '목록으로')}
           </Link>
         </p>
       </AppShell>
@@ -152,7 +154,7 @@ function SpecDetailPage() {
             to="/specs"
             className="text-xs text-ink-subtle transition-colors hover:text-ink"
           >
-            ← 사양서 목록
+            {t('specDetail.backToList', '← 사양서 목록')}
           </Link>
           <h1 className="mt-1 flex flex-wrap items-center gap-2.5 text-2xl font-bold">
             {spec.name}
@@ -160,15 +162,16 @@ function SpecDetailPage() {
           </h1>
           <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-subtle">
             <span>
-              현재 <b className="font-mono text-ink">{cur.version}</b>
+              {t('page.specDetail.current', '현재')} <b className="font-mono text-ink">{cur.version}</b>
             </span>
             {deployed && (
               <span>
-                배포 <b className="font-mono text-ink">{deployed.version}</b>
+                {t('page.specDetail.deployed', '배포')}{' '}
+                <b className="font-mono text-ink">{deployed.version}</b>
               </span>
             )}
-            <span>담당 {cur.author}</span>
-            <span>{cur.date} 수정</span>
+            <span>{tf('page.specDetail.owner', { name: cur.author }, '담당 {name}')}</span>
+            <span>{tf('page.specDetail.modified', { date: cur.date }, '{date} 수정')}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -179,7 +182,7 @@ function SpecDetailPage() {
               onClick={() => navigate({ to: '/approvals' })}
               className="h-9 rounded-lg border border-pending-ink/40 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
             >
-              결재 진행 보기 →
+              {t('specDetail.viewApproval', '결재 진행 보기 →')}
             </button>
           ) : (
             <button
@@ -187,7 +190,7 @@ function SpecDetailPage() {
               onClick={() => setRequesting(true)}
               className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              승인 요청
+              {t('specDetail.requestApproval', '승인 요청')}
             </button>
           )}
           <button
@@ -195,14 +198,14 @@ function SpecDetailPage() {
             onClick={() => setCompare(true)}
             className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            버전 비교
+            {t('specDetail.compareVersions', '버전 비교')}
           </button>
           <button
             type="button"
             onClick={() => setHistory(true)}
             className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            이력
+            {t('specDetail.history', '이력')}
           </button>
           <button
             type="button"
@@ -210,7 +213,8 @@ function SpecDetailPage() {
             disabled={dirty === 0}
             className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
           >
-            임시저장{dirty > 0 && <span className="ml-1 tabular-nums text-primary">{dirty}</span>}
+            {t('specDetail.saveDraft', '임시저장')}
+            {dirty > 0 && <span className="ml-1 tabular-nums text-primary">{dirty}</span>}
           </button>
           <button
             type="button"
@@ -222,7 +226,7 @@ function SpecDetailPage() {
             disabled={dirty === 0}
             className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            전체 저장
+            {t('specDetail.saveAll', '전체 저장')}
           </button>
         </div>
       </div>
@@ -239,14 +243,14 @@ function SpecDetailPage() {
               onClick={restoreDraft}
               className="rounded-lg bg-review-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
             >
-              이어서 작업
+              {t('specDetail.resumeDraft', '이어서 작업')}
             </button>
             <button
               type="button"
               onClick={discardDraft}
               className="rounded-lg px-3 py-1.5 transition-opacity hover:opacity-70"
             >
-              버리기
+              {t('specDetail.discardDraft', '버리기')}
             </button>
           </span>
         </div>
@@ -282,21 +286,21 @@ function SpecDetailPage() {
               onClick={() => toast('Excel 다운로드 — 본개발에서 연결됩니다')}
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              Excel 다운로드
+              {t('specDetail.excelDownload', 'Excel 다운로드')}
             </button>
             <button
               type="button"
               onClick={() => toast('엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다')}
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              엑셀 업로드
+              {t('specDetail.excelUpload', '엑셀 업로드')}
             </button>
             <button
               type="button"
               onClick={() => toast('필드 추가 — 본개발에서 연결됩니다')}
               className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
-              + 필드 추가
+              {t('specDetail.addField', '+ 필드 추가')}
             </button>
           </div>
         </div>
@@ -317,14 +321,15 @@ function SpecDetailPage() {
                     : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
                 }`}
               >
-                {c} <span className={on ? 'text-primary/80' : 'text-ink-subtle'}>{n}</span>
+                {c === '전체' ? t('common.all', '전체') : c}{' '}
+                <span className={on ? 'text-primary/80' : 'text-ink-subtle'}>{n}</span>
               </button>
             )
           })}
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="필드명·설명 검색..."
+            placeholder={t('specDetail.searchFields', '필드명·설명 검색...')}
             className="ml-auto h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-56"
           />
         </div>
@@ -442,7 +447,7 @@ function SpecDetailPage() {
                   }}
                   className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
                 >
-                  {i === 0 ? '보는 중' : '비교'}
+                  {i === 0 ? t('specDetail.viewing', '보는 중') : t('specDetail.compare', '비교')}
                 </button>
               </li>
             ))}
@@ -481,11 +486,11 @@ function SpecDetailPage() {
               onClick={() => setRequesting(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel', '취소')}
             </button>
             {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 상신은 되돌리기 어렵다) */}
             <CtaButton
-              busyLabel="상신 중…"
+              busyLabel={t('specDetail.submitting', '상신 중…')}
               onAction={async () => {
                 await simulate()
                 setRequesting(false)
@@ -493,7 +498,7 @@ function SpecDetailPage() {
                 toast('승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요')
               }}
             >
-              상신
+              {t('specDetail.submit', '상신')}
             </CtaButton>
           </div>
         </Modal>
@@ -512,6 +517,7 @@ function FieldEditor({
   onSave: (next: FieldDef) => void
   onCancel: () => void
 }) {
+  const { t } = useI18n()
   const [draft, setDraft] = useState<FieldDef>(field)
   const set = <TKey extends keyof FieldDef>(k: TKey, v: FieldDef[TKey]) =>
     setDraft((d) => ({ ...d, [k]: v }))
@@ -567,7 +573,7 @@ function FieldEditor({
           <input
             value={draft.rule ?? ''}
             onChange={(e) => set('rule', e.target.value === '' ? null : e.target.value)}
-            placeholder="예: ^[A-Z]{2}\d{4}$"
+            placeholder={t('specDetail.rulePlaceholder', '예: ^[A-Z]{2}\\d{4}$')}
             className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none placeholder:font-sans focus:border-primary/60"
           />
         </label>
@@ -587,14 +593,14 @@ function FieldEditor({
           onClick={onCancel}
           className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
-          취소
+          {t('common.cancel', '취소')}
         </button>
         <button
           type="button"
           onClick={() => onSave(draft)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          저장
+          {t('common.save', '저장')}
         </button>
       </div>
     </div>

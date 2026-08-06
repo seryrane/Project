@@ -10,6 +10,7 @@ import { useToast } from '#/components/portal/toast'
 import { NOTICE_CATEGORIES, notices } from '#/data/community'
 import type { Notice } from '#/data/community'
 import { apiSend, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/notice')({ component: NoticePage })
 
@@ -25,6 +26,7 @@ const isNew = (date: string) => date >= '2026.08.03'
 
 function NoticePage() {
   const toast = useToast()
+  const { t } = useI18n()
   const [category, setCategory] = useState('전체')
   const [query, setQuery] = useState('')
   const [reading, setReading] = useState<Notice | null>(null)
@@ -53,9 +55,9 @@ function NoticePage() {
     <AppShell active="notice" title="공지사항">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">공지사항</h1>
+          <h1 className="text-2xl font-bold">{t('nav.notice', '공지사항')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            시스템·배포·정책 공지 — 최소 메뉴라 모든 역할에게 보입니다
+            {t('page.notice.subtitle', '시스템·배포·정책 공지 — 최소 메뉴라 모든 역할에게 보입니다')}
           </p>
         </div>
         {/* 작성은 커뮤니티 생성 권한 — 보이는 것과 되는 것 분리 (지금 사용자는 Super Admin) */}
@@ -64,7 +66,7 @@ function NoticePage() {
           onClick={() => setWriting(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 공지 작성
+          + {t('notice.write', '공지 작성')}
         </button>
       </div>
 
@@ -72,10 +74,15 @@ function NoticePage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="제목 검색..."
+          placeholder={t('notice.searchPh', '제목 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
-        <ChipSelect options={['전체', ...NOTICE_CATEGORIES]} value={category} onChange={setCategory} />
+        {/* '전체'만 UI 어휘라 번역 — 카테고리 이름은 데이터 값이라 그대로 (규약 §4-4) */}
+        <ChipSelect
+          options={[t('common.all'), ...NOTICE_CATEGORIES]}
+          value={category === '전체' ? t('common.all') : category}
+          onChange={(v) => setCategory(v === t('common.all') ? '전체' : v)}
+        />
       </div>
 
       {/* 고정 공지 — 목록 위에 면으로 선다 */}
@@ -93,7 +100,7 @@ function NoticePage() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                   <path d="M16 3l5 5-6 2-4 4 1 5-4-4-5 4 4-5-4-4 5 1 4-4 2-6z" />
                 </svg>
-                고정 공지
+                {t('notice.pinned', '고정 공지')}
               </span>
               <span className="mt-1.5 block truncate text-[14px] font-semibold text-ink">{n.title}</span>
               <span className="mt-1.5 flex items-center gap-2 text-xs text-ink-subtle">
@@ -157,7 +164,9 @@ function NoticePage() {
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${CAT_CLS[reading.category]}`}>
                     {reading.category}
                   </span>
-                  {reading.pinned && <span className="text-[11px] font-semibold text-primary">고정 공지</span>}
+                  {reading.pinned && (
+                    <span className="text-[11px] font-semibold text-primary">{t('notice.pinned', '고정 공지')}</span>
+                  )}
                 </div>
                 <h3 className="mt-2 text-[15px] font-bold leading-snug text-ink">{reading.title}</h3>
                 <p className="mt-1.5 text-xs text-ink-subtle">
@@ -177,7 +186,7 @@ function NoticePage() {
                   onClick={close}
                   className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                 >
-                  닫기
+                  {t('common.close')}
                 </button>
               </div>
             </div>
@@ -193,7 +202,7 @@ function NoticePage() {
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="공지 제목"
+              placeholder={t('notice.titlePh', '공지 제목')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -209,7 +218,7 @@ function NoticePage() {
               rows={5}
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
-              placeholder="공지 내용을 입력하세요"
+              placeholder={t('notice.bodyPh', '공지 내용을 입력하세요')}
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -226,12 +235,12 @@ function NoticePage() {
               onClick={() => setWriting(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
             <CtaButton
               disabled={newTitle.trim() === ''}
-              busyLabel="등록 중…"
+              busyLabel={t('notice.submitting', '등록 중…')}
               onAction={async () => {
                 const ok = await apiSend('POST', '/notices', {
                   title: newTitle,
@@ -247,7 +256,7 @@ function NoticePage() {
                 toast('공지를 등록했습니다 — 전체 알림으로도 발송됩니다')
               }}
             >
-              등록
+              {t('notice.submit', '등록')}
             </CtaButton>
           </div>
         </Modal>

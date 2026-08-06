@@ -11,13 +11,23 @@ import { useToast } from '#/components/portal/toast'
 import { QNA_CATEGORIES, questions } from '#/data/community'
 import type { Question } from '#/data/community'
 import { apiSend, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/qna')({ component: QnaPage })
 
 const FILTERS = ['전체', '답변 대기', '답변 완료'] as const
 
+/* 필터 상태값은 한국어 상수 그대로 — 라벨만 렌더 자리에서 사전을 입힌다 (규약 §4) */
+const FILTER_KEY: Record<(typeof FILTERS)[number], string> = {
+  '전체': 'common.all',
+  '답변 대기': 'qna.tab.waiting',
+  '답변 완료': 'qna.tab.answered',
+}
+
 function QnaPage() {
   const toast = useToast()
+  const { t, tf } = useI18n()
+  const filterLabel = (f: (typeof FILTERS)[number]) => t(FILTER_KEY[f], f)
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('전체')
   const [query, setQuery] = useState('')
   const [reading, setReading] = useState<Question | null>(null)
@@ -47,9 +57,9 @@ function QnaPage() {
     <AppShell active="qna" title="Q&A">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Q&A</h1>
+          <h1 className="text-2xl font-bold">{t('nav.qna', 'Q&A')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            묻고 답하기 — 답변 대기 <b className="tabular-nums text-pending-ink">{waiting}건</b>
+            {tf('page.qna.subtitle', { n: waiting }, '묻고 답하기 — 답변 대기 {n}건')}
           </p>
         </div>
         <button
@@ -57,7 +67,7 @@ function QnaPage() {
           onClick={() => setWriting(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 질문하기
+          + {t('qna.ask', '질문하기')}
         </button>
       </div>
 
@@ -65,10 +75,14 @@ function QnaPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="질문 검색..."
+          placeholder={t('qna.searchPh', '질문 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
-        <ChipSelect options={FILTERS} value={filter} onChange={setFilter} />
+        <ChipSelect
+          options={FILTERS.map(filterLabel)}
+          value={filterLabel(filter)}
+          onChange={(v) => setFilter(FILTERS.find((f) => filterLabel(f) === v) ?? '전체')}
+        />
       </div>
 
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface">
@@ -90,7 +104,7 @@ function QnaPage() {
                       answered ? 'bg-deployed-bg text-deployed-ink' : 'bg-pending-bg text-pending-ink'
                     }`}
                   >
-                    {answered ? '답변 완료' : '답변 대기'}
+                    {answered ? t('qna.tab.answered', '답변 완료') : t('qna.tab.waiting', '답변 대기')}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{q.title}</span>
                   <span className="hidden shrink-0 rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle sm:block">
@@ -100,7 +114,7 @@ function QnaPage() {
                   <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{q.date}</span>
                   {answered && (
                     <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
-                      답변 {q.answers.length}
+                      {tf('qna.answers', { n: q.answers.length }, '답변 {n}')}
                     </span>
                   )}
                 </button>
@@ -130,7 +144,9 @@ function QnaPage() {
                           : 'bg-pending-bg text-pending-ink'
                       }`}
                     >
-                      {reading.answers.length > 0 ? '답변 완료' : '답변 대기'}
+                      {reading.answers.length > 0
+                        ? t('qna.tab.answered', '답변 완료')
+                        : t('qna.tab.waiting', '답변 대기')}
                     </span>
                     <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle">
                       {reading.category}
@@ -180,13 +196,13 @@ function QnaPage() {
                   rows={2}
                   value={answerDraft}
                   onChange={(e) => setAnswerDraft(e.target.value)}
-                  placeholder="답변을 입력하세요 (운영진)"
+                  placeholder={t('qna.answerPh', '답변을 입력하세요 (운영진)')}
                   className="w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
                 />
                 <div className="mt-2 flex justify-end">
                   <CtaButton
                     disabled={answerDraft.trim() === ''}
-                    busyLabel="등록 중…"
+                    busyLabel={t('qna.submitting', '등록 중…')}
                     onAction={async () => {
                       await apiSend('POST', `/questions/${reading.id}/answers`, { body: answerDraft })
                       setAnswerDraft('')
@@ -195,7 +211,7 @@ function QnaPage() {
                       toast('답변을 등록했습니다 — 질문자에게 알림이 갑니다')
                     }}
                   >
-                    답변 등록
+                    {t('qna.answerSubmit', '답변 등록')}
                   </CtaButton>
                 </div>
               </div>
@@ -212,7 +228,7 @@ function QnaPage() {
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="무엇이 궁금한가요?"
+              placeholder={t('qna.titlePh', '무엇이 궁금한가요?')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -228,7 +244,7 @@ function QnaPage() {
               rows={4}
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
-              placeholder="상황을 구체적으로 적을수록 답이 빨라집니다 — 화면·시각·메시지"
+              placeholder={t('qna.bodyPh', '상황을 구체적으로 적을수록 답이 빨라집니다 — 화면·시각·메시지')}
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -241,11 +257,11 @@ function QnaPage() {
               onClick={() => setWriting(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <CtaButton
               disabled={newTitle.trim() === ''}
-              busyLabel="등록 중…"
+              busyLabel={t('qna.submitting', '등록 중…')}
               onAction={async () => {
                 await apiSend('POST', '/questions', {
                   title: newTitle,
@@ -259,7 +275,7 @@ function QnaPage() {
                 toast('질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다')
               }}
             >
-              등록
+              {t('qna.submit', '등록')}
             </CtaButton>
           </div>
         </Modal>

@@ -21,6 +21,7 @@ import {
   underperforming,
   weeklyApprovals,
 } from '#/data/analytics'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/analytics')({ component: AnalyticsPage })
 
@@ -78,13 +79,17 @@ function AttainmentBars() {
 }
 
 function AnalyticsPage() {
+  const { t } = useI18n()
   return (
     <AppShell active="analytics" title="통계 & 분석">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">통계 & 분석</h1>
+          <h1 className="text-2xl font-bold">{t('nav.analytics', '센터 KPI 대시보드')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            ICDAP KPI 시안 (Mock 데이터) · 범위: 전사 · 마지막 집계 오늘 06:00
+            {t(
+              'page.analytics.subtitle',
+              'ICDAP KPI 시안 (Mock 데이터) · 범위: 전사 · 마지막 집계 오늘 06:00',
+            )}
           </p>
         </div>
       </div>
@@ -114,7 +119,7 @@ function AnalyticsPage() {
         <ChartCard
           title="월별 KPI 달성률 — 목표 vs 실적"
           subtitle="2026년 · 단위: % · 8월은 진행 중이라 예상치다"
-          action={{ label: 'KPI 관리' }}
+          action={{ label: t('analytics.action.kpi') }}
           className="anim-fade-up [animation-delay:80ms] xl:col-span-2"
         >
           <TrendLineChart
@@ -128,7 +133,7 @@ function AnalyticsPage() {
         <ChartCard
           title="미달 KPI"
           subtitle="달성률 100% 미만 — 이름을 부른다"
-          action={{ label: 'KPI 상세' }}
+          action={{ label: t('analytics.action.kpiDetail') }}
           className="anim-fade-up [animation-delay:140ms]"
         >
           <ol className="space-y-1.5">
@@ -158,7 +163,7 @@ function AnalyticsPage() {
         <ChartCard
           title="조직별 KPI 달성률"
           subtitle="이번 달 기준 · 초록 = 목표 달성"
-          action={{ label: '조직 KPI' }}
+          action={{ label: t('analytics.action.orgKpi') }}
           className="anim-fade-up [animation-delay:200ms] xl:col-span-3"
         >
           <AttainmentBars />

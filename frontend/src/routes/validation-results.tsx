@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Drawer } from '#/components/portal/Drawer'
 import { ChartCard, StatusStackBar, TrendLineChart } from '#/components/portal/charts'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import {
   RUN_STATUS_CLS,
   SEVERITY_CLS,
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/validation-results')({ component: Validat
 const STATUS_FILTERS = ['전체', '오류', '재처리 중', '해결', '통과'] as const
 
 function ValidationResultsPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]>('전체')
@@ -58,9 +60,12 @@ function ValidationResultsPage() {
     <AppShell active="results" title="검증 결과 조회">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">검증 결과 조회</h1>
+          <h1 className="text-2xl font-bold">{t('nav.results', '검증 결과 조회')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            배치·실시간 검증 실행과 오류 상세 (Mock 데이터) · 마지막 배치 오늘 06:00
+            {t(
+              'page.validation-results.subtitle',
+              '배치·실시간 검증 실행과 오류 상세 (Mock 데이터) · 마지막 배치 오늘 06:00',
+            )}
           </p>
         </div>
         <button
@@ -68,7 +73,7 @@ function ValidationResultsPage() {
           onClick={() => toast('Excel 리포트 내보내기 — 본개발에서 연결됩니다')}
           className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
-          Excel 내보내기
+          {t('results.exportExcel', 'Excel 내보내기')}
         </button>
       </div>
 
@@ -118,7 +123,8 @@ function ValidationResultsPage() {
                     : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
                 }`}
               >
-                {s}
+                {/* '전체'만 UI 어휘 — 나머지는 데이터 상태값이라 번역하지 않는다 */}
+                {s === '전체' ? t('common.all', '전체') : s}
               </button>
             )
           })}
@@ -126,7 +132,7 @@ function ValidationResultsPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="실행 ID, 사양서, Rule 검색..."
+          placeholder={t('results.searchPlaceholder', '실행 ID, 사양서, Rule 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
         />
       </div>
@@ -233,7 +239,7 @@ function ValidationResultsPage() {
                     className="flex w-full items-center justify-between rounded-xl border border-hairline px-4 py-3 text-left text-[13px] transition-colors hover:border-primary/40 hover:bg-chip"
                   >
                     <span className="font-medium text-ink">{detail.specName}</span>
-                    <span className="text-xs text-primary">사양서 열기 →</span>
+                    <span className="text-xs text-primary">{t('results.openSpec', '사양서 열기 →')}</span>
                   </button>
 
                   <div>
@@ -271,7 +277,7 @@ function ValidationResultsPage() {
                     }}
                     className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
-                    Rule 보기 →
+                    {t('results.viewRule', 'Rule 보기 →')}
                   </button>
                   <button
                     type="button"
@@ -283,7 +289,7 @@ function ValidationResultsPage() {
                     }}
                     className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
-                    재검증 실행
+                    {t('results.revalidate', '재검증 실행')}
                   </button>
                 </div>
               </div>

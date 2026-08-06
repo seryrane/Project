@@ -9,6 +9,7 @@ import { useToast } from '#/components/portal/toast'
 import { KPI_AREAS, METRIC_STATUS_CLS, kpiMetrics } from '#/data/kpi'
 import type { KpiMetric } from '#/data/kpi'
 import { apiSend } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage })
 
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage
  * ⚠ 지표 목록·산식은 OPN-008 확정에 종속 — 미승인 지표는 대시보드에 안 올라간다.
  */
 function KpiMetricsPage() {
+  const { t, tf } = useI18n()
   const toast = useToast()
   const [area, setArea] = useState('전체')
   const [detail, setDetail] = useState<KpiMetric | null>(null)
@@ -27,15 +29,19 @@ function KpiMetricsPage() {
     [area],
   )
   const approved = kpiMetrics.filter((m) => m.status === '승인').length
+  const allLabel = t('common.all')
 
   return (
     <AppShell active="kpi-metrics" title="지표 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">지표 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.kpi-metrics', '지표 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            센터 KPI 지표 정의서 — 산식·원천·주기 (FR-070) · 승인{' '}
-            <b className="tabular-nums text-deployed-ink">{approved}</b>/{kpiMetrics.length}
+            {tf(
+              'page.kpi-metrics.subtitle',
+              { approved, total: kpiMetrics.length },
+              '센터 KPI 지표 정의서 — 산식·원천·주기 (FR-070) · 승인 {approved}/{total}',
+            )}
           </p>
         </div>
         <button
@@ -43,12 +49,18 @@ function KpiMetricsPage() {
           onClick={() => toast('지표 추가는 OPN-008(지표 목록·산식) 확정 후 열립니다')}
           className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
-          + 지표 추가
+          + {t('kpi-metrics.addMetric')}
         </button>
       </div>
 
       <div className="mt-5">
-        <ChipSelect options={['전체', ...KPI_AREAS]} value={area} onChange={setArea} />
+        {/* 영역 이름은 데이터 어휘라 그대로 — "전체" 칩만 언어를 입힌다. 내부 값은
+            한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
+        <ChipSelect
+          options={[allLabel, ...KPI_AREAS]}
+          value={area === '전체' ? allLabel : area}
+          onChange={(v) => setArea(v === allLabel ? '전체' : v)}
+        />
       </div>
 
       {/* 시트성 표 — 산식·원천을 나란히 비교하는 화면이라 카드로 펴지 않는다 */}
@@ -166,11 +178,11 @@ function KpiMetricsPage() {
                   onClick={close}
                   className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                 >
-                  닫기
+                  {t('common.close')}
                 </button>
                 {detail.status === '검토 중' && (
                   <CtaButton
-                    busyLabel="상신 중…"
+                    busyLabel={t('kpi-metrics.submitting')}
                     onAction={async () => {
                       const ok = await apiSend('POST', '/submissions', {
                         kind: 'kpi-metric-approval',
@@ -181,7 +193,7 @@ function KpiMetricsPage() {
                       toast(`${detail.name} 산식 승인을 상신했습니다 — 현업 승인 후 대시보드에 표출됩니다`)
                     }}
                   >
-                    산식 승인 상신
+                    {t('kpi-metrics.submitApproval')}
                   </CtaButton>
                 )}
               </div>

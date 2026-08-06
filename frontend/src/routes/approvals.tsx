@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import { KIND_CLS, approvalRequests, myRequests, processedRequests } from '#/data/approvals'
 import type { ApprovalRequest } from '#/data/approvals'
 
@@ -47,6 +48,7 @@ function UrgentChip() {
 type Tab = 'mine' | 'all' | 'requested' | 'done'
 
 function ApprovalsPage() {
+  const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('mine')
@@ -98,20 +100,23 @@ function ApprovalsPage() {
   ]
 
   const TABS: Array<{ key: Tab; label: string; count?: number }> = [
-    { key: 'mine', label: '내 차례', count: pending.filter((r) => r.myTurn).length },
-    { key: 'all', label: '전체 대기', count: pending.length },
-    { key: 'requested', label: '내 요청', count: myRequests.length },
-    { key: 'done', label: '처리됨' },
+    { key: 'mine', label: t('approvals.tab.mine', '내 차례'), count: pending.filter((r) => r.myTurn).length },
+    { key: 'all', label: t('approvals.tab.all', '전체 대기'), count: pending.length },
+    { key: 'requested', label: t('approvals.tab.requested', '내 요청'), count: myRequests.length },
+    { key: 'done', label: t('approvals.tab.done', '처리됨') },
   ]
 
   return (
     <AppShell active="approvals" title="승인 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">승인 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.approvals', '승인 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            사양서·배포·메뉴·권한 결재 (Mock 데이터) · 내 차례{' '}
-            <b className="tabular-nums text-ink">{pending.filter((r) => r.myTurn).length}건</b>
+            {tf(
+              'page.approvals.subtitle',
+              { n: pending.filter((r) => r.myTurn).length },
+              '사양서·배포·메뉴·권한 결재 (Mock 데이터) · 내 차례 {n}건',
+            )}
           </p>
         </div>
       </div>
@@ -128,26 +133,26 @@ function ApprovalsPage() {
 
       <div className="mt-5 flex flex-col gap-3 pc:flex-row pc:items-center">
         <div className="flex w-fit gap-1 rounded-lg border border-hairline bg-surface p-1 text-[13px]">
-          {TABS.map((t) => (
+          {TABS.map((tb) => (
             <button
-              key={t.key}
+              key={tb.key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(tb.key)}
               className={`rounded-md px-3 py-1.5 transition-colors ${
-                tab === t.key
+                tab === tb.key
                   ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
                   : 'text-ink-muted hover:text-ink'
               }`}
             >
-              {t.label}
-              {t.count != null && <span className="ml-1.5 tabular-nums">{t.count}</span>}
+              {tb.label}
+              {tb.count != null && <span className="ml-1.5 tabular-nums">{tb.count}</span>}
             </button>
           ))}
         </div>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="제목, ID, 요청자 검색..."
+          placeholder={t('approvals.searchPlaceholder', '제목, ID, 요청자 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
         />
       </div>
@@ -298,7 +303,7 @@ function ApprovalsPage() {
                   onClick={() => navigate({ to: '/specs/$specId', params: { specId: detail.specId! } })}
                   className="rounded-full bg-primary/12 px-2.5 py-0.5 text-xs font-medium text-primary transition-opacity hover:opacity-80"
                 >
-                  사양서 열기 →
+                  {t('approvals.openSpec', '사양서 열기 →')}
                 </button>
               )}
               {detail.kind === '배포' && (
@@ -307,7 +312,7 @@ function ApprovalsPage() {
                   onClick={() => navigate({ to: '/deploys' })}
                   className="rounded-full bg-primary/12 px-2.5 py-0.5 text-xs font-medium text-primary transition-opacity hover:opacity-80"
                 >
-                  배포 관리 열기 →
+                  {t('approvals.openDeploys', '배포 관리 열기 →')}
                 </button>
               )}
             </div>
@@ -389,7 +394,7 @@ function ApprovalsPage() {
                   value={opinion}
                   onChange={(e) => setOpinion(e.target.value)}
                   rows={3}
-                  placeholder="승인/반려 의견을 입력하세요..."
+                  placeholder={t('approvals.opinionPlaceholder', '승인/반려 의견을 입력하세요...')}
                   className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
                 />
               </div>
@@ -400,14 +405,14 @@ function ApprovalsPage() {
                   onClick={() => decide(detail, '반려')}
                   className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
-                  ✕ 반려
+                  ✕ {t('common.reject', '반려')}
                 </button>
                 <button
                   type="button"
                   onClick={() => decide(detail, '승인')}
                   className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
                 >
-                  ✓ 승인
+                  ✓ {t('common.approve', '승인')}
                 </button>
               </div>
             </>

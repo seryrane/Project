@@ -238,13 +238,13 @@ function DashboardPage() {
       <ChartCard
         title="일별 검증 처리량"
         subtitle={`${rangeLabel} · 단위: 천 건 · 점선은 이전 동일 기간`}
-        action={{ label: '검증 결과', onClick: goResults }}
+        action={{ label: t('dash.action.results'), onClick: goResults }}
       >
         <TrendLineChart data={slice} compare={prevSlice.length === slice.length ? prevSlice : undefined} />
       </ChartCard>
     ),
     status: (
-      <ChartCard title="사양서 상태 분포" subtitle="전체 128건 기준" action={{ label: '사양서 관리', onClick: goSpecs }}>
+      <ChartCard title="사양서 상태 분포" subtitle="전체 128건 기준" action={{ label: t('nav.specs'), onClick: goSpecs }}>
         <StatusStackBar data={statusDistribution} />
       </ChartCard>
     ),
@@ -252,7 +252,7 @@ function DashboardPage() {
       <ChartCard
         title="검증 실행 히트맵"
         subtitle="최근 25주 · 일별 처리량 (짙을수록 많음)"
-        action={{ label: '검증 리포트', onClick: goReports }}
+        action={{ label: t('nav.reports'), onClick: goReports }}
       >
         <ActivityHeatmap days={heatmapDays} />
       </ChartCard>
@@ -261,7 +261,7 @@ function DashboardPage() {
       <ChartCard
         title="승인 대기 큐"
         subtitle={`${approvalQueue.length}건이 결재를 기다립니다`}
-        action={{ label: '승인 관리', onClick: goApprovals }}
+        action={{ label: t('nav.approvals'), onClick: goApprovals }}
       >
         <ol className="space-y-1.5">
           {approvalQueue.map((q) => (
@@ -296,7 +296,7 @@ function DashboardPage() {
       <ChartCard
         title="오류 유형별 검출 건수"
         subtitle={`${rangeLabel} 누적 · 증감은 이전 동일 기간 대비`}
-        action={{ label: '검증 결과', onClick: goResults }}
+        action={{ label: t('dash.action.results'), onClick: goResults }}
       >
         <ErrorBarChart data={scaledErrors} />
       </ChartCard>
@@ -305,7 +305,7 @@ function DashboardPage() {
       <ChartCard
         title="시스템 현황"
         subtitle="서버 리소스 · 30초마다 갱신 (Mock)"
-        action={{ label: '시스템 알림' }}
+        action={{ label: t('nav.alerts') }}
       >
         <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
           {serverResources.map((s) => (
@@ -323,7 +323,7 @@ function DashboardPage() {
       </ChartCard>
     ),
     pipeline: (
-      <ChartCard title="데이터 파이프라인" subtitle="CDO 수신 · 마트 적재 배치" action={{ label: '검증 결과', onClick: goResults }}>
+      <ChartCard title="데이터 파이프라인" subtitle="CDO 수신 · 마트 적재 배치" action={{ label: t('dash.action.results'), onClick: goResults }}>
         <ol className="space-y-2">
           {pipelines.map((p) => (
             <li key={p.name} className="flex items-center gap-2.5 text-[13px]">
@@ -365,7 +365,7 @@ function DashboardPage() {
       <ChartCard
         title="권한별 회원 분포"
         subtitle="전체 66명 기준"
-        action={{ label: '회원 관리', onClick: () => navigate({ to: '/members' }) }}
+        action={{ label: t('nav.members'), onClick: () => navigate({ to: '/members' }) }}
       >
         <StatusStackBar data={memberRoles} />
       </ChartCard>
@@ -374,7 +374,7 @@ function DashboardPage() {
       <ChartCard
         title="최근 공지"
         subtitle="고정 공지 우선"
-        action={{ label: '공지사항', onClick: () => navigate({ to: '/notice' }) }}
+        action={{ label: t('nav.notice'), onClick: () => navigate({ to: '/notice' }) }}
       >
         <ol className="space-y-2.5">
           {[...notices.filter((n) => n.pinned), ...notices.filter((n) => !n.pinned)]
@@ -398,7 +398,7 @@ function DashboardPage() {
       </ChartCard>
     ),
     activity: (
-      <ChartCard title="최근 활동" action={{ label: '전체 보기' }}>
+      <ChartCard title="최근 활동" action={{ label: t('dash.action.viewAll') }}>
         <ol className="space-y-3.5">
           {recentActivity.map((a) => (
             <li key={a.text} className="flex items-start gap-2.5 text-[13px]">

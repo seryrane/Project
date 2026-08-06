@@ -107,6 +107,7 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 - 기본 다크. `<html data-theme="light">`로 라이트 전환 — 모든 색은 CSS 변수 토큰이라 통째로 교체됨. 토글은 상단바(해/달), localStorage `theme`에 저장.
 - **사이드바는 두 테마 모두 다크 유지** (브랜드 아이덴티티). 사이드바 내부는 white/* 유틸 사용 가능, 콘텐츠 영역은 반드시 `chip`/`chip-strong`/`hairline` 토큰 사용 (white/* 금지 — 라이트에서 깨짐).
 - 라이트 토큰: canvas #f4f5f9 · surface #fff · primary #6d5cf0 등 (styles.css `[data-theme='light']` 블록).
+- **포인트 색상(개인 설정)**: `<html data-accent="blue|teal|green|amber|rose">`가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 — violet(기본)은 속성 없음. 선택지 정본은 `lib/accent.ts`(styles.css accent 블록과 1:1), 저장은 localStorage `accent` + 서버 `PUT /me/accent`. **컴포넌트는 아무것도 모른다** — 색을 primary/accent2 토큰으로만 쓰면 자동으로 따라온다(직접 hex 금지 이유가 하나 더 늘었다). 라이트 조합 선택자 `[data-theme='light'][data-accent=…]`는 라이트 테마 블록 **뒤**에 있어야 이긴다(순서가 명세).
 
 ## 사이드바 (Rentier 스타일)
 

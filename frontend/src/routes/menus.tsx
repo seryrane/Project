@@ -11,7 +11,10 @@ import { useToast } from '#/components/portal/toast'
 import { COLUMN_OPTIONS, TEMPLATES, menuItems } from '#/data/menus'
 import type { MenuConfig, MenuItem, TemplateKey } from '#/data/menus'
 import { WIDGET_META } from '#/data/dashboardLayout'
+import { nav } from '#/data/nav'
 import { roleDefs } from '#/data/roles'
+import { apiSend } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 // 접근 가능 역할은 권한 관리 정본(roleDefs)에서 파생한다 — 역할이 추가되면
 // 여기도 자동 노출된다 (본개발에서는 서버 역할 목록으로 교체)
@@ -78,6 +81,7 @@ function Wireframe({ t }: { t: TemplateKey }) {
 }
 
 function MenusPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const [items, setItems] = useState(menuItems)
   const [selected, setSelected] = useState<MenuItem | null>(null)
@@ -215,9 +219,12 @@ function MenusPage() {
     <AppShell active="menus" title="메뉴 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">메뉴 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.menus', '메뉴 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            내비게이션 동적 구성 · 역할 연결 — 정본은 이 목록이다 (LNB·팔레트·권한이 함께 본다)
+            {t(
+              'page.menus.subtitle',
+              '내비게이션 동적 구성 · 역할 연결 — 정본은 이 목록이다 (LNB·팔레트·권한이 함께 본다)',
+            )}
           </p>
         </div>
         <button
@@ -255,6 +262,18 @@ function MenusPage() {
                 />
               </label>
               <label className="block">
+                <span className="text-xs font-medium text-ink-subtle">영문명 (English name)</span>
+                <input
+                  value={draft.nameEn ?? ''}
+                  onChange={(e) => setDraft((d) => d && { ...d, nameEn: e.target.value })}
+                  placeholder="e.g. Members"
+                  className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+                />
+                <span className="mt-1 block text-[11px] leading-relaxed text-ink-subtle">
+                  영문(EN) 화면의 LNB·검색 팔레트가 이 이름을 씁니다 — 비우면 기본 번역으로 나갑니다
+                </span>
+              </label>
+              <label className="block">
                 <span className="text-xs font-medium text-ink-subtle">경로 (Path) <b className="text-danger-ink">*</b></span>
                 <input
                   value={draft.path}
@@ -282,15 +301,15 @@ function MenusPage() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <ChipSelect
-                          options={TEMPLATES.map((t) => t.name)}
-                          value={TEMPLATES.find((t) => t.key === draft.template)?.name ?? TEMPLATES[0].name}
+                          options={TEMPLATES.map((tpl) => tpl.name)}
+                          value={TEMPLATES.find((tpl) => tpl.key === draft.template)?.name ?? TEMPLATES[0].name}
                           onChange={(name) => {
-                            const t = TEMPLATES.find((x) => x.name === name)
-                            if (t) setDraft((d) => d && { ...d, template: t.key })
+                            const tpl = TEMPLATES.find((x) => x.name === name)
+                            if (tpl) setDraft((d) => d && { ...d, template: tpl.key })
                           }}
                         />
                         <span className="mt-1.5 block text-[11px] text-ink-subtle">
-                          {TEMPLATES.find((t) => t.key === draft.template)?.desc}
+                          {TEMPLATES.find((tpl) => tpl.key === draft.template)?.desc}
                         </span>
                       </span>
                     </div>
@@ -450,6 +469,11 @@ function MenusPage() {
                   disabled={!draft.minimal && draft.roles.length === 0}
                   onClick={() => {
                     setItems((list) => list.map((x) => (x.id === draft.id ? draft : x)))
+                    // 영문명은 서버 nav 라벨 정본으로 — EN 화면의 LNB 가 이 값을 입는다
+                    const navKey = nav
+                      .flatMap((s) => s.items)
+                      .find((i) => i.to === draft.path)?.key
+                    if (navKey) void apiSend('PUT', '/nav/label', { key: navKey, labelEn: draft.nameEn ?? '' })
                     toast(`${draft.name} 메뉴 설정을 저장했습니다 — LNB 에 바로 반영됩니다`)
                   }}
                   className="h-9 flex-1 rounded-lg bg-gradient-to-r from-primary to-accent2 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
@@ -522,14 +546,14 @@ function MenusPage() {
               화면 템플릿 <b className="text-danger-ink">*</b>
             </span>
             <div className="mt-1.5 grid grid-cols-2 gap-2 pc:grid-cols-3">
-              {TEMPLATES.map((t) => {
-                const on = newTemplate === t.key
+              {TEMPLATES.map((tpl) => {
+                const on = newTemplate === tpl.key
                 return (
                   <button
-                    key={t.key}
+                    key={tpl.key}
                     type="button"
                     aria-pressed={on}
-                    onClick={() => setNewTemplate(t.key)}
+                    onClick={() => setNewTemplate(tpl.key)}
                     className={`rounded-xl border p-2.5 text-left transition-all active:scale-[0.98] ${
                       on
                         ? 'border-primary/60 bg-primary/8 shadow-[0_2px_10px_var(--color-glow)]'
@@ -537,14 +561,14 @@ function MenusPage() {
                     }`}
                   >
                     <span className="block h-16 overflow-hidden rounded-lg bg-canvas/50">
-                      <Wireframe t={t.key} />
+                      <Wireframe t={tpl.key} />
                     </span>
                     <span className={`mt-1.5 flex items-center justify-between text-xs font-semibold ${on ? 'text-primary' : 'text-ink'}`}>
-                      {t.name}
+                      {tpl.name}
                       {/* 규약 16절 — 선택은 색만으로 말하지 않는다 */}
                       {on && <span className="text-[10px] font-medium">✓ 선택됨</span>}
                     </span>
-                    <span className="mt-0.5 block text-[10px] leading-snug text-ink-subtle">{t.desc}</span>
+                    <span className="mt-0.5 block text-[10px] leading-snug text-ink-subtle">{tpl.desc}</span>
                   </button>
                 )
               })}

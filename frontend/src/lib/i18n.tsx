@@ -12,14 +12,63 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 import { apiSend } from './api'
+import { ADMIN_DICT } from './i18n-dict-admin'
+import { COMMUNITY_DICT } from './i18n-dict-community'
+import { PAGE_DICT } from './i18n-dict-page'
+import { WORK_DICT } from './i18n-dict-work'
 
 export type Locale = 'ko' | 'en'
 
 const STORAGE_KEY = 'locale'
 
-type Entry = { ko: string; en: string }
+export type Entry = { ko: string; en: string }
 
-const DICT: Record<string, Entry> = {
+const CORE_DICT: Record<string, Entry> = {
+  // ── 브랜드 (플랫폼 이름·설명) — 이름 'HMG Admin' 은 고유명사라 안 바뀐다 ──
+  'brand.tagline': { ko: '통합 관리자 포털', en: 'Unified Admin Portal' },
+  'brand.footer': { ko: '프로토타입 v0.5 · 디자인 검토용', en: 'Prototype v0.5 · for design review' },
+  'brand.loginFooter': { ko: '© HMG · 프로토타입 v0.5', en: '© HMG · Prototype v0.5' },
+
+  // ── 공통 컨트롤 (버튼·칩에서 되풀이되는 낱말 — 화면 사전보다 이걸 먼저 쓴다) ──
+  'common.save': { ko: '저장', en: 'Save' },
+  'common.cancel': { ko: '취소', en: 'Cancel' },
+  'common.close': { ko: '닫기', en: 'Close' },
+  'common.confirm': { ko: '확인', en: 'OK' },
+  'common.add': { ko: '추가', en: 'Add' },
+  'common.delete': { ko: '삭제', en: 'Delete' },
+  'common.edit': { ko: '편집', en: 'Edit' },
+  'common.search': { ko: '검색', en: 'Search' },
+  'common.all': { ko: '전체', en: 'All' },
+  'common.approve': { ko: '승인', en: 'Approve' },
+  'common.reject': { ko: '반려', en: 'Reject' },
+  'common.reset': { ko: '초기화', en: 'Reset' },
+  'common.apply': { ko: '적용', en: 'Apply' },
+  'common.create': { ko: '만들기', en: 'Create' },
+  'common.more': { ko: '더보기', en: 'More' },
+  'common.download': { ko: '내려받기', en: 'Download' },
+  'common.copy': { ko: '복사', en: 'Copy' },
+
+  // ── 커맨드 팔레트 ─────────────────────────────────────────────────
+  'palette.pages': { ko: '페이지', en: 'Pages' },
+  'palette.go': { ko: '이동', en: 'Go' },
+  'palette.specs': { ko: '사양서', en: 'Specs' },
+
+  // ── 개인 설정 ────────────────────────────────────────────────────
+  'prefs.accent': { ko: '포인트 색상', en: 'Accent color' },
+  'prefs.accent.desc': {
+    ko: '버튼·강조·차트의 포인트 색이 함께 바뀝니다. 계정 설정이라 다른 기기에서도 같습니다.',
+    en: 'Buttons, highlights and charts change together. Saved to your account, so it follows you across devices.',
+  },
+  'accent.violet': { ko: '보라 (기본)', en: 'Violet (default)' },
+  'accent.blue': { ko: '파랑', en: 'Blue' },
+  'accent.teal': { ko: '청록', en: 'Teal' },
+  'accent.green': { ko: '초록', en: 'Green' },
+  'accent.amber': { ko: '호박', en: 'Amber' },
+  'accent.rose': { ko: '장미', en: 'Rose' },
+  'prefs.language': { ko: '언어', en: 'Language' },
+  'prefs.theme': { ko: '테마', en: 'Theme' },
+  'prefs.theme.dark': { ko: '다크', en: 'Dark' },
+  'prefs.theme.light': { ko: '라이트', en: 'Light' },
   // ── LNB (key 가 서버 재료 — nav.<item.key>) ──────────────────────
   'nav.dashboard': { ko: '대시보드', en: 'Dashboard' },
   'nav.analytics': { ko: '센터 KPI 대시보드', en: 'Center KPI Dashboard' },
@@ -128,6 +177,16 @@ const DICT: Record<string, Entry> = {
   'dash.range.90': { ko: '최근 90일', en: 'Last 90 days' },
   'dash.editWidgets': { ko: '위젯 편집', en: 'Edit widgets' },
   'dash.done': { ko: '완료', en: 'Done' },
+}
+
+// 화면별 사전은 파일을 가른다 — 사전 하나가 수백 키로 크는 것을 막고,
+// 화면 작업이 서로 다른 파일을 만지게 한다(충돌 방지). 키가 겹치면 화면 사전이 이긴다.
+const DICT: Record<string, Entry> = {
+  ...CORE_DICT,
+  ...WORK_DICT,
+  ...ADMIN_DICT,
+  ...COMMUNITY_DICT,
+  ...PAGE_DICT,
 }
 
 interface I18n {

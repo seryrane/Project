@@ -5,6 +5,7 @@ import { MotionRoot, m } from '#/components/portal/motion'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { ToastProvider, useToast } from '#/components/portal/toast'
 import { apiPost } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/signup')({ component: SignupShell })
 
@@ -25,6 +26,7 @@ function SignupShell() {
 }
 
 function SignupPage() {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const toast = useToast()
   const [name, setName] = useState('')
@@ -35,9 +37,9 @@ function SignupPage() {
   const [error, setError] = useState('')
 
   // 실시간 유효성 — 제출 전에 알 수 있는 것은 그 자리에서
-  const emailHint = email !== '' && !/.+@.+\..+/.test(email) ? '이메일 형식이 아닙니다' : ''
-  const pwHint = pw !== '' && pw.length < 8 ? '8자 이상이어야 합니다' : ''
-  const pw2Hint = pw2 !== '' && pw2 !== pw ? '비밀번호가 서로 다릅니다' : ''
+  const emailHint = email !== '' && !/.+@.+\..+/.test(email) ? t('signup.emailHint') : ''
+  const pwHint = pw !== '' && pw.length < 8 ? t('signup.pwHint') : ''
+  const pw2Hint = pw2 !== '' && pw2 !== pw ? t('signup.pw2Hint') : ''
   const canSubmit =
     name.trim() !== '' && /.+@.+\..+/.test(email) && pw.length >= 8 && pw === pw2
 
@@ -65,16 +67,16 @@ function SignupPage() {
           className="mt-6 space-y-3.5 rounded-2xl border border-hairline bg-surface p-5"
         >
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">이름 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">{t('signup.name')} <b className="text-danger-ink">*</b></span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="홍길동"
+              placeholder={t('signup.ph.name')}
               className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">회사 이메일 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">{t('signup.email')} <b className="text-danger-ink">*</b></span>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -87,23 +89,23 @@ function SignupPage() {
             {emailHint && <span className="mt-1 block text-[11px] text-danger-ink">{emailHint}</span>}
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">소속 (회사·팀)</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('signup.dept')}</span>
             <input
               value={dept}
               onChange={(e) => setDept(e.target.value)}
-              placeholder="예: LG전자 인포테인먼트팀"
+              placeholder={t('signup.ph.dept')}
               className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">비밀번호 <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">{t('login.password')} <b className="text-danger-ink">*</b></span>
               <input
                 type="password"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 autoComplete="new-password"
-                placeholder="8자 이상"
+                placeholder={t('login.pwPlaceholder')}
                 className={`mt-1 h-11 w-full rounded-xl border bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60 ${
                   pwHint ? 'border-danger-ink/50' : 'border-hairline'
                 }`}
@@ -111,13 +113,13 @@ function SignupPage() {
               {pwHint && <span className="mt-1 block text-[11px] text-danger-ink">{pwHint}</span>}
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">비밀번호 확인 <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">{t('signup.pw2')} <b className="text-danger-ink">*</b></span>
               <input
                 type="password"
                 value={pw2}
                 onChange={(e) => setPw2(e.target.value)}
                 autoComplete="new-password"
-                placeholder="한 번 더"
+                placeholder={t('signup.ph.pw2')}
                 className={`mt-1 h-11 w-full rounded-xl border bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60 ${
                   pw2Hint ? 'border-danger-ink/50' : 'border-hairline'
                 }`}
@@ -134,7 +136,7 @@ function SignupPage() {
 
           <CtaButton
             disabled={!canSubmit}
-            busyLabel="접수 중…"
+            busyLabel={t('signup.submitting')}
             className="h-11 w-full"
             onAction={async () => {
               setError('')
@@ -152,14 +154,14 @@ function SignupPage() {
               void navigate({ to: '/login' })
             }}
           >
-            가입 신청
+            {t('login.signup')}
           </CtaButton>
         </form>
 
         <p className="mt-4 text-center text-[12px] text-ink-subtle">
-          이미 계정이 있으신가요?{' '}
+          {t('signup.haveAccount')}{' '}
           <Link to="/login" className="font-medium text-primary hover:underline">
-            로그인
+            {t('login.title')}
           </Link>
         </p>
       </m.div>

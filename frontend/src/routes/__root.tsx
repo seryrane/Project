@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 
+import { applySavedAccent } from '#/lib/accent'
 import { I18nProvider } from '#/lib/i18n'
 
 import appCss from '../styles.css?url'
@@ -29,6 +31,8 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // 포인트 색상은 계정 설정 — 수화 직후 저장값을 입힌다 (테마 초기화와 같은 시점)
+  useEffect(() => applySavedAccent(), [])
   return (
     <html lang="ko" data-theme="dark">
       <head>

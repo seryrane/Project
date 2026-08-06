@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import {
   ENGINE_TEMPLATE,
   RESULT_CLS,
@@ -15,6 +16,10 @@ import type { ValidationEngine } from '#/data/validationEngines'
 
 export const Route = createFileRoute('/validation-engine')({ component: ValidationEnginePage })
 
+/* 셀렉트 칩의 내부 값은 키 — 화면에 보일 때만 사전을 입힌다 (언어를 바꿔도 선택이 안 깨진다) */
+const STATUS_KEYS = ['active', 'inactive'] as const
+const FREQ_KEYS = ['daily', 'weekly', 'hourly'] as const
+
 function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
   return (
     <span className={`flex items-center gap-1 text-xs font-medium ${RESULT_CLS[result]}`}>
@@ -24,6 +29,7 @@ function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
 }
 
 function ValidationEnginePage() {
+  const { t } = useI18n()
   const toast = useToast()
   const [engines, setEngines] = useState(validationEngines)
   const [expanded, setExpanded] = useState<string | null>(validationEngines[0].id)
@@ -32,17 +38,17 @@ function ValidationEnginePage() {
   const [progress, setProgress] = useState<Record<string, number>>({})
   const timers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
   const [editing, setEditing] = useState<ValidationEngine | 'new' | null>(null)
-  const [engineStatus, setEngineStatus] = useState('활성')
+  const [engineStatus, setEngineStatus] = useState<(typeof STATUS_KEYS)[number]>('active')
   const [scheduling, setScheduling] = useState(false)
-  const [schedFreq, setSchedFreq] = useState('일간 (매일)')
+  const [schedFreq, setSchedFreq] = useState<(typeof FREQ_KEYS)[number]>('daily')
   const [schedOn, setSchedOn] = useState(true)
   const [schedEngine, setSchedEngine] = useState(validationEngines[0].name)
   const [deleting, setDeleting] = useState<ValidationEngine | null>(null)
   const [schedActive, setSchedActive] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const t = timers.current
-    return () => Object.values(t).forEach(clearInterval)
+    const tm = timers.current
+    return () => Object.values(tm).forEach(clearInterval)
   }, [])
 
   const run = (e: ValidationEngine) => {
@@ -87,9 +93,12 @@ function ValidationEnginePage() {
     <AppShell active="engine" title="검증엔진 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">검증엔진 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.engine', '검증엔진 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            Python 함수 기반 검증엔진 등록 · 스케줄 관리 · 즉시 실행 (Mock 데이터)
+            {t(
+              'page.validation-engine.subtitle',
+              'Python 함수 기반 검증엔진 등록 · 스케줄 관리 · 즉시 실행 (Mock 데이터)',
+            )}
           </p>
         </div>
         <button
@@ -97,7 +106,7 @@ function ValidationEnginePage() {
           onClick={() => setEditing('new')}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 엔진 등록
+          {t('engine.register', '+ 엔진 등록')}
         </button>
       </div>
 
@@ -174,12 +183,12 @@ function ValidationEnginePage() {
                       onClick={() => run(e)}
                       className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                     >
-                      ⚡ 즉시 실행
+                      {t('engine.runNow', '⚡ 즉시 실행')}
                     </button>
                   )}
                   <button
                     type="button"
-                    aria-label="엔진 수정"
+                    aria-label={t('engine.editAria', '엔진 수정')}
                     onClick={() => setEditing(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
                   >
@@ -187,7 +196,7 @@ function ValidationEnginePage() {
                   </button>
                   <button
                     type="button"
-                    aria-label="엔진 삭제"
+                    aria-label={t('engine.deleteAria', '엔진 삭제')}
                     onClick={() => setDeleting(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
@@ -195,7 +204,7 @@ function ValidationEnginePage() {
                   </button>
                   <button
                     type="button"
-                    aria-label={open ? '접기' : '펼치기'}
+                    aria-label={open ? t('engine.collapse', '접기') : t('engine.expand', '펼치기')}
                     onClick={() => setExpanded(open ? null : e.id)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
                   >
@@ -211,19 +220,19 @@ function ValidationEnginePage() {
                   <div className="mt-4 flex gap-1 rounded-lg border border-hairline bg-canvas/50 p-1 text-xs w-fit">
                     {(
                       [
-                        { key: 'code', label: '</> Python 함수' },
-                        { key: 'schedule', label: `📅 스케줄 (${schedules.length})` },
+                        { key: 'code', label: t('engine.tab.code', '</> Python 함수') },
+                        { key: 'schedule', label: `${t('engine.tab.schedule', '📅 스케줄')} (${schedules.length})` },
                       ] as const
-                    ).map((t) => (
+                    ).map((tb) => (
                       <button
-                        key={t.key}
+                        key={tb.key}
                         type="button"
-                        onClick={() => setTab(t.key)}
+                        onClick={() => setTab(tb.key)}
                         className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
-                          tab === t.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
+                          tab === tb.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
                         }`}
                       >
-                        {t.label}
+                        {tb.label}
                       </button>
                     ))}
                   </div>
@@ -263,7 +272,7 @@ function ValidationEnginePage() {
                                 type="button"
                                 role="switch"
                                 aria-checked={on}
-                                aria-label="스케줄 활성화"
+                                aria-label={t('engine.schedToggleAria', '스케줄 활성화')}
                                 onClick={() => {
                                   setSchedActive((m) => ({ ...m, [s3.id]: !on }))
                                   toast(`스케줄을 ${on ? '중지' : '활성화'}했습니다 — ${on ? '자동 실행이 멈춥니다' : s3.time}`)
@@ -283,7 +292,7 @@ function ValidationEnginePage() {
                         onClick={() => setScheduling(true)}
                         className="w-full rounded-xl border border-dashed border-hairline px-4 py-2.5 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                       >
-                        + 스케줄 추가
+                        {t('engine.addSchedule', '+ 스케줄 추가')}
                       </button>
                     </div>
                   )}
@@ -306,7 +315,7 @@ function ValidationEnginePage() {
               <span className="text-xs font-medium text-ink-subtle">엔진명 <b className="text-danger-ink">*</b></span>
               <input
                 defaultValue={editing === 'new' ? '' : editing.name}
-                placeholder="예: NULL 값 검증 엔진"
+                placeholder={t('engine.namePlaceholder', '예: NULL 값 검증 엔진')}
                 className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
               />
             </label>
@@ -314,9 +323,12 @@ function ValidationEnginePage() {
               <span className="text-xs font-medium text-ink-subtle">상태</span>
               <div className="mt-2">
                 <ChipSelect
-                  options={['활성', '비활성']}
-                  value={engineStatus}
-                  onChange={setEngineStatus}
+                  options={STATUS_KEYS.map((k) => t(`engine.status.${k}`))}
+                  value={t(`engine.status.${engineStatus}`)}
+                  onChange={(v) => {
+                    const k = STATUS_KEYS.find((x) => t(`engine.status.${x}`) === v)
+                    if (k) setEngineStatus(k)
+                  }}
                 />
               </div>
             </div>
@@ -325,7 +337,7 @@ function ValidationEnginePage() {
             <span className="text-xs font-medium text-ink-subtle">설명</span>
             <input
               defaultValue={editing === 'new' ? '' : editing.desc}
-              placeholder="엔진 설명"
+              placeholder={t('engine.descPlaceholder', '엔진 설명')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
@@ -341,7 +353,7 @@ function ValidationEnginePage() {
               <span className="text-xs font-medium text-ink-subtle">대상 필드 <b className="text-danger-ink">*</b></span>
               <input
                 defaultValue={editing === 'new' ? '' : editing.targetFields}
-                placeholder="item_code, item_name (쉼표 구분)"
+                placeholder={t('engine.fieldsPlaceholder', 'item_code, item_name (쉼표 구분)')}
                 className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
               />
             </label>
@@ -370,7 +382,7 @@ function ValidationEnginePage() {
               onClick={() => setEditing(null)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel', '취소')}
             </button>
             <button
               type="button"
@@ -380,7 +392,7 @@ function ValidationEnginePage() {
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
-              {editing === 'new' ? '엔진 등록' : '수정 저장'}
+              {editing === 'new' ? t('engine.submitNew', '엔진 등록') : t('engine.submitEdit', '수정 저장')}
             </button>
           </div>
         </Modal>
@@ -398,7 +410,14 @@ function ValidationEnginePage() {
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">실행 주기 <b className="text-danger-ink">*</b></span>
             <div className="mt-1.5">
-              <ChipSelect options={['일간 (매일)', '주간 (매주)', '시간 (매시)']} value={schedFreq} onChange={setSchedFreq} />
+              <ChipSelect
+                options={FREQ_KEYS.map((k) => t(`engine.freq.${k}`))}
+                value={t(`engine.freq.${schedFreq}`)}
+                onChange={(v) => {
+                  const k = FREQ_KEYS.find((x) => t(`engine.freq.${x}`) === v)
+                  if (k) setSchedFreq(k)
+                }}
+              />
             </div>
           </div>
           <label className="mt-3 block">
@@ -414,7 +433,7 @@ function ValidationEnginePage() {
               <b className="text-ink">스케줄 활성화</b>
               <span className="block text-xs text-ink-subtle">비활성화 시 자동 실행이 중단됩니다</span>
             </span>
-            <Switch checked={schedOn} onChange={setSchedOn} label="스케줄 활성화" />
+            <Switch checked={schedOn} onChange={setSchedOn} label={t('engine.schedToggleAria', '스케줄 활성화')} />
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -422,7 +441,7 @@ function ValidationEnginePage() {
               onClick={() => setScheduling(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel', '취소')}
             </button>
             <button
               type="button"
@@ -432,7 +451,7 @@ function ValidationEnginePage() {
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
-              스케줄 등록
+              {t('engine.submitSchedule', '스케줄 등록')}
             </button>
           </div>
         </Modal>
@@ -453,7 +472,7 @@ function ValidationEnginePage() {
               onClick={() => setDeleting(null)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel', '취소')}
             </button>
             <button
               type="button"
@@ -464,7 +483,7 @@ function ValidationEnginePage() {
               }}
               className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
             >
-              삭제
+              {t('common.delete', '삭제')}
             </button>
           </div>
         </Modal>

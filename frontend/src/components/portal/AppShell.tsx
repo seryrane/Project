@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
 import type { IconName, NavItem, NavSection } from '#/data/nav'
+import { ACCENTS, useAccent } from '#/lib/accent'
 import { apiSend, clearToken, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
@@ -261,6 +262,7 @@ function Shell({
   const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
   // 내가 할 수 있는 것 — 권한은 말없이 붙고 회수는 더 조용하다. 받은 본인이 확인할 자리
   const [abilitiesOpen, setAbilitiesOpen] = useState(false)
+  const [prefsOpen, setPrefsOpen] = useState(false)
   // 새 기능 배지 (규약 19절) — localStorage 는 서버에 없으므로 수화 뒤에 센다
   const [whatsNew, setWhatsNew] = useState(0)
   useEffect(() => {
@@ -275,13 +277,17 @@ function Shell({
     title: '시스템 관리자',
     gradeName: 'Super Admin',
   })
-  // 라벨은 사전이 입힌다 — 서버 재료는 key(규약 §4-2). 사전에 없으면 서버 라벨 그대로
+  // 라벨은 언어별로 입힌다 — 서버 재료는 key(규약 §4-2). EN 은 관리자가 메뉴 관리에서
+  // 넣은 영문명(labelEn)이 우선이고, 없으면 사전, 그것도 없으면 한국어 라벨 그대로.
   const displayNav = serverNav.map((s) => ({
     ...s,
     title: s.title ? t(`nav.section.${s.id}`, s.title) : undefined,
     items: s.items.map((it) => ({
       ...it,
-      label: t(`nav.${it.key}`, it.label),
+      label:
+        locale === 'en'
+          ? (it.labelEn ?? t(`nav.${it.key}`, it.label))
+          : it.label,
       ...(it.key === 'guide' && whatsNew > 0 ? { badge: whatsNew } : {}),
     })),
   }))
@@ -360,7 +366,7 @@ function Shell({
                 PoC
               </span>
             </div>
-            <div className="text-[11px] text-sidebar-ink/60">통합 관리자 포털</div>
+            <div className="text-[11px] text-sidebar-ink/60">{t('brand.tagline')}</div>
           </div>
           <button
             type="button"
@@ -431,7 +437,7 @@ function Shell({
           })}
         </nav>
         <div className={`whitespace-nowrap border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/40 ${railHide}`}>
-          프로토타입 v0.5 · 디자인 검토용
+          {t('brand.footer')}
         </div>
       </aside>
 
@@ -457,7 +463,11 @@ function Shell({
               <span className="hidden pc:inline">
                 HMG Admin <span className="mx-1.5">›</span>
               </span>
-              <span className="font-medium text-ink">{title}</span>
+              {/* 자리 이름은 LNB 와 같은 낱말로 — 메뉴는 Members 인데 머리는 회원 관리면
+                  같은 화면이 두 이름을 갖는다. active 키로 표시 라벨을 되찾는다 */}
+              <span className="font-medium text-ink">
+                {displayNav.flatMap((s) => s.items).find((i) => i.key === active)?.label ?? title}
+              </span>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2.5 pc:gap-3">
@@ -642,25 +652,28 @@ function Shell({
                 <Icon name="shield" size={15} />
                 {t('gnb.myAbilities')}
               </button>
-              {(
-                [
-                  { icon: 'user' as IconName, label: t('gnb.myPage') },
-                  { icon: 'settings' as IconName, label: t('gnb.settings') },
-                ] as const
-              ).map((m) => (
-                <button
-                  key={m.label}
-                  type="button"
-                  onClick={() => {
-                    setMenu(null)
-                    toast(tf('gnb.notReady', { label: m.label }))
-                  }}
-                  className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
-                >
-                  <Icon name={m.icon} size={15} />
-                  {m.label}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(null)
+                  toast(tf('gnb.notReady', { label: t('gnb.myPage') }))
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+              >
+                <Icon name="user" size={15} />
+                {t('gnb.myPage')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(null)
+                  setPrefsOpen(true)
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+              >
+                <Icon name="settings" size={15} />
+                {t('gnb.settings')}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -684,10 +697,100 @@ function Shell({
 
       {/* 내가 할 수 있는 것 — 권한 이름이 아니라 사람 말로. 정본은 권한 관리(roleDefs) 파생 */}
       {abilitiesOpen && (
-        <Drawer title="내가 할 수 있는 것" onClose={() => setAbilitiesOpen(false)}>
+        <Drawer title={t('gnb.myAbilities')} onClose={() => setAbilitiesOpen(false)}>
           {() => <MyAbilities />}
         </Drawer>
       )}
+
+      {/* 개인 설정 — 언어·테마·포인트 색상. 전부 즉시 적용이라 저장 버튼이 없다 */}
+      {prefsOpen && (
+        <Drawer title={t('gnb.settings')} onClose={() => setPrefsOpen(false)}>
+          {() => <Preferences theme={theme} onToggleTheme={toggle} />}
+        </Drawer>
+      )}
+    </div>
+  )
+}
+
+/** 개인 설정 — 언어·테마·포인트 색상. 전부 즉시 적용(정본은 서버, localStorage 백업).
+ *  선택 상태는 면+글자+✓ (규약 16절 — 색만으로 선택을 말하지 않는다). */
+function Preferences({ theme, onToggleTheme }: { theme: 'dark' | 'light'; onToggleTheme: () => void }) {
+  const { locale, setLocale, t } = useI18n()
+  const { accent, setAccent } = useAccent()
+
+  const seg = (on: boolean) =>
+    `flex-1 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+      on ? 'bg-chip-strong font-semibold text-ink' : 'text-ink-muted hover:bg-chip hover:text-ink'
+    }`
+
+  return (
+    <div className="space-y-6">
+      <section>
+        <h3 className="text-[13px] font-semibold text-ink">{t('prefs.language')}</h3>
+        <div className="mt-2 flex gap-1 rounded-xl border border-hairline bg-canvas/40 p-1">
+          {/* 언어 이름은 그 언어로 — 못 읽는 말로 적힌 언어 메뉴는 못 고른다 */}
+          <button type="button" aria-pressed={locale === 'ko'} onClick={() => setLocale('ko')} className={seg(locale === 'ko')}>
+            {locale === 'ko' && '✓ '}한국어
+          </button>
+          <button type="button" aria-pressed={locale === 'en'} onClick={() => setLocale('en')} className={seg(locale === 'en')}>
+            {locale === 'en' && '✓ '}English
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-[13px] font-semibold text-ink">{t('prefs.theme')}</h3>
+        <div className="mt-2 flex gap-1 rounded-xl border border-hairline bg-canvas/40 p-1">
+          <button
+            type="button"
+            aria-pressed={theme === 'dark'}
+            onClick={() => theme !== 'dark' && onToggleTheme()}
+            className={seg(theme === 'dark')}
+          >
+            {theme === 'dark' && '✓ '}
+            {t('prefs.theme.dark')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={theme === 'light'}
+            onClick={() => theme !== 'light' && onToggleTheme()}
+            className={seg(theme === 'light')}
+          >
+            {theme === 'light' && '✓ '}
+            {t('prefs.theme.light')}
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-[13px] font-semibold text-ink">{t('prefs.accent')}</h3>
+        <p className="mt-1 text-[12px] leading-relaxed text-ink-subtle">{t('prefs.accent.desc')}</p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {ACCENTS.map((a) => {
+            const on = accent === a.key
+            return (
+              <button
+                key={a.key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setAccent(a.key)}
+                className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
+                  on ? 'border-primary bg-chip-strong' : 'border-hairline hover:bg-chip'
+                }`}
+              >
+                <span
+                  className={`h-8 w-8 rounded-full ${on ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-surface' : ''}`}
+                  style={{ background: a.swatch }}
+                />
+                <span className={`text-[12px] ${on ? 'font-semibold text-ink' : 'text-ink-muted'}`}>
+                  {on && '✓ '}
+                  {t(`accent.${a.key}`)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
     </div>
   )
 }

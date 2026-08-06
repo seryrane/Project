@@ -4,12 +4,14 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
+import { useI18n } from '#/lib/i18n'
 import { validationReports } from '#/data/validationReports'
 import type { ValidationReport } from '#/data/validationReports'
 
 export const Route = createFileRoute('/validation-reports')({ component: ValidationReportsPage })
 
 function ValidationReportsPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<ValidationReport | null>(null)
@@ -31,15 +33,17 @@ function ValidationReportsPage() {
     <AppShell active="reports" title="검증 리포트">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">검증 리포트</h1>
-          <p className="mt-1 text-[13px] text-ink-subtle">검증 결과 기반 리포트 생성 및 조회 (Mock 데이터)</p>
+          <h1 className="text-2xl font-bold">{t('nav.reports', '검증 리포트')}</h1>
+          <p className="mt-1 text-[13px] text-ink-subtle">
+            {t('page.validation-reports.subtitle', '검증 결과 기반 리포트 생성 및 조회 (Mock 데이터)')}
+          </p>
         </div>
         <button
           type="button"
           onClick={() => toast('리포트 생성 — 기간·엔진을 골라 생성합니다 (본개발에서 연결)')}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 리포트 생성
+          {t('reports.create', '+ 리포트 생성')}
         </button>
       </div>
 
@@ -81,9 +85,9 @@ function ValidationReportsPage() {
                     <span className="text-ink-subtle">실행 <b className="tabular-nums text-ink">{r.runs}회</b></span>
                     <span className="text-danger-ink">오류 <b className="tabular-nums">{r.errors}건</b></span>
                     <span className="text-review-ink">경고 <b className="tabular-nums">{r.warnings}건</b></span>
-                    {r.types.map((t) => (
-                      <span key={t.label} className="rounded-full bg-chip px-2 py-0.5 font-mono text-[10px] text-ink-muted">
-                        {t.label}: {t.count}
+                    {r.types.map((ty) => (
+                      <span key={ty.label} className="rounded-full bg-chip px-2 py-0.5 font-mono text-[10px] text-ink-muted">
+                        {ty.label}: {ty.count}
                       </span>
                     ))}
                   </span>
@@ -94,7 +98,7 @@ function ValidationReportsPage() {
                     onClick={() => setDetail(r)}
                     className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
-                    보기
+                    {t('reports.view', '보기')}
                   </button>
                   {status === '임시저장' && (
                     <button
@@ -105,7 +109,7 @@ function ValidationReportsPage() {
                       }}
                       className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
                     >
-                      발행
+                      {t('reports.publish', '발행')}
                     </button>
                   )}
                 </span>
@@ -162,17 +166,17 @@ function ValidationReportsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {detail.types.map((t, idx) => {
+                  {detail.types.map((ty, idx) => {
                     const total = detail.types.reduce((a, x) => a + x.count, 0)
                     return (
-                      <tr key={t.label} className="border-b border-hairline/60 last:border-0">
+                      <tr key={ty.label} className="border-b border-hairline/60 last:border-0">
                         <td className="px-3 py-2.5 font-mono text-xs text-ink-subtle">{idx + 1}</td>
                         <td className="px-3 py-2.5">
-                          <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs text-ink">{t.label}</code>
+                          <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs text-ink">{ty.label}</code>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-danger-ink">{t.count}건</td>
+                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-danger-ink">{ty.count}건</td>
                         <td className="px-3 py-2.5 text-right tabular-nums text-ink-muted">
-                          {Math.round((t.count / total) * 100)}%
+                          {Math.round((ty.count / total) * 100)}%
                         </td>
                         <td className="px-3 py-2.5">
                           <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
@@ -196,21 +200,21 @@ function ValidationReportsPage() {
               }}
               className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              실행 상세는 검증 결과 조회 →
+              {t('reports.goResults', '실행 상세는 검증 결과 조회 →')}
             </button>
             <button
               type="button"
               onClick={() => toast('인쇄 — 본개발에서 연결됩니다')}
               className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              🖨 인쇄
+              {t('reports.print', '🖨 인쇄')}
             </button>
             <button
               type="button"
               onClick={() => toast('PDF 다운로드 — 본개발에서 연결됩니다')}
               className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              ⬇ PDF 다운로드
+              {t('reports.downloadPdf', '⬇ PDF 다운로드')}
             </button>
           </div>
         </Modal>

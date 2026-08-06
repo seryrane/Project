@@ -13,6 +13,7 @@ import type { Grade, Member } from '#/data/members'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
 import { apiSend, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/members')({ component: MembersPage })
 
@@ -26,6 +27,7 @@ const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], stri
 }
 
 function MembersPage() {
+  const { t } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -116,13 +118,18 @@ function MembersPage() {
     toast(locking ? `${m.name} 계정을 잠갔습니다 — 같은 버튼으로 해제할 수 있습니다` : `${m.name} 계정 잠금을 해제했습니다`)
   }
 
+  // 필터 칩 표시 어휘 — 값(한국어 원문)과 표시(언어별)를 가른다
+  const allStatusLabel = t('members.filter.allStatus')
+  const allGradeLabel = t('members.filter.allGrades')
+  const modeLabel = (mode: '허용' | '차단') => t(mode === '허용' ? 'members.allow' : 'members.block')
+
   return (
     <AppShell active="members" title="회원 관리">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">회원 관리</h1>
+          <h1 className="text-2xl font-bold">{t('nav.members', '회원 관리')}</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            HMG-SSO 연동 계정 · 등급 4종 + 서비스별 Role (Mock 데이터)
+            {t('page.members.subtitle', 'HMG-SSO 연동 계정 · 등급 4종 + 서비스별 Role (Mock 데이터)')}
           </p>
         </div>
         <button
@@ -130,7 +137,7 @@ function MembersPage() {
           onClick={() => setCreating(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 회원 등록
+          + {t('members.add')}
         </button>
       </div>
 
@@ -147,17 +154,23 @@ function MembersPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="이름, 이메일, 부서 검색..."
+          placeholder={t('members.searchPlaceholder')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {/* 상태·등급 값은 데이터 어휘라 그대로 — "전체" 칩(UI 어휘)만 언어를 입힌다.
+              내부 값은 한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
           <ChipSelect
-            options={['전체 상태', '활성', '비활성', '잠금']}
-            value={status}
-            onChange={setStatus}
+            options={[allStatusLabel, '활성', '비활성', '잠금']}
+            value={status === '전체 상태' ? allStatusLabel : status}
+            onChange={(v) => setStatus(v === allStatusLabel ? '전체 상태' : v)}
           />
           <span className="hidden h-4 w-px bg-hairline pc:block" aria-hidden />
-          <ChipSelect options={['전체 등급', ...GRADES]} value={grade} onChange={setGrade} />
+          <ChipSelect
+            options={[allGradeLabel, ...GRADES]}
+            value={grade === '전체 등급' ? allGradeLabel : grade}
+            onChange={(v) => setGrade(v === allGradeLabel ? '전체 등급' : v)}
+          />
         </div>
       </div>
 
@@ -192,7 +205,7 @@ function MembersPage() {
                   <span
                     role="button"
                     tabIndex={0}
-                    aria-label={st === '잠금' ? '잠금 해제' : '계정 잠금'}
+                    aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleLock(m)
@@ -207,7 +220,7 @@ function MembersPage() {
                       st === '잠금' ? 'bg-review-bg text-review-ink' : 'text-ink-subtle'
                     }`}
                   >
-                    {st === '잠금' ? '🔒 해제' : '🔓'}
+                    {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
                   </span>
                 </span>
                 <span className="mt-2.5 flex flex-wrap items-center gap-1">
@@ -295,7 +308,7 @@ function MembersPage() {
                   <td className="px-4 py-3 text-right">
                     <button
                       type="button"
-                      aria-label={st === '잠금' ? '잠금 해제' : '계정 잠금'}
+                      aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleLock(m)
@@ -306,7 +319,7 @@ function MembersPage() {
                           : 'text-ink-subtle hover:bg-chip hover:text-ink'
                       }`}
                     >
-                      {st === '잠금' ? '🔒 해제' : '🔓'}
+                      {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
                     </button>
                   </td>
                 </tr>
@@ -353,16 +366,16 @@ function MembersPage() {
                       { key: 'activity', label: '활동 이력' },
                       { key: 'perm', label: '권한' },
                     ] as const
-                  ).map((t) => (
+                  ).map((tb) => (
                     <button
-                      key={t.key}
+                      key={tb.key}
                       type="button"
-                      onClick={() => setTab(t.key)}
+                      onClick={() => setTab(tb.key)}
                       className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
-                        tab === t.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
+                        tab === tb.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
                       }`}
                     >
-                      {t.label}
+                      {t(`members.tab.${tb.key}`, tb.label)}
                     </button>
                   ))}
                 </div>
@@ -446,7 +459,7 @@ function MembersPage() {
                             }}
                             className="text-[11px] font-medium text-primary transition-opacity hover:opacity-80"
                           >
-                            권한 관리에서 역할 정의 →
+                            {t('members.defineRoles')}
                           </button>
                         </div>
                         <table className="mt-2 w-full border-collapse text-xs">
@@ -510,14 +523,14 @@ function MembersPage() {
                                       : 'bg-danger-bg text-danger-ink'
                                   }`}
                                 >
-                                  {ex.mode}
+                                  {modeLabel(ex.mode)}
                                 </span>
                                 <span className="text-ink">
                                   {ex.menu} · {ex.action}
                                 </span>
                                 <button
                                   type="button"
-                                  aria-label="예외 제거"
+                                  aria-label={t('members.removeException')}
                                   onClick={() => setExceptions((xs) => xs.filter((_, j) => j !== i))}
                                   className="ml-auto rounded px-1.5 text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                                 >
@@ -539,16 +552,16 @@ function MembersPage() {
                             ))}
                           </Select>
                           <ChipSelect
-                            options={['허용', '차단'] as const}
-                            value={exMode}
-                            onChange={(v) => setExMode(v)}
+                            options={[modeLabel('허용'), modeLabel('차단')]}
+                            value={modeLabel(exMode)}
+                            onChange={(v) => setExMode(v === modeLabel('허용') ? '허용' : '차단')}
                           />
                           <button
                             type="button"
                             onClick={() => setExceptions((xs) => [...xs, { menu: exMenu, action: exAction, mode: exMode }])}
                             className="h-10 rounded-lg border border-dashed border-hairline px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                           >
-                            + 추가
+                            + {t('common.add')}
                           </button>
                         </div>
                         <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
@@ -567,14 +580,14 @@ function MembersPage() {
                     onClick={() => toast(`${detail.name} 비밀번호 초기화 메일을 보냈습니다`)}
                     className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
-                    비밀번호 초기화
+                    {t('members.resetPw')}
                   </button>
                   <button
                     type="button"
                     onClick={() => toggleLock(detail)}
                     className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
                   >
-                    {st === '잠금' ? '잠금 해제' : '계정 잠금'}
+                    {st === '잠금' ? t('members.unlock') : t('members.lock')}
                   </button>
                   <button
                     type="button"
@@ -586,7 +599,8 @@ function MembersPage() {
                     }}
                     className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
-                    변경 상신{dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
+                    {t('members.submit')}
+                    {dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
                   </button>
                 </div>
               </div>
@@ -604,7 +618,7 @@ function MembersPage() {
           <div className="mt-3 grid grid-cols-1 gap-3 pc:grid-cols-2">
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">이름 <b className="text-danger-ink">*</b></span>
-              <input placeholder="홍길동" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+              <input placeholder={t('members.ph.name')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">이메일 (SSO) <b className="text-danger-ink">*</b></span>
@@ -612,7 +626,7 @@ function MembersPage() {
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">부서</span>
-              <input placeholder="IT 전략팀" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+              <input placeholder={t('members.ph.dept')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <div>
               <span className="text-xs font-medium text-ink-subtle">등급</span>
@@ -627,7 +641,7 @@ function MembersPage() {
               onClick={() => setCreating(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -637,7 +651,7 @@ function MembersPage() {
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
-              등록
+              {t('members.register')}
             </button>
           </div>
         </Modal>
