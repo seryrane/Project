@@ -25,22 +25,27 @@ export function TableauEmbed({ url, title }: { url: string; title: string }) {
   const [loaded, setLoaded] = useState(false)
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border border-hairline bg-canvas/40 ${loaded ? '' : 'card-loading'}`}>
+    <div className={`relative overflow-hidden rounded-xl border border-hairline ${loaded ? '' : 'card-loading'}`}>
       {!loaded && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-canvas/60">
           <span aria-hidden className="h-6 w-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           <span className="text-xs text-ink-subtle">Tableau 워크북을 불러오는 중…</span>
         </div>
       )}
-      <iframe
-        key={url}
-        src={withEmbedParams(url)}
-        title={title}
-        onLoad={() => setLoaded(true)}
-        className="block h-[560px] w-full"
-        loading="lazy"
-        referrerPolicy="no-referrer"
-      />
+      {/* 워크북은 고정폭(대개 ~1000px)이라 w-full 로 늘리면 오른쪽에 흰 여백이 쏠린다 —
+          바탕을 일부러 흰색으로 통일하고 프레임을 가운데 정렬해 여백이 좌우 균형이 되게 한다.
+          넘치는 세로는 프레임 안 스크롤(표는 자기 상자 안 — 규약 §8과 같은 원칙) */}
+      <div className="flex justify-center overflow-x-auto bg-white">
+        <iframe
+          key={url}
+          src={withEmbedParams(url)}
+          title={title}
+          onLoad={() => setLoaded(true)}
+          className="block h-[72vh] min-h-[560px] w-full max-w-[1020px]"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      </div>
     </div>
   )
 }
