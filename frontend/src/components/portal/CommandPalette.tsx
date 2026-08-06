@@ -9,10 +9,12 @@ interface Command {
   group: string
   label: string
   hint?: string
-  to: string
+  to?: string
+  /** 페이지 이동이 아니라 그 자리에서 뭔가 여는 명령 (예: 물어보기 패널) */
+  action?: () => void
 }
 
-export function CommandPalette({ onClose }: { onClose: () => void }) {
+export function CommandPalette({ onClose, onAsk }: { onClose: () => void; onAsk: () => void }) {
   const navigate = useNavigate()
   const { locale, t } = useI18n()
   const [query, setQuery] = useState('')
@@ -26,6 +28,8 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   // 라벨은 LNB 와 같은 규칙으로 언어를 입힌다 (EN: labelEn → 사전 → ko).
   const commands = useMemo<Array<Command>>(
     () => [
+      // 챗봇도 ⌘K 로 닿는다 — GNB 💬 와 같은 자리를 여는 명령일 뿐, 화면 이동이 아니다
+      { group: t('palette.actions'), label: t('ask.title'), hint: t('palette.open'), action: onAsk },
       ...nav.flatMap((section) =>
         section.items.flatMap((item) =>
           item.to == null
@@ -50,7 +54,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         to: '/specs',
       })),
     ],
-    [locale, t],
+    [locale, t, onAsk],
   )
 
   const q = query.trim().toLowerCase()
@@ -62,7 +66,11 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const run = (cmd: Command) => {
     onClose()
-    navigate({ to: cmd.to })
+    if (cmd.action) {
+      cmd.action()
+      return
+    }
+    if (cmd.to) navigate({ to: cmd.to })
   }
 
   const onKey = (e: React.KeyboardEvent) => {

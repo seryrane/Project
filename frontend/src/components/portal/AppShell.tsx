@@ -8,6 +8,7 @@ import { apiSend, clearToken, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 import { useTheme } from '#/lib/useTheme'
 
+import { AskPanel } from './AskPanel'
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
 import { Drawer } from './Drawer'
@@ -110,6 +111,8 @@ function Shell({
   // 내가 할 수 있는 것 — 권한은 말없이 붙고 회수는 더 조용하다. 받은 본인이 확인할 자리
   const [abilitiesOpen, setAbilitiesOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
+  // 대화형 챗봇 — 자리는 GNB 💬 · 커맨드 팔레트와 같은 층(정본: 챗봇_표준질의_설계.md §1)
+  const [askOpen, setAskOpen] = useState(false)
   // 새 기능 배지 (규약 19절) — localStorage 는 서버에 없으므로 수화 뒤에 센다
   const [whatsNew, setWhatsNew] = useState(0)
   useEffect(() => {
@@ -344,6 +347,17 @@ function Shell({
               </span>
               <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">⌘K</kbd>
             </button>
+            {/* 대화형 챗봇 — 어느 화면에서나 같은 패널 하나(정본 §1). 특정 화면 안에
+                두면 그 화면 권한이 없는 사람은 챗봇 자체를 못 쓰게 된다 */}
+            <button
+              type="button"
+              onClick={() => setAskOpen(true)}
+              aria-label={t('ask.title')}
+              title={t('ask.title')}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-[15px] text-ink-muted transition-colors hover:text-ink"
+            >
+              💬
+            </button>
             {/* 언어는 사람마다 (규약 §4-1) — 현재 언어를 표시하고 누르면 전환 */}
             <button
               type="button"
@@ -540,7 +554,27 @@ function Shell({
         </>
       )}
 
-      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
+      {paletteOpen && (
+        <CommandPalette onClose={() => setPaletteOpen(false)} onAsk={() => setAskOpen(true)} />
+      )}
+
+      {/* 대화형 챗봇 — [그 화면 열기] 는 Drawer 의 close 렌더-프롭으로 닫는다(퇴장
+          애니메이션이 끝난 뒤 언마운트). 부모의 onClose 를 바로 부르면 애니메이션이
+          안 돈다(Drawer.tsx 주석 참고). 메뉴 키 → 경로는 서버 nav(serverNav) 에서 찾는다 */}
+      {askOpen && (
+        <Drawer title={t('ask.title')} onClose={() => setAskOpen(false)}>
+          {(close) => (
+            <AskPanel
+              onOpenMenu={(key) => {
+                const item = serverNav.flatMap((s) => s.items).find((i) => i.key === key)
+                if (!item?.to) return
+                navigate({ to: item.to })
+                close()
+              }}
+            />
+          )}
+        </Drawer>
+      )}
 
       {/* 내가 할 수 있는 것 — 권한 이름이 아니라 사람 말로. 정본은 권한 관리(roleDefs) 파생 */}
       {abilitiesOpen && (

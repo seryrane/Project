@@ -25,6 +25,7 @@ const PAGES = [
   '/qna',
   '/faq',
   '/guide',
+  '/alerts',
   '/privacy',
   '/login',
   '/signup',
@@ -112,6 +113,16 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   // 덮은 것은 Esc 로 닫힌다
   await page.keyboard.press('Escape')
   await expect(sheet).not.toBeVisible()
+})
+
+test('GNB 💬 — 물어보기 패널이 뜨고 Esc 로 닫힌다', async ({ page }) => {
+  // 자리는 어느 화면에서나 같은 패널 하나(정본: 챗봇_표준질의_설계.md §1) — /specs 로 확인
+  await ready(page, '/specs')
+  await page.getByRole('button', { name: '물어보기' }).click()
+  await expect(page.getByRole('heading', { name: '물어보기' })).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('heading', { name: '물어보기' })).not.toBeVisible()
 })
 
 test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지 않는다', async ({ page }) => {

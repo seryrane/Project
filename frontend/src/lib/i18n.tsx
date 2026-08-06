@@ -91,6 +91,32 @@ const CORE_DICT: Record<string, Entry> = {
   'palette.pages': { ko: '페이지', en: 'Pages' },
   'palette.go': { ko: '이동', en: 'Go' },
   'palette.specs': { ko: '사양서', en: 'Specs' },
+  'palette.actions': { ko: '기능', en: 'Actions' },
+  'palette.open': { ko: '열기', en: 'Open' },
+
+  // ── 대화형 챗봇 (정본: docs/챗봇_표준질의_설계.md) ───────────────────
+  // ⚠ 답 본문(understood·headline·evidence 등)은 서버가 언어별로 만든다(정본 §5) —
+  //   여기는 패널 껍데기 문구만.
+  'ask.title': { ko: '물어보기', en: 'Ask' },
+  'ask.placeholder': { ko: '무엇이든 물어보세요…', en: 'Ask anything…' },
+  'ask.inputLabel': { ko: '질문 입력', en: 'Question' },
+  'ask.send': { ko: '보내기', en: 'Send' },
+  'ask.sending': { ko: '답변 준비 중…', en: 'Thinking…' },
+  'ask.suggested': { ko: '표준 질의', en: 'Suggested questions' },
+  'ask.catalogError': {
+    ko: '표준 질의를 불러오지 못했습니다 — 아래에 직접 물어보셔도 됩니다.',
+    en: 'Could not load suggested questions — you can still type your own below.',
+  },
+  'ask.catalogEmpty': { ko: '아직 표준 질의가 없습니다.', en: 'No suggested questions yet.' },
+  'ask.askError': {
+    ko: '답을 받아오지 못했습니다 — 네트워크를 확인해 주세요.',
+    en: 'Could not get an answer — check your connection.',
+  },
+  'ask.understood': { ko: '이렇게 알아들었어요', en: "Here's what I understood" },
+  'ask.totalLine': { ko: '총 {total}{unit}', en: 'Total {total}{unit}' },
+  'ask.evidence': { ko: '근거', en: 'Evidence' },
+  'ask.anomalies': { ko: '특이사항', en: 'Anomalies' },
+  'ask.openScreen': { ko: '그 화면 열기', en: 'Open this screen' },
 
   // ── 개인 설정 ────────────────────────────────────────────────────
   'prefs.accent': { ko: '포인트 색상', en: 'Accent color' },

@@ -24,6 +24,7 @@
 | [docs/화면_공통규칙.md](docs/화면_공통규칙.md) | 화면 규약 — 표시 영역·알림·로딩·다국어·표·모바일·강조 색 (22개 절) |
 | [frontend/DESIGN.md](frontend/DESIGN.md) | 시각 토큰 — 색·치수·테마·모션 |
 | [docs/RBAC_설계노트.md](docs/RBAC_설계노트.md) | 권한 설계 — 메뉴 × 액션 × 범위, 본개발 원칙 |
+| [docs/챗봇_표준질의_설계.md](docs/챗봇_표준질의_설계.md) | 챗봇 — 무엇을 묻고 어떻게 답하나(표준 질의·답의 칸) |
 | [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md) | 사업 배경·원문 자료 위치·확정/미확정 |
 | [CLAUDE.md](CLAUDE.md) | 이 저장소에서 일하는 방식(작업 규율) |
 
@@ -81,6 +82,11 @@ cd frontend && npm run build       # 프로덕션 빌드
 
 마지막은 **눈으로 봅니다** — 라이트/다크, 한국어/영어, 393px 폭. 한 언어·한 테마로만
 보면 넘침은 반드시 늦게 발견됩니다(규약 §4-5).
+
+> ⚠ `npm run e2e` 가 **`browserType.launch: spawn UNKNOWN`** 으로 통째 실패하면 코드 탓이
+> 아닙니다 — 회사 PC 의 **애플리케이션 제어 정책이 Playwright 번들 브라우저를 차단**한 것입니다
+> (실행 파일을 직접 돌려 보면 그렇게 말합니다). 그때는 설치된 Chrome 으로 돌립니다:
+> `PW_CHANNEL=chrome npm run e2e`.
 
 ## 구조
 

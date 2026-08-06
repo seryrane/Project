@@ -491,4 +491,125 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'dash.members.subtitle': { ko: '전체 66명 기준', en: 'Based on all 66 members' },
   'dash.notice.subtitle': { ko: '고정 공지 우선', en: 'Pinned notices first' },
   'dash.notice.pinnedBadge': { ko: '고정', en: 'Pinned' },
+
+  // ── 시스템 알림 (alerts) ─────────────────────────────────────────
+  'alerts.subtitle': {
+    ko: '서버 자원 · 알림 이력 · 알림 규칙 (Mock 데이터) · 마지막 집계 오늘 06:00',
+    en: 'Server resources · alert history · alert rules (mock) · last refresh 06:00 today',
+  },
+  // 요약 타일 — 0 은 "지금 문제 없음"과 "자료가 안 들어옴"을 구별해 말한다 (규약 §10)
+  'alerts.tile.dangerServers.label': { ko: '위험 · 주의 서버', en: 'Servers at risk' },
+  'alerts.tile.dangerServers.okCaption': { ko: '문제 없음 — 서버 {n}대 모두 정상', en: 'All clear — all {n} servers healthy' },
+  'alerts.tile.dangerServers.warnCaption': { ko: '{n}대 점검 필요 — 아래 카드에서 확인', en: '{n} need attention — see cards below' },
+  'alerts.tile.last24h.label': { ko: '24시간 발생 알림', en: 'Alerts in last 24h' },
+  'alerts.tile.last24h.zeroCaption': {
+    ko: '수집은 정상 — 지난 24시간 발생한 알림이 없습니다',
+    en: 'Collection is normal — no alerts in the last 24 hours',
+  },
+  'alerts.tile.last24h.caption': { ko: '최근 24시간 기준', en: 'Based on the last 24 hours' },
+  'alerts.tile.resolved.label': { ko: '해소된 알림', en: 'Resolved alerts' },
+  'alerts.tile.resolved.noneOccurred': {
+    ko: '발생한 알림이 없어 해소 건도 없습니다',
+    en: 'No alerts occurred, so none were resolved',
+  },
+  'alerts.tile.resolved.zeroCaption': {
+    ko: '발생만 있고 아직 해소된 알림이 없습니다 — 조치가 필요합니다',
+    en: 'Alerts occurred but none resolved yet — action needed',
+  },
+  'alerts.tile.resolved.caption': { ko: '24시간 발생 {n}건 중', en: 'out of {n} in the last 24h' },
+  'alerts.tile.oldestOpen.label': { ko: '가장 오래된 미해결', en: 'Oldest unresolved' },
+  'alerts.tile.oldestOpen.caption': { ko: '{server} — 지금도 진행 중', en: '{server} — still ongoing' },
+  'alerts.tile.oldestOpen.noneCaption': {
+    ko: '모든 알림이 해소되었습니다 — 미해결 없음',
+    en: 'All alerts resolved — nothing unresolved',
+  },
+  'alerts.elapsed.days': { ko: '{d}일 {h}시간 경과', en: '{d}d {h}h elapsed' },
+  'alerts.elapsed.hours': { ko: '{h}시간 {m}분 경과', en: '{h}h {m}m elapsed' },
+  'alerts.elapsed.minutes': { ko: '{m}분 경과', en: '{m}m elapsed' },
+  'alerts.elapsed.none': { ko: '—', en: '—' },
+
+  // 서버 자원 리포팅
+  'alerts.section.servers.title': { ko: '서버 자원 리포팅', en: 'Server resource reporting' },
+  'alerts.section.servers.subtitle': {
+    ko: '30초마다 갱신 (Mock) · 대시보드와 같은 임계값(주의 70% · 위험 85%)',
+    en: 'Refreshes every 30s (mock) · same thresholds as the dashboard (warn 70% · danger 85%)',
+  },
+  'alerts.server.viewTrend': { ko: '추이 보기', en: 'View trend' },
+  'alerts.trend.title': { ko: '선택 서버 최근 추이', en: 'Selected server — recent trend' },
+  'alerts.trend.subtitle': { ko: '최근 14일 · 단위: %', en: 'Last 14 days · Unit: %' },
+  'alerts.metric.cpu': { ko: 'CPU', en: 'CPU' },
+  'alerts.metric.mem': { ko: '메모리', en: 'Memory' },
+  'alerts.metric.disk': { ko: '디스크', en: 'Disk' },
+
+  // 알림 이력
+  'alerts.section.history.title': { ko: '알림 이력', en: 'Alert history' },
+  'alerts.section.history.hint': { ko: '행을 누르면 상세가 열립니다', en: 'Click a row to see details' },
+  'alerts.filter.openOnly': { ko: '미해결만 보기', en: 'Unresolved only' },
+  'alerts.th.at': { ko: '발생 시각', en: 'Occurred' },
+  'alerts.th.severity': { ko: '등급', en: 'Severity' },
+  'alerts.th.server': { ko: '대상 서버', en: 'Server' },
+  'alerts.th.message': { ko: '내용', en: 'Message' },
+  'alerts.th.status': { ko: '상태', en: 'Status' },
+  'alerts.th.resolvedAt': { ko: '해소 시각', en: 'Resolved' },
+  'alerts.empty': { ko: '조건에 맞는 알림이 없습니다.', en: 'No alerts match the filters.' },
+  // 필터의 내부 상태값은 그대로 두고 표시만 번역한다 (규약 §4-7)
+  'alerts.severity.danger': { ko: '위험', en: 'Danger' },
+  'alerts.severity.warn': { ko: '주의', en: 'Warning' },
+  'alerts.severity.info': { ko: '정보', en: 'Info' },
+  'alerts.status.open': { ko: '미해결', en: 'Unresolved' },
+  'alerts.status.resolved': { ko: '해결', en: 'Resolved' },
+
+  // 상세 서랍
+  'alerts.detailTitle': { ko: '알림 상세 — {id}', en: 'Alert details — {id}' },
+  'alerts.detail.snapshotTitle': { ko: '그 시점 자원 값', en: 'Resource values at the time' },
+  'alerts.detail.recentTitle': { ko: '같은 서버 최근 알림', en: 'Recent alerts on this server' },
+  'alerts.detail.recentEmpty': { ko: '같은 서버의 다른 알림이 없습니다.', en: 'No other alerts for this server.' },
+  'alerts.detail.actionTitle': { ko: '조치 안내', en: 'Recommended action' },
+  'alerts.action.cpu': {
+    ko: 'CPU 를 많이 쓰는 프로세스를 확인하고, 지속되면 스케일 아웃을 검토하세요.',
+    en: 'Check which process is consuming CPU, and consider scaling out if it persists.',
+  },
+  'alerts.action.mem': {
+    ko: '메모리 누수 여부를 확인하고, 필요하면 서비스를 재기동하세요.',
+    en: 'Check for a memory leak and restart the service if needed.',
+  },
+  'alerts.action.disk': {
+    ko: '불필요한 로그·백업을 정리하거나 볼륨을 증설하세요.',
+    en: 'Clean up unneeded logs/backups or expand the volume.',
+  },
+  'alerts.action.info': {
+    ko: '정보성 알림입니다 — 별도 조치가 필요하지 않습니다.',
+    en: 'This is an informational alert — no action is required.',
+  },
+  'alerts.detail.nextActions': { ko: '다음 행동', en: 'Next steps' },
+  'alerts.goResults': { ko: '검증 결과 조회 →', en: 'Validation results →' },
+  'alerts.goDeploys': { ko: '배포 관리 →', en: 'Deployments →' },
+
+  // 알림 규칙 (관리자)
+  'alerts.section.rules.title': { ko: '알림 규칙', en: 'Alert rules' },
+  'alerts.section.rules.subtitle': { ko: '임계값과 수신 방법', en: 'Thresholds and delivery methods' },
+  'alerts.rules.edit': { ko: '규칙 편집', en: 'Edit rules' },
+  'alerts.rules.threshold.warn': { ko: '주의', en: 'Warn' },
+  'alerts.rules.threshold.danger': { ko: '위험', en: 'Danger' },
+  'alerts.rules.channelsTitle': { ko: '수신 방법', en: 'Delivery methods' },
+  'alerts.rules.channel.inApp': { ko: '앱 내 알림', en: 'In-app' },
+  'alerts.rules.channel.email': { ko: '이메일', en: 'Email' },
+  'alerts.rules.channel.webhook': { ko: '웹훅', en: 'Webhook' },
+  'alerts.rules.channel.enabled': { ko: '사용 중', en: 'Enabled' },
+  'alerts.rules.channel.disabled': { ko: '미사용', en: 'Disabled' },
+  'alerts.rules.channel.emailTarget': { ko: '수신 그룹', en: 'Recipient group' },
+  'alerts.rules.channel.webhookTarget': { ko: '엔드포인트 URL', en: 'Endpoint URL' },
+  'alerts.rules.channel.webhookEmptyNote': {
+    ko: '엔드포인트가 없으면 켜 두어도 이 방법으로 알림이 오지 않습니다',
+    en: "Without an endpoint, turning this on won't actually deliver alerts",
+  },
+  'alerts.rules.modalTitle': { ko: '알림 규칙 편집', en: 'Edit alert rules' },
+  'alerts.rules.modalDesc': {
+    ko: '임계값을 낮추면 더 자주, 높이면 더 드물게 알림이 옵니다. 되돌릴 수 있으니 바로 저장됩니다.',
+    en: 'Lower thresholds alert more often, higher ones less often. This is reversible, so it saves immediately.',
+  },
+  'alerts.toast.rulesSaved': {
+    ko: '알림 규칙을 저장했습니다 — 값은 언제든 [규칙 편집]에서 다시 바꿀 수 있습니다',
+    en: 'Saved alert rules — change them again anytime in [Edit rules]',
+  },
 }

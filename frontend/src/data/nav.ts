@@ -103,8 +103,10 @@ export const nav: Array<NavSection> = [
     id: 'system',
     title: '시스템',
     items: [
-      // ⚠ '시스템 알림'은 뺐다 — 갈 화면이 없어 눌러도 아무 일이 없었다(규약 15·17절:
-      // 이름이 어긋나면 있는 것도 없는 것이 된다). 알림은 GNB 의 종 하나로 모은다(규약 2절)
+      // 2026-08-06 되살림: 실제 화면(/alerts)이 생겨 규약 15·17절 위반(갈 곳 없는 메뉴)이
+      // 풀렸다 — 서버 자원 리포팅·알림 이력·알림 규칙을 보여준다. GNB 종은 "안 본 것"만
+      // 모으고, 이 메뉴는 "지금 상태 + 지난 이력"을 보러 오는 자리라 역할이 다르다.
+      { key: 'alerts', label: '시스템 알림', labelEn: 'System Alerts', icon: 'bell', to: '/alerts' },
       { key: 'privacy', label: '개인정보보호', icon: 'lock', to: '/privacy' },
     ],
   },
