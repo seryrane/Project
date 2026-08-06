@@ -6,6 +6,7 @@ import { MotionRoot, m } from '#/components/portal/motion'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { ToastProvider, useToast } from '#/components/portal/toast'
 import { apiPost, setToken } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/login')({ component: LoginShell })
 
@@ -38,6 +39,7 @@ function LoginShell() {
 function LoginPage() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { locale, setLocale, t, tf } = useI18n()
   const [id, setId] = useState('')
   const [pw, setPw] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -59,17 +61,15 @@ function LoginPage() {
 
   // 실시간 유효성 — 제출 전에 알 수 있는 것은 그 자리에서 말한다
   const idHint =
-    id !== '' && !/^[\w.-]+(@[\w.-]+\.[a-z]{2,})?$/i.test(id.trim())
-      ? '이메일 또는 이메일 아이디(@ 앞부분) 형식이 아닙니다'
-      : ''
-  const pwHint = pw !== '' && pw.length < 8 ? '비밀번호는 8자 이상입니다' : ''
+    id !== '' && !/^[\w.-]+(@[\w.-]+\.[a-z]{2,})?$/i.test(id.trim()) ? t('login.idHint') : ''
+  const pwHint = pw !== '' && pw.length < 8 ? t('login.pwHint') : ''
   const canSubmit = id.trim() !== '' && pw.length >= 8 && idHint === ''
 
   const finish = (token: string, name: string) => {
     setToken(token)
     if (remember) localStorage.setItem(REMEMBER_KEY, id.trim())
     else localStorage.removeItem(REMEMBER_KEY)
-    toast(`${name}님, 어서 오세요`)
+    toast(tf('login.welcome', { name }))
     void navigate({ to: '/dashboard' })
   }
 
@@ -113,13 +113,11 @@ function LoginPage() {
           className="relative"
         >
           {/* 두 프로젝트(센터 KPI 품질 + IBD 사양서)가 한 포털 — 어느 한쪽으로 기울지 않는다 */}
-          <h2 className="text-2xl font-bold leading-snug text-white">
-            센터 KPI 품질과 IBD 사양서,
-            <br />두 프로젝트가 만나는 하나의 포털.
+          <h2 className="whitespace-pre-line text-2xl font-bold leading-snug text-white">
+            {t('login.brand.title')}
           </h2>
           <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/70">
-            KPI 지표·품질 현황(ICDAP)과 수집 사양 관리(IDMS)를 한 곳에서 — 센터 구성원과
-            협력사(모비스·오토에버·해외 연구소)가 같은 문으로 들어옵니다.
+            {t('login.brand.desc')}
           </p>
         </m.div>
         <p className="text-[11px] text-sidebar-ink/50">© HMG · 프로토타입 v0.5</p>
@@ -138,25 +136,37 @@ function LoginPage() {
               H
             </span>
           </div>
-          <h1 className="text-2xl font-bold">로그인</h1>
-          <p className="mt-1 text-[13px] text-ink-subtle">
-            HMG-SSO 간편 로그인 또는 일반 계정으로 들어옵니다
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">{t('login.title')}</h1>
+              <p className="mt-1 text-[13px] text-ink-subtle">{t('login.subtitle')}</p>
+            </div>
+            {/* 언어는 로그인 전에도 고른다 — 협력사 사용자에게 첫 화면부터 */}
+            <button
+              type="button"
+              onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
+              aria-label="언어 전환 / Switch language"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-surface text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
+            >
+              {locale === 'ko' ? '한' : 'EN'}
+            </button>
+          </div>
 
           {/* SSO — 프로토콜 미정(요구사항)이라 자리만. 협력사는 아래 일반 로그인 */}
           <button
             type="button"
-            onClick={() => toast('HMG-SSO 연동은 프로토콜 확정 후 연결됩니다 (OAuth2/OIDC/SAML/LDAP 미정)')}
+            onClick={() => toast(t('login.ssoPending'))}
             className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-surface text-[13px] font-semibold transition-colors hover:border-primary/40"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded bg-gradient-to-br from-primary to-accent2 text-[10px] font-bold text-white">
               H
             </span>
-            HMG-SSO 로 간편 로그인
+            {t('login.sso')}
           </button>
 
           <div className="my-5 flex items-center gap-3 text-[11px] text-ink-subtle">
-            <span className="h-px flex-1 bg-hairline" /> 또는 일반 계정 <span className="h-px flex-1 bg-hairline" />
+            <span className="h-px flex-1 bg-hairline" /> {t('login.or')}{' '}
+            <span className="h-px flex-1 bg-hairline" />
           </div>
 
           {!fidoTicket ? (
@@ -167,12 +177,12 @@ function LoginPage() {
               className="space-y-3.5"
             >
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">이메일 또는 아이디</span>
+                <span className="text-xs font-medium text-ink-subtle">{t('login.id')}</span>
                 <input
                   value={id}
                   onChange={(e) => setId(e.target.value)}
                   autoComplete="username"
-                  placeholder="name@hmg.com 또는 name"
+                  placeholder={t('login.idPlaceholder')}
                   className={`mt-1 h-11 w-full rounded-xl border bg-surface px-3.5 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
                     idHint ? 'border-danger-ink/50' : 'border-hairline'
                   }`}
@@ -180,7 +190,7 @@ function LoginPage() {
                 {idHint && <span className="mt-1 block text-[11px] text-danger-ink">{idHint}</span>}
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">비밀번호</span>
+                <span className="text-xs font-medium text-ink-subtle">{t('login.password')}</span>
                 <span className="relative mt-1 block">
                   <input
                     type={showPw ? 'text' : 'password'}
@@ -188,7 +198,7 @@ function LoginPage() {
                     onChange={(e) => setPw(e.target.value)}
                     onKeyUp={(e) => setCaps(e.getModifierState('CapsLock'))}
                     autoComplete="current-password"
-                    placeholder="8자 이상"
+                    placeholder={t('login.pwPlaceholder')}
                     className={`h-11 w-full rounded-xl border bg-surface px-3.5 pr-11 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
                       pwHint ? 'border-danger-ink/50' : 'border-hairline'
                     }`}
@@ -215,7 +225,7 @@ function LoginPage() {
                 </span>
                 {pwHint && <span className="mt-1 block text-[11px] text-danger-ink">{pwHint}</span>}
                 {caps && (
-                  <span className="mt-1 block text-[11px] text-pending-ink">⇪ Caps Lock 이 켜져 있습니다</span>
+                  <span className="mt-1 block text-[11px] text-pending-ink">{t('login.capsLock')}</span>
                 )}
               </label>
 
@@ -227,14 +237,14 @@ function LoginPage() {
                     onChange={(e) => setRemember(e.target.checked)}
                     className="h-4 w-4 accent-[var(--color-primary)]"
                   />
-                  아이디 기억
+                  {t('login.remember')}
                 </label>
                 <button
                   type="button"
                   onClick={() => setForgotOpen(true)}
                   className="text-primary hover:underline"
                 >
-                  비밀번호를 잊으셨나요?
+                  {t('login.forgot')}
                 </button>
               </div>
 
@@ -247,11 +257,11 @@ function LoginPage() {
 
               <CtaButton
                 disabled={!canSubmit}
-                busyLabel="확인 중…"
+                busyLabel={t('login.submitting')}
                 onAction={login}
                 className="h-11 w-full"
               >
-                로그인
+                {t('login.submit')}
               </CtaButton>
             </form>
           ) : (
@@ -266,14 +276,12 @@ function LoginPage() {
                   <path d="M12 11v4M7 10.5V9a5 5 0 0 1 10 0v1.5M5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 18.5 12h-13A1.5 1.5 0 0 0 4 13.5v6A1.5 1.5 0 0 0 5.5 21Z" />
                 </svg>
               </span>
-              <h2 className="mt-3 text-[15px] font-semibold">FIDO 2차 인증</h2>
-              <p className="mt-1 text-[12px] leading-relaxed text-ink-subtle">
-                {fidoTicket.name}님 계정에 보안 키가 등록되어 있습니다.
-                <br />
-                기기의 지문·보안 키로 본인을 확인해 주세요. (약식 시뮬레이션)
+              <h2 className="mt-3 text-[15px] font-semibold">{t('login.fido.title')}</h2>
+              <p className="mt-1 whitespace-pre-line text-[12px] leading-relaxed text-ink-subtle">
+                {tf('login.fido.desc', { name: fidoTicket.name })}
               </p>
               <CtaButton
-                busyLabel="인증 중…"
+                busyLabel={t('login.fido.verifying')}
                 className="mt-4 h-11 w-full"
                 onAction={async () => {
                   const res = await apiPost<{ token: string; user: { name: string } }>('/auth/fido', {
@@ -287,30 +295,31 @@ function LoginPage() {
                   finish(res.data.token, res.data.user.name)
                 }}
               >
-                지문 · 보안 키로 인증
+                {t('login.fido.verify')}
               </CtaButton>
               <button
                 type="button"
                 onClick={() => setFidoTicket(null)}
                 className="mt-2 text-[11px] text-ink-subtle hover:text-ink"
               >
-                다른 계정으로 로그인
+                {t('login.fido.other')}
               </button>
             </m.div>
           )}
 
           <p className="mt-5 text-center text-[12px] text-ink-subtle">
-            협력사·외부 계정이신가요?{' '}
+            {t('login.partner')}{' '}
             <Link to="/signup" className="font-medium text-primary hover:underline">
-              가입 신청
+              {t('login.signup')}
             </Link>
-            <span className="mx-1.5">·</span>승인 후 이용할 수 있습니다
+            <span className="mx-1.5">·</span>
+            {t('login.afterApproval')}
           </p>
 
           {/* 데모 계정 — 프로토타입 리뷰용. 역할별로 메뉴가 어떻게 갈리는지 바로 본다 */}
           <div className="mt-6 rounded-2xl border border-hairline/70 bg-surface/60 p-4">
             <p className="text-[11px] font-semibold text-ink-subtle">
-              데모 계정 (비밀번호 공통: <code className="rounded bg-chip px-1 font-mono">hmg1234!</code>)
+              {tf('login.demo.title', { pw: 'hmg1234!' })}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {DEMO_ACCOUNTS.map((a) => (
@@ -329,10 +338,7 @@ function LoginPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-ink-subtle">
-              역할이 다르면 로그인 후 메뉴가 다르게 파생됩니다 — Editor 로 들어오면 관리
-              메뉴가 보이지 않습니다.
-            </p>
+            <p className="mt-2 text-[10px] leading-relaxed text-ink-subtle">{t('login.demo.hint')}</p>
           </div>
         </m.div>
       </div>

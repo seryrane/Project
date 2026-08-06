@@ -6,6 +6,7 @@ import { Avatar } from '#/components/portal/Avatar'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
 import { apiGet, apiSend } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 import {
   ActivityHeatmap,
   ChartCard,
@@ -135,6 +136,7 @@ const SPAN: Record<WidgetSize, string> = {
 const SIZE_LABEL: Record<WidgetSize, string> = { 1: '1칸', 2: '2칸', 3: '전체' }
 
 function DashboardPage() {
+  const { t } = useI18n()
   const [range, setRange] = useState(30)
   const navigate = useNavigate()
   const goSpecs = () => navigate({ to: '/specs' })
@@ -169,11 +171,11 @@ function DashboardPage() {
       setBooted(true)
       return
     }
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       sessionStorage.setItem('dashboard.booted', '1')
       setBooted(true)
     }, 850)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [])
   const apply = (next: Array<WidgetSlot>) => {
     setLayout(next)
@@ -416,16 +418,15 @@ function DashboardPage() {
   }
 
   return (
-    <AppShell active="dashboard" title="대시보드">
+    <AppShell active="dashboard" title={t('dash.title')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">대시보드</h1>
-          <p className="mt-1 text-[13px] text-ink-subtle">
-            센터 KPI(ICDAP) · 사양 관리(IDMS) 통합 현황 (Mock 데이터) · 마지막 집계 오늘 06:00
-          </p>
+          <h1 className="text-2xl font-bold">{t('dash.title')}</h1>
+          <p className="mt-1 text-[13px] text-ink-subtle">{t('dash.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex w-fit gap-1 rounded-lg border border-hairline bg-surface p-1 text-[13px]">
+          {/* 기간 칩 — 영문이 길어져도 내용 따라 늘고, 줄이 부족하면 wrap (규약 §4-5) */}
+          <div className="flex w-fit flex-wrap gap-1 rounded-lg border border-hairline bg-surface p-1 text-[13px]">
             {RANGES.map((r) => (
               <button
                 key={r.key}
@@ -437,7 +438,7 @@ function DashboardPage() {
                     : 'text-ink-muted hover:text-ink'
                 }`}
               >
-                {r.label}
+                {t(`dash.range.${r.key}`, r.label)}
               </button>
             ))}
           </div>
@@ -450,7 +451,7 @@ function DashboardPage() {
                 : 'border-hairline bg-surface text-ink-muted hover:text-ink'
             }`}
           >
-            {editing ? '완료' : '위젯 편집'}
+            {editing ? t('dash.done') : t('dash.editWidgets')}
           </button>
         </div>
       </div>

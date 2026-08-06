@@ -22,10 +22,14 @@ ME = {"id": "u-01", "name": "김현대", "email": "hyundae.kim@hmg.com",
 def current_user(authorization: str | None) -> dict[str, Any]:
     member = member_from_token(authorization)
     if member is not None:
-        return public_user(member)
-    roles = db.kv_get("roles") or []
-    role = next(r for r in roles if r["key"] == ME["gradeKey"])
-    return {**ME, "gradeName": role["name"]}
+        user = public_user(member)
+    else:
+        roles = db.kv_get("roles") or []
+        role = next(r for r in roles if r["key"] == ME["gradeKey"])
+        user = {**ME, "gradeName": role["name"]}
+    # 언어는 사람마다 고른다 (규약 §4-1) — 사용자 설정 정본
+    user["locale"] = db.kv_get(f"locale:{user['id']}") or "ko"
+    return user
 
 
 def role_of(user: dict[str, Any]) -> dict[str, Any]:
@@ -75,6 +79,17 @@ def my_abilities(authorization: str | None = Header(default=None)) -> dict[str, 
             if actions
         ],
     }
+
+
+@router.put("/me/locale")
+def put_locale(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, str]:
+    """언어 설정 — 사람마다(조직 단위로 묶으면 그 사람만 못 바꾼다, 규약 §4-1)."""
+    locale = body.get("locale")
+    if locale not in ("ko", "en"):
+        locale = "ko"
+    user = current_user(authorization)
+    db.kv_put(f"locale:{user['id']}", locale)
+    return {"status": "ok"}
 
 
 @router.get("/me/dashboard-layout")

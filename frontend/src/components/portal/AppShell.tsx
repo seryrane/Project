@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { nav } from '#/data/nav'
 import type { IconName, NavItem, NavSection } from '#/data/nav'
 import { apiSend, clearToken, useApi } from '#/lib/api'
+import { useI18n } from '#/lib/i18n'
 import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import { unseenCount } from '#/data/whatsnew'
 
@@ -248,6 +249,7 @@ function Shell({
   children: React.ReactNode
 }) {
   const { theme, toggle } = useTheme()
+  const { locale, setLocale, t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -273,11 +275,15 @@ function Shell({
     title: '시스템 관리자',
     gradeName: 'Super Admin',
   })
+  // 라벨은 사전이 입힌다 — 서버 재료는 key(규약 §4-2). 사전에 없으면 서버 라벨 그대로
   const displayNav = serverNav.map((s) => ({
     ...s,
-    items: s.items.map((it) =>
-      it.key === 'guide' && whatsNew > 0 ? { ...it, badge: whatsNew } : it,
-    ),
+    title: s.title ? t(`nav.section.${s.id}`, s.title) : undefined,
+    items: s.items.map((it) => ({
+      ...it,
+      label: t(`nav.${it.key}`, it.label),
+      ...(it.key === 'guide' && whatsNew > 0 ? { badge: whatsNew } : {}),
+    })),
   }))
   const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
   const [unread, setUnread] = useState(3)
@@ -302,11 +308,11 @@ function Shell({
     }
     // 스포트라이트 좌표 위임 — .card-spotlight 위에서만 --mx/--my 를 채운다
     const onMove = (e: PointerEvent) => {
-      const t = e.target instanceof Element ? e.target.closest('.card-spotlight') : null
-      if (t instanceof HTMLElement) {
-        const r = t.getBoundingClientRect()
-        t.style.setProperty('--mx', `${e.clientX - r.left}px`)
-        t.style.setProperty('--my', `${e.clientY - r.top}px`)
+      const card = e.target instanceof Element ? e.target.closest('.card-spotlight') : null
+      if (card instanceof HTMLElement) {
+        const r = card.getBoundingClientRect()
+        card.style.setProperty('--mx', `${e.clientX - r.left}px`)
+        card.style.setProperty('--my', `${e.clientY - r.top}px`)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -381,7 +387,8 @@ function Shell({
                     onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
                     className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/45 transition-colors hover:text-sidebar-ink ${railHide}`}
                   >
-                    <span className="whitespace-nowrap">{section.title}</span>
+                    {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
+                    <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
                     <svg
                       width="12"
                       height="12"
@@ -458,7 +465,8 @@ function Shell({
               to="/specs"
               className="hidden h-9 items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 pc:flex"
             >
-              <Icon name="plus" size={14} />새 사양서
+              <Icon name="plus" size={14} />
+              {t('gnb.newSpec')}
             </Link>
             <button
               type="button"
@@ -473,11 +481,20 @@ function Shell({
               onClick={() => setPaletteOpen(true)}
               className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
-              <span className="flex items-center gap-2">
+              <span className="flex min-w-0 items-center gap-2">
                 <Icon name="search" size={14} />
-                전체 검색...
+                <span className="truncate">{t('gnb.searchPlaceholder')}</span>
               </span>
               <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+            </button>
+            {/* 언어는 사람마다 (규약 §4-1) — 현재 언어를 표시하고 누르면 전환 */}
+            <button
+              type="button"
+              onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
+              aria-label="언어 전환 / Switch language"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
+            >
+              {locale === 'ko' ? '한' : 'EN'}
             </button>
             <button
               type="button"
@@ -544,7 +561,7 @@ function Shell({
           {menu === 'bell' && (
             <div className="anim-scale-in fixed right-3 top-16 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-24">
               <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-                <span className="text-sm font-semibold">알림</span>
+                <span className="text-sm font-semibold">{t('gnb.notifications')}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -553,28 +570,28 @@ function Shell({
                   }}
                   className="rounded-md px-2 py-1 text-xs text-ink-muted transition-colors hover:bg-chip hover:text-ink"
                 >
-                  모두 읽음
+                  {t('gnb.markAllRead')}
                 </button>
               </div>
               <div className="flex gap-1 border-b border-hairline px-3 py-2">
                 {(
                   [
-                    { key: 'all', label: '전체' },
-                    { key: 'todo', label: '해야 할 일' },
+                    { key: 'all', label: t('gnb.bell.all') },
+                    { key: 'todo', label: t('gnb.bell.todo') },
                   ] as const
-                ).map((t) => (
+                ).map((tab) => (
                   <button
-                    key={t.key}
+                    key={tab.key}
                     type="button"
-                    onClick={() => setBellTab(t.key)}
+                    onClick={() => setBellTab(tab.key)}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      bellTab === t.key
+                      bellTab === tab.key
                         ? 'bg-primary/15 text-primary'
                         : 'text-ink-muted hover:bg-chip hover:text-ink'
                     }`}
                   >
-                    {t.label}
-                    {t.key === 'todo' && (
+                    {tab.label}
+                    {tab.key === 'todo' && (
                       <span className="ml-1 tabular-nums">{NOTIFICATIONS.filter((n) => n.todo).length}</span>
                     )}
                   </button>
@@ -603,7 +620,7 @@ function Shell({
                 ))}
               </ol>
               <div className="border-t border-hairline px-4 py-2.5 text-[11px] text-ink-subtle">
-                알림 수신 설정은 마이페이지에서 바꿉니다
+                {t('gnb.bell.footer')}
               </div>
             </div>
           )}
@@ -623,12 +640,12 @@ function Shell({
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
                 <Icon name="shield" size={15} />
-                내가 할 수 있는 것
+                {t('gnb.myAbilities')}
               </button>
               {(
                 [
-                  { icon: 'user' as IconName, label: '마이페이지' },
-                  { icon: 'settings' as IconName, label: '개인 설정' },
+                  { icon: 'user' as IconName, label: t('gnb.myPage') },
+                  { icon: 'settings' as IconName, label: t('gnb.settings') },
                 ] as const
               ).map((m) => (
                 <button
@@ -636,7 +653,7 @@ function Shell({
                   type="button"
                   onClick={() => {
                     setMenu(null)
-                    toast(`${m.label} — 본개발에서 연결됩니다`)
+                    toast(tf('gnb.notReady', { label: m.label }))
                   }}
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
                 >
@@ -656,7 +673,7 @@ function Shell({
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
                 <Icon name="logout" size={15} />
-                로그아웃
+                {t('gnb.logout')}
               </button>
             </div>
           )}
