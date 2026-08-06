@@ -24,7 +24,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={push}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[70] flex flex-col gap-2">
+      {/* ⚠ 자리 다툼을 미리 갈라 둔다 — 우측 하단에는 떠 있는 [물어보기] 버튼이 산다.
+          토스트는 **그 위로** 쌓는다(겹치면 토스트가 버튼을 먹어 못 누르게 된다).
+          치수는 styles.css 의 --fab-size 하나가 정한다. */}
+      <div className="pointer-events-none fixed bottom-[calc(1.5rem+var(--fab-size)+0.5rem+env(safe-area-inset-bottom,0px))] right-6 z-[70] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}

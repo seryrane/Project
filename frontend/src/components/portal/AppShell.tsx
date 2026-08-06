@@ -554,6 +554,26 @@ function Shell({
         </>
       )}
 
+      {/*
+        떠 있는 [물어보기] 버튼 — 자매 프로젝트(acrofuture)가 헤더에서 여기로 옮긴 이유를
+        우리도 그대로 겪었다: **헤더는 좁은 화면에서 접히는 줄이라 늘 있는 자리가 아니고**,
+        아이콘 하나는 다른 조작들 사이에서 눈에 안 띈다(2026-08-06 사용자: "챗봇은 어디에도
+        안 보이는데"). 어디서나 같은 것을 여는 물건은 **어디서나 같은 자리**에 있어야 한다.
+
+        자리 다툼은 미리 갈라 뒀다 — 토스트는 이 버튼 **위로** 쌓는다(toast.tsx).
+        z 는 서랍·모달(50 이상)보다 낮다: 덮개를 쓰는 중에 이 버튼이 그 위에 떠 있으면
+        "끝내고 닫는" 흐름을 방해한다.
+      */}
+      <button
+        type="button"
+        onClick={() => setAskOpen(true)}
+        aria-label={t('ask.title')}
+        title={t('ask.title')}
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-30 flex h-[var(--fab-size)] w-[var(--fab-size)] items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent2 text-white shadow-[0_10px_30px_var(--color-glow)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
+      >
+        <Icon name="chat" size={22} />
+      </button>
+
       {paletteOpen && (
         <CommandPalette onClose={() => setPaletteOpen(false)} onAsk={() => setAskOpen(true)} />
       )}

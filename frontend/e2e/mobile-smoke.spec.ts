@@ -115,10 +115,14 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   await expect(sheet).not.toBeVisible()
 })
 
-test('GNB 💬 — 물어보기 패널이 뜨고 Esc 로 닫힌다', async ({ page }) => {
+test('물어보기 — 떠 있는 버튼으로 열리고 Esc 로 닫힌다', async ({ page }) => {
   // 자리는 어느 화면에서나 같은 패널 하나(정본: 챗봇_표준질의_설계.md §1) — /specs 로 확인
   await ready(page, '/specs')
-  await page.getByRole('button', { name: '물어보기' }).click()
+  const entries = page.getByRole('button', { name: '물어보기' })
+  // ⚠ 진입점이 둘이다(헤더 · 떠 있는 버튼) — 이름만으로 집으면 셀렉터가 모호해져 깨진다.
+  // 좁은 화면에서 **늘 같은 자리에 있는 쪽**(떠 있는 버튼, DOM 상 뒤)이 이 판의 대상이다.
+  await expect(entries).toHaveCount(2)
+  await entries.last().click()
   await expect(page.getByRole('heading', { name: '물어보기' })).toBeVisible()
 
   await page.keyboard.press('Escape')

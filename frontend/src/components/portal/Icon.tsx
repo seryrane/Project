@@ -118,6 +118,14 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M14 8l4 4-4 4M18 12H9.5" />
     </>
   ),
+  // 물어보기(챗봇) — 떠 있는 버튼이 쓴다. 이모지 대신 선 아이콘인 이유는 다른
+  // 조작들과 같은 굵기·같은 색으로 그려져야 "버튼"으로 읽히기 때문이다
+  chat: (
+    <>
+      <path d="M20.5 12.5c0 3.9-3.8 7-8.5 7-1 0-2-.15-2.9-.42L4 20.5l1.5-3.7A6.6 6.6 0 0 1 3.5 12.5c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7Z" />
+      <path d="M8.8 12.3h.01M12 12.3h.01M15.2 12.3h.01" />
+    </>
+  ),
 }
 
 export function Icon({ name, size = 16 }: { name: IconName; size?: number }) {

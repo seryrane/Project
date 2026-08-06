@@ -160,6 +160,11 @@
   --color-glow: rgb(219 39 119 / 20%);
 }
 
+:root {
+  /* 떠 있는 [물어보기] 버튼의 크기 — 토스트가 이 값만큼 위로 비켜선다(toast.tsx) */
+  --fab-size: 52px;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -304,15 +309,19 @@ select option {
 
 /* CTA 셴 — 그라디언트 주 버튼에 호버 시 빛이 한 번 스치고 지나간다.
    정본은 이 조합 선택자 하나: from-primary+to-accent2 유틸 조합이 곧 CTA 표식이라
-   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋 */
+   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋.
+
+   ⚠ **자리를 정하는 유틸을 덮지 않는다** — `position: relative` 가 `.fixed` 를 이겨
+   떠 있는 [물어보기] 버튼이 우측 하단이 아니라 글의 흐름 자리에 그려졌다
+   (2026-08-06 실측: 화면 위쪽 구석에 떴다). 효과가 배치를 이기면 안 된다. */
 @media (hover: hover) {
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled),
-  a[class*='from-primary'][class*='to-accent2'] {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute),
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute) {
     position: relative;
     overflow: hidden;
   }
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled)::after,
-  a[class*='from-primary'][class*='to-accent2']::after {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute)::after,
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute)::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -320,8 +329,8 @@ select option {
     transform: translateX(-130%);
     pointer-events: none;
   }
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled):hover::after,
-  a[class*='from-primary'][class*='to-accent2']:hover::after {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute):hover::after,
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute):hover::after {
     transform: translateX(130%);
     transition: transform 600ms ease;
   }

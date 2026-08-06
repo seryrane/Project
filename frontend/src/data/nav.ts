@@ -25,6 +25,7 @@ export type IconName =
   | 'user'
   | 'settings'
   | 'logout'
+  | 'chat'
 
 export interface NavItem {
   key: string

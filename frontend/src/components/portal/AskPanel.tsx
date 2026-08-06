@@ -264,6 +264,14 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
   // 두 번째 호출도 막는다. state 만 믿으면 리렌더 전에 겹쳐 들어온다.
   const busyRef = useRef(false)
   const idRef = useRef(0)
+  /**
+   * 새 답이 붙으면 **바닥으로 따라 내려간다**(2026-08-06 사용자 지시).
+   * 이어묻기 칩은 대화 맨 아래에 있는데, 누르면 그 아래로 답이 더 붙는다 —
+   * 안 따라가면 방금 물어본 답이 화면 밖에서 조용히 생기고 사람은 "눌렀는데
+   * 아무 일도 안 났다"고 읽는다. 스크롤 상자는 Drawer 가 갖고 있으므로
+   * 바닥에 표식을 하나 두고 그것을 보이게 한다(어느 조상이 스크롤하든 통한다).
+   */
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -283,6 +291,19 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
       cancelled = true
     }
   }, [locale])
+
+  /**
+   * 턴이 늘거나(질문 추가) 답이 채워질 때(로딩→완료) 바닥으로.
+   *
+   * ⚠ **`behavior: 'smooth'` 를 쓰지 않는다** (2026-08-06 실측). 이 패널은 덮개(Drawer)
+   * 안이고 덮개는 등장할 때 transform 으로 움직인다 — 그 안에서 부드러운 스크롤은
+   * **한 픽셀도 움직이지 않고 조용히 취소된다**(기본값은 멀쩡히 움직인다).
+   * 증상은 "자동 스크롤이 아예 안 된다"로 나타나서 코드가 안 불린 줄 알기 쉽다.
+   */
+  useEffect(() => {
+    if (turns.length === 0) return
+    bottomRef.current?.scrollIntoView({ block: 'end' })
+  }, [turns])
 
   const submitQuestion = async (raw: string) => {
     const question = raw.trim()
@@ -378,6 +399,9 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
           {t('ask.send')}
         </CtaButton>
       </div>
+      {/* 바닥 표식 — 새 답이 붙으면 여기로 따라 내려간다(위 useEffect). 스크롤 상자는
+          Drawer 가 갖고 있어서, 표식을 보이게 하는 편이 어느 조상이 스크롤하든 통한다 */}
+      <div ref={bottomRef} aria-hidden />
     </div>
   )
 }
