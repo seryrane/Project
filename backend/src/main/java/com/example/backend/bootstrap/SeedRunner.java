@@ -29,11 +29,20 @@ public class SeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        for (String name : List.of("roles", "nav", "nav_requires", "faqs", "members", "whatsnew")) {
+        for (String name : List.of("roles", "faqs", "members", "whatsnew")) {
             Integer exists = store.jdbc()
                 .queryForObject("SELECT COUNT(*) FROM kv WHERE name = ?", Integer.class, name);
             if (exists == null || exists == 0) {
                 store.jdbc().update("INSERT INTO kv(name, json) VALUES(?, ?)", name, readSeed(name));
+            }
+        }
+        // ⚠ nav·nav_requires 는 화면에서 고치는 값이 아니라 **코드가 정본** — 항상 덮는다.
+        //   비어 있을 때만 채우면 구조를 바꿔도 기존 DB 가 옛 메뉴를 계속 낸다(FastAPI 벌에서 실증)
+        for (String name : List.of("nav", "nav_requires")) {
+            String json = readSeed(name);
+            int updated = store.jdbc().update("UPDATE kv SET json = ? WHERE name = ?", json, name);
+            if (updated == 0) {
+                store.jdbc().update("INSERT INTO kv(name, json) VALUES(?, ?)", name, json);
             }
         }
         seedRows("notices");

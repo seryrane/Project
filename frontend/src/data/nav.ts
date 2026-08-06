@@ -40,11 +40,20 @@ export interface NavSection {
   items: Array<NavItem>
 }
 
+/** ⚠ 이 포털은 두 프로젝트(센터 KPI 품질 ICDAP + IBD 사양서 IDMS)의 합본이다 —
+ *  프로젝트는 하나지만 **메뉴가 두 프로젝트를 가른다**. 어느 한쪽 낱말로 전체를
+ *  부르지 않는다 (2026-08-06 사용자 교정). */
 export const nav: Array<NavSection> = [
   {
     id: 'main',
     items: [
       { key: 'dashboard', label: '대시보드', icon: 'dashboard', to: '/dashboard' },
+    ],
+  },
+  {
+    id: 'kpi',
+    title: '센터 KPI (ICDAP)',
+    items: [
       { key: 'analytics', label: '통계 & 분석', icon: 'stats', to: '/analytics' },
     ],
   },
@@ -59,7 +68,7 @@ export const nav: Array<NavSection> = [
   },
   {
     id: 'idms',
-    title: '사양 (IDMS)',
+    title: '사양서 (IDMS)',
     items: [
       { key: 'specs', label: '사양서 관리', icon: 'doc', to: '/specs' },
       { key: 'approvals', label: '승인 관리', icon: 'approve', badge: 3, to: '/approvals' },

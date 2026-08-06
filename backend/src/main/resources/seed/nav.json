@@ -7,7 +7,13 @@
     "label": "대시보드",
     "icon": "dashboard",
     "to": "/dashboard"
-   },
+   }
+  ]
+ },
+ {
+  "id": "kpi",
+  "title": "센터 KPI (ICDAP)",
+  "items": [
    {
     "key": "analytics",
     "label": "통계 & 분석",
@@ -42,7 +48,7 @@
  },
  {
   "id": "idms",
-  "title": "사양 (IDMS)",
+  "title": "사양서 (IDMS)",
   "items": [
    {
     "key": "specs",

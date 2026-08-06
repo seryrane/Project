@@ -114,8 +114,10 @@ function GuidePage() {
             </div>
             <div className="space-y-3 p-5 text-[13px] leading-relaxed text-ink-muted">
               <p>
-                이 포털은 HMG 통합 데이터 플랫폼의 관리자 화면입니다 — 사양서를 정본으로 두고
-                <b className="text-ink"> 작성 → 승인 → 배포 → 검증</b>이 한 흐름으로 이어집니다.
+                이 포털은 <b className="text-ink">두 프로젝트가 합쳐진 한 곳</b>입니다 — 센터
+                KPI 품질(ICDAP)은 지표·품질 현황을 보고, IBD 사양서(IDMS)는 사양서를 정본으로
+                <b className="text-ink"> 작성 → 승인 → 배포 → 검증</b> 흐름을 탑니다. 메뉴가 두
+                프로젝트를 가릅니다.
               </p>
               <p>
                 로그인은 HMG-SSO 계정으로 합니다. 첫 화면(대시보드)은 역할에 맞는 위젯이 자동

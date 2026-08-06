@@ -112,14 +112,14 @@ function LoginPage() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
+          {/* 두 프로젝트(센터 KPI 품질 + IBD 사양서)가 한 포털 — 어느 한쪽으로 기울지 않는다 */}
           <h2 className="text-2xl font-bold leading-snug text-white">
-            사양이 정본이 되는 곳,
-            <br />
-            작성부터 검증까지 한 흐름으로.
+            센터 KPI 품질과 IBD 사양서,
+            <br />두 프로젝트가 만나는 하나의 포털.
           </h2>
           <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/70">
-            KPI(ICDAP) · 사양관리(IDMS) 통합 포털 — 센터 구성원과 협력사(모비스·오토에버·해외
-            연구소)가 같은 곳에서 일합니다.
+            KPI 지표·품질 현황(ICDAP)과 수집 사양 관리(IDMS)를 한 곳에서 — 센터 구성원과
+            협력사(모비스·오토에버·해외 연구소)가 같은 문으로 들어옵니다.
           </p>
         </m.div>
         <p className="text-[11px] text-sidebar-ink/50">© HMG · 프로토타입 v0.5</p>

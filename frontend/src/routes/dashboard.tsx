@@ -421,7 +421,7 @@ function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">대시보드</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            IDMS 사양 관리 · 검증 현황 요약 (Mock 데이터) · 마지막 집계 오늘 06:00
+            센터 KPI(ICDAP) · 사양 관리(IDMS) 통합 현황 (Mock 데이터) · 마지막 집계 오늘 06:00
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

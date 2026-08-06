@@ -127,9 +127,12 @@ ROLES = [
 ]
 
 # ── LNB 정본 (frontend/src/data/nav.ts 와 같은 모양) ─────────────────────
+# ⚠ 두 프로젝트(센터 KPI 품질 ICDAP + IBD 사양서 IDMS)의 합본 — 메뉴가 가른다
 NAV = [
     {"id": "main", "items": [
         {"key": "dashboard", "label": "대시보드", "icon": "dashboard", "to": "/dashboard"},
+    ]},
+    {"id": "kpi", "title": "센터 KPI (ICDAP)", "items": [
         {"key": "analytics", "label": "통계 & 분석", "icon": "stats", "to": "/analytics"},
     ]},
     {"id": "admin", "title": "관리", "items": [
@@ -137,7 +140,7 @@ NAV = [
         {"key": "roles", "label": "권한 관리", "icon": "shield", "to": "/roles"},
         {"key": "menus", "label": "메뉴 관리", "icon": "menu", "to": "/menus"},
     ]},
-    {"id": "idms", "title": "사양 (IDMS)", "items": [
+    {"id": "idms", "title": "사양서 (IDMS)", "items": [
         {"key": "specs", "label": "사양서 관리", "icon": "doc", "to": "/specs"},
         {"key": "approvals", "label": "승인 관리", "icon": "approve", "badge": 3, "to": "/approvals"},
         {"key": "deploys", "label": "배포 관리", "icon": "deploy", "to": "/deploys"},
@@ -307,13 +310,15 @@ def now_iso() -> str:
 
 
 def seed_if_empty() -> None:
-    """비어 있을 때만 채운다 — 화면에서 바꾼 것을 재기동이 되돌리면 안 된다."""
+    """비어 있을 때만 채운다 — 화면에서 바꾼 것을 재기동이 되돌리면 안 된다.
+
+    ⚠ 예외: nav·nav_requires 는 화면에서 고치는 값이 아니라 **코드가 정본**이다 —
+    비어 있을 때만 채우면 구조를 바꿔도 기존 DB 가 옛 메뉴를 계속 낸다(실제로 겪음).
+    """
     if db.kv_get("roles") is None:
         db.kv_put("roles", ROLES)
-    if db.kv_get("nav") is None:
-        db.kv_put("nav", NAV)
-    if db.kv_get("nav_requires") is None:
-        db.kv_put("nav_requires", NAV_REQUIRES)
+    db.kv_put("nav", NAV)
+    db.kv_put("nav_requires", NAV_REQUIRES)
     if db.kv_get("faqs") is None:
         db.kv_put("faqs", FAQS)
     if db.kv_get("members") is None:
