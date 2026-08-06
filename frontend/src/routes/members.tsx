@@ -18,7 +18,7 @@ export const Route = createFileRoute('/members')({ component: MembersPage })
 
 const GRADES: Array<Grade> = ['Super Admin', 'Admin', 'Editor', 'Viewer']
 
-const ACTIVITY_DOT: Record<Member['activity'][number]['kind'], string> = {
+const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], string> = {
   auth: 'bg-fill-draft',
   spec: 'bg-fill-pending',
   approve: 'bg-fill-deployed',
@@ -39,7 +39,18 @@ function MembersPage() {
   const [lockOverride, setLockOverride] = useState<Record<string, boolean>>({})
 
   // 정본은 서버 — 서버가 없으면 mock 으로 돌아간다 (관문 lib/api.ts)
-  const { data: memberList } = useApi<Array<Member>>('/members', members)
+  const { data: serverMembers } = useApi<Array<Member>>('/members', members)
+  // ⚠ 서버 시드에는 아직 화면 전용 필드(활동 이력·가입일·연락처)가 없다 — 같은 id 의
+  //   mock 으로 보강한다. 안 하면 [활동 이력] 탭이 undefined.map 으로 터진다(실사고).
+  //   본개발에서 활동 이력이 서버 감사 로그로 이관되면 이 병합은 걷어낸다.
+  const memberList = useMemo(
+    () =>
+      serverMembers.map((m) => {
+        const local = members.find((x) => x.id === m.id)
+        return local ? { ...local, ...m } : m
+      }),
+    [serverMembers],
+  )
 
   const effStatus = (m: Member) => (m.id in lockOverride ? (lockOverride[m.id] ? '잠금' : '활성') : m.status)
 
@@ -379,7 +390,14 @@ function MembersPage() {
 
                   {tab === 'activity' && (
                     <ol className="space-y-2">
-                      {detail.activity.map((a) => (
+                      {/* 빈 자리에 이유를 적는다 (규약 17절) — 신규·서버 계정은 이력이 없다 */}
+                      {(detail.activity ?? []).length === 0 && (
+                        <p className="rounded-xl bg-canvas/40 px-3.5 py-3 text-xs text-ink-subtle">
+                          아직 기록된 활동이 없습니다 — 로그인·상신 등 활동이 생기면 여기에
+                          쌓입니다.
+                        </p>
+                      )}
+                      {(detail.activity ?? []).map((a) => (
                         <li
                           key={a.text}
                           className="flex items-center justify-between gap-3 rounded-xl bg-canvas/40 px-3.5 py-2.5 text-[13px]"

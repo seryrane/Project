@@ -28,7 +28,35 @@ export interface MenuItem {
    *  텅 비어 "로그인해서 볼 게 없는 포털"이 된다. 특히 가이드는 권한이 없는
    *  사람일수록 필요하므로 여기서 가리면 안 된다. */
   minimal?: boolean
+  /** 관리자가 화면에서 만든 메뉴 — **이런 메뉴만 템플릿·화면 구성을 편집한다.**
+   *  시스템 메뉴(코드로 만든 화면)에 템플릿을 노출하면 실제 화면과 어긋난다
+   *  (2026-08-06 사용자 지적). */
+  custom?: boolean
+  /** 신규 메뉴의 화면 구성 — 템플릿에 따라 쓰는 칸이 다르다 */
+  config?: MenuConfig
 }
+
+export interface MenuConfig {
+  /** 목록+상세형: 표 컬럼 */
+  columns?: Array<string>
+  /** 목록+상세형: 검색칸 사용 */
+  searchable?: boolean
+  /** 목록+상세형: 상세가 열리는 표시 영역 (규약 §1) */
+  detailSurface?: '우측 패널' | '모달' | '본문 페이지'
+  /** 대시보드형: 배치할 위젯 */
+  widgets?: Array<string>
+  /** 게시판형: 카테고리 (콤마 구분) */
+  categories?: string
+  /** 게시판형: 작성 가능 등급 */
+  writeGrade?: 'Viewer 이상' | 'Editor 이상' | 'Admin 이상'
+  /** 문서형: 제목에서 목차 자동 생성 */
+  autoToc?: boolean
+  /** 빈 화면: 외부 시스템 URL (동적 URL 편입 — 요구사항 "신규 시스템 편입") */
+  embedUrl?: string
+}
+
+/** 목록+상세형 컬럼 후보 — 신규 메뉴가 고르는 재료 */
+export const COLUMN_OPTIONS = ['이름', '상태', '담당자', '수정일', '버전', '카테고리', '태그'] as const
 
 export const menuItems: Array<MenuItem> = [
   { id: 'm-dash', order: 1, name: '대시보드', path: '/dashboard', icon: 'dashboard', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },

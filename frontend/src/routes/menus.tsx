@@ -8,8 +8,9 @@ import { layoutSpring, m as fx } from '#/components/portal/motion'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { TEMPLATES, menuItems } from '#/data/menus'
-import type { MenuItem, TemplateKey } from '#/data/menus'
+import { COLUMN_OPTIONS, TEMPLATES, menuItems } from '#/data/menus'
+import type { MenuConfig, MenuItem, TemplateKey } from '#/data/menus'
+import { WIDGET_META } from '#/data/dashboardLayout'
 import { roleDefs } from '#/data/roles'
 
 // 접근 가능 역할은 권한 관리 정본(roleDefs)에서 파생한다 — 역할이 추가되면
@@ -84,6 +85,8 @@ function MenusPage() {
   const [newTemplate, setNewTemplate] = useState<TemplateKey>('list-detail')
   const [newRoles, setNewRoles] = useState<Array<string>>([])
   const [newMinimal, setNewMinimal] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newPath, setNewPath] = useState('')
   // 선택 메뉴 편집 초안 (우측 패널)
   const [draft, setDraft] = useState<MenuItem | null>(null)
 
@@ -91,6 +94,9 @@ function MenusPage() {
     setSelected(m)
     setDraft({ ...m })
   }
+
+  const patchConfig = (patch: Partial<MenuConfig>) =>
+    setDraft((d) => d && { ...d, config: { ...d.config, ...patch } })
 
   // 드래그로 순서를 바꾼다 — 같은 부모 아래에서만 (계층이 섞이면 뜻이 바뀐다)
   const [dragId, setDragId] = useState<string | null>(null)
@@ -264,28 +270,134 @@ function MenusPage() {
                   className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
                 />
               </label>
-              {/* 화면 템플릿 — 이 메뉴가 어떤 UI 로 열리는지 그림으로 확인·변경 */}
-              <div>
-                <span className="text-xs font-medium text-ink-subtle">화면 템플릿</span>
-                <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-3">
-                  <span className="h-14 w-20 shrink-0 overflow-hidden rounded-lg">
-                    <Wireframe t={draft.template} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <ChipSelect
-                      options={TEMPLATES.map((t) => t.name)}
-                      value={TEMPLATES.find((t) => t.key === draft.template)?.name ?? TEMPLATES[0].name}
-                      onChange={(name) => {
-                        const t = TEMPLATES.find((x) => x.name === name)
-                        if (t) setDraft((d) => d && { ...d, template: t.key })
-                      }}
-                    />
-                    <span className="mt-1.5 block text-[11px] text-ink-subtle">
-                      {TEMPLATES.find((t) => t.key === draft.template)?.desc}
-                    </span>
-                  </span>
-                </div>
-              </div>
+              {/* 화면 템플릿·구성은 **관리자가 만든 메뉴에만** — 시스템 메뉴(코드 화면)에
+                  템플릿을 노출하면 실제 화면과 어긋난다 (2026-08-06 사용자 지적) */}
+              {draft.custom ? (
+                <>
+                  <div>
+                    <span className="text-xs font-medium text-ink-subtle">화면 템플릿</span>
+                    <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-3">
+                      <span className="h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                        <Wireframe t={draft.template} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <ChipSelect
+                          options={TEMPLATES.map((t) => t.name)}
+                          value={TEMPLATES.find((t) => t.key === draft.template)?.name ?? TEMPLATES[0].name}
+                          onChange={(name) => {
+                            const t = TEMPLATES.find((x) => x.name === name)
+                            if (t) setDraft((d) => d && { ...d, template: t.key })
+                          }}
+                        />
+                        <span className="mt-1.5 block text-[11px] text-ink-subtle">
+                          {TEMPLATES.find((t) => t.key === draft.template)?.desc}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  {/* 화면 구성 — 관리자가 만든 메뉴가 실제로 무엇을 하는지 여기서 정한다 */}
+                  <div className="rounded-xl border border-hairline/70 bg-canvas/40 p-3.5">
+                    <span className="text-xs font-semibold text-ink">화면 구성</span>
+                    <div className="mt-2.5 space-y-3">
+                      {draft.template === 'list-detail' && (
+                        <>
+                          <div>
+                            <span className="text-[11px] text-ink-subtle">표 컬럼</span>
+                            <div className="mt-1.5">
+                              <ChipMulti
+                                options={COLUMN_OPTIONS}
+                                values={(draft.config?.columns ?? ['이름', '상태']) as Array<(typeof COLUMN_OPTIONS)[number]>}
+                                onChange={(columns) => patchConfig({ columns })}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between rounded-lg bg-chip px-3 py-2">
+                            <span className="text-xs text-ink">검색칸 사용</span>
+                            <Switch
+                              checked={draft.config?.searchable ?? true}
+                              onChange={(searchable) => patchConfig({ searchable })}
+                              label="검색칸 사용"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[11px] text-ink-subtle">상세가 열리는 곳 (규약 §1)</span>
+                            <div className="mt-1.5">
+                              <ChipSelect
+                                options={['우측 패널', '모달', '본문 페이지'] as const}
+                                value={draft.config?.detailSurface ?? '우측 패널'}
+                                onChange={(detailSurface) => patchConfig({ detailSurface })}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {draft.template === 'dashboard' && (
+                        <div>
+                          <span className="text-[11px] text-ink-subtle">배치할 위젯 (역할 권한이 다시 거른다)</span>
+                          <div className="mt-1.5">
+                            <ChipMulti
+                              options={Object.values(WIDGET_META).map((w) => w.title)}
+                              values={draft.config?.widgets ?? []}
+                              onChange={(widgets) => patchConfig({ widgets })}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {draft.template === 'board' && (
+                        <>
+                          <label className="block">
+                            <span className="text-[11px] text-ink-subtle">카테고리 (콤마로 구분)</span>
+                            <input
+                              value={draft.config?.categories ?? ''}
+                              onChange={(e) => patchConfig({ categories: e.target.value })}
+                              placeholder="예: 공지, 자료, 질문"
+                              className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-xs outline-none focus:border-primary/60"
+                            />
+                          </label>
+                          <div>
+                            <span className="text-[11px] text-ink-subtle">작성 가능 등급</span>
+                            <div className="mt-1.5">
+                              <ChipSelect
+                                options={['Viewer 이상', 'Editor 이상', 'Admin 이상'] as const}
+                                value={draft.config?.writeGrade ?? 'Editor 이상'}
+                                onChange={(writeGrade) => patchConfig({ writeGrade })}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {draft.template === 'document' && (
+                        <div className="flex items-center justify-between rounded-lg bg-chip px-3 py-2">
+                          <span className="text-xs text-ink">제목에서 목차 자동 생성</span>
+                          <Switch
+                            checked={draft.config?.autoToc ?? true}
+                            onChange={(autoToc) => patchConfig({ autoToc })}
+                            label="목차 자동 생성"
+                          />
+                        </div>
+                      )}
+                      {draft.template === 'blank' && (
+                        <label className="block">
+                          <span className="text-[11px] text-ink-subtle">
+                            외부 시스템 URL — 등록하면 이 메뉴가 그 화면을 임베드합니다 (신규 시스템 편입)
+                          </span>
+                          <input
+                            value={draft.config?.embedUrl ?? ''}
+                            onChange={(e) => patchConfig({ embedUrl: e.target.value })}
+                            placeholder="https://..."
+                            className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+                  시스템 메뉴 — 화면이 코드로 만들어져 있어 이름·노출·접근 역할만 설정합니다.
+                  템플릿·화면 구성은 [+ 메뉴 추가]로 만든 메뉴에서 편집합니다.
+                </p>
+              )}
               <div className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
                 <span className="text-[13px] font-medium text-ink">노출 여부</span>
                 <button
@@ -379,11 +491,21 @@ function MenusPage() {
         <Modal title="새 메뉴 추가" onClose={() => setCreating(false)}>
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">메뉴 이름 <b className="text-danger-ink">*</b></span>
-            <input placeholder="메뉴 이름 입력" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="메뉴 이름 입력"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+            />
           </label>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">경로 (Path) <b className="text-danger-ink">*</b></span>
-            <input placeholder="/path/to/page" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60" />
+            <input
+              value={newPath}
+              onChange={(e) => setNewPath(e.target.value)}
+              placeholder="/path/to/page"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+            />
           </label>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">상위 메뉴 (선택)</span>
@@ -455,13 +577,30 @@ function MenusPage() {
             </button>
             <button
               type="button"
+              disabled={newName.trim() === '' || !newPath.trim().startsWith('/') || (!newMinimal && newRoles.length === 0)}
               onClick={() => {
+                // 실제로 만들어진다 — 만든 뒤 우측 설정에서 화면 구성을 이어간다
+                const item: MenuItem = {
+                  id: `m-custom-${items.length + 1}`,
+                  order: tops.length + 1,
+                  name: newName.trim(),
+                  path: newPath.trim(),
+                  icon: 'doc',
+                  active: true,
+                  roles: newMinimal ? [] : newRoles,
+                  minimal: newMinimal,
+                  template: newTemplate,
+                  custom: true,
+                  config: {},
+                }
+                setItems((list) => [...list, item])
                 setCreating(false)
-                toast(
-                  `메뉴를 추가했습니다 (${TEMPLATES.find((t) => t.key === newTemplate)?.name} 템플릿) — 접근 역할이 있는 사람에게 바로 보입니다`,
-                )
+                setNewName('')
+                setNewPath('')
+                select(item)
+                toast('메뉴를 추가했습니다 — 우측 [화면 구성]에서 이 화면에 들어갈 요소를 정하세요')
               }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               추가
             </button>

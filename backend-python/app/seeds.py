@@ -309,6 +309,15 @@ WHATSNEW = [
 ]
 
 
+# Tableau 임베딩 등록부 시드 — 데모용 공개 워크북(Tableau Public 샘플).
+# 실제 IVI 워크북은 SSO 연계 후 관리자가 화면에서 교체 등록한다
+EMBEDS = [
+    {"id": "E-01", "title": "IVI KPI 샘플 워크북 (Tableau Public 데모)",
+     "url": "https://public.tableau.com/views/RegionalSampleWorkbook/Storms",
+     "area": "IVI"},
+]
+
+
 def now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -329,6 +338,8 @@ def seed_if_empty() -> None:
         db.kv_put("members", MEMBERS)
     if db.kv_get("whatsnew") is None:
         db.kv_put("whatsnew", WHATSNEW)
+    if db.kv_get("embeds") is None:
+        db.kv_put("embeds", EMBEDS)
 
     with db.connect() as conn:
         if conn.execute("SELECT COUNT(*) c FROM notices").fetchone()["c"] == 0:

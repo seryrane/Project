@@ -16,7 +16,8 @@ export interface Member {
   lastLogin: string
   joined: string
   phone: string
-  activity: Array<{ text: string; at: string; kind: 'auth' | 'spec' | 'approve' | 'admin' }>
+  /** 화면 전용 mock — 서버 정본에는 아직 없다(본개발에서 감사 로그 조회로 대체) */
+  activity?: Array<{ text: string; at: string; kind: 'auth' | 'spec' | 'approve' | 'admin' }>
 }
 
 export const members: Array<Member> = [

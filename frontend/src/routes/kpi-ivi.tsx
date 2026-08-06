@@ -3,20 +3,43 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChartCard, StatTile, TrendLineChart } from '#/components/portal/charts'
+import { Modal } from '#/components/portal/Modal'
+import { CtaButton } from '#/components/portal/Skeleton'
+import { TableauEmbed } from '#/components/portal/TableauEmbed'
 import { useToast } from '#/components/portal/toast'
 import { iviTrend } from '#/data/kpi'
+import { apiSend, useApi } from '#/lib/api'
 
 export const Route = createFileRoute('/kpi-ivi')({ component: KpiIviPage })
 
+interface EmbedItem {
+  id: string
+  title: string
+  url: string
+  area: string
+}
+
 /**
  * 인포 IVI KPI (FR-075) — **Tableau 임베딩 뷰와 자체 UI 표출을 병행 제공**한다(AC①).
- * 임베딩은 Connected App/Trusted Ticket 기반 SSO 인증(FR: Tableau 연동)이 확정돼야
- * 실제로 붙는다 — 그 전까지 자리와 전환 구조를 정확히 만들어 둔다.
- * 지표별 표출 방식(임베딩 vs 자체)은 설계서에 정의·승인된다(AC②).
+ * 1차 오픈 전략: 임베딩으로 빠르게 → 2차부터 웹(자체 UI) 전환.
+ * 워크북은 관리자가 URL 로 등록한다(코드 배포 없이 편입 — 회의록: "임베드 링크
+ * 따서 아이프레임으로"). ⚠ SSO 확정 전에는 공개/티켓 링크만 표출된다.
  */
 function KpiIviPage() {
   const toast = useToast()
   const [mode, setMode] = useState<'tableau' | 'native'>('tableau')
+  const [current, setCurrent] = useState(0)
+  const [adding, setAdding] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newUrl, setNewUrl] = useState('')
+
+  // 워크북 등록부 정본은 서버 — 서버가 없으면 빈 목록(등록 안내가 뜬다)
+  const { data: workbooks, reload } = useApi<Array<EmbedItem>>('/embeds', [])
+
+  const urlHint =
+    newUrl !== '' && !newUrl.startsWith('https://') ? '워크북 주소는 https 로 시작해야 합니다' : ''
+  const active: EmbedItem | undefined =
+    workbooks.length > 0 ? workbooks[Math.min(current, workbooks.length - 1)] : undefined
 
   const trendData = iviTrend.days.map((d, i) => ({ date: d, value: iviTrend.appLaunch[i] }))
 
@@ -26,7 +49,8 @@ function KpiIviPage() {
         <div>
           <h1 className="text-2xl font-bold">인포 IVI KPI</h1>
           <p className="mt-1 text-[13px] text-ink-subtle">
-            IVI 지표 — Tableau 임베딩과 자체 UI 를 병행 제공 (FR-075)
+            IVI 지표 — Tableau 임베딩과 자체 UI 를 병행 제공 (FR-075) · SSO 연계 전에는
+            공개·티켓 링크만 표출됩니다
           </p>
         </div>
         {/* 표출 방식 전환 — 1차는 임베딩으로 빠르게, 2차부터 웹 전환(전환 전략) */}
@@ -53,33 +77,67 @@ function KpiIviPage() {
       </div>
 
       {mode === 'tableau' ? (
-        /* 임베딩 자리 — SSO 토큰 연계(이중 로그인 차단)가 확정돼야 실물이 붙는다 */
         <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface">
-          <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">IVI KPI 워크북 (Tableau)</h2>
-            <span className="text-[11px] text-ink-subtle">Embedding API · Connected App SSO</span>
-          </div>
-          <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 p-8 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                <rect x="3" y="4" width="18" height="14" rx="2" />
-                <path d="M3 9h18M8 21h8M12 18v3" />
-              </svg>
-            </span>
-            <p className="text-[15px] font-semibold text-ink">Tableau 임베딩 자리</p>
-            <p className="max-w-md text-[13px] leading-relaxed text-ink-subtle">
-              Connected App(Trusted Ticket) 기반 SSO 토큰 연계가 확정되면 이 자리에 IVI KPI
-              워크북이 이중 로그인 없이 표시됩니다. 임베딩 파라미터(차종·기간)는 상단 필터와
-              연동됩니다.
-            </p>
+          <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+            {/* 워크북 탭 — 등록된 것만. 등록은 관리자(코드 배포 없이 편입) */}
+            <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+              {workbooks.map((w, i) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  aria-pressed={i === current}
+                  onClick={() => setCurrent(i)}
+                  className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                    i === current
+                      ? 'border-primary/50 bg-primary/15 text-primary'
+                      : 'border-hairline text-ink-muted hover:border-primary/30 hover:text-ink'
+                  }`}
+                >
+                  {i === current ? '✓ ' : ''}
+                  {w.title}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
-              onClick={() => toast('Tableau 연동은 SSO 방식(Connected App/Trusted Ticket) 확정 후 연결됩니다')}
-              className="mt-1 h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+              onClick={() => setAdding(true)}
+              className="h-8 shrink-0 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
             >
-              연동 상태 확인
+              + 워크북 등록
             </button>
           </div>
+
+          <div className="p-4">
+            {active ? (
+              <TableauEmbed url={active.url} title={active.title} />
+            ) : (
+              /* 빈 자리에 이유를 적는다 (규약 17절) — 아직 없음 ≠ 고장 */
+              <div className="flex min-h-[320px] flex-col items-center justify-center gap-2 text-center">
+                <p className="text-[15px] font-semibold text-ink">등록된 워크북이 없습니다</p>
+                <p className="max-w-md text-[13px] leading-relaxed text-ink-subtle">
+                  [+ 워크북 등록]으로 Tableau 임베드 링크를 등록하면 이 자리에 바로
+                  표시됩니다. 등록 권한이 없다면 KPI 담당자에게 요청하세요.
+                </p>
+              </div>
+            )}
+          </div>
+          {active && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline px-5 py-2.5">
+              <span className="truncate font-mono text-[10px] text-ink-subtle">{active.url}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = workbooks.filter((w) => w.id !== active.id)
+                  void apiSend('PUT', '/embeds', { items: next }).then(() => reload())
+                  setCurrent(0)
+                  toast(`${active.title} 워크북을 내렸습니다`)
+                }}
+                className="shrink-0 text-[11px] text-ink-subtle transition-colors hover:text-danger-ink"
+              >
+                이 워크북 내리기
+              </button>
+            </div>
+          )}
         </section>
       ) : (
         /* 자체 UI — 마트 집계 기반. 2차 오픈부터 웹 전환의 종착점 */
@@ -96,6 +154,65 @@ function KpiIviPage() {
             </ChartCard>
           </div>
         </>
+      )}
+
+      {/* 워크북 등록 — 짧게 적고 닫는 일이라 모달 */}
+      {adding && (
+        <Modal title="Tableau 워크북 등록" onClose={() => setAdding(false)}>
+          <p className="text-[13px] leading-relaxed text-ink-muted">
+            Tableau 의 [공유 → 임베드 링크]를 붙여넣으세요. SSO 연계 전에는 공개(Tableau
+            Public)·티켓 링크만 표시됩니다.
+          </p>
+          <label className="mt-3 block">
+            <span className="text-xs font-medium text-ink-subtle">표시 이름 <b className="text-danger-ink">*</b></span>
+            <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="예: IVI 주간 사용성 워크북"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+            />
+          </label>
+          <label className="mt-3 block">
+            <span className="text-xs font-medium text-ink-subtle">임베드 URL <b className="text-danger-ink">*</b></span>
+            <input
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              placeholder="https://public.tableau.com/views/..."
+              className={`mt-1 h-10 w-full rounded-lg border bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60 ${
+                urlHint ? 'border-danger-ink/50' : 'border-hairline'
+              }`}
+            />
+            {urlHint && <span className="mt-1 block text-[11px] text-danger-ink">{urlHint}</span>}
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              취소
+            </button>
+            <CtaButton
+              disabled={newTitle.trim() === '' || !newUrl.startsWith('https://')}
+              busyLabel="등록 중…"
+              onAction={async () => {
+                const next = [
+                  ...workbooks,
+                  { id: `E-${workbooks.length + 10}`, title: newTitle.trim(), url: newUrl.trim(), area: 'IVI' },
+                ]
+                await apiSend('PUT', '/embeds', { items: next })
+                reload()
+                setAdding(false)
+                setNewTitle('')
+                setNewUrl('')
+                setCurrent(next.length - 1)
+                toast('워크북을 등록했습니다 — 바로 표시됩니다')
+              }}
+            >
+              등록
+            </CtaButton>
+          </div>
+        </Modal>
       )}
     </AppShell>
   )

@@ -33,16 +33,17 @@ const PAGES = [
 ]
 
 /** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이
- *  되지 않게, 상호작용 전에는 네트워크가 잠잠해질 때까지(=수화 완료) 기다린다. */
+ *  되지 않게, 상호작용 전에는 네트워크가 잠잠해질 때까지(=수화 완료) 기다린다.
+ *  ⚠ 외부 임베딩(iframe·Tableau)이 있는 화면은 네트워크가 영영 안 잠잠할 수 있다 —
+ *  8초 지나면 수화는 끝났다고 보고 진행한다(무한 대기로 판이 죽는 것보다 낫다). */
 async function ready(page: Page, path: string) {
   await page.goto(path)
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
 }
 
 for (const path of PAGES) {
   test(`${path} — 페이지가 가로로 넘치지 않는다`, async ({ page }) => {
-    await page.goto(path)
-    await page.waitForLoadState('networkidle')
+    await ready(page, path)
     // ⚠ innerWidth 와 비교하면 안 된다 — 모바일 브라우저는 넘친 페이지를 축소해서
     //   innerWidth 도 같이 커지고, 검사는 0 을 보고 통과한다(2026-08-05 실기기에서
     //   상세가 1033px "PC 축소판"으로 보이는데 21건 전부 초록이었다).
