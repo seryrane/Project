@@ -13,9 +13,13 @@ export const Route = createFileRoute('/approvals')({ component: ApprovalsPage })
 
 /** 결재 단계 점 — ● 지난 단계 · ◉ 현재 · ○ 남은 단계 */
 function StepDots({ step }: { step: [number, number] }) {
+  const { tf } = useI18n()
   const [cur, total] = step
   return (
-    <span className="flex items-center gap-1" title={`${cur}/${total} 단계`}>
+    <span
+      className="flex items-center gap-1"
+      title={tf('approvals.stepTooltip', { cur, total }, '{cur}/{total} 단계')}
+    >
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}
@@ -38,9 +42,10 @@ function KindChip({ kind }: { kind: keyof typeof KIND_CLS }) {
 }
 
 function UrgentChip() {
+  const { t } = useI18n()
   return (
     <span className="rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-ink">
-      긴급
+      {t('approvals.urgent', '긴급')}
     </span>
   )
 }
@@ -72,26 +77,44 @@ function ApprovalsPage() {
     setOpinion('')
     // 승인은 끝이 아니라 다음 단계의 시작이다 — 무엇이 이어지는지 함께 말한다
     if (action === '승인' && req.kind === '배포') {
-      toast(`${req.title} 승인 완료 — 배포 관리에서 예정 시각에 실행됩니다`)
+      toast(
+        tf(
+          'approvals.toast.approvedDeploy',
+          { title: req.title },
+          '{title} 승인 완료 — 배포 관리에서 예정 시각에 실행됩니다',
+        ),
+      )
     } else if (action === '승인' && req.kind === '사양서') {
-      toast(`${req.title} 승인 완료 — 배포에 포함하려면 배포 관리에서 요청하세요`)
+      toast(
+        tf(
+          'approvals.toast.approvedSpec',
+          { title: req.title },
+          '{title} 승인 완료 — 배포에 포함하려면 배포 관리에서 요청하세요',
+        ),
+      )
     } else {
-      toast(`${req.title} — ${action} 처리했습니다`)
+      toast(
+        tf(
+          'approvals.toast.decided',
+          { title: req.title, action: action === '승인' ? t('common.approve', '승인') : t('common.reject', '반려') },
+          '{title} — {action} 처리했습니다',
+        ),
+      )
     }
   }
 
   const stats = [
-    { label: '전체 요청', value: approvalRequests.length + processedRequests.length },
-    { label: '대기 중', value: pending.length, cls: 'text-review-ink' },
+    { label: t('approvals.stat.total', '전체 요청'), value: approvalRequests.length + processedRequests.length },
+    { label: t('approvals.stat.pending', '대기 중'), value: pending.length, cls: 'text-review-ink' },
     {
-      label: '승인 완료',
+      label: t('approvals.stat.approved', '승인 완료'),
       value:
         processedRequests.filter((p) => p.result === '승인').length +
         Object.values(decided).filter((v) => v === '승인').length,
       cls: 'text-deployed-ink',
     },
     {
-      label: '반려',
+      label: t('approvals.stat.rejected', '반려'),
       value:
         processedRequests.filter((p) => p.result === '반려').length +
         Object.values(decided).filter((v) => v === '반려').length,
@@ -171,16 +194,16 @@ function ApprovalsPage() {
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
                   <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
-                    대기
+                    {t('approvals.waitingBadge', '대기')}
                   </span>
                   {r.myTurn && (
                     <span className="rounded-full bg-pending-bg px-2 py-0.5 text-[11px] font-semibold text-pending-ink">
-                      내 차례
+                      {t('approvals.tab.mine', '내 차례')}
                     </span>
                   )}
                   <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-subtle">
                     <Avatar name={r.requester} size={16} />
-                    {r.requester} · {r.requestedAt} · 기한{' '}
+                    {r.requester} · {r.requestedAt} · {t('approvals.deadlineLabel', '기한')}{' '}
                     <b className={r.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{r.deadline}</b>
                   </span>
                 </span>
@@ -190,7 +213,7 @@ function ApprovalsPage() {
                   <StepDots step={r.step} />
                   {r.myTurn && (
                     <span className="flex-1 rounded-lg bg-deployed-bg/60 py-1.5 text-center text-xs font-medium text-deployed-ink">
-                      상세 검토 후 처리
+                      {t('approvals.reviewThenProcess', '상세 검토 후 처리')}
                     </span>
                   )}
                 </span>
@@ -199,7 +222,9 @@ function ApprovalsPage() {
           ))}
           {rows.length === 0 && (
             <li className="mt-10 text-center text-sm text-ink-subtle">
-              {tab === 'mine' ? '내 차례인 결재가 없습니다.' : '대기 중인 결재가 없습니다.'}
+              {tab === 'mine'
+                ? t('approvals.emptyMine', '내 차례인 결재가 없습니다.')
+                : t('approvals.emptyAll', '대기 중인 결재가 없습니다.')}
             </li>
           )}
         </ol>
@@ -225,7 +250,11 @@ function ApprovalsPage() {
                     {r.status}
                   </span>
                   <span className="ml-auto text-xs text-ink-subtle">
-                    승인자 {r.approver} · {r.requestedAt} · 기한 {r.deadline}
+                    {tf(
+                      'approvals.approverDeadline',
+                      { approver: r.approver, requestedAt: r.requestedAt, deadline: r.deadline },
+                      '승인자 {approver} · {requestedAt} · 기한 {deadline}',
+                    )}
                   </span>
                 </span>
                 <span className="mt-2 block text-[15px] font-semibold text-ink">{r.title}</span>
@@ -278,7 +307,7 @@ function ApprovalsPage() {
       {/* 승인 요청 상세 — 변경 전/후를 갈라 보여 주고, 처리도 여기서 한다 */}
       {detail && (
         <Modal
-          title="승인 요청 상세"
+          title={t('approvals.detailModalTitle', '승인 요청 상세')}
           onClose={() => {
             setDetail(null)
             setOpinion('')
@@ -291,7 +320,7 @@ function ApprovalsPage() {
               <KindChip kind={detail.kind} />
               <span className="font-mono text-xs text-ink-subtle">{detail.id}</span>
               <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
-                대기
+                {t('approvals.waitingBadge', '대기')}
               </span>
               <StepDots step={detail.step} />
             </div>
@@ -319,19 +348,21 @@ function ApprovalsPage() {
           </div>
 
           <div className="mt-4">
-            <div className="text-xs font-medium text-ink-subtle">요청 내용</div>
+            <div className="text-xs font-medium text-ink-subtle">
+              {t('approvals.label.requestContent', '요청 내용')}
+            </div>
             <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{detail.summary}</p>
           </div>
 
           <div className="mt-4">
-            <div className="text-xs font-medium text-ink-subtle">변경 항목</div>
+            <div className="text-xs font-medium text-ink-subtle">{t('approvals.label.changes', '변경 항목')}</div>
             <div className="mt-1.5 overflow-x-auto rounded-xl border border-hairline">
               <table className="w-full min-w-[480px] border-collapse text-[13px]">
                 <thead>
                   <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                    <th className="px-3 py-2 font-medium">항목</th>
-                    <th className="px-3 py-2 font-medium">변경 전</th>
-                    <th className="px-3 py-2 font-medium">변경 후</th>
+                    <th className="px-3 py-2 font-medium">{t('approvals.th.item', '항목')}</th>
+                    <th className="px-3 py-2 font-medium">{t('approvals.th.before', '변경 전')}</th>
+                    <th className="px-3 py-2 font-medium">{t('approvals.th.after', '변경 후')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -361,7 +392,7 @@ function ApprovalsPage() {
 
           <div className="mt-4 grid grid-cols-1 gap-3 pc:grid-cols-2">
             <div className="rounded-xl border border-hairline px-4 py-3">
-              <div className="text-xs font-medium text-ink-subtle">요청자</div>
+              <div className="text-xs font-medium text-ink-subtle">{t('approvals.label.requester', '요청자')}</div>
               <div className="mt-1.5 flex items-center gap-2 text-[13px]">
                 <Avatar name={detail.requester} size={24} />
                 <span>
@@ -369,16 +400,19 @@ function ApprovalsPage() {
                   <span className="ml-1.5 text-ink-subtle">{detail.requesterTeam}</span>
                 </span>
               </div>
-              <div className="mt-1 text-xs text-ink-subtle">요청일 {detail.requestedAt}</div>
+              <div className="mt-1 text-xs text-ink-subtle">
+                {tf('approvals.requestedOn', { date: detail.requestedAt }, '요청일 {date}')}
+              </div>
             </div>
             <div className="rounded-xl border border-hairline px-4 py-3">
-              <div className="text-xs font-medium text-ink-subtle">승인자</div>
+              <div className="text-xs font-medium text-ink-subtle">{t('approvals.label.approver', '승인자')}</div>
               <div className="mt-1.5 flex items-center gap-2 text-[13px]">
                 <Avatar name={detail.approver} size={24} />
                 <b className="text-ink">{detail.approver}</b>
               </div>
               <div className="mt-1 text-xs text-ink-subtle">
-                처리 기한 <b className={detail.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{detail.deadline}</b>
+                {t('approvals.label.processDeadline', '처리 기한')}{' '}
+                <b className={detail.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{detail.deadline}</b>
               </div>
             </div>
           </div>
@@ -387,7 +421,10 @@ function ApprovalsPage() {
             <>
               <div className="mt-4">
                 <label className="text-xs font-medium text-ink-subtle" htmlFor="opinion">
-                  승인 의견 <span className="text-ink-subtle">(반려 시 필수 — 무엇이 · 왜 · 다음에 무엇을)</span>
+                  {t('approvals.label.opinion', '승인 의견')}{' '}
+                  <span className="text-ink-subtle">
+                    {t('approvals.opinionHint', '(반려 시 필수 — 무엇이 · 왜 · 다음에 무엇을)')}
+                  </span>
                 </label>
                 <textarea
                   id="opinion"
@@ -418,7 +455,11 @@ function ApprovalsPage() {
             </>
           ) : (
             <p className="mt-4 rounded-lg bg-chip px-3 py-2 text-xs text-ink-subtle">
-              지금은 내 차례가 아닙니다 — {detail.step[0]}/{detail.step[1]} 단계 결재자 처리를 기다립니다.
+              {tf(
+                'approvals.notMyTurn',
+                { cur: detail.step[0], total: detail.step[1] },
+                '지금은 내 차례가 아닙니다 — {cur}/{total} 단계 결재자 처리를 기다립니다.',
+              )}
             </p>
           )}
         </Modal>

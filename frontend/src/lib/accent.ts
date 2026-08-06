@@ -11,12 +11,16 @@ import { useEffect, useState } from 'react'
 
 import { apiSend } from './api'
 
-export type Accent = 'violet' | 'blue' | 'teal' | 'green' | 'amber' | 'rose'
+export type Accent = 'navy' | 'violet' | 'blue' | 'green' | 'amber' | 'rose'
+
+export const DEFAULT_ACCENT: Accent = 'navy'
 
 export const ACCENTS: ReadonlyArray<{ key: Accent; swatch: string }> = [
+  // 현대 남색이 기본 — 스와치는 밝힌 쪽(다크 값)으로. 브랜드 원색(#002C5F)은
+  // 동그라미가 검게 보여 "무슨 색인지"가 안 읽힌다
+  { key: 'navy', swatch: '#3f74b4' },
   { key: 'violet', swatch: '#8b7cff' },
   { key: 'blue', swatch: '#63a3ff' },
-  { key: 'teal', swatch: '#3ecfbe' },
   { key: 'green', swatch: '#55cf85' },
   { key: 'amber', swatch: '#f0a84e' },
   { key: 'rose', swatch: '#f27a9d' },
@@ -27,8 +31,8 @@ const STORAGE_KEY = 'accent'
 const isAccent = (v: unknown): v is Accent => ACCENTS.some((a) => a.key === v)
 
 function apply(accent: Accent) {
-  // violet(기본)은 속성 자체를 지운다 — CSS 에 violet 블록이 없는 것과 짝
-  if (accent === 'violet') delete document.documentElement.dataset.accent
+  // 기본(현대 남색)은 속성 자체를 지운다 — CSS 에 navy 블록이 없는 것과 짝
+  if (accent === DEFAULT_ACCENT) delete document.documentElement.dataset.accent
   else document.documentElement.dataset.accent = accent
 }
 
@@ -39,7 +43,7 @@ export function applySavedAccent() {
 }
 
 export function useAccent() {
-  const [accent, setAccentState] = useState<Accent>('violet')
+  const [accent, setAccentState] = useState<Accent>(DEFAULT_ACCENT)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (isAccent(saved)) setAccentState(saved)

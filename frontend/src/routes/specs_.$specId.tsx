@@ -102,7 +102,7 @@ function SpecDetailPage() {
     return (
       <AppShell active="specs" title="사양서 관리">
         <p className="text-sm text-ink-subtle">
-          사양서를 찾을 수 없습니다.{' '}
+          {t('specDetail.notFound', '사양서를 찾을 수 없습니다.')}{' '}
           <Link to="/specs" className="text-primary underline">
             {t('specDetail.toList', '목록으로')}
           </Link>
@@ -117,14 +117,14 @@ function SpecDetailPage() {
   const saveField = (next: FieldDef) => {
     setFields((fs) => fs.map((f) => (f.no === next.no ? next : f)))
     setDirty((d) => d + 1)
-    toast(`${next.name} 필드를 수정했습니다`)
+    toast(tf('specDetail.toast.fieldUpdated', { name: next.name }, '{name} 필드를 수정했습니다'))
   }
 
   const saveDraft = () => {
     const at = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
     localStorage.setItem(draftKey, JSON.stringify({ at, fields }))
     setDraftInfo(null)
-    toast(`임시저장했습니다 (${at})`)
+    toast(tf('specDetail.toast.draftSaved', { at }, '임시저장했습니다 ({at})'))
   }
 
   const restoreDraft = () => {
@@ -221,7 +221,12 @@ function SpecDetailPage() {
             onClick={() => {
               setDirty(0)
               localStorage.removeItem(draftKey)
-              toast('사양서에 반영했습니다 — 승인 요청은 워크플로우에서 진행합니다')
+              toast(
+                t(
+                  'specDetail.toast.savedAll',
+                  '사양서에 반영했습니다 — 승인 요청은 워크플로우에서 진행합니다',
+                ),
+              )
             }}
             disabled={dirty === 0}
             className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
@@ -235,7 +240,11 @@ function SpecDetailPage() {
       {draftInfo && (
         <div className="anim-fade-in mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-review-ink/30 bg-review-bg px-4 py-3 text-[13px] text-review-ink">
           <span>
-            임시저장본이 있습니다 ({draftInfo}). 이어서 작업할까요? 지금 화면은 마지막 반영본입니다.
+            {tf(
+              'specDetail.draftBanner',
+              { at: draftInfo },
+              '임시저장본이 있습니다 ({at}). 이어서 작업할까요? 지금 화면은 마지막 반영본입니다.',
+            )}
           </span>
           <span className="flex gap-2">
             <button
@@ -259,7 +268,9 @@ function SpecDetailPage() {
       {/* 배포 워크플로우 */}
       <div className="mt-4 rounded-xl border border-hairline bg-surface px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="text-xs font-medium text-ink-subtle">배포 워크플로우</span>
+          <span className="text-xs font-medium text-ink-subtle">
+            {t('specDetail.workflowLabel', '배포 워크플로우')}
+          </span>
           <WorkflowStepper current={submitted ? 4 : workflowIndex(cur.status)} />
         </div>
       </div>
@@ -268,9 +279,14 @@ function SpecDetailPage() {
       <section className="mt-5 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-ink">필드 목록 ({fields.length}개)</h2>
+            <h2 className="text-sm font-semibold text-ink">
+              {tf('specDetail.fieldListTitle', { n: fields.length }, '필드 목록 ({n}개)')}
+            </h2>
             <p className="mt-0.5 text-xs text-ink-subtle">
-              행을 누르면 우측에서 편집합니다 · 표는 자기 상자 안에서만 가로로 흐릅니다
+              {t(
+                'specDetail.fieldListHint',
+                '행을 누르면 우측에서 편집합니다 · 표는 자기 상자 안에서만 가로로 흐릅니다',
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
@@ -283,21 +299,25 @@ function SpecDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => toast('Excel 다운로드 — 본개발에서 연결됩니다')}
+              onClick={() =>
+                toast(t('specDetail.toast.excelDownload', 'Excel 다운로드 — 본개발에서 연결됩니다'))
+              }
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('specDetail.excelDownload', 'Excel 다운로드')}
             </button>
             <button
               type="button"
-              onClick={() => toast('엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다')}
+              onClick={() =>
+                toast(t('specDetail.toast.excelUpload', '엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다'))
+              }
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('specDetail.excelUpload', '엑셀 업로드')}
             </button>
             <button
               type="button"
-              onClick={() => toast('필드 추가 — 본개발에서 연결됩니다')}
+              onClick={() => toast(t('specDetail.toast.addField', '필드 추가 — 본개발에서 연결됩니다'))}
               className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               {t('specDetail.addField', '+ 필드 추가')}
@@ -340,15 +360,15 @@ function SpecDetailPage() {
             <thead>
               <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
                 <th className="px-3 py-2.5 font-medium">#</th>
-                <th className="px-3 py-2.5 font-medium">카테고리</th>
-                <th className="px-3 py-2.5 font-medium">필드명</th>
-                <th className="px-3 py-2.5 font-medium">타입</th>
-                <th className="px-3 py-2.5 font-medium">필수</th>
-                <th className="px-3 py-2.5 text-right font-medium">최대길이</th>
-                <th className="px-3 py-2.5 font-medium">설명</th>
-                <th className="px-3 py-2.5 font-medium">유효성</th>
-                <th className="px-3 py-2.5 font-medium">담당자</th>
-                <th className="px-3 py-2.5 font-medium">상태</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.category', '카테고리')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.name', '필드명')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.type', '타입')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.required', '필수')}</th>
+                <th className="px-3 py-2.5 text-right font-medium">{t('specDetail.th.maxLen', '최대길이')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.desc', '설명')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.rule', '유효성')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.owner', '담당자')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.status', '상태')}</th>
               </tr>
             </thead>
             <tbody>
@@ -392,7 +412,7 @@ function SpecDetailPage() {
               {visible.length === 0 && (
                 <tr>
                   <td colSpan={10} className="px-3 py-8 text-center text-sm text-ink-subtle">
-                    조건에 맞는 필드가 없습니다.
+                    {t('specDetail.fieldsEmpty', '조건에 맞는 필드가 없습니다.')}
                   </td>
                 </tr>
               )}
@@ -403,7 +423,10 @@ function SpecDetailPage() {
 
       {/* 행 편집 — 목록을 훑다가 한 필드에 집중한다 (규약 §1 목록→상세 짝) */}
       {editing && (
-        <Drawer title={`필드 편집 — ${editing.name}`} onClose={() => setEditing(null)}>
+        <Drawer
+          title={tf('specDetail.editFieldTitle', { name: editing.name }, '필드 편집 — {name}')}
+          onClose={() => setEditing(null)}
+        >
           {(close) => (
             <FieldEditor
               field={editing}
@@ -419,7 +442,10 @@ function SpecDetailPage() {
 
       {/* 버전 이력 — 타임라인 */}
       {history && (
-        <Modal title={`버전 이력 — ${spec.name}`} onClose={() => setHistory(false)}>
+        <Modal
+          title={tf('specDetail.historyTitle', { name: spec.name }, '버전 이력 — {name}')}
+          onClose={() => setHistory(false)}
+        >
           <ol className="space-y-2.5">
             {spec.history.map((v, i) => (
               <li
@@ -431,12 +457,12 @@ function SpecDetailPage() {
                   <StatusBadge status={v.status} />
                   {i === 0 && (
                     <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      현재
+                      {t('specDetail.currentBadge', '현재')}
                     </span>
                   )}
                   <span className="w-full text-xs text-ink-muted">{v.summary}</span>
                   <span className="w-full text-[11px] text-ink-subtle">
-                    작성 {v.author} · {v.date}
+                    {tf('specDetail.authoredBy', { author: v.author, date: v.date }, '작성 {author} · {date}')}
                   </span>
                 </span>
                 <button
@@ -465,20 +491,37 @@ function SpecDetailPage() {
 
       {/* 승인 요청 상신 — 무엇이 올라가는지 확인시키고 상신한다 (사양서 → 승인 관리 연결) */}
       {requesting && (
-        <Modal title="승인 요청 상신" onClose={() => setRequesting(false)}>
+        <Modal
+          title={t('specDetail.approvalModalTitle', '승인 요청 상신')}
+          onClose={() => setRequesting(false)}
+        >
           <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5 text-[13px]">
             <b className="text-ink">
               {spec.name} {cur.version}
             </b>
-            <span className="ml-2 text-ink-subtle">필드 {fields.length}개 · 수정 {dirty}건 포함</span>
+            <span className="ml-2 text-ink-subtle">
+              {tf(
+                'specDetail.approvalSummary',
+                { n: fields.length, m: dirty },
+                '필드 {n}개 · 수정 {m}건 포함',
+              )}
+            </span>
           </div>
           <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
-            상신하면 결재선(검토 → 최종 승인)을 따라 승인 관리에 등록되고, 승인 완료 전까지
-            배포에 포함할 수 없습니다.
+            {t(
+              'specDetail.approvalDesc',
+              '상신하면 결재선(검토 → 최종 승인)을 따라 승인 관리에 등록되고, 승인 완료 전까지 배포에 포함할 수 없습니다.',
+            )}
           </p>
           <div className="mt-3 rounded-xl border border-hairline px-4 py-3 text-[13px]">
-            <div className="text-xs text-ink-subtle">승인자</div>
-            <div className="mt-1 font-medium text-ink">한동현 (1차) → 김현대 (최종)</div>
+            <div className="text-xs text-ink-subtle">{t('specDetail.approverLabel', '승인자')}</div>
+            <div className="mt-1 font-medium text-ink">
+              {tf(
+                'specDetail.approverChain',
+                { primary: '한동현', final: '김현대' },
+                '{primary} (1차) → {final} (최종)',
+              )}
+            </div>
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -495,7 +538,12 @@ function SpecDetailPage() {
                 await simulate()
                 setRequesting(false)
                 setSubmitted(true)
-                toast('승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요')
+                toast(
+                  t(
+                    'specDetail.toast.submitted',
+                    '승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요',
+                  ),
+                )
               }}
             >
               {t('specDetail.submit', '상신')}
@@ -532,20 +580,20 @@ function FieldEditor({
           </span>
         </div>
         <div>
-          <span className="text-xs font-medium text-ink-subtle">타입</span>
+          <span className="text-xs font-medium text-ink-subtle">{t('specDetail.label.type', '타입')}</span>
           <div className="mt-1.5">
             <ChipSelect options={TYPE_OPTIONS} value={draft.type} onChange={(v) => set('type', v)} mono />
           </div>
         </div>
         <div>
-          <span className="text-xs font-medium text-ink-subtle">상태</span>
+          <span className="text-xs font-medium text-ink-subtle">{t('specDetail.label.status', '상태')}</span>
           <div className="mt-1.5">
             <ChipSelect options={STATUS_OPTIONS} value={draft.status} onChange={(v) => set('status', v)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">최대길이</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('specDetail.label.maxLen', '최대길이')}</span>
             <input
               type="number"
               value={draft.maxLen ?? ''}
@@ -555,12 +603,16 @@ function FieldEditor({
             />
           </label>
           <div className="mt-6 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
-            <span className="text-[13px] text-ink">필수 입력</span>
-            <Switch checked={draft.required} onChange={(v) => set('required', v)} label="필수 입력" />
+            <span className="text-[13px] text-ink">{t('specDetail.label.requiredInput', '필수 입력')}</span>
+            <Switch
+              checked={draft.required}
+              onChange={(v) => set('required', v)}
+              label={t('specDetail.label.requiredInput', '필수 입력')}
+            />
           </div>
         </div>
         <label className="block">
-          <span className="text-xs font-medium text-ink-subtle">설명</span>
+          <span className="text-xs font-medium text-ink-subtle">{t('specDetail.label.desc', '설명')}</span>
           <textarea
             value={draft.desc}
             onChange={(e) => set('desc', e.target.value)}
@@ -569,7 +621,9 @@ function FieldEditor({
           />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-ink-subtle">유효성 규칙 (정규식)</span>
+          <span className="text-xs font-medium text-ink-subtle">
+            {t('specDetail.label.rule', '유효성 규칙 (정규식)')}
+          </span>
           <input
             value={draft.rule ?? ''}
             onChange={(e) => set('rule', e.target.value === '' ? null : e.target.value)}
@@ -578,7 +632,7 @@ function FieldEditor({
           />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-ink-subtle">담당자</span>
+          <span className="text-xs font-medium text-ink-subtle">{t('specDetail.label.owner', '담당자')}</span>
           <input
             value={draft.owner}
             onChange={(e) => set('owner', e.target.value)}

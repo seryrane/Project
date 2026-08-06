@@ -27,7 +27,7 @@ interface EmbedItem {
  * 따서 아이프레임으로"). ⚠ SSO 확정 전에는 공개/티켓 링크만 표출된다.
  */
 function KpiIviPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const [mode, setMode] = useState<'tableau' | 'native'>('tableau')
   const [current, setCurrent] = useState(0)
@@ -39,14 +39,16 @@ function KpiIviPage() {
   const { data: workbooks, reload } = useApi<Array<EmbedItem>>('/embeds', [])
 
   const urlHint =
-    newUrl !== '' && !newUrl.startsWith('https://') ? '워크북 주소는 https 로 시작해야 합니다' : ''
+    newUrl !== '' && !newUrl.startsWith('https://')
+      ? t('kpi-ivi.urlHint', '워크북 주소는 https 로 시작해야 합니다')
+      : ''
   const active: EmbedItem | undefined =
     workbooks.length > 0 ? workbooks[Math.min(current, workbooks.length - 1)] : undefined
 
   const trendData = iviTrend.days.map((d, i) => ({ date: d, value: iviTrend.appLaunch[i] }))
 
   return (
-    <AppShell active="kpi-ivi" title="인포 IVI KPI">
+    <AppShell active="kpi-ivi" title={t('nav.kpi-ivi', '인포 IVI KPI')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.kpi-ivi', '인포 IVI KPI')}</h1>
@@ -117,10 +119,13 @@ function KpiIviPage() {
             ) : (
               /* 빈 자리에 이유를 적는다 (규약 17절) — 아직 없음 ≠ 고장 */
               <div className="flex min-h-[320px] flex-col items-center justify-center gap-2 text-center">
-                <p className="text-[15px] font-semibold text-ink">등록된 워크북이 없습니다</p>
+                <p className="text-[15px] font-semibold text-ink">{t('kpi-ivi.empty.title', '등록된 워크북이 없습니다')}</p>
                 <p className="max-w-md text-[13px] leading-relaxed text-ink-subtle">
-                  [+ 워크북 등록]으로 Tableau 임베드 링크를 등록하면 이 자리에 바로
-                  표시됩니다. 등록 권한이 없다면 KPI 담당자에게 요청하세요.
+                  {tf(
+                    'kpi-ivi.empty.desc',
+                    { addLabel: t('kpi-ivi.addWorkbook') },
+                    '[+ {addLabel}]으로 Tableau 임베드 링크를 등록하면 이 자리에 바로 표시됩니다. 등록 권한이 없다면 KPI 담당자에게 요청하세요.',
+                  )}
                 </p>
               </div>
             )}
@@ -134,7 +139,7 @@ function KpiIviPage() {
                   const next = workbooks.filter((w) => w.id !== active.id)
                   void apiSend('PUT', '/embeds', { items: next }).then(() => reload())
                   setCurrent(0)
-                  toast(`${active.title} 워크북을 내렸습니다`)
+                  toast(tf('kpi-ivi.toast.removed', { title: active.title }))
                 }}
                 className="shrink-0 text-[11px] text-ink-subtle transition-colors hover:text-danger-ink"
               >
@@ -147,14 +152,47 @@ function KpiIviPage() {
         /* 자체 UI — 마트 집계 기반. 2차 오픈부터 웹 전환의 종착점 */
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 pc:grid-cols-4">
-            <StatTile label="앱 일 실행 수" value="1,062" delta="+6.4%" deltaGood spark={iviTrend.appLaunch} caption="최근 7일" />
-            <StatTile label="OTA 업데이트 완료율" value="95.1%" delta="+0.5%p" deltaGood spark={iviTrend.otaRate} caption="최근 7일" />
-            <StatTile label="음성 명령 성공률" value="88.7%" delta="+1.1%p" deltaGood caption="일 1회 집계" />
-            <StatTile label="내비 연동 오류" value="34건" delta="-12건" deltaGood caption="어제 기준" />
+            <StatTile
+              label={t('kpi-ivi.stat.appLaunch', '앱 일 실행 수')}
+              value="1,062"
+              delta="+6.4%"
+              deltaGood
+              spark={iviTrend.appLaunch}
+              caption={t('kpi-ivi.caption.last7d', '최근 7일')}
+            />
+            <StatTile
+              label={t('kpi-ivi.stat.otaRate', 'OTA 업데이트 완료율')}
+              value="95.1%"
+              delta="+0.5%p"
+              deltaGood
+              spark={iviTrend.otaRate}
+              caption={t('kpi-ivi.caption.last7d', '최근 7일')}
+            />
+            <StatTile
+              label={t('kpi-ivi.stat.voiceSuccess', '음성 명령 성공률')}
+              value="88.7%"
+              delta="+1.1%p"
+              deltaGood
+              caption={t('kpi-ivi.caption.dailyOnce', '일 1회 집계')}
+            />
+            <StatTile
+              label={t('kpi-ivi.stat.naviError', '내비 연동 오류')}
+              value="34건"
+              delta="-12건"
+              deltaGood
+              caption={t('kpi-ivi.caption.yesterday', '어제 기준')}
+            />
           </div>
           <div className="anim-fade-up mt-5 [animation-delay:80ms]">
-            <ChartCard title="IVI 앱 일 실행 추이" subtitle="mart_ivi_usage · 일 1회 배치 (FR-072)">
-              <TrendLineChart data={trendData} unit="회" labels={{ main: '최근 7일', compare: '이전' }} />
+            <ChartCard
+              title={t('kpi-ivi.chart.title', 'IVI 앱 일 실행 추이')}
+              subtitle={t('kpi-ivi.chart.subtitle', 'mart_ivi_usage · 일 1회 배치 (FR-072)')}
+            >
+              <TrendLineChart
+                data={trendData}
+                unit="회"
+                labels={{ main: t('kpi-ivi.caption.last7d', '최근 7일'), compare: t('kpi-ivi.legend.prev', '이전') }}
+              />
             </ChartCard>
           </div>
         </>
@@ -162,13 +200,17 @@ function KpiIviPage() {
 
       {/* 워크북 등록 — 짧게 적고 닫는 일이라 모달 */}
       {adding && (
-        <Modal title="Tableau 워크북 등록" onClose={() => setAdding(false)}>
+        <Modal title={t('kpi-ivi.modal.title', 'Tableau 워크북 등록')} onClose={() => setAdding(false)}>
           <p className="text-[13px] leading-relaxed text-ink-muted">
-            Tableau 의 [공유 → 임베드 링크]를 붙여넣으세요. SSO 연계 전에는 공개(Tableau
-            Public)·티켓 링크만 표시됩니다.
+            {t(
+              'kpi-ivi.modal.desc',
+              'Tableau 의 [공유 → 임베드 링크]를 붙여넣으세요. SSO 연계 전에는 공개(Tableau Public)·티켓 링크만 표시됩니다.',
+            )}
           </p>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">표시 이름 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('kpi-ivi.label.title', '표시 이름')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -177,7 +219,9 @@ function KpiIviPage() {
             />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">임베드 URL <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('kpi-ivi.label.url', '임베드 URL')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
@@ -210,7 +254,7 @@ function KpiIviPage() {
                 setNewTitle('')
                 setNewUrl('')
                 setCurrent(next.length - 1)
-                toast('워크북을 등록했습니다 — 바로 표시됩니다')
+                toast(t('kpi-ivi.toast.registered', '워크북을 등록했습니다 — 바로 표시됩니다'))
               }}
             >
               {t('kpi-ivi.register')}

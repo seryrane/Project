@@ -29,7 +29,7 @@ function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
 }
 
 function ValidationEnginePage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const [engines, setEngines] = useState(validationEngines)
   const [expanded, setExpanded] = useState<string | null>(validationEngines[0].id)
@@ -53,7 +53,7 @@ function ValidationEnginePage() {
 
   const run = (e: ValidationEngine) => {
     if (e.id in progress) return // 두 번 눌리지 않게 막는다
-    toast(`${e.name} 즉시 검증을 시작합니다`)
+    toast(tf('engine.toast.started', { name: e.name }, '{name} 즉시 검증을 시작합니다'))
     setProgress((p) => ({ ...p, [e.id]: 3 }))
     timers.current[e.id] = setInterval(() => {
       setProgress((p) => {
@@ -64,8 +64,12 @@ function ValidationEnginePage() {
           const errors = e.id === 'ENG-001' ? 12 : e.id === 'ENG-002' ? 4 : 0
           toast(
             errors > 0
-              ? `${e.name} 완료 — 오류 ${errors}건 검출 · 검증 결과 조회에서 확인하세요`
-              : `${e.name} 완료 — 오류 없음 (통과)`,
+              ? tf(
+                  'engine.toast.doneWithErrors',
+                  { name: e.name, n: errors },
+                  '{name} 완료 — 오류 {n}건 검출 · 검증 결과 조회에서 확인하세요',
+                )
+              : tf('engine.toast.donePass', { name: e.name }, '{name} 완료 — 오류 없음 (통과)'),
           )
           setEngines((list) =>
             list.map((x) => (x.id === e.id ? { ...x, runs: x.runs + 1, lastRun: '방금' } : x)),
@@ -79,14 +83,28 @@ function ValidationEnginePage() {
   }
 
   const stats = [
-    { label: '전체 엔진', value: `${engines.length}개`, sub: `활성 ${engines.filter((e) => e.active).length}개` },
     {
-      label: '등록 스케줄',
-      value: `${Object.values(engineSchedules).flat().length}개`,
-      sub: `활성 ${Object.values(engineSchedules).flat().filter((s) => s.active).length}개`,
+      label: t('engine.stat.total', '전체 엔진'),
+      value: tf('engine.countUnit', { n: engines.length }, '{n}개'),
+      sub: tf('engine.activeUnit', { n: engines.filter((e) => e.active).length }, '활성 {n}개'),
     },
-    { label: '오늘 실행', value: '2회', sub: '성공 1 / 부분성공 1' },
-    { label: '누적 오류', value: '56건', sub: '최근 7일 기준', cls: 'text-danger-ink' },
+    {
+      label: t('engine.stat.schedules', '등록 스케줄'),
+      value: tf('engine.countUnit', { n: Object.values(engineSchedules).flat().length }, '{n}개'),
+      sub: tf(
+        'engine.activeUnit',
+        { n: Object.values(engineSchedules).flat().filter((s) => s.active).length },
+        '활성 {n}개',
+      ),
+    },
+    // '성공'/'부분성공'은 엔진 실행 결과 상태값이라 그대로 둔다 (규약)
+    { label: t('engine.stat.todayRuns', '오늘 실행'), value: tf('engine.timesUnit', { n: 2 }, '{n}회'), sub: '성공 1 / 부분성공 1' },
+    {
+      label: t('engine.stat.cumulativeErrors', '누적 오류'),
+      value: tf('engine.casesUnit', { n: 56 }, '{n}건'),
+      sub: t('engine.last7days', '최근 7일 기준'),
+      cls: 'text-danger-ink',
+    },
   ]
 
   return (
@@ -151,18 +169,27 @@ function ValidationEnginePage() {
                         e.active ? 'bg-deployed-bg text-deployed-ink' : 'bg-chip text-ink-subtle'
                       }`}
                     >
-                      {e.active ? '활성' : '비활성'}
+                      {e.active ? t('engine.status.active', '활성') : t('engine.status.inactive', '비활성')}
                     </span>
                     <ResultBadge result={e.lastResult} />
                   </span>
                   <span className="mt-1 block text-[13px] text-ink-muted">{e.desc}</span>
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
                     <span>
-                      대상: <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-[11px]">{e.targetTable}</code>
+                      {t('engine.label.target', '대상')}:{' '}
+                      <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-[11px]">{e.targetTable}</code>
                     </span>
-                    <span className="tabular-nums">총 실행: {e.runs}회</span>
-                    <span className="tabular-nums">최근: {e.lastRun}</span>
-                    <span>스케줄: {schedules.filter((s3) => schedActive[s3.id] ?? s3.active).length}개 활성</span>
+                    <span className="tabular-nums">{tf('engine.totalRuns', { n: e.runs }, '총 실행: {n}회')}</span>
+                    <span className="tabular-nums">
+                      {t('engine.label.recent', '최근')}: {e.lastRun}
+                    </span>
+                    <span>
+                      {tf(
+                        'engine.scheduleActive',
+                        { n: schedules.filter((s3) => schedActive[s3.id] ?? s3.active).length },
+                        '스케줄: {n}개 활성',
+                      )}
+                    </span>
                   </span>
                 </button>
                 <span className="flex shrink-0 items-center gap-1.5">
@@ -246,8 +273,10 @@ function ValidationEnginePage() {
                         <pre className="font-mono text-xs leading-relaxed text-sidebar-ink">{e.code}</pre>
                       </div>
                       <p className="mt-2 rounded-lg bg-chip px-3 py-2 text-xs text-ink-muted">
-                        <b className="text-ink">입력:</b> records (list[dict]) — 검증 대상 레코드 ·{' '}
-                        <b className="text-ink">반환:</b> errors (list[dict]) — 오류 목록
+                        <b className="text-ink">{t('engine.codeHint.input', '입력')}:</b> records (list[dict]) —{' '}
+                        {t('engine.codeHint.inputDesc', '검증 대상 레코드')} ·{' '}
+                        <b className="text-ink">{t('engine.codeHint.output', '반환')}:</b> errors (list[dict]) —{' '}
+                        {t('engine.codeHint.outputDesc', '오류 목록')}
                       </p>
                     </>
                   ) : (
@@ -264,7 +293,11 @@ function ValidationEnginePage() {
                             </span>
                             <span className="font-medium text-ink">{s3.time}</span>
                             <span className="text-xs text-ink-subtle">
-                              다음 실행: <b className="tabular-nums text-ink-muted">{on ? s3.next : '— (비활성)'}</b> · 최근:{' '}
+                              {t('engine.label.nextRun', '다음 실행')}:{' '}
+                              <b className="tabular-nums text-ink-muted">
+                                {on ? s3.next : t('engine.inactiveDash', '— (비활성)')}
+                              </b>{' '}
+                              · {t('engine.label.recent', '최근')}:{' '}
                               <span className="tabular-nums">{s3.last}</span>
                             </span>
                             <span className="ml-auto flex items-center gap-2">
@@ -275,7 +308,18 @@ function ValidationEnginePage() {
                                 aria-label={t('engine.schedToggleAria', '스케줄 활성화')}
                                 onClick={() => {
                                   setSchedActive((m) => ({ ...m, [s3.id]: !on }))
-                                  toast(`스케줄을 ${on ? '중지' : '활성화'}했습니다 — ${on ? '자동 실행이 멈춥니다' : s3.time}`)
+                                  toast(
+                                    on
+                                      ? t(
+                                          'engine.toast.scheduleStopped',
+                                          '스케줄을 중지했습니다 — 자동 실행이 멈춥니다',
+                                        )
+                                      : tf(
+                                          'engine.toast.scheduleActivated',
+                                          { time: s3.time },
+                                          '스케줄을 활성화했습니다 — {time}',
+                                        ),
+                                  )
                                 }}
                                 className={`h-6 w-11 rounded-full p-0.5 transition-colors ${on ? 'bg-primary' : 'bg-chip-strong'}`}
                               >
@@ -306,13 +350,19 @@ function ValidationEnginePage() {
       {/* 엔진 등록/수정 — 함수 시그니처 규칙을 화면이 미리 말한다 */}
       {editing && (
         <Modal
-          title={editing === 'new' ? '검증 엔진 등록' : '검증 엔진 수정'}
+          title={
+            editing === 'new'
+              ? t('engine.modal.new', '검증 엔진 등록')
+              : t('engine.modal.edit', '검증 엔진 수정')
+          }
           onClose={() => setEditing(null)}
           wide
         >
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[1fr_180px]">
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">엔진명 <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('engine.label.name', '엔진명')} <b className="text-danger-ink">*</b>
+              </span>
               <input
                 defaultValue={editing === 'new' ? '' : editing.name}
                 placeholder={t('engine.namePlaceholder', '예: NULL 값 검증 엔진')}
@@ -320,7 +370,7 @@ function ValidationEnginePage() {
               />
             </label>
             <div>
-              <span className="text-xs font-medium text-ink-subtle">상태</span>
+              <span className="text-xs font-medium text-ink-subtle">{t('engine.label.status', '상태')}</span>
               <div className="mt-2">
                 <ChipSelect
                   options={STATUS_KEYS.map((k) => t(`engine.status.${k}`))}
@@ -334,7 +384,7 @@ function ValidationEnginePage() {
             </div>
           </div>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">설명</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('engine.label.desc', '설명')}</span>
             <input
               defaultValue={editing === 'new' ? '' : editing.desc}
               placeholder={t('engine.descPlaceholder', '엔진 설명')}
@@ -343,14 +393,18 @@ function ValidationEnginePage() {
           </label>
           <div className="mt-3 grid grid-cols-1 gap-3 pc:grid-cols-2">
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">대상 테이블</span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('engine.label.targetTable', '대상 테이블')}
+              </span>
               <input
                 defaultValue={editing === 'new' ? 'spec_fields' : editing.targetTable}
                 className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">대상 필드 <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('engine.label.targetFields', '대상 필드')} <b className="text-danger-ink">*</b>
+              </span>
               <input
                 defaultValue={editing === 'new' ? '' : editing.targetFields}
                 placeholder={t('engine.fieldsPlaceholder', 'item_code, item_name (쉼표 구분)')}
@@ -361,9 +415,11 @@ function ValidationEnginePage() {
           <label className="mt-3 block">
             <span className="flex items-center justify-between text-xs font-medium text-ink-subtle">
               <span>
-                Python 검증 함수 <b className="text-danger-ink">*</b>
+                {t('engine.label.pyFunction', 'Python 검증 함수')} <b className="text-danger-ink">*</b>
               </span>
-              <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px]">Python 3.x 문법</span>
+              <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px]">
+                {t('engine.pySyntaxBadge', 'Python 3.x 문법')}
+              </span>
             </span>
             <textarea
               defaultValue={editing === 'new' ? ENGINE_TEMPLATE : editing.code}
@@ -373,8 +429,10 @@ function ValidationEnginePage() {
             />
           </label>
           <p className="mt-2 rounded-lg border border-review-ink/30 bg-review-bg px-3 py-2 text-xs text-review-ink">
-            ⚠ 함수는 반드시 <code className="font-mono">def validate_*(records)</code> 형태이고{' '}
-            <code className="font-mono">list</code>를 반환해야 합니다.
+            {t(
+              'engine.functionRuleHint',
+              '⚠ 함수는 반드시 def validate_*(records) 형태이고 list를 반환해야 합니다.',
+            )}
           </p>
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -388,7 +446,11 @@ function ValidationEnginePage() {
               type="button"
               onClick={() => {
                 setEditing(null)
-                toast(editing === 'new' ? '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요' : '엔진 수정을 저장했습니다')
+                toast(
+                  editing === 'new'
+                    ? t('engine.toast.registered', '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요')
+                    : t('engine.toast.editSaved', '엔진 수정을 저장했습니다'),
+                )
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
@@ -400,15 +462,19 @@ function ValidationEnginePage() {
 
       {/* 스케줄 추가 */}
       {scheduling && (
-        <Modal title="스케줄 추가" onClose={() => setScheduling(false)}>
+        <Modal title={t('engine.modal.addSchedule', '스케줄 추가')} onClose={() => setScheduling(false)}>
           <div>
-            <span className="text-xs font-medium text-ink-subtle">검증 엔진 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('engine.label.engine', '검증 엔진')} <b className="text-danger-ink">*</b>
+            </span>
             <div className="mt-1.5">
               <ChipSelect options={engines.map((e) => e.name)} value={schedEngine} onChange={setSchedEngine} />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">실행 주기 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('engine.label.freq', '실행 주기')} <b className="text-danger-ink">*</b>
+            </span>
             <div className="mt-1.5">
               <ChipSelect
                 options={FREQ_KEYS.map((k) => t(`engine.freq.${k}`))}
@@ -421,7 +487,9 @@ function ValidationEnginePage() {
             </div>
           </div>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">실행 시각 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('engine.label.time', '실행 시각')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               type="time"
               defaultValue="02:00"
@@ -430,8 +498,10 @@ function ValidationEnginePage() {
           </label>
           <div className="mt-4 flex items-center justify-between rounded-xl bg-chip px-3.5 py-3">
             <span className="text-[13px]">
-              <b className="text-ink">스케줄 활성화</b>
-              <span className="block text-xs text-ink-subtle">비활성화 시 자동 실행이 중단됩니다</span>
+              <b className="text-ink">{t('engine.schedToggleAria', '스케줄 활성화')}</b>
+              <span className="block text-xs text-ink-subtle">
+                {t('engine.scheduleOffHint', '비활성화 시 자동 실행이 중단됩니다')}
+              </span>
             </span>
             <Switch checked={schedOn} onChange={setSchedOn} label={t('engine.schedToggleAria', '스케줄 활성화')} />
           </div>
@@ -447,7 +517,12 @@ function ValidationEnginePage() {
               type="button"
               onClick={() => {
                 setScheduling(false)
-                toast('스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다')
+                toast(
+                  t(
+                    'engine.toast.scheduleRegistered',
+                    '스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다',
+                  ),
+                )
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
@@ -459,12 +534,13 @@ function ValidationEnginePage() {
 
       {/* 삭제 확인 — 되돌릴 수 없는 것에만 묻는다 (규약 §2) */}
       {deleting && (
-        <Modal title="엔진 삭제" onClose={() => setDeleting(null)}>
+        <Modal title={t('engine.modal.delete', '엔진 삭제')} onClose={() => setDeleting(null)}>
           <p className="text-[13px] leading-relaxed text-ink-muted">
-            <b className="text-ink">{deleting.name}</b>을 삭제합니다. 연결된 스케줄{' '}
-            <b className="tabular-nums text-ink">{(engineSchedules[deleting.id] ?? []).length}개</b>도 함께
-            삭제되고, <b className="text-danger-ink">되돌릴 수 없습니다.</b> 지난 검증 결과·리포트는
-            남습니다.
+            {tf(
+              'engine.deleteConfirm',
+              { name: deleting.name, n: (engineSchedules[deleting.id] ?? []).length },
+              '{name}을 삭제합니다. 연결된 스케줄 {n}개도 함께 삭제되고, 되돌릴 수 없습니다. 지난 검증 결과·리포트는 남습니다.',
+            )}
           </p>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -479,7 +555,7 @@ function ValidationEnginePage() {
               onClick={() => {
                 setEngines((list) => list.filter((x) => x.id !== deleting.id))
                 setDeleting(null)
-                toast(`${deleting.name}을 삭제했습니다`)
+                toast(tf('engine.toast.deleted', { name: deleting.name }, '{name}을 삭제했습니다'))
               }}
               className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
             >

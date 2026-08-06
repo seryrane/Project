@@ -157,13 +157,13 @@ def test_self_lock_submission_rejected() -> None:
 def test_prefs_roundtrip() -> None:
     """언어·포인트 색상은 계정 설정 — 저장하면 /me 가 돌려준다. 엉뚱한 값은 기본값으로."""
     assert client.put("/api/me/locale", json={"locale": "en"}).status_code == 200
-    assert client.put("/api/me/accent", json={"accent": "teal"}).status_code == 200
+    assert client.put("/api/me/accent", json={"accent": "navy"}).status_code == 200
     me = client.get("/api/me").json()
-    assert me["locale"] == "en" and me["accent"] == "teal"
+    assert me["locale"] == "en" and me["accent"] == "navy"
     client.put("/api/me/locale", json={"locale": "xx"})
     client.put("/api/me/accent", json={"accent": "neon"})
     me = client.get("/api/me").json()
-    assert me["locale"] == "ko" and me["accent"] == "violet"
+    assert me["locale"] == "ko" and me["accent"] == "navy"
 
 
 def test_nav_label_en_edit() -> None:

@@ -29,7 +29,7 @@ def current_user(authorization: str | None) -> dict[str, Any]:
         user = {**ME, "gradeName": role["name"]}
     # 언어·포인트 색상은 사람마다 고른다 (규약 §4-1) — 사용자 설정 정본
     user["locale"] = db.kv_get(f"locale:{user['id']}") or "ko"
-    user["accent"] = db.kv_get(f"accent:{user['id']}") or "violet"
+    user["accent"] = db.kv_get(f"accent:{user['id']}") or "navy"
     return user
 
 
@@ -97,8 +97,8 @@ def put_locale(body: dict[str, Any], authorization: str | None = Header(default=
 def put_accent(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, str]:
     """포인트 색상 — 개인 설정. 선택지 정본은 프런트 lib/accent.ts 와 1:1."""
     accent = body.get("accent")
-    if accent not in ("violet", "blue", "teal", "green", "amber", "rose"):
-        accent = "violet"
+    if accent not in ("navy", "violet", "blue", "green", "amber", "rose"):
+        accent = "navy"  # 기본 = 현대 남색
     user = current_user(authorization)
     db.kv_put(f"accent:{user['id']}", accent)
     return {"status": "ok"}

@@ -11,20 +11,41 @@ import type { ValidationReport } from '#/data/validationReports'
 export const Route = createFileRoute('/validation-reports')({ component: ValidationReportsPage })
 
 function ValidationReportsPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<ValidationReport | null>(null)
   const [published, setPublished] = useState<Record<string, boolean>>({})
 
   const stats = [
-    { label: '전체 리포트', value: `${validationReports.length}건`, sub: `발행 ${validationReports.filter((r) => r.status === '발행').length}건` },
-    { label: '이번 주 생성', value: '3건', sub: '자동 1 + 수동 2' },
-    { label: '최다 오류 유형', value: 'NULL_VALUE', sub: '누적 55건', cls: 'text-danger-ink' },
     {
-      label: '임시저장',
-      value: `${validationReports.filter((r) => r.status === '임시저장' && !published[r.id]).length}건`,
-      sub: '발행 대기 중',
+      label: t('reports.stat.total', '전체 리포트'),
+      value: tf('reports.countUnit', { n: validationReports.length }, '{n}건'),
+      sub: tf(
+        'reports.publishedUnit',
+        { n: validationReports.filter((r) => r.status === '발행').length },
+        '발행 {n}건',
+      ),
+    },
+    {
+      label: t('reports.stat.createdThisWeek', '이번 주 생성'),
+      value: tf('reports.countUnit', { n: 3 }, '{n}건'),
+      sub: t('reports.autoManualSub', '자동 1 + 수동 2'),
+    },
+    {
+      label: t('reports.stat.topErrorType', '최다 오류 유형'),
+      value: 'NULL_VALUE',
+      sub: tf('reports.cumulativeUnit', { n: 55 }, '누적 {n}건'),
+      cls: 'text-danger-ink',
+    },
+    {
+      label: t('reports.stat.drafts', '임시저장'),
+      value: tf(
+        'reports.countUnit',
+        { n: validationReports.filter((r) => r.status === '임시저장' && !published[r.id]).length },
+        '{n}건',
+      ),
+      sub: t('reports.publishPending', '발행 대기 중'),
       cls: 'text-review-ink',
     },
   ]
@@ -40,7 +61,9 @@ function ValidationReportsPage() {
         </div>
         <button
           type="button"
-          onClick={() => toast('리포트 생성 — 기간·엔진을 골라 생성합니다 (본개발에서 연결)')}
+          onClick={() =>
+            toast(t('reports.toast.create', '리포트 생성 — 기간·엔진을 골라 생성합니다 (본개발에서 연결)'))
+          }
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
           {t('reports.create', '+ 리포트 생성')}
@@ -77,14 +100,29 @@ function ValidationReportsPage() {
                     </span>
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
-                    <span>엔진: <b className="text-ink-muted">{r.engine}</b></span>
-                    <span>기간: {r.period}</span>
-                    <span>생성: {r.createdAt} · {r.createdBy}</span>
+                    <span>
+                      {t('reports.label.engine', '엔진')}: <b className="text-ink-muted">{r.engine}</b>
+                    </span>
+                    <span>
+                      {t('reports.label.period', '기간')}: {r.period}
+                    </span>
+                    <span>
+                      {t('reports.label.created', '생성')}: {r.createdAt} · {r.createdBy}
+                    </span>
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="text-ink-subtle">실행 <b className="tabular-nums text-ink">{r.runs}회</b></span>
-                    <span className="text-danger-ink">오류 <b className="tabular-nums">{r.errors}건</b></span>
-                    <span className="text-review-ink">경고 <b className="tabular-nums">{r.warnings}건</b></span>
+                    <span className="text-ink-subtle">
+                      {t('reports.label.runs', '실행')}{' '}
+                      <b className="tabular-nums text-ink">{tf('reports.timesUnit', { n: r.runs }, '{n}회')}</b>
+                    </span>
+                    <span className="text-danger-ink">
+                      {t('reports.label.errors', '오류')}{' '}
+                      <b className="tabular-nums">{tf('reports.casesUnit', { n: r.errors }, '{n}건')}</b>
+                    </span>
+                    <span className="text-review-ink">
+                      {t('reports.label.warnings', '경고')}{' '}
+                      <b className="tabular-nums">{tf('reports.casesUnit', { n: r.warnings }, '{n}건')}</b>
+                    </span>
                     {r.types.map((ty) => (
                       <span key={ty.label} className="rounded-full bg-chip px-2 py-0.5 font-mono text-[10px] text-ink-muted">
                         {ty.label}: {ty.count}
@@ -105,7 +143,13 @@ function ValidationReportsPage() {
                       type="button"
                       onClick={() => {
                         setPublished((m) => ({ ...m, [r.id]: true }))
-                        toast(`${r.title} 을 발행했습니다 — 공지·구독자에게 전달됩니다`)
+                        toast(
+                          tf(
+                            'reports.toast.published',
+                            { title: r.title },
+                            '{title} 을 발행했습니다 — 공지·구독자에게 전달됩니다',
+                          ),
+                        )
                       }}
                       className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
                     >
@@ -123,12 +167,12 @@ function ValidationReportsPage() {
         <Modal title={detail.title} onClose={() => setDetail(null)} wide>
           <dl className="grid grid-cols-2 gap-3 text-[13px] pc:grid-cols-3">
             {[
-              { k: '대상 엔진', v: detail.engine },
-              { k: '조회 기간', v: detail.period },
-              { k: '생성자', v: detail.createdBy },
-              { k: '생성일시', v: detail.createdAt },
-              { k: '상태', v: published[detail.id] ? '발행' : detail.status },
-              { k: '실행 횟수', v: `${detail.runs}회` },
+              { k: t('reports.dl.engine', '대상 엔진'), v: detail.engine },
+              { k: t('reports.dl.period', '조회 기간'), v: detail.period },
+              { k: t('reports.dl.createdBy', '생성자'), v: detail.createdBy },
+              { k: t('reports.dl.createdAt', '생성일시'), v: detail.createdAt },
+              { k: t('reports.dl.status', '상태'), v: published[detail.id] ? '발행' : detail.status },
+              { k: t('reports.dl.runs', '실행 횟수'), v: tf('reports.timesUnit', { n: detail.runs }, '{n}회') },
             ].map((row) => (
               <div key={row.k} className="rounded-xl border border-hairline px-3.5 py-2.5">
                 <dt className="text-xs text-ink-subtle">{row.k}</dt>
@@ -140,29 +184,31 @@ function ValidationReportsPage() {
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-danger-ink/25 bg-danger-bg px-4 py-3.5 text-center">
               <div className="text-2xl font-semibold tabular-nums text-danger-ink">{detail.errors}</div>
-              <div className="mt-0.5 text-xs text-danger-ink/80">총 오류</div>
+              <div className="mt-0.5 text-xs text-danger-ink/80">{t('reports.totalErrors', '총 오류')}</div>
             </div>
             <div className="rounded-xl border border-review-ink/25 bg-review-bg px-4 py-3.5 text-center">
               <div className="text-2xl font-semibold tabular-nums text-review-ink">{detail.warnings}</div>
-              <div className="mt-0.5 text-xs text-review-ink/80">총 경고</div>
+              <div className="mt-0.5 text-xs text-review-ink/80">{t('reports.totalWarnings', '총 경고')}</div>
             </div>
             <div className="rounded-xl border border-deployed-ink/25 bg-deployed-bg px-4 py-3.5 text-center">
               <div className="text-2xl font-semibold tabular-nums text-deployed-ink">{detail.passRate}%</div>
-              <div className="mt-0.5 text-xs text-deployed-ink/80">통과율</div>
+              <div className="mt-0.5 text-xs text-deployed-ink/80">{t('reports.passRate', '통과율')}</div>
             </div>
           </div>
 
           <div className="mt-4">
-            <div className="text-xs font-medium text-ink-subtle">주요 오류 유형 요약</div>
+            <div className="text-xs font-medium text-ink-subtle">
+              {t('reports.errorSummaryTitle', '주요 오류 유형 요약')}
+            </div>
             <div className="mt-1.5 overflow-x-auto rounded-xl border border-hairline">
               <table className="w-full min-w-[420px] border-collapse text-[13px]">
                 <thead>
                   <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                    <th className="px-3 py-2 font-medium">순위</th>
-                    <th className="px-3 py-2 font-medium">오류 유형</th>
-                    <th className="px-3 py-2 text-right font-medium">건수</th>
-                    <th className="px-3 py-2 text-right font-medium">비율</th>
-                    <th className="px-3 py-2 font-medium">조치</th>
+                    <th className="px-3 py-2 font-medium">{t('reports.th.rank', '순위')}</th>
+                    <th className="px-3 py-2 font-medium">{t('reports.th.errorType', '오류 유형')}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t('reports.th.count', '건수')}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t('reports.th.ratio', '비율')}</th>
+                    <th className="px-3 py-2 font-medium">{t('reports.th.action', '조치')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,13 +220,15 @@ function ValidationReportsPage() {
                         <td className="px-3 py-2.5">
                           <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs text-ink">{ty.label}</code>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-danger-ink">{ty.count}건</td>
+                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-danger-ink">
+                          {tf('reports.casesUnit', { n: ty.count }, '{n}건')}
+                        </td>
                         <td className="px-3 py-2.5 text-right tabular-nums text-ink-muted">
                           {Math.round((ty.count / total) * 100)}%
                         </td>
                         <td className="px-3 py-2.5">
                           <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
-                            조치 필요
+                            {t('reports.actionNeeded', '조치 필요')}
                           </span>
                         </td>
                       </tr>
@@ -204,14 +252,14 @@ function ValidationReportsPage() {
             </button>
             <button
               type="button"
-              onClick={() => toast('인쇄 — 본개발에서 연결됩니다')}
+              onClick={() => toast(t('reports.toast.print', '인쇄 — 본개발에서 연결됩니다'))}
               className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('reports.print', '🖨 인쇄')}
             </button>
             <button
               type="button"
-              onClick={() => toast('PDF 다운로드 — 본개발에서 연결됩니다')}
+              onClick={() => toast(t('reports.toast.pdfDownload', 'PDF 다운로드 — 본개발에서 연결됩니다'))}
               className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('reports.downloadPdf', '⬇ PDF 다운로드')}

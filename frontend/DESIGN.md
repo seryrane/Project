@@ -3,6 +3,10 @@
 > Data-Inside 가이드 수령 전까지의 잠정 표준. 수령 시 토큰만 교체한다.
 > v0.2에서 다크 SaaS 톤으로 전환, v0.3에서 라이트/다크 테마 전환·글로우 절제·트리 사이드바·대시보드 차트 규칙 추가.
 > 참조: Behance Rentier(다크 SaaS 파일관리) · Aivora(AI 워크플로 admin) · Linear(다크 토큰 구조) · docs/UI_ADOPTION.md(화면 패턴).
+>
+> **이 문서는 시각 토큰(색·글자·간격·모션)의 정본이다.** 화면 규약(무엇을 어디에 띄우나)은
+> `docs/화면_공통규칙.md`, 실무 마크업 사용법은 `docs/퍼블리싱_가이드.md`.
+> 문서 지도는 저장소 `README.md`.
 
 ## Overview
 
@@ -106,8 +110,10 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 
 - 기본 다크. `<html data-theme="light">`로 라이트 전환 — 모든 색은 CSS 변수 토큰이라 통째로 교체됨. 토글은 상단바(해/달), localStorage `theme`에 저장.
 - **사이드바는 두 테마 모두 다크 유지** (브랜드 아이덴티티). 사이드바 내부는 white/* 유틸 사용 가능, 콘텐츠 영역은 반드시 `chip`/`chip-strong`/`hairline` 토큰 사용 (white/* 금지 — 라이트에서 깨짐).
-- 라이트 토큰: canvas #f4f5f9 · surface #fff · primary #6d5cf0 등 (styles.css `[data-theme='light']` 블록).
-- **포인트 색상(개인 설정)**: `<html data-accent="blue|teal|green|amber|rose">`가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 — violet(기본)은 속성 없음. 선택지 정본은 `lib/accent.ts`(styles.css accent 블록과 1:1), 저장은 localStorage `accent` + 서버 `PUT /me/accent`. **컴포넌트는 아무것도 모른다** — 색을 primary/accent2 토큰으로만 쓰면 자동으로 따라온다(직접 hex 금지 이유가 하나 더 늘었다). 라이트 조합 선택자 `[data-theme='light'][data-accent=…]`는 라이트 테마 블록 **뒤**에 있어야 이긴다(순서가 명세).
+- 라이트 토큰: canvas #f4f5f9 · surface #fff · primary #002c5f(현대 남색) 등 (styles.css `[data-theme='light']` 블록).
+- **포인트 색상(개인 설정)**: `<html data-accent="violet|blue|green|amber|rose">`가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 — **기본은 현대 남색(navy)이라 속성 없음**. 선택지 정본은 `lib/accent.ts`(`DEFAULT_ACCENT` 포함, styles.css accent 블록과 1:1), 저장은 localStorage `accent` + 서버 `PUT /me/accent`. **컴포넌트는 아무것도 모른다** — 색을 primary/accent2 토큰으로만 쓰면 자동으로 따라온다(직접 hex 금지 이유가 하나 더 늘었다). 라이트 조합 선택자 `[data-theme='light'][data-accent=…]`는 라이트 테마 블록 **뒤**에 있어야 이긴다(순서가 명세).
+- **브랜드 남색은 테마마다 다른 값으로 쓴다** — 원색 #002C5F 는 라이트에서 그대로, 다크에서는 같은 색조를 밝힌 #5a90d2 로. 어두운 캔버스(#0c0e15)에 원색을 그대로 쓰면 버튼이 배경에 묻힌다.
+- ⚠ **고정폭 글꼴 목록 끝에 한글 글꼴을 붙인다** (`--font-mono`, 2026-08-06 사용자 지적): 글꼴 대체는 **글자 하나 단위**라, 한글이 없는 기본 mono 목록이면 산식·주기처럼 한글이 섞인 칸에서 그 한글만 윈도 기본 글꼴로 떨어져 나가 화면에 딴 글꼴이 섞인다. 목록 끝에 Pretendard 를 두면 ASCII 는 고정폭, 한글은 본문 글꼴로 이어받는다.
 
 ## 사이드바 (Rentier 스타일)
 

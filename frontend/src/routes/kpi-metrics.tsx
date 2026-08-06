@@ -32,7 +32,7 @@ function KpiMetricsPage() {
   const allLabel = t('common.all')
 
   return (
-    <AppShell active="kpi-metrics" title="지표 관리">
+    <AppShell active="kpi-metrics" title={t('nav.kpi-metrics', '지표 관리')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.kpi-metrics', '지표 관리')}</h1>
@@ -46,7 +46,7 @@ function KpiMetricsPage() {
         </div>
         <button
           type="button"
-          onClick={() => toast('지표 추가는 OPN-008(지표 목록·산식) 확정 후 열립니다')}
+          onClick={() => toast(t('kpi-metrics.toast.addDisabled', '지표 추가는 OPN-008(지표 목록·산식) 확정 후 열립니다'))}
           className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           + {t('kpi-metrics.addMetric')}
@@ -66,20 +66,22 @@ function KpiMetricsPage() {
       {/* 시트성 표 — 산식·원천을 나란히 비교하는 화면이라 카드로 펴지 않는다 */}
       <section className="anim-fade-up card-spotlight mt-4 rounded-2xl border border-hairline bg-surface">
         <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink">지표 정의서 ({rows.length}건)</h2>
-          <span className="text-[11px] text-ink-subtle">행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출</span>
+          <h2 className="text-sm font-semibold text-ink">{tf('kpi-metrics.sectionTitle', { n: rows.length })}</h2>
+          <span className="text-[11px] text-ink-subtle">
+            {t('kpi-metrics.sectionHint', '행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출')}
+          </span>
         </div>
         <div className="table-scroll">
           <table className="w-full min-w-[760px] border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                <th className="px-4 py-2.5 font-medium">지표</th>
-                <th className="px-3 py-2.5 font-medium">영역</th>
-                <th className="px-3 py-2.5 font-medium">산식</th>
-                <th className="px-3 py-2.5 font-medium">원천 테이블</th>
-                <th className="px-3 py-2.5 font-medium">주기</th>
-                <th className="px-3 py-2.5 font-medium">담당</th>
-                <th className="px-3 py-2.5 font-medium">승인</th>
+                <th className="px-4 py-2.5 font-medium">{t('kpi-metrics.th.metric', '지표')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.area', '영역')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.formula', '산식')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.sourceTable', '원천 테이블')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.cycle', '주기')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.owner', '담당')}</th>
+                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.approval', '승인')}</th>
               </tr>
             </thead>
             <tbody>
@@ -120,7 +122,7 @@ function KpiMetricsPage() {
 
       {/* 정의 상세 — 목록을 훑으며 보는 상세라 서랍 (규약 §1) */}
       {detail && (
-        <Drawer title={`지표 정의 — ${detail.name}`} onClose={() => setDetail(null)}>
+        <Drawer title={tf('kpi-metrics.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
           {(close) => (
             <div className="flex h-full flex-col">
               <div className="flex-1 space-y-3">
@@ -136,10 +138,10 @@ function KpiMetricsPage() {
                 <p className="text-[13px] leading-relaxed text-ink-muted">{detail.desc}</p>
                 {(
                   [
-                    ['산식', detail.formula, true],
-                    ['원천 테이블', detail.sourceTable, true],
-                    ['갱신 주기', detail.cycle, false],
-                    ['담당', detail.owner, false],
+                    [t('kpi-metrics.th.formula', '산식'), detail.formula, true],
+                    [t('kpi-metrics.th.sourceTable', '원천 테이블'), detail.sourceTable, true],
+                    [t('kpi-metrics.label.cycle', '갱신 주기'), detail.cycle, false],
+                    [t('kpi-metrics.th.owner', '담당'), detail.owner, false],
                   ] as const
                 ).map(([label, value, mono]) => (
                   <div key={label} className="rounded-xl border border-hairline/70 bg-canvas/40 px-3.5 py-2.5">
@@ -157,9 +159,11 @@ function KpiMetricsPage() {
                     className="card-hover flex items-center justify-between rounded-xl border border-primary/30 bg-primary/6 px-3.5 py-3 text-[13px]"
                   >
                     <span>
-                      <b className="block font-semibold text-ink">연계 사양서 {detail.linkedSpec}</b>
+                      <b className="block font-semibold text-ink">
+                        {tf('kpi-metrics.linkedSpec', { id: detail.linkedSpec })}
+                      </b>
                       <span className="block text-[11px] text-ink-subtle">
-                        이 지표의 원천 필드를 정의하는 IDMS 사양서로 이동
+                        {t('kpi-metrics.linkedSpecDesc', '이 지표의 원천 필드를 정의하는 IDMS 사양서로 이동')}
                       </span>
                     </span>
                     <span aria-hidden className="text-primary">→</span>
@@ -167,8 +171,10 @@ function KpiMetricsPage() {
                 )}
                 {detail.status !== '승인' && (
                   <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
-                    미승인 지표는 대시보드에 표출되지 않습니다 — 산식 확정 후 현업 승인 절차를
-                    거칩니다 (FR-070 AC②).
+                    {t(
+                      'kpi-metrics.notApprovedNotice',
+                      '미승인 지표는 대시보드에 표출되지 않습니다 — 산식 확정 후 현업 승인 절차를 거칩니다 (FR-070 AC②).',
+                    )}
                   </p>
                 )}
               </div>
@@ -190,7 +196,7 @@ function KpiMetricsPage() {
                       })
                       if (!ok) await simulate()
                       close()
-                      toast(`${detail.name} 산식 승인을 상신했습니다 — 현업 승인 후 대시보드에 표출됩니다`)
+                      toast(tf('kpi-metrics.toast.submitted', { name: detail.name }))
                     }}
                   >
                     {t('kpi-metrics.submitApproval')}

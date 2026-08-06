@@ -26,7 +26,7 @@ const isNew = (date: string) => date >= '2026.08.03'
 
 function NoticePage() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const [category, setCategory] = useState('전체')
   const [query, setQuery] = useState('')
   const [reading, setReading] = useState<Notice | null>(null)
@@ -52,7 +52,7 @@ function NoticePage() {
   const rest = filtered.filter((n) => !n.pinned)
 
   return (
-    <AppShell active="notice" title="공지사항">
+    <AppShell active="notice" title={t('nav.notice', '공지사항')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.notice', '공지사항')}</h1>
@@ -107,7 +107,7 @@ function NoticePage() {
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${CAT_CLS[n.category]}`}>
                   {n.category}
                 </span>
-                {n.author} · {n.date} · 조회 {n.views}
+                {n.author} · {n.date} · {tf('notice.views', { n: n.views })}
               </span>
             </button>
           ))}
@@ -117,7 +117,7 @@ function NoticePage() {
       {/* 목록 — 표는 자기 상자 안에서만 흐른다 */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
         <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink">전체 공지 ({filtered.length}건)</h2>
+          <h2 className="text-sm font-semibold text-ink">{tf('notice.sectionTitle', { n: filtered.length })}</h2>
         </div>
         <ol>
           {rest.map((n) => (
@@ -141,14 +141,14 @@ function NoticePage() {
                 <span className="hidden shrink-0 text-xs text-ink-subtle sm:block">{n.author}</span>
                 <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{n.date}</span>
                 <span className="hidden w-14 shrink-0 text-right text-[11px] tabular-nums text-ink-subtle sm:block">
-                  조회 {n.views}
+                  {tf('notice.views', { n: n.views })}
                 </span>
               </button>
             </li>
           ))}
           {rest.length === 0 && pinned.length === 0 && (
             <li className="px-5 py-10 text-center text-[13px] text-ink-subtle">
-              조건에 맞는 공지가 없습니다 — 검색어나 카테고리를 바꿔 보세요.
+              {t('notice.empty', '조건에 맞는 공지가 없습니다 — 검색어나 카테고리를 바꿔 보세요.')}
             </li>
           )}
         </ol>
@@ -156,7 +156,7 @@ function NoticePage() {
 
       {/* 상세 — 읽고 닫는 것이라 우측 서랍 (본문 목록을 유지한 채) */}
       {reading && (
-        <Drawer title={`공지 — ${reading.id}`} onClose={() => setReading(null)}>
+        <Drawer title={tf('notice.drawerTitle', { id: reading.id })} onClose={() => setReading(null)}>
           {(close) => (
             <div className="flex h-full flex-col">
               <div className="flex-1">
@@ -170,7 +170,7 @@ function NoticePage() {
                 </div>
                 <h3 className="mt-2 text-[15px] font-bold leading-snug text-ink">{reading.title}</h3>
                 <p className="mt-1.5 text-xs text-ink-subtle">
-                  {reading.author} · {reading.date} · 조회 {reading.views}
+                  {reading.author} · {reading.date} · {tf('notice.views', { n: reading.views })}
                 </p>
                 <div className="mt-4 space-y-3 border-t border-hairline pt-4">
                   {reading.body.map((p) => (
@@ -196,9 +196,11 @@ function NoticePage() {
 
       {/* 작성 — 짧게 적고 닫는 일이라 모달 */}
       {writing && (
-        <Modal title="공지 작성" onClose={() => setWriting(false)}>
+        <Modal title={t('notice.write', '공지 작성')} onClose={() => setWriting(false)}>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">제목 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('notice.label.title', '제목')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -207,13 +209,15 @@ function NoticePage() {
             />
           </label>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">카테고리</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('notice.label.category', '카테고리')}</span>
             <div className="mt-1.5">
               <ChipSelect options={NOTICE_CATEGORIES} value={newCat} onChange={setNewCat} />
             </div>
           </div>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">본문 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('notice.label.body', '본문')} <b className="text-danger-ink">*</b>
+            </span>
             <textarea
               rows={5}
               value={newBody}
@@ -224,10 +228,12 @@ function NoticePage() {
           </label>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px]">
-              <b className="font-medium text-ink">상단 고정</b>
-              <span className="block text-[11px] text-ink-subtle">목록 위 고정 카드로 노출됩니다</span>
+              <b className="font-medium text-ink">{t('notice.label.pinToTop', '상단 고정')}</b>
+              <span className="block text-[11px] text-ink-subtle">
+                {t('notice.pinToTopDesc', '목록 위 고정 카드로 노출됩니다')}
+              </span>
             </span>
-            <Switch checked={newPinned} onChange={setNewPinned} label="상단 고정" />
+            <Switch checked={newPinned} onChange={setNewPinned} label={t('notice.label.pinToTop', '상단 고정')} />
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -253,7 +259,7 @@ function NoticePage() {
                 setNewTitle('')
                 setNewBody('')
                 reload()
-                toast('공지를 등록했습니다 — 전체 알림으로도 발송됩니다')
+                toast(t('notice.toast.posted', '공지를 등록했습니다 — 전체 알림으로도 발송됩니다'))
               }}
             >
               {t('notice.submit', '등록')}

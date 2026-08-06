@@ -1,8 +1,10 @@
+import { currentVersion } from '#/data/specs'
+import type { Spec } from '#/data/specs'
+import { useI18n } from '#/lib/i18n'
+
 import { Avatar } from './Avatar'
 import { StatusBadge } from './StatusBadge'
 import { useToast } from './toast'
-import { currentVersion } from '#/data/specs'
-import type { Spec } from '#/data/specs'
 
 interface Props {
   spec: Spec
@@ -13,6 +15,7 @@ interface Props {
 
 export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
   const toast = useToast()
+  const { t, tf } = useI18n()
   const cur = currentVersion(spec)
   const needsApproval = cur.status === '초안' || cur.status === '검토 중'
   return (
@@ -63,7 +66,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
           <Avatar name={cur.author} />
           <span className="font-medium text-ink-muted">{cur.author}</span>
           <span>·</span>
-          <span>{spec.updated} 수정</span>
+          <span>{tf('specCard.updated', { date: spec.updated })}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -71,7 +74,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
             onClick={onDetail}
             className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
-            상세 보기
+            {t('specCard.detail')}
           </button>
           <button
             type="button"
@@ -81,18 +84,18 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
             }}
             className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
-            버전 비교
+            {t('specCard.compare')}
           </button>
           {needsApproval && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                toast(`${spec.name} 승인 요청이 전송되었습니다`)
+                toast(tf('specCard.requestedToast', { name: spec.name }))
               }}
               className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-[opacity,transform] hover:opacity-90 active:scale-95"
             >
-              승인 요청
+              {t('specCard.request')}
             </button>
           )}
         </div>

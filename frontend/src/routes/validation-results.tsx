@@ -20,7 +20,7 @@ export const Route = createFileRoute('/validation-results')({ component: Validat
 const STATUS_FILTERS = ['전체', '오류', '재처리 중', '해결', '통과'] as const
 
 function ValidationResultsPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]>('전체')
@@ -50,10 +50,10 @@ function ValidationResultsPage() {
   const successRate = ((1 - totals.errors / totals.processed) * 100).toFixed(2)
 
   const stats = [
-    { label: '기간 검증 처리', value: totals.processed.toLocaleString() },
-    { label: '성공률', value: `${successRate}%`, cls: 'text-deployed-ink' },
-    { label: '미해결 오류 실행', value: totals.open, cls: 'text-danger-ink' },
-    { label: '재처리 대기', value: totals.requeue, cls: 'text-review-ink' },
+    { label: t('results.stat.processed', '기간 검증 처리'), value: totals.processed.toLocaleString() },
+    { label: t('results.stat.successRate', '성공률'), value: `${successRate}%`, cls: 'text-deployed-ink' },
+    { label: t('results.stat.openErrors', '미해결 오류 실행'), value: totals.open, cls: 'text-danger-ink' },
+    { label: t('results.stat.requeuePending', '재처리 대기'), value: totals.requeue, cls: 'text-review-ink' },
   ]
 
   return (
@@ -70,7 +70,9 @@ function ValidationResultsPage() {
         </div>
         <button
           type="button"
-          onClick={() => toast('Excel 리포트 내보내기 — 본개발에서 연결됩니다')}
+          onClick={() =>
+            toast(t('results.toast.exportExcel', 'Excel 리포트 내보내기 — 본개발에서 연결됩니다'))
+          }
           className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
           {t('results.exportExcel', 'Excel 내보내기')}
@@ -88,20 +90,23 @@ function ValidationResultsPage() {
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
         <ChartCard
-          title="일별 오류 · 경고 추이"
-          subtitle="최근 7일 · 단위: 건"
+          title={t('results.chart.trendTitle', '일별 오류 · 경고 추이')}
+          subtitle={t('results.chart.trendSubtitle', '최근 7일 · 단위: 건')}
           className="anim-fade-up [animation-delay:80ms] xl:col-span-2"
         >
           <TrendLineChart
             data={dailyErrorTrend.errors}
             compare={dailyErrorTrend.warnings}
-            unit="건"
-            labels={{ main: '오류', compare: '경고' }}
+            unit={t('results.chart.unit', '건')}
+            labels={{
+              main: t('results.chart.errorLabel', '오류'),
+              compare: t('results.chart.warningLabel', '경고'),
+            }}
           />
         </ChartCard>
         <ChartCard
-          title="오류 유형 분포"
-          subtitle="최근 30일 누적"
+          title={t('results.chart.distTitle', '오류 유형 분포')}
+          subtitle={t('results.chart.distSubtitle', '최근 30일 누적')}
           className="anim-fade-up [animation-delay:140ms]"
         >
           <StatusStackBar data={errorTypeDistribution} />
@@ -141,15 +146,15 @@ function ValidationResultsPage() {
         <table className="w-full min-w-[900px] border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-              <th className="px-4 py-2.5 font-medium">실행</th>
-              <th className="px-4 py-2.5 font-medium">일시</th>
-              <th className="px-4 py-2.5 font-medium">사양서</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.run', '실행')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.datetime', '일시')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.spec', '사양서')}</th>
               <th className="px-4 py-2.5 font-medium">Rule</th>
-              <th className="px-4 py-2.5 font-medium">오류 유형</th>
-              <th className="px-4 py-2.5 font-medium">심각도</th>
-              <th className="px-4 py-2.5 text-right font-medium">대상</th>
-              <th className="px-4 py-2.5 text-right font-medium">오류</th>
-              <th className="px-4 py-2.5 font-medium">상태</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.errorType', '오류 유형')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.severity', '심각도')}</th>
+              <th className="px-4 py-2.5 text-right font-medium">{t('results.th.target', '대상')}</th>
+              <th className="px-4 py-2.5 text-right font-medium">{t('results.th.errors', '오류')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('results.th.status', '상태')}</th>
             </tr>
           </thead>
           <tbody>
@@ -197,7 +202,7 @@ function ValidationResultsPage() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                  조건에 맞는 실행이 없습니다.
+                  {t('results.empty', '조건에 맞는 실행이 없습니다.')}
                 </td>
               </tr>
             )}
@@ -207,7 +212,10 @@ function ValidationResultsPage() {
 
       {/* 오류 상세 — 어느 행·어느 필드가 왜 걸렸는지 + 다음 행동(재검증·사양서) */}
       {detail && (
-        <Drawer title={`검증 상세 — ${detail.id}`} onClose={() => setDetail(null)}>
+        <Drawer
+          title={tf('results.detailDrawerTitle', { id: detail.id }, '검증 상세 — {id}')}
+          onClose={() => setDetail(null)}
+        >
           {(close) => {
             const st = requeued[detail.id] ? '재처리 중' : detail.status
             return (
@@ -225,8 +233,12 @@ function ValidationResultsPage() {
                     </div>
                     <div className="mt-2 font-medium text-ink">{detail.rule}</div>
                     <div className="mt-0.5 text-xs text-ink-muted">
-                      {detail.errorType} · 대상 <b className="tabular-nums">{detail.total.toLocaleString()}</b>건 중 오류{' '}
-                      <b className="tabular-nums text-danger-ink">{detail.errors.toLocaleString()}</b>건
+                      {detail.errorType} · {t('results.detail.target', '대상')}{' '}
+                      <b className="tabular-nums">{detail.total.toLocaleString()}</b>
+                      {t('results.detail.unit', '건')}
+                      {t('results.detail.ofWhichErrors', ' 중 오류 ')}
+                      <b className="tabular-nums text-danger-ink">{detail.errors.toLocaleString()}</b>
+                      {t('results.detail.unit', '건')}
                     </div>
                   </div>
 
@@ -244,14 +256,18 @@ function ValidationResultsPage() {
 
                   <div>
                     <div className="text-xs font-medium text-ink-subtle">
-                      오류 샘플 {detail.samples.length > 0 && `(${detail.samples.length}건 표시)`}
+                      {t('results.label.errorSamples', '오류 샘플')}{' '}
+                      {detail.samples.length > 0 &&
+                        tf('results.samplesShown', { n: detail.samples.length }, '({n}건 표시)')}
                     </div>
                     {detail.samples.length > 0 ? (
                       <ol className="mt-1.5 space-y-2">
                         {detail.samples.map((s2) => (
                           <li key={s2.row} className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-[13px]">
                             <div className="flex flex-wrap items-center gap-2 text-xs">
-                              <span className="font-mono text-ink-subtle">행 {s2.row.toLocaleString()}</span>
+                              <span className="font-mono text-ink-subtle">
+                                {tf('results.rowLabel', { n: s2.row.toLocaleString() }, '행 {n}')}
+                              </span>
                               <span className="rounded-md bg-chip px-1.5 py-0.5 font-medium text-ink-muted">{s2.field}</span>
                               <span className="rounded bg-danger-bg px-1.5 py-0.5 font-mono text-[11px] text-danger-ink">
                                 {s2.value}
@@ -263,7 +279,9 @@ function ValidationResultsPage() {
                       </ol>
                     ) : (
                       // 없는 것과 못 불러온 것은 다르다 — 통과라 샘플이 없다고 적는다 (규약 §3)
-                      <p className="mt-1.5 text-xs text-ink-subtle">오류가 없어 샘플이 없습니다 (통과).</p>
+                      <p className="mt-1.5 text-xs text-ink-subtle">
+                        {t('results.noSamplesPass', '오류가 없어 샘플이 없습니다 (통과).')}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -285,7 +303,13 @@ function ValidationResultsPage() {
                     onClick={() => {
                       setRequeued((m) => ({ ...m, [detail.id]: true }))
                       close()
-                      toast(`${detail.id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다`)
+                      toast(
+                        tf(
+                          'results.toast.requeued',
+                          { id: detail.id },
+                          '{id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다',
+                        ),
+                      )
                     }}
                     className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                   >

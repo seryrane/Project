@@ -54,12 +54,13 @@ function SignupPage() {
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white">
           H
         </span>
-        <h1 className="mt-4 text-2xl font-bold">가입 신청</h1>
+        <h1 className="mt-4 text-2xl font-bold">{t('login.signup', '가입 신청')}</h1>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-subtle">
-          협력사·외부 계정용입니다 (HMG 임직원은 SSO 로 바로 로그인).
+          {t('signup.intro', '협력사·외부 계정용입니다 (HMG 임직원은 SSO 로 바로 로그인).')}
           <br />
-          관리자 승인 후 <b className="text-ink-muted">Viewer 등급</b>으로 시작합니다 — 필요한
-          권한은 승인 뒤 요청하세요.
+          {t('signup.startAs', '관리자 승인 후')}{' '}
+          <b className="text-ink-muted">{t('signup.viewerGrade', 'Viewer 등급')}</b>
+          {t('signup.startAsTail', '으로 시작합니다 — 필요한 권한은 승인 뒤 요청하세요.')}
         </p>
 
         <form
@@ -147,10 +148,10 @@ function SignupPage() {
                 password: pw,
               })
               if (!res.ok) {
-                setError(res.detail || '가입 신청에 실패했습니다.')
+                setError(res.detail || t('signup.error', '가입 신청에 실패했습니다.'))
                 return
               }
-              toast(res.data?.message ?? '가입 신청을 접수했습니다 — 관리자 승인 후 안내됩니다.')
+              toast(res.data?.message ?? t('signup.toast.submitted', '가입 신청을 접수했습니다 — 관리자 승인 후 안내됩니다.'))
               void navigate({ to: '/login' })
             }}
           >

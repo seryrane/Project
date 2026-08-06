@@ -136,7 +136,7 @@ const SPAN: Record<WidgetSize, string> = {
 const SIZE_LABEL: Record<WidgetSize, string> = { 1: '1칸', 2: '2칸', 3: '전체' }
 
 function DashboardPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const [range, setRange] = useState(30)
   const navigate = useNavigate()
   const goSpecs = () => navigate({ to: '/specs' })
@@ -209,7 +209,7 @@ function DashboardPage() {
   const sum = slice.reduce((a, d) => a + d.value, 0)
   const prevSum = prevSlice.reduce((a, d) => a + d.value, 0)
   const deltaPct = prevSum > 0 ? ((sum - prevSum) / prevSum) * 100 : 0
-  const rangeLabel = RANGES.find((r) => r.key === range)?.label
+  const rangeLabel = t(`dash.range.${range}`, RANGES.find((r) => r.key === range)?.label ?? '')
 
   // 오류 유형도 기간을 따른다 — 30일 기준값을 기간 비율로 편 결정적 mock
   const scaledErrors = errorTypes.map((e) => ({
@@ -221,37 +221,66 @@ function DashboardPage() {
   const widgetBody: Record<WidgetId, React.ReactNode> = {
     kpi: (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile label="총 사양서" value="128" delta="+6" deltaGood spark={kpiSparks.specs} caption="최근 14일 추이" />
-        <StatTile label="승인 대기" value="7" delta="+2" deltaGood={false} spark={kpiSparks.pending} caption="최근 14일 추이" />
-        <StatTile label="검증 성공률" value="96.8%" delta="+1.2%p" deltaGood spark={kpiSparks.successRate} caption="최근 14일 추이" />
         <StatTile
-          label="기간 검증 처리"
+          label={t('dash.stat.totalSpecs', '총 사양서')}
+          value="128"
+          delta="+6"
+          deltaGood
+          spark={kpiSparks.specs}
+          caption={t('dash.caption.trend14', '최근 14일 추이')}
+        />
+        <StatTile
+          label={t('dash.stat.pending', '승인 대기')}
+          value="7"
+          delta="+2"
+          deltaGood={false}
+          spark={kpiSparks.pending}
+          caption={t('dash.caption.trend14', '최근 14일 추이')}
+        />
+        <StatTile
+          label={t('dash.stat.successRate', '검증 성공률')}
+          value="96.8%"
+          delta="+1.2%p"
+          deltaGood
+          spark={kpiSparks.successRate}
+          caption={t('dash.caption.trend14', '최근 14일 추이')}
+        />
+        <StatTile
+          label={t('dash.stat.periodProcessed', '기간 검증 처리')}
           value={compactSum(slice.map((d) => d.value))}
           delta={`${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(1)}%`}
           deltaGood={deltaPct >= 0}
           spark={kpiSparks.processed}
-          caption="vs 이전 동일 기간"
+          caption={t('dash.caption.vsPrev', 'vs 이전 동일 기간')}
         />
       </div>
     ),
     trend: (
       <ChartCard
-        title="일별 검증 처리량"
-        subtitle={`${rangeLabel} · 단위: 천 건 · 점선은 이전 동일 기간`}
+        title={t('widget.trend', '일별 검증 처리량')}
+        subtitle={tf(
+          'dash.trend.subtitle',
+          { range: rangeLabel },
+          '{range} · 단위: 천 건 · 점선은 이전 동일 기간',
+        )}
         action={{ label: t('dash.action.results'), onClick: goResults }}
       >
         <TrendLineChart data={slice} compare={prevSlice.length === slice.length ? prevSlice : undefined} />
       </ChartCard>
     ),
     status: (
-      <ChartCard title="사양서 상태 분포" subtitle="전체 128건 기준" action={{ label: t('nav.specs'), onClick: goSpecs }}>
+      <ChartCard
+        title={t('widget.status', '사양서 상태 분포')}
+        subtitle={t('dash.status.subtitle', '전체 128건 기준')}
+        action={{ label: t('nav.specs'), onClick: goSpecs }}
+      >
         <StatusStackBar data={statusDistribution} />
       </ChartCard>
     ),
     heatmap: (
       <ChartCard
-        title="검증 실행 히트맵"
-        subtitle="최근 25주 · 일별 처리량 (짙을수록 많음)"
+        title={t('widget.heatmap', '검증 실행 히트맵')}
+        subtitle={t('dash.heatmap.subtitle', '최근 25주 · 일별 처리량 (짙을수록 많음)')}
         action={{ label: t('nav.reports'), onClick: goReports }}
       >
         <ActivityHeatmap days={heatmapDays} />
@@ -259,8 +288,8 @@ function DashboardPage() {
     ),
     queue: (
       <ChartCard
-        title="승인 대기 큐"
-        subtitle={`${approvalQueue.length}건이 결재를 기다립니다`}
+        title={t('widget.queue', '승인 대기 큐')}
+        subtitle={tf('dash.queue.subtitle', { n: approvalQueue.length }, '{n}건이 결재를 기다립니다')}
         action={{ label: t('nav.approvals'), onClick: goApprovals }}
       >
         <ol className="space-y-1.5">
@@ -284,7 +313,7 @@ function DashboardPage() {
                     q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-pending-bg text-pending-ink'
                   }`}
                 >
-                  {q.waitingDays}일 경과
+                  {tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}
                 </span>
               </button>
             </li>
@@ -294,8 +323,12 @@ function DashboardPage() {
     ),
     errors: (
       <ChartCard
-        title="오류 유형별 검출 건수"
-        subtitle={`${rangeLabel} 누적 · 증감은 이전 동일 기간 대비`}
+        title={t('widget.errors', '오류 유형별 검출 건수')}
+        subtitle={tf(
+          'dash.errors.subtitle',
+          { range: rangeLabel },
+          '{range} 누적 · 증감은 이전 동일 기간 대비',
+        )}
         action={{ label: t('dash.action.results'), onClick: goResults }}
       >
         <ErrorBarChart data={scaledErrors} />
@@ -303,8 +336,8 @@ function DashboardPage() {
     ),
     system: (
       <ChartCard
-        title="시스템 현황"
-        subtitle="서버 리소스 · 30초마다 갱신 (Mock)"
+        title={t('widget.system', '시스템 현황')}
+        subtitle={t('dash.system.subtitle', '서버 리소스 · 30초마다 갱신 (Mock)')}
         action={{ label: t('nav.alerts') }}
       >
         <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
@@ -323,7 +356,11 @@ function DashboardPage() {
       </ChartCard>
     ),
     pipeline: (
-      <ChartCard title="데이터 파이프라인" subtitle="CDO 수신 · 마트 적재 배치" action={{ label: t('dash.action.results'), onClick: goResults }}>
+      <ChartCard
+        title={t('widget.pipeline', '데이터 파이프라인')}
+        subtitle={t('dash.pipeline.subtitle', 'CDO 수신 · 마트 적재 배치')}
+        action={{ label: t('dash.action.results'), onClick: goResults }}
+      >
         <ol className="space-y-2">
           {pipelines.map((p) => (
             <li key={p.name} className="flex items-center gap-2.5 text-[13px]">
@@ -341,7 +378,7 @@ function DashboardPage() {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-ink">{p.name}</span>
                 <span className="block text-xs tabular-nums text-ink-subtle">
-                  마지막: {p.last}
+                  {t('dash.pipeline.lastLabel', '마지막')}: {p.last}
                   {p.duration ? ` (${p.duration})` : ''}
                 </span>
               </span>
@@ -363,8 +400,8 @@ function DashboardPage() {
     ),
     members: (
       <ChartCard
-        title="권한별 회원 분포"
-        subtitle="전체 66명 기준"
+        title={t('widget.members', '권한별 회원 분포')}
+        subtitle={t('dash.members.subtitle', '전체 66명 기준')}
         action={{ label: t('nav.members'), onClick: () => navigate({ to: '/members' }) }}
       >
         <StatusStackBar data={memberRoles} />
@@ -372,8 +409,8 @@ function DashboardPage() {
     ),
     notice: (
       <ChartCard
-        title="최근 공지"
-        subtitle="고정 공지 우선"
+        title={t('widget.notice', '최근 공지')}
+        subtitle={t('dash.notice.subtitle', '고정 공지 우선')}
         action={{ label: t('nav.notice'), onClick: () => navigate({ to: '/notice' }) }}
       >
         <ol className="space-y-2.5">
@@ -386,7 +423,7 @@ function DashboardPage() {
                     n.pinned ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-subtle'
                   }`}
                 >
-                  {n.pinned ? '고정' : n.category}
+                  {n.pinned ? t('dash.notice.pinnedBadge', '고정') : n.category}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-ink">{n.title}</span>
@@ -398,7 +435,7 @@ function DashboardPage() {
       </ChartCard>
     ),
     activity: (
-      <ChartCard title="최근 활동" action={{ label: t('dash.action.viewAll') }}>
+      <ChartCard title={t('widget.activity', '최근 활동')} action={{ label: t('dash.action.viewAll') }}>
         <ol className="space-y-3.5">
           {recentActivity.map((a) => (
             <li key={a.text} className="flex items-start gap-2.5 text-[13px]">
@@ -459,27 +496,33 @@ function DashboardPage() {
       {editing && (
         <div className="anim-fade-in mt-4 rounded-xl border border-primary/30 bg-primary/6 p-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] font-medium text-ink">역할 추천 프리셋</span>
+            <span className="text-[13px] font-medium text-ink">{t('dash.presetHeading', '역할 추천 프리셋')}</span>
             {ROLE_PRESETS.map((p) => (
               <button
                 key={p.key}
                 type="button"
                 onClick={() => apply(p.layout)}
-                title={p.desc}
+                title={t(`dash.presetDesc.${p.key}`, p.desc)}
                 className="rounded-full border border-hairline bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
               >
-                {p.label}
+                {t(`dash.preset.${p.key}`, p.label)}
               </button>
             ))}
           </div>
           <p className="mt-2 text-xs text-ink-subtle">
-            프리셋은 역할의 기능(RBAC)에서 파생된 추천 구성입니다 — 역할에 기능이 더해지거나
-            빠지면 프리셋도 따라 바뀝니다. 적용 후 카드를 <b>끌어다 놓거나</b> ◀ ▶(위치)·칸수(크기)·
-            ✕(숨김)으로 자유롭게 고치세요. 바꾸는 즉시 저장됩니다.
+            {t(
+              'dash.presetHint1',
+              '프리셋은 역할의 기능(RBAC)에서 파생된 추천 구성입니다 — 역할에 기능이 더해지거나 빠지면 프리셋도 따라 바뀝니다. 적용 후 카드를',
+            )}{' '}
+            <b>{t('dash.presetHint.drag', '끌어다 놓거나')}</b>{' '}
+            {t(
+              'dash.presetHint2',
+              '◀ ▶(위치)·칸수(크기)· ✕(숨김)으로 자유롭게 고치세요. 바꾸는 즉시 저장됩니다.',
+            )}
           </p>
           {hiddenWidgets.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-ink-subtle">숨긴 위젯:</span>
+              <span className="text-ink-subtle">{t('dash.hiddenWidgetsLabel', '숨긴 위젯:')}</span>
               {hiddenWidgets.map((id) => (
                 <button
                   key={id}
@@ -487,7 +530,7 @@ function DashboardPage() {
                   onClick={() => show(id)}
                   className="rounded-full border border-dashed border-hairline px-2.5 py-1 text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                 >
-                  + {WIDGET_META[id].title}
+                  + {t(`widget.${id}`, WIDGET_META[id].title)}
                 </button>
               ))}
             </div>
@@ -557,7 +600,7 @@ function DashboardPage() {
               <div className="absolute -top-3 right-3 z-10 flex items-center gap-1 rounded-full border border-hairline bg-raised px-1.5 py-1 shadow-lg">
                 <button
                   type="button"
-                  aria-label="앞으로"
+                  aria-label={t('dash.aria.moveEarlier', '앞으로')}
                   onClick={() => move(idx, -1)}
                   disabled={idx === 0}
                   className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-chip hover:text-ink disabled:opacity-30"
@@ -566,7 +609,7 @@ function DashboardPage() {
                 </button>
                 <button
                   type="button"
-                  aria-label="뒤로"
+                  aria-label={t('dash.aria.moveLater', '뒤로')}
                   onClick={() => move(idx, 1)}
                   disabled={idx === layout.length - 1}
                   className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-chip hover:text-ink disabled:opacity-30"
@@ -576,14 +619,14 @@ function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => resize(idx)}
-                  title="크기 바꾸기"
+                  title={t('dash.resizeTitle', '크기 바꾸기')}
                   className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-chip hover:text-ink"
                 >
-                  {SIZE_LABEL[slot.size]}
+                  {t(`dash.size.${slot.size}`, SIZE_LABEL[slot.size])}
                 </button>
                 <button
                   type="button"
-                  aria-label="숨기기"
+                  aria-label={t('dash.aria.hide', '숨기기')}
                   onClick={() => hide(idx)}
                   className="flex h-6 w-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-danger-bg hover:text-danger-ink"
                 >

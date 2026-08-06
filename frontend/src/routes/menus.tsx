@@ -81,7 +81,7 @@ function Wireframe({ t }: { t: TemplateKey }) {
 }
 
 function MenusPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const [items, setItems] = useState(menuItems)
   const [selected, setSelected] = useState<MenuItem | null>(null)
@@ -121,7 +121,11 @@ function MenusPage() {
   const toggleActive = (m: MenuItem) => {
     setItems((list) => list.map((x) => (x.id === m.id ? { ...x, active: !x.active } : x)))
     // 되돌릴 수 있으니 묻지 않는다 — 되돌릴 길을 문구로 (규약 §2)
-    toast(`${m.name} 메뉴를 ${m.active ? '숨겼습니다' : '노출합니다'} — 같은 토글로 되돌립니다`)
+    toast(
+      m.active
+        ? tf('menus.toast.hidden', { name: m.name })
+        : tf('menus.toast.shown', { name: m.name }),
+    )
   }
 
   const children = (id: string) => items.filter((x) => x.parent === id)
@@ -177,7 +181,7 @@ function MenusPage() {
             {m.name}
             {children(m.id).length > 0 && (
               <span className="ml-1.5 rounded-full bg-chip px-1.5 py-0.5 text-[10px] font-normal text-ink-subtle no-underline">
-                {children(m.id).length}개 하위
+                {tf('menus.childCount', { n: children(m.id).length })}
               </span>
             )}
           </span>
@@ -186,20 +190,20 @@ function MenusPage() {
         {m.minimal ? (
           <span
             className="rounded-full bg-deployed-bg px-1.5 py-0.5 text-[10px] font-medium text-deployed-ink"
-            title="권한 없이 모든 역할에 보이는 메뉴"
+            title={t('menus.minimalHint', '권한 없이 모든 역할에 보이는 메뉴')}
           >
-            최소 메뉴
+            {t('menus.minimalBadge', '최소 메뉴')}
           </span>
         ) : (
           <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
-            {m.roles.length}개 역할
+            {tf('menus.roleCount', { n: m.roles.length })}
           </span>
         )}
         <button
           type="button"
           role="switch"
           aria-checked={m.active}
-          aria-label={`${m.name} 노출`}
+          aria-label={tf('menus.toggleAria', { name: m.name })}
           onClick={(e) => {
             e.stopPropagation()
             toggleActive(m)
@@ -216,7 +220,7 @@ function MenusPage() {
   )
 
   return (
-    <AppShell active="menus" title="메뉴 관리">
+    <AppShell active="menus" title={t('nav.menus', '메뉴 관리')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.menus', '메뉴 관리')}</h1>
@@ -232,7 +236,7 @@ function MenusPage() {
           onClick={() => setCreating(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
-          + 메뉴 추가
+          + {t('menus.add', '메뉴 추가')}
         </button>
       </div>
 
@@ -240,8 +244,10 @@ function MenusPage() {
         {/* 좌: 메뉴 구조 트리 */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface">
           <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">메뉴 구조 ({items.length}개)</h2>
-            <span className="text-xs text-ink-subtle">드래그하여 순서 변경 · 행을 누르면 우측에서 설정</span>
+            <h2 className="text-sm font-semibold text-ink">{tf('menus.structureTitle', { n: items.length })}</h2>
+            <span className="text-xs text-ink-subtle">
+              {t('menus.structureHint', '드래그하여 순서 변경 · 행을 누르면 우측에서 설정')}
+            </span>
           </div>
           <ul className="space-y-1 p-4">{tops.map((m) => renderRow(m, 0))}</ul>
         </section>
@@ -249,12 +255,14 @@ function MenusPage() {
         {/* 우: 메뉴 설정 패널 — 목록→상세 짝 (규약 §1의 패널 안 2열) */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:80ms]">
           <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">메뉴 설정</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('menus.settingsTitle', '메뉴 설정')}</h2>
           </div>
           {draft && selected ? (
             <div className="space-y-3.5 p-5">
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">메뉴 이름 <b className="text-danger-ink">*</b></span>
+                <span className="text-xs font-medium text-ink-subtle">
+                  {t('menus.label.name', '메뉴 이름')} <b className="text-danger-ink">*</b>
+                </span>
                 <input
                   value={draft.name}
                   onChange={(e) => setDraft((d) => d && { ...d, name: e.target.value })}
@@ -262,7 +270,7 @@ function MenusPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">영문명 (English name)</span>
+                <span className="text-xs font-medium text-ink-subtle">{t('menus.label.nameEn', '영문명 (English name)')}</span>
                 <input
                   value={draft.nameEn ?? ''}
                   onChange={(e) => setDraft((d) => d && { ...d, nameEn: e.target.value })}
@@ -270,11 +278,16 @@ function MenusPage() {
                   className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
                 />
                 <span className="mt-1 block text-[11px] leading-relaxed text-ink-subtle">
-                  영문(EN) 화면의 LNB·검색 팔레트가 이 이름을 씁니다 — 비우면 기본 번역으로 나갑니다
+                  {t(
+                    'menus.nameEnHint',
+                    '영문(EN) 화면의 LNB·검색 팔레트가 이 이름을 씁니다 — 비우면 기본 번역으로 나갑니다',
+                  )}
                 </span>
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">경로 (Path) <b className="text-danger-ink">*</b></span>
+                <span className="text-xs font-medium text-ink-subtle">
+                  {t('menus.label.path', '경로 (Path)')} <b className="text-danger-ink">*</b>
+                </span>
                 <input
                   value={draft.path}
                   onChange={(e) => setDraft((d) => d && { ...d, path: e.target.value })}
@@ -282,7 +295,7 @@ function MenusPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-ink-subtle">아이콘명</span>
+                <span className="text-xs font-medium text-ink-subtle">{t('menus.label.icon', '아이콘명')}</span>
                 <input
                   value={draft.icon}
                   onChange={(e) => setDraft((d) => d && { ...d, icon: e.target.value })}
@@ -294,7 +307,7 @@ function MenusPage() {
               {draft.custom ? (
                 <>
                   <div>
-                    <span className="text-xs font-medium text-ink-subtle">화면 템플릿</span>
+                    <span className="text-xs font-medium text-ink-subtle">{t('menus.label.template', '화면 템플릿')}</span>
                     <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-3">
                       <span className="h-14 w-20 shrink-0 overflow-hidden rounded-lg">
                         <Wireframe t={draft.template} />
@@ -316,12 +329,12 @@ function MenusPage() {
                   </div>
                   {/* 화면 구성 — 관리자가 만든 메뉴가 실제로 무엇을 하는지 여기서 정한다 */}
                   <div className="rounded-xl border border-hairline/70 bg-canvas/40 p-3.5">
-                    <span className="text-xs font-semibold text-ink">화면 구성</span>
+                    <span className="text-xs font-semibold text-ink">{t('menus.label.layout', '화면 구성')}</span>
                     <div className="mt-2.5 space-y-3">
                       {draft.template === 'list-detail' && (
                         <>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">표 컬럼</span>
+                            <span className="text-[11px] text-ink-subtle">{t('menus.label.columns', '표 컬럼')}</span>
                             <div className="mt-1.5">
                               <ChipMulti
                                 options={COLUMN_OPTIONS}
@@ -331,15 +344,17 @@ function MenusPage() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between rounded-lg bg-chip px-3 py-2">
-                            <span className="text-xs text-ink">검색칸 사용</span>
+                            <span className="text-xs text-ink">{t('menus.label.searchable', '검색칸 사용')}</span>
                             <Switch
                               checked={draft.config?.searchable ?? true}
                               onChange={(searchable) => patchConfig({ searchable })}
-                              label="검색칸 사용"
+                              label={t('menus.label.searchable', '검색칸 사용')}
                             />
                           </div>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">상세가 열리는 곳 (규약 §1)</span>
+                            <span className="text-[11px] text-ink-subtle">
+                              {t('menus.label.detailSurface', '상세가 열리는 곳 (규약 §1)')}
+                            </span>
                             <div className="mt-1.5">
                               <ChipSelect
                                 options={['우측 패널', '모달', '본문 페이지'] as const}
@@ -352,7 +367,9 @@ function MenusPage() {
                       )}
                       {draft.template === 'dashboard' && (
                         <div>
-                          <span className="text-[11px] text-ink-subtle">배치할 위젯 (역할 권한이 다시 거른다)</span>
+                          <span className="text-[11px] text-ink-subtle">
+                            {t('menus.label.widgets', '배치할 위젯 (역할 권한이 다시 거른다)')}
+                          </span>
                           <div className="mt-1.5">
                             <ChipMulti
                               options={Object.values(WIDGET_META).map((w) => w.title)}
@@ -365,16 +382,18 @@ function MenusPage() {
                       {draft.template === 'board' && (
                         <>
                           <label className="block">
-                            <span className="text-[11px] text-ink-subtle">카테고리 (콤마로 구분)</span>
+                            <span className="text-[11px] text-ink-subtle">
+                              {t('menus.label.categories', '카테고리 (콤마로 구분)')}
+                            </span>
                             <input
                               value={draft.config?.categories ?? ''}
                               onChange={(e) => patchConfig({ categories: e.target.value })}
-                              placeholder="예: 공지, 자료, 질문"
+                              placeholder={t('menus.ph.categories', '예: 공지, 자료, 질문')}
                               className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-xs outline-none focus:border-primary/60"
                             />
                           </label>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">작성 가능 등급</span>
+                            <span className="text-[11px] text-ink-subtle">{t('menus.label.writeGrade', '작성 가능 등급')}</span>
                             <div className="mt-1.5">
                               <ChipSelect
                                 options={['Viewer 이상', 'Editor 이상', 'Admin 이상'] as const}
@@ -387,18 +406,21 @@ function MenusPage() {
                       )}
                       {draft.template === 'document' && (
                         <div className="flex items-center justify-between rounded-lg bg-chip px-3 py-2">
-                          <span className="text-xs text-ink">제목에서 목차 자동 생성</span>
+                          <span className="text-xs text-ink">{t('menus.label.autoToc', '제목에서 목차 자동 생성')}</span>
                           <Switch
                             checked={draft.config?.autoToc ?? true}
                             onChange={(autoToc) => patchConfig({ autoToc })}
-                            label="목차 자동 생성"
+                            label={t('menus.label.autoToc', '제목에서 목차 자동 생성')}
                           />
                         </div>
                       )}
                       {draft.template === 'blank' && (
                         <label className="block">
                           <span className="text-[11px] text-ink-subtle">
-                            외부 시스템 URL — 등록하면 이 메뉴가 그 화면을 임베드합니다 (신규 시스템 편입)
+                            {t(
+                              'menus.label.embedUrl',
+                              '외부 시스템 URL — 등록하면 이 메뉴가 그 화면을 임베드합니다 (신규 시스템 편입)',
+                            )}
                           </span>
                           <input
                             value={draft.config?.embedUrl ?? ''}
@@ -413,17 +435,20 @@ function MenusPage() {
                 </>
               ) : (
                 <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
-                  시스템 메뉴 — 화면이 코드로 만들어져 있어 이름·노출·접근 역할만 설정합니다.
-                  템플릿·화면 구성은 [+ 메뉴 추가]로 만든 메뉴에서 편집합니다.
+                  {tf(
+                    'menus.systemMenuHint',
+                    { addLabel: t('menus.add', '메뉴 추가') },
+                    '시스템 메뉴 — 화면이 코드로 만들어져 있어 이름·노출·접근 역할만 설정합니다. 템플릿·화면 구성은 [+ {addLabel}]로 만든 메뉴에서 편집합니다.',
+                  )}
                 </p>
               )}
               <div className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
-                <span className="text-[13px] font-medium text-ink">노출 여부</span>
+                <span className="text-[13px] font-medium text-ink">{t('menus.label.visible', '노출 여부')}</span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={draft.active}
-                  aria-label="노출"
+                  aria-label={t('menus.exposeLabel', '노출')}
                   onClick={() => setDraft((d) => d && { ...d, active: !d.active })}
                   className={`h-6 w-11 rounded-full p-0.5 transition-colors ${draft.active ? 'bg-primary' : 'bg-chip-strong'}`}
                 >
@@ -434,19 +459,22 @@ function MenusPage() {
                   특히 가이드·공지는 권한 없는 사람일수록 필요하다 */}
               <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
                 <span className="text-[13px]">
-                  <b className="font-medium text-ink">최소 메뉴</b>
-                  <span className="block text-[11px] text-ink-subtle">권한 없이 모든 역할에 보입니다</span>
+                  <b className="font-medium text-ink">{t('menus.minimalBadge', '최소 메뉴')}</b>
+                  <span className="block text-[11px] text-ink-subtle">
+                    {t('menus.minimalDesc', '권한 없이 모든 역할에 보입니다')}
+                  </span>
                 </span>
                 <Switch
                   checked={draft.minimal ?? false}
                   onChange={(v) => setDraft((d) => d && { ...d, minimal: v })}
-                  label="최소 메뉴"
+                  label={t('menus.minimalBadge', '최소 메뉴')}
                 />
               </div>
               {!draft.minimal && (
                 <div>
                   <span className="text-xs font-medium text-ink-subtle">
-                    접근 가능 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+                    {t('menus.label.accessRoles', '접근 가능 역할')}{' '}
+                    <span className="font-normal">{t('menus.label.accessRolesHint', '(권한 관리의 역할이 자동 노출)')}</span>
                   </span>
                   <div className="mt-1.5">
                     <ChipMulti
@@ -457,8 +485,11 @@ function MenusPage() {
                   </div>
                   {draft.roles.length === 0 && (
                     <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-[11px] text-danger-ink">
-                      접근 역할이 없으면 아무도 이 메뉴를 못 봅니다 — 하나 이상 고르거나 [최소
-                      메뉴]로 전환하세요.
+                      {tf(
+                        'menus.noRolesWarning',
+                        { minimalLabel: t('menus.minimalBadge', '최소 메뉴') },
+                        '접근 역할이 없으면 아무도 이 메뉴를 못 봅니다 — 하나 이상 고르거나 [{minimalLabel}]로 전환하세요.',
+                      )}
                     </p>
                   )}
                 </div>
@@ -474,28 +505,28 @@ function MenusPage() {
                       .flatMap((s) => s.items)
                       .find((i) => i.to === draft.path)?.key
                     if (navKey) void apiSend('PUT', '/nav/label', { key: navKey, labelEn: draft.nameEn ?? '' })
-                    toast(`${draft.name} 메뉴 설정을 저장했습니다 — LNB 에 바로 반영됩니다`)
+                    toast(tf('menus.toast.saved', { name: draft.name }))
                   }}
                   className="h-9 flex-1 rounded-lg bg-gradient-to-r from-primary to-accent2 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
-                  저장
+                  {t('common.save')}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     const kids = children(selected.id).length
                     if (kids > 0) {
-                      toast(`하위 메뉴 ${kids}개가 있어 삭제할 수 없습니다 — 하위를 먼저 옮기거나 삭제하세요`)
+                      toast(tf('menus.toast.hasChildren', { n: kids }))
                       return
                     }
                     setItems((list) => list.filter((x) => x.id !== selected.id))
                     setSelected(null)
                     setDraft(null)
-                    toast(`${selected.name} 메뉴를 삭제했습니다`)
+                    toast(tf('menus.toast.deleted', { name: selected.name }))
                   }}
                   className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
                 >
-                  삭제
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
@@ -504,7 +535,7 @@ function MenusPage() {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
                 <path d="M4 6.5h16M4 12h16M4 17.5h9" />
               </svg>
-              <p className="text-[13px]">메뉴를 클릭하여 설정을 변경하세요</p>
+              <p className="text-[13px]">{t('menus.emptyHint', '메뉴를 클릭하여 설정을 변경하세요')}</p>
             </div>
           )}
         </section>
@@ -512,18 +543,22 @@ function MenusPage() {
 
       {/* 새 메뉴 추가 — 상위 메뉴를 골라 계층으로 넣는다 */}
       {creating && (
-        <Modal title="새 메뉴 추가" onClose={() => setCreating(false)}>
+        <Modal title={t('menus.newTitle', '새 메뉴 추가')} onClose={() => setCreating(false)}>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">메뉴 이름 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('menus.label.name', '메뉴 이름')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="메뉴 이름 입력"
+              placeholder={t('menus.ph.name', '메뉴 이름 입력')}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">경로 (Path) <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('menus.label.path', '경로 (Path)')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newPath}
               onChange={(e) => setNewPath(e.target.value)}
@@ -532,9 +567,9 @@ function MenusPage() {
             />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">상위 메뉴 (선택)</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('menus.label.parent', '상위 메뉴 (선택)')}</span>
             <Select defaultValue="최상위 메뉴" className="mt-1 w-full">
-              <option>최상위 메뉴</option>
+              <option value="최상위 메뉴">{t('menus.topLevelOption', '최상위 메뉴')}</option>
               {tops.map((m) => (
                 <option key={m.id}>{m.name}</option>
               ))}
@@ -543,7 +578,7 @@ function MenusPage() {
           {/* 화면 템플릿 — 관리자가 새 메뉴의 UI 를 미리 구상한다 */}
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">
-              화면 템플릿 <b className="text-danger-ink">*</b>
+              {t('menus.label.template', '화면 템플릿')} <b className="text-danger-ink">*</b>
             </span>
             <div className="mt-1.5 grid grid-cols-2 gap-2 pc:grid-cols-3">
               {TEMPLATES.map((tpl) => {
@@ -566,7 +601,7 @@ function MenusPage() {
                     <span className={`mt-1.5 flex items-center justify-between text-xs font-semibold ${on ? 'text-primary' : 'text-ink'}`}>
                       {tpl.name}
                       {/* 규약 16절 — 선택은 색만으로 말하지 않는다 */}
-                      {on && <span className="text-[10px] font-medium">✓ 선택됨</span>}
+                      {on && <span className="text-[10px] font-medium">✓ {t('menus.selectedBadge', '선택됨')}</span>}
                     </span>
                     <span className="mt-0.5 block text-[10px] leading-snug text-ink-subtle">{tpl.desc}</span>
                   </button>
@@ -576,15 +611,18 @@ function MenusPage() {
           </div>
           <div className="mt-3 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px]">
-              <b className="font-medium text-ink">최소 메뉴</b>
-              <span className="block text-[11px] text-ink-subtle">권한 없이 모든 역할에 보입니다</span>
+              <b className="font-medium text-ink">{t('menus.minimalBadge', '최소 메뉴')}</b>
+              <span className="block text-[11px] text-ink-subtle">
+                {t('menus.minimalDesc', '권한 없이 모든 역할에 보입니다')}
+              </span>
             </span>
-            <Switch checked={newMinimal} onChange={setNewMinimal} label="최소 메뉴" />
+            <Switch checked={newMinimal} onChange={setNewMinimal} label={t('menus.minimalBadge', '최소 메뉴')} />
           </div>
           {!newMinimal && (
             <div className="mt-3">
               <span className="text-xs font-medium text-ink-subtle">
-                접근 역할 <span className="font-normal">(권한 관리의 역할이 자동 노출)</span>
+                {t('menus.label.accessRolesShort', '접근 역할')}{' '}
+                <span className="font-normal">{t('menus.label.accessRolesHint', '(권한 관리의 역할이 자동 노출)')}</span>
               </span>
               <div className="mt-1.5">
                 <ChipMulti options={ROLE_NAMES} values={newRoles} onChange={setNewRoles} />
@@ -597,7 +635,7 @@ function MenusPage() {
               onClick={() => setCreating(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -622,11 +660,17 @@ function MenusPage() {
                 setNewName('')
                 setNewPath('')
                 select(item)
-                toast('메뉴를 추가했습니다 — 우측 [화면 구성]에서 이 화면에 들어갈 요소를 정하세요')
+                toast(
+                  tf(
+                    'menus.toast.added',
+                    { layoutLabel: t('menus.label.layout', '화면 구성') },
+                    '메뉴를 추가했습니다 — 우측 [{layoutLabel}]에서 이 화면에 들어갈 요소를 정하세요',
+                  ),
+                )
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              추가
+              {t('common.add')}
             </button>
           </div>
         </Modal>

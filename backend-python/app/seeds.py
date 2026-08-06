@@ -160,8 +160,8 @@ NAV = [
         {"key": "faq", "label": "FAQ", "labelEn": "FAQ", "icon": "help", "to": "/faq"},
         {"key": "guide", "label": "사용자 가이드", "labelEn": "User Guide", "icon": "book", "to": "/guide"},
     ]},
+    # '시스템 알림'은 뺐다 — 갈 화면이 없는 메뉴였다(알림은 GNB 종 하나로 모은다)
     {"id": "system", "title": "시스템", "items": [
-        {"key": "alerts", "label": "시스템 알림", "labelEn": "System Alerts", "icon": "bell", "badge": 3},
         {"key": "privacy", "label": "개인정보보호", "labelEn": "Privacy", "icon": "lock", "to": "/privacy"},
     ]},
 ]

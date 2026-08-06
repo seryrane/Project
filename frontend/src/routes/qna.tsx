@@ -87,7 +87,7 @@ function QnaPage() {
 
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface">
         <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink">질문 목록 ({filtered.length}건)</h2>
+          <h2 className="text-sm font-semibold text-ink">{tf('qna.sectionTitle', { n: filtered.length })}</h2>
         </div>
         <ol>
           {filtered.map((q) => {
@@ -123,7 +123,7 @@ function QnaPage() {
           })}
           {filtered.length === 0 && (
             <li className="px-5 py-10 text-center text-[13px] text-ink-subtle">
-              조건에 맞는 질문이 없습니다.
+              {t('qna.empty', '조건에 맞는 질문이 없습니다.')}
             </li>
           )}
         </ol>
@@ -131,7 +131,7 @@ function QnaPage() {
 
       {/* 상세 — 질문 + 답변 스레드. 답변 입력은 커뮤니티 생성 권한(운영진) */}
       {reading && (
-        <Drawer title={`질문 — ${reading.id}`} onClose={() => setReading(null)}>
+        <Drawer title={tf('qna.drawerTitle', { id: reading.id })} onClose={() => setReading(null)}>
           {(close) => (
             <div className="flex h-full flex-col">
               <div className="flex-1 space-y-4">
@@ -164,11 +164,12 @@ function QnaPage() {
 
                 <div>
                   <h4 className="text-xs font-semibold text-ink">
-                    답변 <span className="tabular-nums text-ink-subtle">{reading.answers.length}</span>
+                    {t('qna.answersHeading', '답변')}{' '}
+                    <span className="tabular-nums text-ink-subtle">{reading.answers.length}</span>
                   </h4>
                   {reading.answers.length === 0 ? (
                     <p className="mt-2 text-xs text-ink-subtle">
-                      아직 답변이 없습니다 — 운영진에게 알림이 가 있습니다.
+                      {t('qna.noAnswersYet', '아직 답변이 없습니다 — 운영진에게 알림이 가 있습니다.')}
                     </p>
                   ) : (
                     <ol className="mt-2 space-y-2.5">
@@ -208,7 +209,7 @@ function QnaPage() {
                       setAnswerDraft('')
                       close()
                       reload()
-                      toast('답변을 등록했습니다 — 질문자에게 알림이 갑니다')
+                      toast(t('qna.toast.answered', '답변을 등록했습니다 — 질문자에게 알림이 갑니다'))
                     }}
                   >
                     {t('qna.answerSubmit', '답변 등록')}
@@ -222,9 +223,11 @@ function QnaPage() {
 
       {/* 질문 작성 */}
       {writing && (
-        <Modal title="질문하기" onClose={() => setWriting(false)}>
+        <Modal title={t('qna.ask', '질문하기')} onClose={() => setWriting(false)}>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">제목 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('qna.label.title', '제목')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -233,13 +236,15 @@ function QnaPage() {
             />
           </label>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">카테고리</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('qna.label.category', '카테고리')}</span>
             <div className="mt-1.5">
               <ChipSelect options={QNA_CATEGORIES} value={newCat} onChange={setNewCat} />
             </div>
           </div>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">내용 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('qna.label.body', '내용')} <b className="text-danger-ink">*</b>
+            </span>
             <textarea
               rows={4}
               value={newBody}
@@ -249,7 +254,7 @@ function QnaPage() {
             />
           </label>
           <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
-            비슷한 질문이 FAQ 에 있을 수 있습니다 — 등록 전에 FAQ 를 한 번 확인해 보세요.
+            {t('qna.faqHint', '비슷한 질문이 FAQ 에 있을 수 있습니다 — 등록 전에 FAQ 를 한 번 확인해 보세요.')}
           </p>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -272,7 +277,7 @@ function QnaPage() {
                 setNewTitle('')
                 setNewBody('')
                 reload()
-                toast('질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다')
+                toast(t('qna.toast.posted', '질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다'))
               }}
             >
               {t('qna.submit', '등록')}

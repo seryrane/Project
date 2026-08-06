@@ -27,7 +27,7 @@ const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], stri
 }
 
 function MembersPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -78,10 +78,10 @@ function MembersPage() {
   }
 
   const stats = [
-    { label: '전체 회원', value: counts.all },
-    { label: '활성', value: counts.active, cls: 'text-deployed-ink' },
-    { label: '비활성', value: counts.inactive, cls: 'text-ink-subtle' },
-    { label: '잠금', value: counts.locked, cls: 'text-review-ink' },
+    { label: t('members.stat.all', '전체 회원'), value: counts.all },
+    { label: t('members.stat.active', '활성'), value: counts.active, cls: 'text-deployed-ink' },
+    { label: t('members.stat.inactive', '비활성'), value: counts.inactive, cls: 'text-ink-subtle' },
+    { label: t('members.stat.locked', '잠금'), value: counts.locked, cls: 'text-review-ink' },
   ]
 
   // 롤베이스 정합: 권한의 원천은 역할이다 — 사용자 쪽에서는 ①역할 배정을 바꾸고
@@ -115,7 +115,7 @@ function MembersPage() {
     // 서버에도 반영 — 잠금 처리 사실은 서버가 감사 로그로 남긴다
     void apiSend('POST', `/members/${m.id}/lock-toggle`)
     // 되돌릴 수 있으면 묻지 않는다 — 되돌릴 길을 문구로 준다 (규약 §2)
-    toast(locking ? `${m.name} 계정을 잠갔습니다 — 같은 버튼으로 해제할 수 있습니다` : `${m.name} 계정 잠금을 해제했습니다`)
+    toast(locking ? tf('members.toast.locked', { name: m.name }) : tf('members.toast.unlocked', { name: m.name }))
   }
 
   // 필터 칩 표시 어휘 — 값(한국어 원문)과 표시(언어별)를 가른다
@@ -124,7 +124,7 @@ function MembersPage() {
   const modeLabel = (mode: '허용' | '차단') => t(mode === '허용' ? 'members.allow' : 'members.block')
 
   return (
-    <AppShell active="members" title="회원 관리">
+    <AppShell active="members" title={t('nav.members', '회원 관리')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.members', '회원 관리')}</h1>
@@ -242,7 +242,7 @@ function MembersPage() {
         })}
         {rows.length === 0 && (
           <li className="rounded-2xl border border-hairline bg-surface px-4 py-10 text-center text-sm text-ink-subtle">
-            조건에 맞는 회원이 없습니다.
+            {t('members.empty', '조건에 맞는 회원이 없습니다.')}
           </li>
         )}
       </ol>
@@ -251,13 +251,13 @@ function MembersPage() {
         <table className="w-full min-w-[860px] border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-              <th className="px-4 py-2.5 font-medium">회원</th>
-              <th className="px-4 py-2.5 font-medium">부서</th>
-              <th className="px-4 py-2.5 font-medium">등급 · Role</th>
-              <th className="px-4 py-2.5 font-medium">상태</th>
-              <th className="px-4 py-2.5 font-medium">FIDO</th>
-              <th className="px-4 py-2.5 font-medium">최종 로그인</th>
-              <th className="px-4 py-2.5 text-right font-medium">잠금</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.member', '회원')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.dept', '부서')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.gradeRole', '등급 · Role')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.status', '상태')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.fido', 'FIDO')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('members.th.lastLogin', '최종 로그인')}</th>
+              <th className="px-4 py-2.5 text-right font-medium">{t('members.th.lock', '잠금')}</th>
             </tr>
           </thead>
           <tbody>
@@ -328,7 +328,7 @@ function MembersPage() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                  조건에 맞는 회원이 없습니다.
+                  {t('members.empty', '조건에 맞는 회원이 없습니다.')}
                 </td>
               </tr>
             )}
@@ -338,7 +338,7 @@ function MembersPage() {
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}
       {detail && (
-        <Drawer title={`회원 상세 — ${detail.name}`} onClose={() => setDetail(null)}>
+        <Drawer title={tf('members.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
           {(close) => {
             const st = effStatus(detail)
             return (
@@ -384,14 +384,20 @@ function MembersPage() {
                   {tab === 'info' && (
                     <dl className="grid grid-cols-2 gap-3 text-[13px]">
                       {[
-                        { k: '이름', v: detail.name },
-                        { k: '이메일', v: detail.email },
-                        { k: '부서', v: detail.dept },
-                        { k: '연락처', v: detail.phone },
-                        { k: '가입일', v: detail.joined },
-                        { k: '최종 로그인', v: detail.lastLogin },
-                        { k: 'FIDO 2차 인증', v: detail.fido ? '사용 중' : '미사용' },
-                        { k: '서비스 Role', v: detail.roles.length > 0 ? detail.roles.join(', ') : '— (없음)' },
+                        { k: t('members.label.name', '이름'), v: detail.name },
+                        { k: t('members.label.email', '이메일'), v: detail.email },
+                        { k: t('members.th.dept', '부서'), v: detail.dept },
+                        { k: t('members.label.phone', '연락처'), v: detail.phone },
+                        { k: t('members.label.joined', '가입일'), v: detail.joined },
+                        { k: t('members.th.lastLogin', '최종 로그인'), v: detail.lastLogin },
+                        {
+                          k: t('members.label.fido2fa', 'FIDO 2차 인증'),
+                          v: detail.fido ? t('members.fido.on', '사용 중') : t('members.fido.off', '미사용'),
+                        },
+                        {
+                          k: t('members.label.serviceRole', '서비스 Role'),
+                          v: detail.roles.length > 0 ? detail.roles.join(', ') : t('members.none', '— (없음)'),
+                        },
                       ].map((row) => (
                         <div key={row.k} className="rounded-xl border border-hairline px-3.5 py-2.5">
                           <dt className="text-xs text-ink-subtle">{row.k}</dt>
@@ -406,8 +412,10 @@ function MembersPage() {
                       {/* 빈 자리에 이유를 적는다 (규약 17절) — 신규·서버 계정은 이력이 없다 */}
                       {(detail.activity ?? []).length === 0 && (
                         <p className="rounded-xl bg-canvas/40 px-3.5 py-3 text-xs text-ink-subtle">
-                          아직 기록된 활동이 없습니다 — 로그인·상신 등 활동이 생기면 여기에
-                          쌓입니다.
+                          {t(
+                            'members.activity.empty',
+                            '아직 기록된 활동이 없습니다 — 로그인·상신 등 활동이 생기면 여기에 쌓입니다.',
+                          )}
                         </p>
                       )}
                       {(detail.activity ?? []).map((a) => (
@@ -423,7 +431,10 @@ function MembersPage() {
                         </li>
                       ))}
                       <p className="pt-1 text-[11px] text-ink-subtle">
-                        감사로그는 5년 보관됩니다 — 전체 이력은 본개발에서 별도 조회 화면으로.
+                        {t(
+                          'members.activity.retention',
+                          '감사로그는 5년 보관됩니다 — 전체 이력은 본개발에서 별도 조회 화면으로.',
+                        )}
                       </p>
                     </ol>
                   )}
@@ -432,15 +443,17 @@ function MembersPage() {
                     <div className="space-y-4">
                       {/* ① 역할 배정 — 권한은 역할이 정한다 */}
                       <div className="rounded-xl border border-hairline p-3.5">
-                        <div className="text-xs font-semibold text-ink">역할 배정</div>
+                        <div className="text-xs font-semibold text-ink">{t('members.perm.roleAssign', '역할 배정')}</div>
                         <div className="mt-2">
-                          <span className="text-[11px] text-ink-subtle">등급 (단일)</span>
+                          <span className="text-[11px] text-ink-subtle">{t('members.perm.gradeSingle', '등급 (단일)')}</span>
                           <div className="mt-1.5">
                             <ChipSelect options={GRADES} value={draftGrade} onChange={setDraftGrade} />
                           </div>
                         </div>
                         <div className="mt-2.5">
-                          <span className="text-[11px] text-ink-subtle">서비스 Role (겸직 가능)</span>
+                          <span className="text-[11px] text-ink-subtle">
+                            {t('members.perm.serviceRoleMulti', '서비스 Role (겸직 가능)')}
+                          </span>
                           <div className="mt-1.5">
                             <ChipMulti options={SERVICE_ROLES} values={draftRoles} onChange={setDraftRoles} mono />
                           </div>
@@ -450,7 +463,9 @@ function MembersPage() {
                       {/* ② 역할이 주는 권한 — 읽기 전용. 고치려면 권한 관리로 간다 */}
                       <div className="rounded-xl border border-hairline bg-canvas/40 p-3.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-ink">역할이 주는 권한 (읽기 전용)</span>
+                          <span className="text-xs font-semibold text-ink">
+                            {t('members.perm.rolePermsReadonly', '역할이 주는 권한 (읽기 전용)')}
+                          </span>
                           <button
                             type="button"
                             onClick={() => {
@@ -465,13 +480,13 @@ function MembersPage() {
                         <table className="mt-2 w-full border-collapse text-xs">
                           <thead>
                             <tr className="text-ink-subtle">
-                              <th className="pb-1 text-left font-medium">메뉴</th>
+                              <th className="pb-1 text-left font-medium">{t('members.th.menu', '메뉴')}</th>
                               {PREVIEW_ACTIONS.map((a) => (
                                 <th key={a} className="w-11 pb-1 text-center font-medium">
-                                  {a}
+                                  {t(`perm.${a}`, a)}
                                 </th>
                               ))}
-                              <th className="w-16 pb-1 text-center font-medium">범위</th>
+                              <th className="w-16 pb-1 text-center font-medium">{t('members.th.scope', '범위')}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -479,7 +494,7 @@ function MembersPage() {
                               const canRead = (gradeRole?.matrix[m] ?? []).includes('조회')
                               return (
                                 <tr key={m} className="border-t border-hairline/50">
-                                  <td className="py-1.5 text-ink-muted">{m}</td>
+                                  <td className="py-1.5 text-ink-muted">{t(`perm.${m}`, m)}</td>
                                   {PREVIEW_ACTIONS.map((a) => (
                                     <td key={a} className="py-1.5 text-center">
                                       <span
@@ -503,11 +518,14 @@ function MembersPage() {
                       {/* ③ 사용자 예외 — 명시적 목록만. 없으면 역할이 전부다 */}
                       <div className="rounded-xl border border-hairline p-3.5">
                         <div className="text-xs font-semibold text-ink">
-                          사용자 예외 <span className="font-normal text-ink-subtle">(허용/차단 오버라이드)</span>
+                          {t('members.perm.exceptions', '사용자 예외')}{' '}
+                          <span className="font-normal text-ink-subtle">
+                            {t('members.perm.exceptionsHint', '(허용/차단 오버라이드)')}
+                          </span>
                         </div>
                         {exceptions.length === 0 ? (
                           <p className="mt-2 text-xs text-ink-subtle">
-                            예외 없음 — 권한은 배정된 역할이 전부 정합니다.
+                            {t('members.perm.noExceptions', '예외 없음 — 권한은 배정된 역할이 전부 정합니다.')}
                           </p>
                         ) : (
                           <ul className="mt-2 space-y-1.5">
@@ -542,13 +560,18 @@ function MembersPage() {
                         )}
                         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                           <Select value={exMenu} onChange={(e) => setExMenu(e.target.value)} className="min-w-0 flex-1">
+                            {/* 값은 한국어 그대로(권한 정본의 키), 보이는 글자만 번역 */}
                             {MENUS.map((m) => (
-                              <option key={m}>{m}</option>
+                              <option key={m} value={m}>
+                                {t(`perm.${m}`, m)}
+                              </option>
                             ))}
                           </Select>
                           <Select value={exAction} onChange={(e) => setExAction(e.target.value as Action)} className="w-24">
                             {ACTIONS.map((a) => (
-                              <option key={a}>{a}</option>
+                              <option key={a} value={a}>
+                                {t(`perm.${a}`, a)}
+                              </option>
                             ))}
                           </Select>
                           <ChipSelect
@@ -565,8 +588,12 @@ function MembersPage() {
                           </button>
                         </div>
                         <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
-                          예외는 감사 대상입니다 — 역할로 풀 수 있으면 역할을 고치세요. 변경은{' '}
-                          <b className="text-ink-muted">상신 후 결재</b>를 거쳐 적용됩니다.
+                          {t(
+                            'members.perm.exceptionNote1',
+                            '예외는 감사 대상입니다 — 역할로 풀 수 있으면 역할을 고치세요. 변경은',
+                          )}{' '}
+                          <b className="text-ink-muted">{t('members.perm.submitApproval', '상신 후 결재')}</b>
+                          {t('members.perm.exceptionNote2', '를 거쳐 적용됩니다.')}
                         </p>
                       </div>
                     </div>
@@ -577,7 +604,7 @@ function MembersPage() {
                 <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-hairline pt-4">
                   <button
                     type="button"
-                    onClick={() => toast(`${detail.name} 비밀번호 초기화 메일을 보냈습니다`)}
+                    onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
                     className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
                     {t('members.resetPw')}
@@ -594,7 +621,7 @@ function MembersPage() {
                     disabled={tab !== 'perm' || dirtyCount === 0}
                     onClick={() => {
                       close()
-                      toast(`${detail.name} 역할·예외 변경 ${dirtyCount}건을 상신했습니다 — 승인 관리에서 결재 후 적용됩니다`)
+                      toast(tf('members.toast.submitChanges', { name: detail.name, n: dirtyCount }))
                       navigate({ to: '/approvals' })
                     }}
                     className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
@@ -611,25 +638,32 @@ function MembersPage() {
 
       {/* 회원 등록 — HMG-SSO 가 원장이라 초대 개념이다 */}
       {creating && (
-        <Modal title="회원 등록" onClose={() => setCreating(false)}>
+        <Modal title={t('members.add')} onClose={() => setCreating(false)}>
           <p className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
-            계정 원장은 HMG-SSO 입니다 — 여기서는 포털 접근 등급과 Role 을 부여합니다.
+            {t(
+              'members.create.hint',
+              '계정 원장은 HMG-SSO 입니다 — 여기서는 포털 접근 등급과 Role 을 부여합니다.',
+            )}
           </p>
           <div className="mt-3 grid grid-cols-1 gap-3 pc:grid-cols-2">
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">이름 <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('members.label.name', '이름')} <b className="text-danger-ink">*</b>
+              </span>
               <input placeholder={t('members.ph.name')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">이메일 (SSO) <b className="text-danger-ink">*</b></span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('members.label.emailSso', '이메일 (SSO)')} <b className="text-danger-ink">*</b>
+              </span>
               <input placeholder="email@hmg.com" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">부서</span>
+              <span className="text-xs font-medium text-ink-subtle">{t('members.th.dept', '부서')}</span>
               <input placeholder={t('members.ph.dept')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <div>
-              <span className="text-xs font-medium text-ink-subtle">등급</span>
+              <span className="text-xs font-medium text-ink-subtle">{t('members.label.grade', '등급')}</span>
               <div className="mt-2">
                 <ChipSelect options={GRADES} value={newGrade} onChange={setNewGrade} />
               </div>
@@ -647,7 +681,7 @@ function MembersPage() {
               type="button"
               onClick={() => {
                 setCreating(false)
-                toast('회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다')
+                toast(t('members.toast.registered', '회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다'))
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >

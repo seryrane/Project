@@ -63,7 +63,11 @@ export const COLUMN_OPTIONS = ['이름', '상태', '담당자', '수정일', '�
 export const menuItems: Array<MenuItem> = [
   { id: 'm-dash', order: 1, name: '대시보드', nameEn: 'Dashboard', path: '/dashboard', icon: 'dashboard', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
   { id: 'm-stats', order: 2, name: '통계 & 분석', nameEn: 'Center KPI Dashboard', path: '/analytics', icon: 'stats', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'dashboard' },
-  { id: 'm-members', order: 3, name: '회원 관리', nameEn: 'Members', path: '/members', icon: 'users', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  // KPI 하위 두 화면도 메뉴 관리에 실려야 한다 — LNB(nav.ts)에는 있는데 여기 없으면
+  // 관리자가 "있는 메뉴를 못 찾는" 화면이 된다 (2026-08-06 문서화 중 발견)
+  { id: 'm-kpi-ivi', order: 3, name: '인포 IVI KPI', nameEn: 'Info IVI KPI', path: '/kpi-ivi', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-stats', template: 'dashboard' },
+  { id: 'm-kpi-metrics', order: 4, name: '지표 관리', nameEn: 'KPI Metrics', path: '/kpi-metrics', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-stats', template: 'list-detail' },
+  { id: 'm-members', order: 5, name: '회원 관리', nameEn: 'Members', path: '/members', icon: 'users', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
   { id: 'm-roles', order: 4, name: '권한 관리', nameEn: 'Roles & Permissions', path: '/roles', icon: 'shield', active: true, roles: ['Super Admin'] , template: 'list-detail' },
   { id: 'm-menus', order: 5, name: '메뉴 관리', nameEn: 'Menus', path: '/menus', icon: 'menu', active: true, roles: ['Super Admin'] , template: 'list-detail' },
   { id: 'm-specs', order: 6, name: '사양서 관리', nameEn: 'Specifications', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'list-detail' },

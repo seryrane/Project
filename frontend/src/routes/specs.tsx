@@ -139,7 +139,7 @@ function SpecsPage() {
       </div>
       {filtered.length === 0 && (
         <div className="mt-16 text-center text-sm text-ink-subtle">
-          조건에 맞는 사양서가 없습니다.
+          {t('specs.empty', '조건에 맞는 사양서가 없습니다.')}
         </div>
       )}
 

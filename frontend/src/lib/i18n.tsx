@@ -48,6 +48,45 @@ const CORE_DICT: Record<string, Entry> = {
   'common.download': { ko: '내려받기', en: 'Download' },
   'common.copy': { ko: '복사', en: 'Copy' },
 
+  // ── 사양서 카드 (공용 컴포넌트라 화면 사전이 아니라 여기) ──────────
+  'specCard.detail': { ko: '상세 보기', en: 'View detail' },
+  'specCard.compare': { ko: '버전 비교', en: 'Compare versions' },
+  'specCard.request': { ko: '승인 요청', en: 'Request approval' },
+  'specCard.updated': { ko: '{date} 수정', en: 'Updated {date}' },
+  'specCard.requestedToast': {
+    ko: '{name} 승인 요청이 전송되었습니다',
+    en: 'Approval request sent for {name}',
+  },
+
+  /* ── 권한 매트릭스의 메뉴·액션 이름 ────────────────────────────────
+     ⚠ 이 키들은 **한국어 낱말 자체가 키**다. 권한 정본(data/roles.ts)이 메뉴·액션을
+     코드가 아니라 한국어 문자열로 들고 있고, 매트릭스가 그 값으로 맞춰 보기 때문이다
+     (규약 §4-2 "서버는 재료를 준다" 를 아직 못 지킨 자리 — 본개발에서 code+label 로
+     가른다). 값은 그대로 두고 **표시만** 이 사전으로 바꾼다. */
+  'perm.대시보드': { ko: '대시보드', en: 'Dashboard' },
+  'perm.통계 & 분석': { ko: '통계 & 분석', en: 'Analytics' },
+  'perm.회원 관리': { ko: '회원 관리', en: 'Members' },
+  'perm.권한 관리': { ko: '권한 관리', en: 'Roles' },
+  'perm.메뉴 관리': { ko: '메뉴 관리', en: 'Menus' },
+  'perm.사양서 관리': { ko: '사양서 관리', en: 'Specs' },
+  'perm.승인 관리': { ko: '승인 관리', en: 'Approvals' },
+  'perm.배포 관리': { ko: '배포 관리', en: 'Deployments' },
+  'perm.검증엔진': { ko: '검증엔진', en: 'Validation' },
+  'perm.커뮤니티': { ko: '커뮤니티', en: 'Community' },
+  'perm.조회': { ko: '조회', en: 'View' },
+  'perm.생성': { ko: '생성', en: 'Create' },
+  'perm.수정': { ko: '수정', en: 'Edit' },
+  'perm.삭제': { ko: '삭제', en: 'Delete' },
+  'perm.업로드': { ko: '업로드', en: 'Upload' },
+  'perm.다운로드': { ko: '다운로드', en: 'Download' },
+  'perm.승인': { ko: '승인', en: 'Approve' },
+
+  // ── 버전 비교 (공용 모달) ─────────────────────────────────────────
+  'compare.before': { ko: '이전 버전', en: 'Previous' },
+  'compare.after': { ko: '현재 버전', en: 'Current' },
+  'compare.removed': { ko: '삭제/변경 전', en: 'Removed / before' },
+  'compare.added': { ko: '추가/변경 후', en: 'Added / after' },
+
   // ── 커맨드 팔레트 ─────────────────────────────────────────────────
   'palette.pages': { ko: '페이지', en: 'Pages' },
   'palette.go': { ko: '이동', en: 'Go' },
@@ -59,9 +98,9 @@ const CORE_DICT: Record<string, Entry> = {
     ko: '버튼·강조·차트의 포인트 색이 함께 바뀝니다. 계정 설정이라 다른 기기에서도 같습니다.',
     en: 'Buttons, highlights and charts change together. Saved to your account, so it follows you across devices.',
   },
-  'accent.violet': { ko: '보라 (기본)', en: 'Violet (default)' },
+  'accent.navy': { ko: '현대 남색 (기본)', en: 'Hyundai navy (default)' },
+  'accent.violet': { ko: '보라', en: 'Violet' },
   'accent.blue': { ko: '파랑', en: 'Blue' },
-  'accent.teal': { ko: '청록', en: 'Teal' },
   'accent.green': { ko: '초록', en: 'Green' },
   'accent.amber': { ko: '호박', en: 'Amber' },
   'accent.rose': { ko: '장미', en: 'Rose' },

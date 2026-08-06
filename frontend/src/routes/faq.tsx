@@ -118,14 +118,14 @@ function FaqPage() {
                   <div className="reveal-inner border-t border-hairline/60 px-5 py-4">
                     <p className="text-[13px] leading-relaxed text-ink-muted">{f.a}</p>
                     <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-subtle">
-                      도움이 되었나요?
+                      {t('faq.helpfulQuestion', '도움이 되었나요?')}
                       <button
                         type="button"
                         disabled={voted[f.id]}
                         onClick={() => {
                           setVoted((v) => ({ ...v, [f.id]: true }))
                           void apiSend('POST', `/faqs/${f.id}/helpful`)
-                          toast('의견 감사합니다 — 도움됨으로 기록했습니다')
+                          toast(t('faq.toast.helpful', '의견 감사합니다 — 도움됨으로 기록했습니다'))
                         }}
                         className={`rounded-full border px-2 py-0.5 font-medium transition-all active:scale-95 ${
                           voted[f.id]
@@ -144,9 +144,9 @@ function FaqPage() {
         })}
         {filtered.length === 0 && (
           <p className="rounded-2xl border border-hairline bg-surface px-5 py-10 text-center text-[13px] text-ink-subtle">
-            검색 결과가 없습니다 —{' '}
+            {t('faq.empty', '검색 결과가 없습니다 —')}{' '}
             <Link to="/qna" className="font-medium text-primary hover:underline">
-              Q&A 에 질문을 남겨 주세요
+              {t('faq.emptyCta', 'Q&A 에 질문을 남겨 주세요')}
             </Link>
             .
           </p>
@@ -155,15 +155,17 @@ function FaqPage() {
 
       {/* FAQ 추가 — 운영진용. 짧게 적고 닫는 일이라 모달 */}
       {adding && (
-        <Modal title="FAQ 추가" onClose={() => setAdding(false)}>
+        <Modal title={t('faq.add', 'FAQ 추가')} onClose={() => setAdding(false)}>
           <div>
-            <span className="text-xs font-medium text-ink-subtle">카테고리</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('faq.label.category', '카테고리')}</span>
             <div className="mt-1.5">
               <ChipSelect options={FAQ_CATEGORIES} value={newCat} onChange={setNewCat} />
             </div>
           </div>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">질문 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('faq.label.q', '질문')} <b className="text-danger-ink">*</b>
+            </span>
             <input
               value={newQ}
               onChange={(e) => setNewQ(e.target.value)}
@@ -172,7 +174,9 @@ function FaqPage() {
             />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">답변 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('faq.label.a', '답변')} <b className="text-danger-ink">*</b>
+            </span>
             <textarea
               rows={4}
               value={newA}
@@ -198,7 +202,7 @@ function FaqPage() {
                 setNewQ('')
                 setNewA('')
                 reload()
-                toast('FAQ 를 추가했습니다')
+                toast(t('faq.toast.added', 'FAQ 를 추가했습니다'))
               }}
             >
               {t('common.add')}

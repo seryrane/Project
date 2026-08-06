@@ -82,7 +82,7 @@ function RolesPage() {
   const baseOptions = [t('roles.fromScratch'), ...roles.map((r) => tf('roles.copy', { name: r.name }))]
 
   return (
-    <AppShell active="roles" title="권한 관리">
+    <AppShell active="roles" title={t('nav.roles', '권한 관리')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.roles', '권한 관리')}</h1>
@@ -128,7 +128,7 @@ function RolesPage() {
                 </button>
                 {r.system && (
                   <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-subtle">
-                    시스템 역할
+                    {t('roles.systemBadge', '시스템 역할')}
                   </span>
                 )}
                 <span className="ml-auto flex items-center gap-1">
@@ -166,7 +166,9 @@ function RolesPage() {
                       </span>
                     ))}
                     {r.assigned > r.holders.length && (
-                      <span className="text-[11px] text-ink-subtle">외 {r.assigned - r.holders.length}명</span>
+                      <span className="text-[11px] text-ink-subtle">
+                        {tf('roles.moreHolders', { n: r.assigned - r.holders.length })}
+                      </span>
                     )}
                     <Link
                       to="/members"
@@ -183,10 +185,10 @@ function RolesPage() {
                 <table className="w-full min-w-[320px] border-collapse text-xs">
                   <thead>
                     <tr className="text-ink-subtle">
-                      <th className="pb-1.5 text-left font-medium">권한 항목</th>
+                      <th className="pb-1.5 text-left font-medium">{t('roles.th.permItem', '권한 항목')}</th>
                       {PREVIEW_ACTIONS.map((a) => (
                         <th key={a} className="w-12 pb-1.5 text-center font-medium">
-                          {a}
+                          {t(`perm.${a}`, a)}
                         </th>
                       ))}
                     </tr>
@@ -194,7 +196,7 @@ function RolesPage() {
                   <tbody>
                     {PREVIEW_MENUS.map((m, mi) => (
                       <tr key={m} className="border-t border-hairline/50">
-                        <td className="py-1.5 text-ink-muted">{m}</td>
+                        <td className="py-1.5 text-ink-muted">{t(`perm.${m}`, m)}</td>
                         {PREVIEW_ACTIONS.map((a, ai) => {
                           const on = has(r, m, a)
                           return (
@@ -204,7 +206,7 @@ function RolesPage() {
                                 className={`anim-dot-in inline-block h-3 w-3 rounded-full ${
                                   on ? 'bg-fill-deployed' : 'bg-chip-strong'
                                 }`}
-                                title={`${m} · ${a}: ${on ? '허용' : '없음'}`}
+                                title={`${m} · ${a}: ${on ? t('roles.tooltip.granted', '허용') : t('roles.tooltip.none', '없음')}`}
                               />
                             </td>
                           )
@@ -234,10 +236,10 @@ function RolesPage() {
                     <table className="w-full min-w-[560px] border-collapse text-xs">
                       <thead>
                         <tr className="border-b border-hairline bg-canvas/60 text-ink-subtle">
-                          <th className="px-3 py-2 text-left font-medium">메뉴</th>
+                          <th className="px-3 py-2 text-left font-medium">{t('roles.th.menu', '메뉴')}</th>
                           {ACTIONS.map((a) => (
                             <th key={a} className="px-1.5 py-2 text-center font-medium">
-                              {a}
+                              {t(`perm.${a}`, a)}
                             </th>
                           ))}
                         </tr>
@@ -245,15 +247,21 @@ function RolesPage() {
                       <tbody>
                         {MENUS.map((m) => (
                           <tr key={m} className="border-b border-hairline/50 last:border-0">
-                            <td className="whitespace-nowrap px-3 py-1.5 text-ink-muted">{m}</td>
+                            <td className="whitespace-nowrap px-3 py-1.5 text-ink-muted">
+                              {t(`perm.${m}`, m)}
+                            </td>
                             {ACTIONS.map((a) => (
                               <td key={a} className="px-1.5 py-1.5 text-center">
                                 {has(r, m, a) ? (
                                   <span
                                     className="inline-block rounded bg-primary/12 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-                                    title={a === '조회' ? `조회 범위: ${SCOPE_LABEL[scopeOf(r, m)]}` : undefined}
+                                    title={
+                                      a === '조회'
+                                        ? `${t('roles.tooltip.scopePrefix', '조회 범위')}: ${SCOPE_LABEL[scopeOf(r, m)]}`
+                                        : undefined
+                                    }
                                   >
-                                    {a}
+                                    {t(`perm.${a}`, a)}
                                     {/* 조회는 범위가 함께 와야 뜻이 있다 — 전체가 아니면 표시 */}
                                     {a === '조회' && scopeOf(r, m) !== 'all' && (
                                       <span className="ml-0.5 opacity-70">· {SCOPE_SHORT[scopeOf(r, m)]}</span>
@@ -279,13 +287,13 @@ function RolesPage() {
 
       {/* 권한 편집 — 메뉴 × 액션 7종 풀 매트릭스 (저장은 상신으로 끝난다) */}
       {editing && (
-        <Modal title={`권한 편집 — ${editing.name}`} onClose={() => setEditing(null)} wide>
+        <Modal title={tf('roles.editTitle', { name: editing.name })} onClose={() => setEditing(null)} wide>
           {/* 권한명·설명도 여기서 고친다 — 이름 변경 역시 상신 대상이다 */}
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[220px_1fr]">
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">
-                권한명 <b className="text-danger-ink">*</b>
-                {editing.system && <span className="ml-1 text-[10px]">(시스템 역할)</span>}
+                {t('roles.label.name', '권한명')} <b className="text-danger-ink">*</b>
+                {editing.system && <span className="ml-1 text-[10px]">({t('roles.systemBadge', '시스템 역할')})</span>}
               </span>
               <input
                 defaultValue={editing.name}
@@ -293,7 +301,7 @@ function RolesPage() {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-subtle">설명</span>
+              <span className="text-xs font-medium text-ink-subtle">{t('roles.label.desc', '설명')}</span>
               <input
                 defaultValue={editing.desc}
                 className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
@@ -301,34 +309,41 @@ function RolesPage() {
             </label>
           </div>
           <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
-            현재 <b className="tabular-nums text-ink">{editing.assigned}명</b> 배정 — 변경은 즉시
-            반영되지 않고 <b className="text-ink">상신 후 결재</b>를 거쳐 적용됩니다. 체크가 있는
-            줄은 밝게 표시됩니다.
+            {t('roles.editHint.before', '현재')}{' '}
+            <b className="tabular-nums text-ink">{tf('roles.editHint.count', { n: editing.assigned })}</b>{' — '}
+            {t('roles.editHint.mid', '변경은 즉시 반영되지 않고')}{' '}
+            <b className="text-ink">{t('roles.editHint.approvalFlow', '상신 후 결재')}</b>
+            {t('roles.editHint.after', '를 거쳐 적용됩니다. 체크가 있는 줄은 밝게 표시됩니다.')}
           </p>
           <div className="table-scroll mt-3 rounded-xl border border-hairline">
             <table className="w-full min-w-[720px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                  <th className="px-3 py-2.5 font-medium">메뉴</th>
+                  <th className="px-3 py-2.5 font-medium">{t('roles.th.menu', '메뉴')}</th>
                   {/* 액션 머리에 사람 말 힌트 — 위험 액션은 ⚠ 로 표시한다 */}
                   {ACTIONS.map((a) => (
                     <th key={a} className="px-2 py-2.5 text-center font-medium" title={ACTION_SPECS[a].hint}>
-                      {a}
+                      {t(`perm.${a}`, a)}
                       {ACTION_SPECS[a].danger && <span className="ml-0.5 text-pending-ink">⚠</span>}
                     </th>
                   ))}
                   <th
                     className="px-2 py-2.5 text-center font-medium"
-                    title="조회가 켜진 메뉴에서 어디까지 보이는지 — 넓은 범위는 좁은 범위를 포함합니다"
+                    title={t(
+                      'roles.tooltip.scopeHelp',
+                      '조회가 켜진 메뉴에서 어디까지 보이는지 — 넓은 범위는 좁은 범위를 포함합니다',
+                    )}
                   >
-                    조회 범위
+                    {t('roles.th.scope', '조회 범위')}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {MENUS.map((m) => (
                   <tr key={m} className="perm-row border-b border-hairline/60 transition-colors last:border-0">
-                    <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{m}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
+                      {t(`perm.${m}`, m)}
+                    </td>
                     {ACTIONS.map((a) => {
                       const on = draft[`${m}.${a}`] ?? false
                       return (
@@ -364,7 +379,7 @@ function RolesPage() {
                             <button
                               key={s}
                               type="button"
-                              aria-label={`${m} 조회 범위 ${SCOPE_LABEL[s]}`}
+                              aria-label={`${m} ${t('roles.th.scope', '조회 범위')} ${SCOPE_LABEL[s]}`}
                               title={SCOPE_LABEL[s]}
                               aria-pressed={on}
                               onClick={() => setDraftScope((d) => ({ ...d, [m]: s }))}
@@ -386,15 +401,18 @@ function RolesPage() {
             </table>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
-            ⚠ 표시는 되돌리기 어렵거나 밖으로 나가는 액션입니다 — 머리글에 마우스를 올리면
-            설명이 보입니다. 조회 범위는 내 것만 ⊂ 우리 팀 ⊂ 전체 — 넓은 범위가 좁은 범위를
-            포함하므로 하나만 고릅니다.
+            {t(
+              'roles.footnote.scopeHelp',
+              '⚠ 표시는 되돌리기 어렵거나 밖으로 나가는 액션입니다 — 머리글에 마우스를 올리면 설명이 보입니다. 조회 범위는 내 것만 ⊂ 우리 팀 ⊂ 전체 — 넓은 범위가 좁은 범위를 포함하므로 하나만 고릅니다.',
+            )}
           </p>
           {selfLock && (
             <p className="mt-3 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-xs leading-relaxed text-danger-ink">
-              <b>[권한 관리 · 수정]을 뺄 수 없습니다</b> — 이 권한을 가진 사람이 회사에{' '}
-              <b>0명</b>이 됩니다. 권한 화면을 여는 열쇠라, 빼고 나면 누구도 되돌릴 수 없습니다.
-              먼저 다른 역할에 이 권한을 부여하세요.
+              <b>{t('roles.selfLock.title', '[권한 관리 · 수정]을 뺄 수 없습니다')}</b> —{' '}
+              {t(
+                'roles.selfLock.body',
+                '이 권한을 가진 사람이 회사에 0명이 됩니다. 권한 화면을 여는 열쇠라, 빼고 나면 누구도 되돌릴 수 없습니다. 먼저 다른 역할에 이 권한을 부여하세요.',
+              )}
             </p>
           )}
           <div className="mt-4 flex justify-end gap-2">
@@ -422,7 +440,9 @@ function RolesPage() {
                 })
                 if (!ok) await simulate() // 서버 없는 시연 모드
                 setEditing(null)
-                toast(`${editing.name} 권한 변경 ${dirtyCount}건을 상신했습니다 — 결재 후 ${editing.assigned}명에게 적용됩니다`)
+                toast(
+                  tf('roles.toast.submitted', { name: editing.name, n: dirtyCount, assigned: editing.assigned }),
+                )
               }}
             >
               {t('roles.submit')}
@@ -434,17 +454,19 @@ function RolesPage() {
 
       {/* 새 역할 — 기반 역할 복사로 시작한다 (시안 2 채택) */}
       {creating && (
-        <Modal title="새 역할 추가" onClose={() => setCreating(false)}>
+        <Modal title={t('roles.newTitle', '새 역할 추가')} onClose={() => setCreating(false)}>
           <label className="block">
-            <span className="text-xs font-medium text-ink-subtle">역할 이름 <b className="text-danger-ink">*</b></span>
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('roles.label.roleName', '역할 이름')} <b className="text-danger-ink">*</b>
+            </span>
             <input placeholder={t('roles.namePlaceholder')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">역할 설명</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('roles.label.roleDesc', '역할 설명')}</span>
             <textarea rows={2} placeholder={t('roles.descPlaceholder')} className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">기반 역할 (복사)</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('roles.label.baseRole', '기반 역할 (복사)')}</span>
             <div className="mt-1.5">
               <ChipSelect
                 options={baseOptions}
@@ -454,8 +476,11 @@ function RolesPage() {
             </div>
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-ink-subtle">
-            기존 역할을 복사해 시작하면 매트릭스를 처음부터 채우지 않아도 됩니다 — 생성 후 [권한
-            편집]에서 다듬으세요.
+            {tf(
+              'roles.newRoleHint',
+              { editLabel: t('roles.editPerms') },
+              '기존 역할을 복사해 시작하면 매트릭스를 처음부터 채우지 않아도 됩니다 — 생성 후 [{editLabel}]에서 다듬으세요.',
+            )}
           </p>
           <div className="mt-5 flex justify-end gap-2">
             <button
@@ -481,7 +506,13 @@ function RolesPage() {
                     holders: [],
                   },
                 ])
-                toast('역할을 생성했습니다 — [권한 편집]에서 매트릭스를 다듬으세요')
+                toast(
+                  tf(
+                    'roles.toast.created',
+                    { editLabel: t('roles.editPerms') },
+                    '역할을 생성했습니다 — [{editLabel}]에서 매트릭스를 다듬으세요',
+                  ),
+                )
               }}
               className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
@@ -493,23 +524,31 @@ function RolesPage() {
 
       {/* 삭제 — 배정 인원이 있으면 막는다 (유령 권한을 만들지 않는다) */}
       {deleting && (
-        <Modal title="역할 삭제" onClose={() => setDeleting(null)}>
+        <Modal title={t('roles.deleteTitle', '역할 삭제')} onClose={() => setDeleting(null)}>
           {deleting.system ? (
             <p className="text-[13px] leading-relaxed text-ink-muted">
-              <b className="text-ink">{deleting.name}</b>은 시스템 기본 역할이라 삭제할 수
-              없습니다. 권한 범위는 [권한 편집]으로 조정하세요.
+              {tf(
+                'roles.delete.systemGuard',
+                { name: deleting.name, editLabel: t('roles.editPerms') },
+                '{name}은 시스템 기본 역할이라 삭제할 수 없습니다. 권한 범위는 [{editLabel}]으로 조정하세요.',
+              )}
             </p>
           ) : deleting.assigned > 0 ? (
             <p className="text-[13px] leading-relaxed text-ink-muted">
-              <b className="text-ink">{deleting.name}</b>에{' '}
-              <b className="tabular-nums text-danger-ink">{deleting.assigned}명</b>이 배정되어
-              있습니다. 먼저 회원 관리에서 다른 역할로 재배정한 뒤 삭제할 수 있습니다 — 역할만
-              지우면 그 인원의 권한이 유령이 됩니다.
+              {tf(
+                'roles.delete.assignedGuard',
+                { name: deleting.name, n: deleting.assigned, membersLabel: t('nav.members') },
+                '{name}에 {n}명이 배정되어 있습니다. 먼저 {membersLabel}에서 다른 역할로 재배정한 뒤 삭제할 수 있습니다 — 역할만 지우면 그 인원의 권한이 유령이 됩니다.',
+              )}
             </p>
           ) : (
             <p className="text-[13px] leading-relaxed text-ink-muted">
-              <b className="text-ink">{deleting.name}</b>을 삭제합니다. 배정 인원이 없어 안전하게
-              삭제됩니다. <b className="text-danger-ink">되돌릴 수 없습니다.</b>
+              {tf(
+                'roles.delete.confirm',
+                { name: deleting.name },
+                '{name}을 삭제합니다. 배정 인원이 없어 안전하게 삭제됩니다.',
+              )}{' '}
+              <b className="text-danger-ink">{t('roles.delete.irreversible', '되돌릴 수 없습니다.')}</b>
             </p>
           )}
           <div className="mt-5 flex justify-end gap-2">
@@ -526,7 +565,7 @@ function RolesPage() {
                 onClick={() => {
                   setRoles((rs) => rs.filter((r) => r.key !== deleting.key))
                   setDeleting(null)
-                  toast(`${deleting.name} 역할을 삭제했습니다`)
+                  toast(tf('roles.toast.deleted', { name: deleting.name }))
                 }}
                 className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
               >

@@ -52,10 +52,11 @@ function StatusIcon({ status }: { status: DeployStatus }) {
 
 /* 배포 파이프라인 — 개발→검증→승인→운영. 승인을 지나야 운영에 닿는다 */
 function Pipeline() {
+  const { t } = useI18n()
   const colors = ['bg-fill-draft/20 text-fill-draft', 'bg-review-bg text-review-ink', 'bg-pending-bg text-pending-ink', 'bg-deployed-bg text-deployed-ink']
   return (
     <div className="overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface p-5">
-      <div className="text-sm font-semibold text-ink">배포 파이프라인</div>
+      <div className="text-sm font-semibold text-ink">{t('deploys.pipelineTitle', '배포 파이프라인')}</div>
       <ol className="mt-4 flex min-w-max items-center">
         {PIPELINE.map((p, i) => (
           <li key={p.key} className="flex items-center">
@@ -91,7 +92,7 @@ function Pipeline() {
 }
 
 function DeploysPage() {
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<Deploy | null>(null)
@@ -145,7 +146,9 @@ function DeploysPage() {
                     {d.status}
                   </span>
                   {d.rollbackTo && (
-                    <span className="text-xs text-danger-ink">← {d.rollbackTo}으로 롤백</span>
+                    <span className="text-xs text-danger-ink">
+                      {tf('deploys.rollbackTo', { version: d.rollbackTo }, '← {version}으로 롤백')}
+                    </span>
                   )}
                   <span className="ml-auto font-mono text-xs text-ink-subtle">{d.id}</span>
                 </span>
@@ -175,9 +178,13 @@ function DeploysPage() {
                   </span>
                   <span className="tabular-nums">
                     {d.at}
-                    {d.scheduled ? ' (예정)' : ''}
+                    {d.scheduled ? ` ${t('deploys.scheduledSuffix', '(예정)')}` : ''}
                   </span>
-                  {d.durationMin != null && <span className="tabular-nums">⏱ {d.durationMin}분</span>}
+                  {d.durationMin != null && (
+                    <span className="tabular-nums">
+                      ⏱ {tf('deploys.minutes', { n: d.durationMin }, '{n}분')}
+                    </span>
+                  )}
                 </span>
               </span>
             </button>
@@ -187,7 +194,7 @@ function DeploysPage() {
 
       {/* 배포 상세 */}
       {detail && (
-        <Modal title="배포 상세" onClose={() => setDetail(null)}>
+        <Modal title={t('deploys.detailModalTitle', '배포 상세')} onClose={() => setDetail(null)}>
           <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
             <span className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-lg font-semibold text-ink">{detail.version}</span>
@@ -206,7 +213,12 @@ function DeploysPage() {
           {/* 승인 없이는 배포가 시작되지 않는다 — 대기 건은 결재로 가는 길을 함께 둔다 */}
           {detail.status === '대기' && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-review-ink/30 bg-review-bg px-4 py-3 text-[13px] text-review-ink">
-              <span>승인 대기 중입니다 — 승인 완료 후 예정 시각에 배포가 시작됩니다.</span>
+              <span>
+                {t(
+                  'deploys.pendingHint',
+                  '승인 대기 중입니다 — 승인 완료 후 예정 시각에 배포가 시작됩니다.',
+                )}
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -221,12 +233,26 @@ function DeploysPage() {
           )}
           <dl className="mt-4 grid grid-cols-2 gap-3 text-[13px]">
             {[
-              { k: '배포 ID', v: <span className="font-mono">{detail.id}</span> },
-              { k: '배포 담당자', v: detail.owner },
+              { k: t('deploys.dl.id', '배포 ID'), v: <span className="font-mono">{detail.id}</span> },
+              { k: t('deploys.dl.owner', '배포 담당자'), v: detail.owner },
               // 0(빈 값)을 평온함으로 읽지 않는다 — 승인자가 없으면 "미정"이라고 적는다
-              { k: '승인자', v: detail.approver ?? <span className="text-review-ink">미정</span> },
-              { k: '시작 시간', v: <span className="tabular-nums">{detail.at}{detail.scheduled ? ' (예정)' : ''}</span> },
-              { k: '소요 시간', v: detail.durationMin != null ? `${detail.durationMin}분` : '—' },
+              {
+                k: t('deploys.dl.approver', '승인자'),
+                v: detail.approver ?? <span className="text-review-ink">{t('deploys.unset', '미정')}</span>,
+              },
+              {
+                k: t('deploys.dl.startTime', '시작 시간'),
+                v: (
+                  <span className="tabular-nums">
+                    {detail.at}
+                    {detail.scheduled ? ` ${t('deploys.scheduledSuffix', '(예정)')}` : ''}
+                  </span>
+                ),
+              },
+              {
+                k: t('deploys.dl.duration', '소요 시간'),
+                v: detail.durationMin != null ? tf('deploys.minutes', { n: detail.durationMin }, '{n}분') : '—',
+              },
             ].map((row) => (
               <div key={row.k} className="rounded-xl border border-hairline px-3.5 py-2.5">
                 <dt className="text-xs text-ink-subtle">{row.k}</dt>
@@ -236,7 +262,9 @@ function DeploysPage() {
           </dl>
           {detail.specs.length > 0 && (
             <div className="mt-4">
-              <div className="text-xs font-medium text-ink-subtle">포함된 사양서</div>
+              <div className="text-xs font-medium text-ink-subtle">
+                {t('deploys.includedSpecs', '포함된 사양서')}
+              </div>
               <div className="mt-1.5 space-y-1.5">
                 {detail.specs.map((s) => (
                   <button
@@ -253,7 +281,7 @@ function DeploysPage() {
             </div>
           )}
           <div className="mt-4">
-            <div className="text-xs font-medium text-ink-subtle">변경 사항</div>
+            <div className="text-xs font-medium text-ink-subtle">{t('deploys.changesLabel', '변경 사항')}</div>
             <ul className="mt-1.5 space-y-1">
               {detail.changes.map((c) => (
                 <li key={c} className="flex items-center gap-2 text-[13px] text-ink-muted">
@@ -268,26 +296,32 @@ function DeploysPage() {
 
       {/* 새 배포 요청 — 승인 없이는 시작되지 않는다 */}
       {creating && (
-        <Modal title="배포 요청" onClose={() => setCreating(false)}>
+        <Modal title={t('deploys.requestModalTitle', '배포 요청')} onClose={() => setCreating(false)}>
           <div className="rounded-xl border border-review-ink/30 bg-review-bg px-4 py-3 text-[13px] leading-relaxed text-review-ink">
-            배포는 승인자의 최종 승인 후 진행됩니다. 미승인 상태에서는 배포가 시작되지 않습니다.
+            {t(
+              'deploys.requestHint',
+              '배포는 승인자의 최종 승인 후 진행됩니다. 미승인 상태에서는 배포가 시작되지 않습니다.',
+            )}
           </div>
           <label className="mt-4 block">
-            <span className="text-xs font-medium text-ink-subtle">배포 버전</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('deploys.label.version', '배포 버전')}</span>
             <input
               defaultValue="v3.1.2"
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3">
-            <span className="text-xs font-medium text-ink-subtle">배포 환경</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('deploys.label.env', '배포 환경')}</span>
             <div className="mt-1.5">
               <ChipSelect options={['Production', 'Staging']} value={newEnv} onChange={setNewEnv} />
             </div>
           </div>
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">
-              포함 사양서 <span className="font-normal">({newSpecs.length}건 선택)</span>
+              {t('deploys.label.includedSpecs', '포함 사양서')}{' '}
+              <span className="font-normal">
+                {tf('deploys.selectedCount', { n: newSpecs.length }, '({n}건 선택)')}
+              </span>
             </span>
             <div className="mt-1.5">
               <ChipMulti
@@ -313,7 +347,12 @@ function DeploysPage() {
               onAction={async () => {
                 await simulate()
                 setCreating(false)
-                toast('배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요')
+                toast(
+                  t(
+                    'deploys.toast.requested',
+                    '배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요',
+                  ),
+                )
               }}
             >
               {t('deploys.submitRequest', '배포 승인 요청')}

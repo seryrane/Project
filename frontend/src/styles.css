@@ -10,6 +10,14 @@
     'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Segoe UI', sans-serif;
 
+  /* ⚠ 고정폭 목록에 **한글 글꼴을 반드시 끝에 붙인다**. 글꼴 대체는 글자 하나 단위라,
+     한글이 없는 목록(Tailwind 기본값)이면 산식·주기처럼 한글이 섞인 칸에서 **그 한글만**
+     윈도 기본 글꼴로 떨어져 나가 화면에 딴 글꼴이 섞인다(2026-08-06 사용자 지적).
+     ASCII(ID·테이블명·수식)는 그대로 고정폭, 한글만 Pretendard 로 이어받는다. */
+  --font-mono:
+    ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, Menlo,
+    'Liberation Mono', 'Pretendard Variable', Pretendard, monospace;
+
   --color-canvas: #0c0e15;
   --color-surface: #141722;
   --color-raised: #1a1e2c;
@@ -17,14 +25,16 @@
   --color-ink: #eef0f6;
   --color-ink-muted: #9aa1b5;
   --color-ink-subtle: #676e84;
-  --color-primary: #8b7cff;
-  --color-primary-deep: #7463f2;
-  --color-accent2: #a08cff;
+  /* 기본 포인트 색 = 현대 남색. 브랜드 원색(#002C5F)은 어두운 캔버스에 묻히므로
+     다크에서는 같은 색조를 밝혀 쓰고, 라이트에서 원색을 쓴다 */
+  --color-primary: #5a90d2;
+  --color-primary-deep: #3f74b4;
+  --color-accent2: #82aee0;
   --color-sidebar: #090b11;
   --color-sidebar-ink: #a7adc0;
   --color-chip: rgb(255 255 255 / 6%);
   --color-chip-strong: rgb(255 255 255 / 11%);
-  --color-glow: rgb(139 124 255 / 25%);
+  --color-glow: rgb(90 144 210 / 25%);
 
   --color-draft-bg: #232838;
   --color-draft-ink: #a3aabf;
@@ -55,12 +65,12 @@
   --color-ink: #1b2033;
   --color-ink-muted: #4d566e;
   --color-ink-subtle: #8791a5;
-  --color-primary: #6d5cf0;
-  --color-primary-deep: #5a49dd;
-  --color-accent2: #8a76ff;
+  --color-primary: #002c5f;
+  --color-primary-deep: #001e42;
+  --color-accent2: #1c4e8a;
   --color-chip: rgb(27 32 51 / 6%);
   --color-chip-strong: rgb(27 32 51 / 11%);
-  --color-glow: rgb(109 92 240 / 20%);
+  --color-glow: rgb(0 44 95 / 20%);
 
   --color-draft-bg: #e9edf4;
   --color-draft-ink: #5b6472;
@@ -84,9 +94,23 @@
 /* ── 포인트 색상 (개인 설정) ─────────────────────────────────────────
    data-accent 가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 —
    그라디언트·CTA·스포트라이트·차트가 전부 토큰을 보므로 이 블록이 전체를 바꾼다.
-   violet(기본)은 :root/[data-theme='light'] 값 그대로라 블록이 없다.
+   navy(기본 — 현대 남색)는 :root/[data-theme='light'] 값 그대로라 블록이 없다.
    ⚠ 라이트 조합 선택자는 반드시 이 자리(라이트 테마 블록 뒤)에 — 순서가 명세다.
    선택지 정본은 lib/accent.ts (여기와 1:1). */
+[data-accent='violet'] {
+  --color-primary: #8b7cff;
+  --color-primary-deep: #7463f2;
+  --color-accent2: #a08cff;
+  --color-glow: rgb(139 124 255 / 25%);
+}
+[data-theme='light'][data-accent='violet'] {
+  --color-primary: #6d5cf0;
+  --color-primary-deep: #5a49dd;
+  --color-accent2: #8a76ff;
+  --color-glow: rgb(109 92 240 / 20%);
+}
+/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 명도·채도를 벌려 구별한다
+   (남색은 어둡고 차분, 파랑은 밝고 선명). 청록은 초록과 너무 닮아 뺐다. */
 [data-accent='blue'] {
   --color-primary: #63a3ff;
   --color-primary-deep: #4a8bf5;
@@ -94,22 +118,10 @@
   --color-glow: rgb(99 163 255 / 25%);
 }
 [data-theme='light'][data-accent='blue'] {
-  --color-primary: #3b82f6;
-  --color-primary-deep: #2563eb;
+  --color-primary: #2563eb;
+  --color-primary-deep: #1d4ed8;
   --color-accent2: #60a5fa;
-  --color-glow: rgb(59 130 246 / 20%);
-}
-[data-accent='teal'] {
-  --color-primary: #3ecfbe;
-  --color-primary-deep: #22b3a2;
-  --color-accent2: #6adfd2;
-  --color-glow: rgb(62 207 190 / 25%);
-}
-[data-theme='light'][data-accent='teal'] {
-  --color-primary: #0d9488;
-  --color-primary-deep: #0f766e;
-  --color-accent2: #14b8a6;
-  --color-glow: rgb(13 148 136 / 20%);
+  --color-glow: rgb(37 99 235 / 20%);
 }
 [data-accent='green'] {
   --color-primary: #55cf85;

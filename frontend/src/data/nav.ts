@@ -103,7 +103,8 @@ export const nav: Array<NavSection> = [
     id: 'system',
     title: '시스템',
     items: [
-      { key: 'alerts', label: '시스템 알림', icon: 'bell', badge: 3 },
+      // ⚠ '시스템 알림'은 뺐다 — 갈 화면이 없어 눌러도 아무 일이 없었다(규약 15·17절:
+      // 이름이 어긋나면 있는 것도 없는 것이 된다). 알림은 GNB 의 종 하나로 모은다(규약 2절)
       { key: 'privacy', label: '개인정보보호', icon: 'lock', to: '/privacy' },
     ],
   },

@@ -5,6 +5,7 @@
    {
     "key": "dashboard",
     "label": "대시보드",
+    "labelEn": "Dashboard",
     "icon": "dashboard",
     "to": "/dashboard"
    }
@@ -17,18 +18,21 @@
    {
     "key": "analytics",
     "label": "센터 KPI 대시보드",
+    "labelEn": "Center KPI Dashboard",
     "icon": "stats",
     "to": "/analytics"
    },
    {
     "key": "kpi-ivi",
     "label": "인포 IVI KPI",
+    "labelEn": "Info IVI KPI",
     "icon": "report",
     "to": "/kpi-ivi"
    },
    {
     "key": "kpi-metrics",
     "label": "지표 관리",
+    "labelEn": "KPI Metrics",
     "icon": "doc",
     "to": "/kpi-metrics"
    }
@@ -41,18 +45,21 @@
    {
     "key": "members",
     "label": "회원 관리",
+    "labelEn": "Members",
     "icon": "users",
     "to": "/members"
    },
    {
     "key": "roles",
     "label": "권한 관리",
+    "labelEn": "Roles & Permissions",
     "icon": "shield",
     "to": "/roles"
    },
    {
     "key": "menus",
     "label": "메뉴 관리",
+    "labelEn": "Menus",
     "icon": "menu",
     "to": "/menus"
    }
@@ -65,12 +72,14 @@
    {
     "key": "specs",
     "label": "사양서 관리",
+    "labelEn": "Specifications",
     "icon": "doc",
     "to": "/specs"
    },
    {
     "key": "approvals",
     "label": "승인 관리",
+    "labelEn": "Approvals",
     "icon": "approve",
     "badge": 3,
     "to": "/approvals"
@@ -78,6 +87,7 @@
    {
     "key": "deploys",
     "label": "배포 관리",
+    "labelEn": "Deployments",
     "icon": "deploy",
     "to": "/deploys"
    }
@@ -90,18 +100,21 @@
    {
     "key": "engine",
     "label": "검증엔진 관리",
+    "labelEn": "Validation Engines",
     "icon": "engine",
     "to": "/validation-engine"
    },
    {
     "key": "results",
     "label": "검증 결과 조회",
+    "labelEn": "Validation Results",
     "icon": "search",
     "to": "/validation-results"
    },
    {
     "key": "reports",
     "label": "검증 리포트",
+    "labelEn": "Validation Reports",
     "icon": "report",
     "to": "/validation-reports"
    }
@@ -114,24 +127,28 @@
    {
     "key": "notice",
     "label": "공지사항",
+    "labelEn": "Notices",
     "icon": "bell",
     "to": "/notice"
    },
    {
     "key": "qna",
     "label": "Q&A",
+    "labelEn": "Q&A",
     "icon": "message",
     "to": "/qna"
    },
    {
     "key": "faq",
     "label": "FAQ",
+    "labelEn": "FAQ",
     "icon": "help",
     "to": "/faq"
    },
    {
     "key": "guide",
     "label": "사용자 가이드",
+    "labelEn": "User Guide",
     "icon": "book",
     "to": "/guide"
    }
@@ -142,14 +159,9 @@
   "title": "시스템",
   "items": [
    {
-    "key": "alerts",
-    "label": "시스템 알림",
-    "icon": "bell",
-    "badge": 3
-   },
-   {
     "key": "privacy",
     "label": "개인정보보호",
+    "labelEn": "Privacy",
     "icon": "lock",
     "to": "/privacy"
    }

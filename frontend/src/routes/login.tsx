@@ -79,7 +79,7 @@ function LoginPage() {
       { step: 'done'; token: string; user: { name: string } } | { step: 'fido'; ticket: string; name: string }
     >('/auth/login', { id: id.trim(), password: pw })
     if (!res.ok || !res.data) {
-      setError(res.detail || '로그인하지 못했습니다.')
+      setError(res.detail || t('login.error.generic', '로그인하지 못했습니다.'))
       return
     }
     if (res.data.step === 'fido') {
@@ -205,7 +205,7 @@ function LoginPage() {
                   />
                   <button
                     type="button"
-                    aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
+                    aria-label={showPw ? t('login.pwHide', '비밀번호 숨기기') : t('login.pwShow', '비밀번호 표시')}
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-ink-subtle transition-colors hover:text-ink"
                   >
@@ -289,7 +289,7 @@ function LoginPage() {
                   })
                   if (!res.ok || !res.data) {
                     setFidoTicket(null)
-                    setError(res.detail || 'FIDO 인증에 실패했습니다 — 다시 로그인해 주세요.')
+                    setError(res.detail || t('login.error.fido', 'FIDO 인증에 실패했습니다 — 다시 로그인해 주세요.'))
                     return
                   }
                   finish(res.data.token, res.data.user.name)
@@ -345,12 +345,12 @@ function LoginPage() {
 
       {/* 비밀번호 찾기 — 계정 존재 여부를 노출하지 않는다 */}
       {forgotOpen && (
-        <Modal title="비밀번호 찾기" onClose={() => setForgotOpen(false)}>
+        <Modal title={t('login.forgotTitle', '비밀번호 찾기')} onClose={() => setForgotOpen(false)}>
           <p className="text-[13px] leading-relaxed text-ink-muted">
-            가입한 이메일을 입력하면 재설정 안내를 보냅니다.
+            {t('login.forgotDesc', '가입한 이메일을 입력하면 재설정 안내를 보냅니다.')}
           </p>
           <label className="mt-3 block">
-            <span className="text-xs font-medium text-ink-subtle">이메일</span>
+            <span className="text-xs font-medium text-ink-subtle">{t('login.forgotEmail', '이메일')}</span>
             <input
               value={forgotEmail}
               onChange={(e) => setForgotEmail(e.target.value)}
@@ -364,19 +364,19 @@ function LoginPage() {
               onClick={() => setForgotOpen(false)}
               className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              취소
+              {t('common.cancel')}
             </button>
             <CtaButton
               disabled={!/.+@.+\..+/.test(forgotEmail)}
-              busyLabel="보내는 중…"
+              busyLabel={t('login.forgotSending', '보내는 중…')}
               onAction={async () => {
                 const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
                 setForgotOpen(false)
                 setForgotEmail('')
-                toast(res.data?.message ?? '가입된 이메일이라면 재설정 안내를 보냈습니다.')
+                toast(res.data?.message ?? t('login.forgotSent', '가입된 이메일이라면 재설정 안내를 보냈습니다.'))
               }}
             >
-              재설정 메일 보내기
+              {t('login.forgotSubmit', '재설정 메일 보내기')}
             </CtaButton>
           </div>
         </Modal>

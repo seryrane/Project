@@ -33,7 +33,7 @@ const RETENTION_OPTIONS = ['90일', '180일', '365일'] as const
 
 function PrivacyPage() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, tf } = useI18n()
   const retentionLabel = (d: string) => t(`privacy.days.${d.replace('일', '')}`, d)
   const [policyOpen, setPolicyOpen] = useState(false)
   const [maskPhone, setMaskPhone] = useState(true)
@@ -46,7 +46,7 @@ function PrivacyPage() {
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
 
   return (
-    <AppShell active="privacy" title="개인정보보호">
+    <AppShell active="privacy" title={t('nav.privacy', '개인정보보호')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.privacy', '개인정보보호')}</h1>
@@ -67,24 +67,26 @@ function PrivacyPage() {
       <div className="mt-5 grid grid-cols-2 gap-3 pc:grid-cols-4">
         {(
           [
-            { label: '현행 처리방침', value: 'v3.2', sub: '2026.08.01 시행' },
-            { label: '반출(다운로드) · 30일', value: `${downloads30d}건`, sub: '전 건 사유 기록됨' },
-            { label: '열람 요청 대기', value: '1건', sub: '기한 10일 — 8/12 까지', warn: true },
-            { label: '파기 예정 계정', value: '3건', sub: '비활성 90일 경과' },
+            { id: 'policyVersion', label: '현행 처리방침', value: 'v3.2', sub: '2026.08.01 시행' },
+            { id: 'exports30d', label: '반출(다운로드) · 30일', value: downloads30d, sub: '전 건 사유 기록됨' },
+            { id: 'pendingAccess', label: '열람 요청 대기', value: 1, sub: '기한 10일 — 8/12 까지', warn: true },
+            { id: 'purgeScheduled', label: '파기 예정 계정', value: 3, sub: '비활성 90일 경과' },
           ] as const
         ).map((tile, i) => (
           <div
-            key={tile.label}
+            key={tile.id}
             style={{ animationDelay: `${i * 60}ms` }}
             className="card-spotlight card-hover anim-fade-up rounded-2xl border border-hairline bg-surface p-4"
           >
-            <div className="text-xs text-ink-subtle">{tile.label}</div>
+            <div className="text-xs text-ink-subtle">{t(`privacy.tile.${tile.id}.label`, tile.label)}</div>
             <div
               className={`mt-1 text-xl font-bold tabular-nums ${'warn' in tile ? 'text-pending-ink' : 'text-ink'}`}
             >
-              {tile.value}
+              {typeof tile.value === 'number'
+                ? tf(`privacy.tile.${tile.id}.value`, { n: tile.value }, `${tile.value}건`)
+                : tile.value}
             </div>
-            <div className="mt-0.5 text-[11px] text-ink-subtle">{tile.sub}</div>
+            <div className="mt-0.5 text-[11px] text-ink-subtle">{t(`privacy.tile.${tile.id}.sub`, tile.sub)}</div>
           </div>
         ))}
       </div>
@@ -93,9 +95,9 @@ function PrivacyPage() {
         {/* 감사 로그 — 표는 자기 상자 안에서만 흐른다 */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">접속·반출 감사 로그</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '접속·반출 감사 로그')}</h2>
             <span className="text-[11px] text-ink-subtle">
-              다운로드·마스킹 해제는 사유가 필수로 남습니다
+              {t('privacy.auditLogHint', '다운로드·마스킹 해제는 사유가 필수로 남습니다')}
             </span>
           </div>
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
@@ -121,7 +123,9 @@ function PrivacyPage() {
                     <span className="ml-auto font-mono text-[10px] tabular-nums text-ink-subtle">{l.at}</span>
                   </div>
                   <div className="mt-1.5 text-xs text-ink-muted">{l.target}</div>
-                  <div className="mt-0.5 text-[11px] text-ink-subtle">사유: {l.reason}</div>
+                  <div className="mt-0.5 text-[11px] text-ink-subtle">
+                    {t('privacy.label.reason', '사유')}: {l.reason}
+                  </div>
                 </li>
               )
             })}
@@ -131,11 +135,11 @@ function PrivacyPage() {
             <table className="w-full min-w-[560px] border-collapse text-xs">
               <thead>
                 <tr className="border-b border-hairline bg-canvas/60 text-left text-ink-subtle">
-                  <th className="px-4 py-2.5 font-medium">시각</th>
-                  <th className="px-3 py-2.5 font-medium">사용자</th>
-                  <th className="px-3 py-2.5 font-medium">액션</th>
-                  <th className="px-3 py-2.5 font-medium">대상</th>
-                  <th className="px-3 py-2.5 font-medium">사유</th>
+                  <th className="px-4 py-2.5 font-medium">{t('privacy.th.at', '시각')}</th>
+                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.user', '사용자')}</th>
+                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.action', '액션')}</th>
+                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.target', '대상')}</th>
+                  <th className="px-3 py-2.5 font-medium">{t('privacy.label.reason', '사유')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,46 +176,74 @@ function PrivacyPage() {
             </table>
           </div>
           <div className="border-t border-hairline px-5 py-2.5 text-[11px] text-ink-subtle">
-            로그는 {retention} 보존 후 자동 파기됩니다 — 보존 기간은 우측 정책에서 바꿉니다.
+            {tf(
+              'privacy.retentionNote',
+              { retention: retentionLabel(retention) },
+              `로그는 ${retention} 보존 후 자동 파기됩니다 — 보존 기간은 우측 정책에서 바꿉니다.`,
+            )}
           </div>
         </section>
 
         {/* 마스킹·보존 정책 — 되돌릴 수 있는 것은 묻지 않고 즉시 저장 */}
         <section className="anim-fade-up card-spotlight self-start rounded-2xl border border-hairline bg-surface [animation-delay:180ms]">
           <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">마스킹 · 보존 정책</h2>
+            <h2 className="text-sm font-semibold text-ink">{t('privacy.maskPolicyTitle', '마스킹 · 보존 정책')}</h2>
           </div>
           <div className="space-y-3 p-5">
             <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
               <span className="text-[13px]">
-                <b className="font-medium text-ink">연락처 마스킹</b>
-                <span className="block text-[11px] text-ink-subtle">010-****-5678 로 표시</span>
+                <b className="font-medium text-ink">{t('privacy.label.maskPhone', '연락처 마스킹')}</b>
+                <span className="block text-[11px] text-ink-subtle">
+                  {t('privacy.maskPhoneDesc', '010-****-5678 로 표시')}
+                </span>
               </span>
               <Switch
                 checked={maskPhone}
                 onChange={(v) => {
                   setMaskPhone(v)
-                  toast(`연락처 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`)
+                  toast(
+                    tf(
+                      'privacy.toast.maskToggle',
+                      {
+                        field: t('privacy.label.maskPhone', '연락처 마스킹'),
+                        state: v ? t('privacy.state.on', '켰습니다') : t('privacy.state.off', '껐습니다'),
+                      },
+                      `연락처 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`,
+                    ),
+                  )
                 }}
-                label="연락처 마스킹"
+                label={t('privacy.label.maskPhone', '연락처 마스킹')}
               />
             </div>
             <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
               <span className="text-[13px]">
-                <b className="font-medium text-ink">이메일 마스킹</b>
-                <span className="block text-[11px] text-ink-subtle">hy****@hmg.com 로 표시</span>
+                <b className="font-medium text-ink">{t('privacy.label.maskEmail', '이메일 마스킹')}</b>
+                <span className="block text-[11px] text-ink-subtle">
+                  {t('privacy.maskEmailDesc', 'hy****@hmg.com 로 표시')}
+                </span>
               </span>
               <Switch
                 checked={maskEmail}
                 onChange={(v) => {
                   setMaskEmail(v)
-                  toast(`이메일 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`)
+                  toast(
+                    tf(
+                      'privacy.toast.maskToggle',
+                      {
+                        field: t('privacy.label.maskEmail', '이메일 마스킹'),
+                        state: v ? t('privacy.state.on', '켰습니다') : t('privacy.state.off', '껐습니다'),
+                      },
+                      `이메일 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`,
+                    ),
+                  )
                 }}
-                label="이메일 마스킹"
+                label={t('privacy.label.maskEmail', '이메일 마스킹')}
               />
             </div>
             <div>
-              <span className="text-xs font-medium text-ink-subtle">접속기록 보존 기간</span>
+              <span className="text-xs font-medium text-ink-subtle">
+                {t('privacy.label.retention', '접속기록 보존 기간')}
+              </span>
               <div className="mt-1.5">
                 <ChipSelect
                   options={RETENTION_OPTIONS.map(retentionLabel)}
@@ -219,17 +251,28 @@ function PrivacyPage() {
                   onChange={(v) => {
                     const raw = RETENTION_OPTIONS.find((d) => retentionLabel(d) === v) ?? '365일'
                     setRetention(raw)
-                    toast(`보존 기간을 ${raw}로 저장했습니다`)
+                    toast(
+                      tf(
+                        'privacy.toast.retentionSaved',
+                        { retention: retentionLabel(raw) },
+                        `보존 기간을 ${raw}로 저장했습니다`,
+                      ),
+                    )
                   }}
                 />
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-ink-subtle">
-                처리방침 v3.2 는 365일을 기준으로 합니다 — 줄이면 방침 개정이 함께 필요합니다.
+                {t(
+                  'privacy.retentionPolicyNote',
+                  '처리방침 v3.2 는 365일을 기준으로 합니다 — 줄이면 방침 개정이 함께 필요합니다.',
+                )}
               </p>
             </div>
             <p className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
-              마스킹을 해제한 화면 조회는 전 건 감사 로그에 남습니다. 정책 변경 이력도 감사
-              대상입니다.
+              {t(
+                'privacy.auditFootnote',
+                '마스킹을 해제한 화면 조회는 전 건 감사 로그에 남습니다. 정책 변경 이력도 감사 대상입니다.',
+              )}
             </p>
           </div>
         </section>
@@ -237,11 +280,17 @@ function PrivacyPage() {
 
       {/* 처리방침 전문 — 읽고 닫는 것이라 우측 서랍 */}
       {policyOpen && (
-        <Drawer title="개인정보 처리방침 v3.2" onClose={() => setPolicyOpen(false)}>
+        <Drawer title={t('privacy.policyDrawerTitle', '개인정보 처리방침 v3.2')} onClose={() => setPolicyOpen(false)}>
           {(close) => (
             <div className="flex h-full flex-col">
               <div className="flex-1">
-                <p className="text-xs text-ink-subtle">시행 2026.08.01 · 승인 김현대 · 문서 PP-2026-03</p>
+                <p className="text-xs text-ink-subtle">
+                  {tf(
+                    'privacy.policyMeta',
+                    { date: '2026.08.01', approver: '김현대', doc: 'PP-2026-03' },
+                    '시행 2026.08.01 · 승인 김현대 · 문서 PP-2026-03',
+                  )}
+                </p>
                 <div className="mt-3 space-y-3 border-t border-hairline pt-3.5">
                   {POLICY_BODY.map((p) => (
                     <p key={p} className="text-[13px] leading-relaxed text-ink-muted">

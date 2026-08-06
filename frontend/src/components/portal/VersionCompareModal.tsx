@@ -1,6 +1,8 @@
-import { Modal } from './Modal'
 import { currentVersion } from '#/data/specs'
 import type { Spec, SpecVersion } from '#/data/specs'
+import { useI18n } from '#/lib/i18n'
+
+import { Modal } from './Modal'
 
 interface Props {
   spec: Spec
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export function VersionCompareModal({ spec, base, onClose }: Props) {
+  const { t } = useI18n()
   const cur = currentVersion(spec)
   const labels = Array.from(
     new Set([...base.fields.map((f) => f.label), ...cur.fields.map((f) => f.label)]),
@@ -17,13 +20,14 @@ export function VersionCompareModal({ spec, base, onClose }: Props) {
   const curMap = new Map(cur.fields.map((f) => [f.label, f.value]))
 
   return (
-    <Modal title="버전 비교" onClose={onClose} wide>
+    <Modal title={t('specCard.compare')} onClose={onClose} wide>
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-lg bg-raised py-2.5 text-center text-sm font-medium text-ink-muted">
-          이전 버전 <span className="ml-1 font-mono font-semibold">{base.version}</span>
+          {t('compare.before')} <span className="ml-1 font-mono font-semibold">{base.version}</span>
         </div>
         <div className="rounded-lg border-2 border-primary/60 bg-primary/10 py-2 text-center text-sm font-medium">
-          현재 버전 <span className="ml-1 font-mono font-semibold text-primary">{cur.version}</span>
+          {t('compare.after')}{' '}
+          <span className="ml-1 font-mono font-semibold text-primary">{cur.version}</span>
         </div>
 
         {labels.map((label) => {
@@ -41,11 +45,11 @@ export function VersionCompareModal({ spec, base, onClose }: Props) {
       <div className="mt-5 flex items-center gap-5 rounded-lg bg-raised px-4 py-2.5 text-xs text-ink-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-danger-bg ring-1 ring-danger-ink/30" />
-          삭제/변경 전
+          {t('compare.removed')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-added-bg ring-1 ring-added-ink/30" />
-          추가/변경 후
+          {t('compare.added')}
         </span>
       </div>
     </Modal>
