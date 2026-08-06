@@ -47,7 +47,7 @@ function NavRow({
       {item.badge != null && (
         <span
           className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
-            active ? 'bg-white/25 text-white' : 'bg-sidebar-accent/25 text-sidebar-accent'
+            active ? 'bg-white/25 text-white' : 'bg-sidebar-accent/15 text-sidebar-accent'
           }`}
         >
           {item.badge}
@@ -214,18 +214,18 @@ function Shell({
               <span className="truncate text-sm font-semibold text-white">HMG Admin</span>
               {/* 사이드바 안이라 primary 가 아니라 sidebar-accent 다 — 라이트에서 primary 는
                   아주 어두운 남색이라 어두운 사이드바에서 안 보인다(styles.css 주석 참고) */}
-              <span className="rounded-full bg-sidebar-accent/25 px-1.5 py-px text-[10px] font-semibold text-sidebar-accent">
+              <span className="rounded-full bg-sidebar-accent/15 px-1.5 py-px text-[10px] font-semibold text-sidebar-accent">
                 PoC
               </span>
             </div>
-            <div className="text-[11px] text-sidebar-ink/60">{t('brand.tagline')}</div>
+            <div className="text-[11px] text-sidebar-ink/75">{t('brand.tagline')}</div>
           </div>
           <button
             type="button"
             onClick={togglePin}
             aria-label={pinned ? '메뉴 접기' : '메뉴 고정'}
             title={pinned ? '메뉴 접기' : '메뉴 고정'}
-            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink/50 transition-colors hover:bg-white/5 hover:text-white pc:flex ${railHide}`}
+            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink/70 transition-colors hover:bg-white/5 hover:text-white pc:flex ${railHide}`}
           >
             <span className={pinned ? '' : 'rotate-45'}>
               <Icon name="pin" size={15} />
@@ -243,7 +243,10 @@ function Shell({
                   <button
                     type="button"
                     onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
-                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/45 transition-colors hover:text-sidebar-ink ${railHide}`}
+                    /* ⚠ LNB 에서 가장 흐린 글자였다 — 2.96:1(2026-08-06 전수 감사).
+                       "덜 중요하다"는 굵기·크기가 이미 말하고 있으니 밝기까지 낮출 필요가
+                       없다. 45% → 70% (4.74:1) */
+                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/70 transition-colors hover:text-sidebar-ink ${railHide}`}
                   >
                     {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
                     <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
@@ -288,7 +291,7 @@ function Shell({
             )
           })}
         </nav>
-        <div className={`whitespace-nowrap border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/40 ${railHide}`}>
+        <div className={`whitespace-nowrap border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/75 ${railHide}`}>
           {t('brand.footer')}
         </div>
       </aside>
