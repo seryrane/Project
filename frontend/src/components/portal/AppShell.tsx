@@ -350,7 +350,7 @@ function Shell({
                 <Icon name="search" size={14} />
                 <span className="truncate">{t('gnb.searchPlaceholder')}</span>
               </span>
-              <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+              <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px] text-ink-muted">⌘K</kbd>
             </button>
             {/* 대화형 챗봇 — 어느 화면에서나 같은 패널 하나(정본 §1). 특정 화면 안에
                 두면 그 화면 권한이 없는 사람은 챗봇 자체를 못 쓰게 된다 */}
@@ -396,8 +396,13 @@ function Shell({
               className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink"
             >
               <Icon name="bell" size={17} />
+              {/* ⚠ 배지에 흰 글자를 박지 않는다 — 다크에서 danger-ink 는 **밝은 빨강**이라
+                  흰 글자가 2.3:1 로 떨어진다(2026-08-06 감사). 상태색은 bg/ink 가 짝이라
+                  서로를 뒤집어 쓰면 두 테마 모두 대비가 선다.
+                  ⚠ 이 주석은 `{조건 && (...)}` **밖**에 둔다 — 안에 넣으면 표현식이 둘이 되어
+                  JSX 가 깨진다(방금 겪었다) */}
               {unread > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger-ink px-1 text-[10px] font-bold tabular-nums text-white">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger-ink px-1 text-[10px] font-bold tabular-nums text-danger-bg">
                   {unread}
                 </span>
               )}

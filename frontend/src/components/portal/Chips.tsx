@@ -29,7 +29,7 @@ export function ChipSelect<T extends string>({
               mono ? 'font-mono text-[11px]' : ''
             } ${
               on
-                ? 'border-primary/50 bg-primary/15 text-primary'
+                ? 'border-primary/50 bg-primary/8 text-primary'
                 : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
             }`}
           >
@@ -69,7 +69,7 @@ export function ChipMulti<T extends string>({
               mono ? 'font-mono text-[10px]' : ''
             } ${
               on
-                ? 'border-primary/50 bg-primary/15 text-primary'
+                ? 'border-primary/50 bg-primary/8 text-primary'
                 : 'border-hairline text-ink-subtle hover:border-primary/30 hover:text-ink'
             }`}
           >
