@@ -27,7 +27,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
     >
       {/* 머리 — 무엇인지(ID·상태·버전)를 면+선으로 갈라 얹는다. 카드가 여럿 늘어선
           목록에서 카드 경계와 "이 카드가 무엇인가"가 함께 읽힌다 (규약 §7 · 덮개와 같은 해부) */}
-      <div className="flex items-start justify-between border-b border-hairline bg-canvas/50 px-5 py-3">
+      <div className="flex items-start justify-between surface-head px-5 py-3">
         <div className="flex items-center gap-2.5">
           <span className="font-mono text-xs font-semibold text-ink-subtle">{spec.id}</span>
           <StatusBadge status={cur.status} />

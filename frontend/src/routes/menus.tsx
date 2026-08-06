@@ -243,7 +243,7 @@ function MenusPage() {
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
         {/* 좌: 메뉴 구조 트리 */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface">
-          <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+          <div className="flex items-center justify-between surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{tf('menus.structureTitle', { n: items.length })}</h2>
             <span className="text-xs text-ink-subtle">
               {t('menus.structureHint', '드래그하여 순서 변경 · 행을 누르면 우측에서 설정')}
@@ -254,7 +254,7 @@ function MenusPage() {
 
         {/* 우: 메뉴 설정 패널 — 목록→상세 짝 (규약 §1의 패널 안 2열) */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:80ms]">
-          <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+          <div className="surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('menus.settingsTitle', '메뉴 설정')}</h2>
           </div>
           {draft && selected ? (

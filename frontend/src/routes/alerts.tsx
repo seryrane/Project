@@ -81,6 +81,27 @@ function Meter({ label, pct }: { label: string; pct: number }) {
   )
 }
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 /** 경과 시간을 일/시/분 중 가장 큰 단위 하나로 말한다(초 단위까지 적으면 못 읽는다) */
 function elapsedParts(ms: number) {
   const totalMin = Math.max(0, Math.floor(ms / 60_000))
@@ -227,12 +248,25 @@ function AlertsPage() {
     return tf('alerts.elapsed.minutes', { m }, '{m}분 경과')
   })()
 
+  // 어제 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). "가장 오래된 미해결"은 경과 시간이라 전과 견줄 수 없어 증감을
+  // 빼고 면(①)만 적용한다(규약 §10 예시와 같은 경우).
+  const PREV_24H = { dangerServers: 1, last24h: 7, resolved: 5 }
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+  const dangerServersDelta = dangerServers.length - PREV_24H.dangerServers
+  const last24hDelta = last24h.length - PREV_24H.last24h
+  const resolvedDelta = resolvedIn24h - PREV_24H.resolved
+  const vsYesterday = t('alerts.delta.caption', '어제 대비')
+
   const tiles = [
     {
       id: 'dangerServers',
       label: t('alerts.tile.dangerServers.label', '위험 · 주의 서버'),
       value: String(dangerServers.length),
       cls: dangerServers.length > 0 ? 'text-danger-ink' : 'text-deployed-ink',
+      // 위험·주의 서버가 늘면 나쁘다
+      delta: fmtDelta(dangerServersDelta),
+      deltaGood: dangerServersDelta <= 0,
       caption:
         dangerServers.length === 0
           ? tf('alerts.tile.dangerServers.okCaption', { n: alertServers.length }, `문제 없음 — 서버 ${alertServers.length}대 모두 정상`)
@@ -243,22 +277,28 @@ function AlertsPage() {
       label: t('alerts.tile.last24h.label', '24시간 발생 알림'),
       value: String(last24h.length),
       cls: 'text-ink',
+      // 발생 알림이 늘면 나쁘다 — 원인 이벤트가 늘었다는 뜻
+      delta: fmtDelta(last24hDelta),
+      deltaGood: last24hDelta <= 0,
       caption:
         last24h.length === 0
           ? t('alerts.tile.last24h.zeroCaption', '수집은 정상 — 지난 24시간 발생한 알림이 없습니다')
-          : t('alerts.tile.last24h.caption', '최근 24시간 기준'),
+          : `${t('alerts.tile.last24h.caption', '최근 24시간 기준')} · ${vsYesterday}`,
     },
     {
       id: 'resolved',
       label: t('alerts.tile.resolved.label', '해소된 알림'),
       value: String(resolvedIn24h),
       cls: resolvedIn24h > 0 ? 'text-deployed-ink' : last24h.length > 0 ? 'text-danger-ink' : 'text-ink',
+      // 해소 건이 늘면 좋다 — 발생한 알림이 없으면(last24h=0) 견줄 뜻이 없어 증감을 뺀다
+      delta: last24h.length > 0 ? fmtDelta(resolvedDelta) : undefined,
+      deltaGood: resolvedDelta >= 0,
       caption:
         last24h.length === 0
           ? t('alerts.tile.resolved.noneOccurred', '발생한 알림이 없어 해소 건도 없습니다')
           : resolvedIn24h === 0
             ? t('alerts.tile.resolved.zeroCaption', '발생만 있고 아직 해소된 알림이 없습니다 — 조치가 필요합니다')
-            : tf('alerts.tile.resolved.caption', { n: last24h.length }, '24시간 발생 {n}건 중'),
+            : `${tf('alerts.tile.resolved.caption', { n: last24h.length }, '24시간 발생 {n}건 중')} · ${vsYesterday}`,
     },
     {
       id: 'oldestOpen',
@@ -301,24 +341,29 @@ function AlertsPage() {
         </button>
       </div>
 
-      {/* 요약 타일 4개 */}
+      {/* 요약 타일 4개 — 라벨 줄은 머리(옅은 면), 숫자는 몸 (규약 §7·§10) */}
       <div className="mt-5 grid grid-cols-2 gap-3 pc:grid-cols-4">
         {tiles.map((tile, i) => (
           <div
             key={tile.id}
             style={{ animationDelay: `${i * 60}ms` }}
-            className="card-spotlight card-hover anim-fade-up rounded-2xl border border-hairline bg-surface p-4"
+            className="card-spotlight card-hover anim-fade-up overflow-hidden rounded-2xl border border-hairline bg-surface"
           >
-            <div className="text-xs text-ink-subtle">{tile.label}</div>
-            <div className={`mt-1 text-xl font-bold tabular-nums ${tile.cls}`}>{tile.value}</div>
-            <div className="mt-0.5 text-[11px] leading-snug text-ink-subtle">{tile.caption}</div>
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{tile.label}</span>
+              {tile.delta && <DeltaChip delta={tile.delta} good={tile.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-xl font-bold tabular-nums ${tile.cls}`}>{tile.value}</div>
+              <div className="mt-1 text-[11px] leading-snug text-ink-subtle">{tile.caption}</div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* 서버 자원 리포팅 */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:100ms]">
-        <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{t('alerts.section.servers.title', '서버 자원 리포팅')}</h2>
           <p className="mt-0.5 text-[11px] text-ink-subtle">{t('alerts.section.servers.subtitle')}</p>
         </div>
@@ -357,7 +402,7 @@ function AlertsPage() {
 
       {/* 알림 이력 */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{t('alerts.section.history.title', '알림 이력')}</h2>
           <span className="text-[11px] text-ink-subtle">{t('alerts.section.history.hint', '행을 누르면 상세가 열립니다')}</span>
         </div>
@@ -461,7 +506,7 @@ function AlertsPage() {
 
       {/* 알림 규칙 카드 — 편집은 모달, 저장은 즉시(되돌릴 수 있으니 확인 모달 없음) */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:220ms]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
           <div>
             <h2 className="text-sm font-semibold text-ink">{t('alerts.section.rules.title', '알림 규칙')}</h2>
             <p className="mt-0.5 text-[11px] text-ink-subtle">{t('alerts.section.rules.subtitle')}</p>

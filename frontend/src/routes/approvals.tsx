@@ -50,6 +50,27 @@ function UrgentChip() {
   )
 }
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 type Tab = 'mine' | 'all' | 'requested' | 'done'
 
 function ApprovalsPage() {
@@ -103,22 +124,50 @@ function ApprovalsPage() {
     }
   }
 
+  const approvedCount =
+    processedRequests.filter((p) => p.result === '승인').length +
+    Object.values(decided).filter((v) => v === '승인').length
+  const rejectedCount =
+    processedRequests.filter((p) => p.result === '반려').length +
+    Object.values(decided).filter((v) => v === '반려').length
+
+  // 지난주 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). "전체 요청"은 누적 총계라 전과 견줘도 뜻이 서지 않아 증감을 빼고
+  // 면(①)만 적용한다.
+  const PREV_WEEK = { pending: 6, approved: 0, rejected: 0 }
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+  const pendingDelta = pending.length - PREV_WEEK.pending
+  const approvedDelta = approvedCount - PREV_WEEK.approved
+  const rejectedDelta = rejectedCount - PREV_WEEK.rejected
+  const deltaCaption = t('approvals.delta.caption', '지난주 대비')
+
   const stats = [
     { label: t('approvals.stat.total', '전체 요청'), value: approvalRequests.length + processedRequests.length },
-    { label: t('approvals.stat.pending', '대기 중'), value: pending.length, cls: 'text-review-ink' },
+    {
+      label: t('approvals.stat.pending', '대기 중'),
+      value: pending.length,
+      cls: 'text-review-ink',
+      // 대기 건이 늘면 나쁘다 — 결재 지연이 쌓인다는 뜻
+      delta: fmtDelta(pendingDelta),
+      deltaGood: pendingDelta <= 0,
+      caption: deltaCaption,
+    },
     {
       label: t('approvals.stat.approved', '승인 완료'),
-      value:
-        processedRequests.filter((p) => p.result === '승인').length +
-        Object.values(decided).filter((v) => v === '승인').length,
+      value: approvedCount,
       cls: 'text-deployed-ink',
+      delta: fmtDelta(approvedDelta),
+      deltaGood: approvedDelta >= 0,
+      caption: deltaCaption,
     },
     {
       label: t('approvals.stat.rejected', '반려'),
-      value:
-        processedRequests.filter((p) => p.result === '반려').length +
-        Object.values(decided).filter((v) => v === '반려').length,
+      value: rejectedCount,
       cls: 'text-danger-ink',
+      // 반려가 늘면 나쁘다
+      delta: fmtDelta(rejectedDelta),
+      deltaGood: rejectedDelta <= 0,
+      caption: deltaCaption,
     },
   ]
 
@@ -144,12 +193,18 @@ function ApprovalsPage() {
         </div>
       </div>
 
-      {/* 요약 — 숫자는 큰 활자 + tabular-nums (규약 §10) */}
+      {/* 요약 — 라벨 줄은 머리(옅은 면), 숫자는 몸 (규약 §7·§10) */}
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+            </div>
           </div>
         ))}
       </div>
@@ -190,7 +245,7 @@ function ApprovalsPage() {
                 className="card-hover flex w-full flex-col card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface text-left"
               >
                 {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
-                <span className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+                <span className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
                   {r.urgent && <UrgentChip />}
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
@@ -242,7 +297,7 @@ function ApprovalsPage() {
                 className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface"
               >
                 {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
-                <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+                <div className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
                   <span

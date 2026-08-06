@@ -69,7 +69,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* 머리는 면(배경)+선으로 가른다 — 선 하나면 스크롤 중 내용 첫 줄처럼 읽힌다 (규약 §7) */}
-        <div className="flex items-center justify-between rounded-t-2xl border-b border-hairline bg-canvas/50 px-5 py-3.5 pc:px-6 pc:py-4">
+        <div className="flex items-center justify-between rounded-t-2xl surface-head px-5 py-3.5 pc:px-6 pc:py-4">
           <h2 className="min-w-0 truncate text-lg font-semibold">{title}</h2>
           <button
             type="button"

@@ -113,7 +113,7 @@ function RolesPage() {
               }`}
             >
               {/* 머리 — 면으로 가른다 (규약 §5: 선 하나로는 약하다) */}
-              <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+              <div className="flex flex-wrap items-center gap-2 surface-head px-5 py-3.5">
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ROLE_BADGE[r.key] ?? 'bg-primary/12 text-primary'}`}>
                   {r.name}
                 </span>

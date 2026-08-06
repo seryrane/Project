@@ -19,6 +19,27 @@ export const Route = createFileRoute('/validation-results')({ component: Validat
 
 const STATUS_FILTERS = ['전체', '오류', '재처리 중', '해결', '통과'] as const
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 function ValidationResultsPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
@@ -47,13 +68,47 @@ function ValidationResultsPage() {
     open: validationRuns.filter((r) => (requeued[r.id] ? '재처리 중' : r.status) === '오류').length,
     requeue: validationRuns.filter((r) => (requeued[r.id] ? '재처리 중' : r.status) === '재처리 중').length,
   }
-  const successRate = ((1 - totals.errors / totals.processed) * 100).toFixed(2)
+  const successRate = (1 - totals.errors / totals.processed) * 100
+
+  // 전일 배치 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). "기간 검증 처리"는 처리량(볼륨)이라 늘고 주는 방향에 좋고 나쁨이
+  // 없어 증감을 빼고 면(①)만 적용한다.
+  const PREV_BATCH = { successRate: 99.71, open: 3, requeue: 0 }
+  const fmtDelta = (n: number, unit = '') => `${n >= 0 ? '+' : ''}${n}${unit}`
+  const successDelta = successRate - PREV_BATCH.successRate
+  const openDelta = totals.open - PREV_BATCH.open
+  const requeueDelta = totals.requeue - PREV_BATCH.requeue
+  const deltaCaption = t('results.delta.caption', '전일 배치 대비')
 
   const stats = [
     { label: t('results.stat.processed', '기간 검증 처리'), value: totals.processed.toLocaleString() },
-    { label: t('results.stat.successRate', '성공률'), value: `${successRate}%`, cls: 'text-deployed-ink' },
-    { label: t('results.stat.openErrors', '미해결 오류 실행'), value: totals.open, cls: 'text-danger-ink' },
-    { label: t('results.stat.requeuePending', '재처리 대기'), value: totals.requeue, cls: 'text-review-ink' },
+    {
+      label: t('results.stat.successRate', '성공률'),
+      value: `${successRate.toFixed(2)}%`,
+      cls: 'text-deployed-ink',
+      // 성공률은 오르면 좋다
+      delta: fmtDelta(Number(successDelta.toFixed(2)), '%p'),
+      deltaGood: successDelta >= 0,
+      caption: deltaCaption,
+    },
+    {
+      label: t('results.stat.openErrors', '미해결 오류 실행'),
+      value: totals.open,
+      cls: 'text-danger-ink',
+      // 미해결이 늘면 나쁘다
+      delta: fmtDelta(openDelta),
+      deltaGood: openDelta <= 0,
+      caption: deltaCaption,
+    },
+    {
+      label: t('results.stat.requeuePending', '재처리 대기'),
+      value: totals.requeue,
+      cls: 'text-review-ink',
+      // 재처리 대기가 늘면 처리 속도가 못 따라간다는 뜻 — 나쁘다
+      delta: fmtDelta(requeueDelta),
+      deltaGood: requeueDelta <= 0,
+      caption: deltaCaption,
+    },
   ]
 
   return (
@@ -81,9 +136,15 @@ function ValidationResultsPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+            </div>
           </div>
         ))}
       </div>

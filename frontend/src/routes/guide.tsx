@@ -79,7 +79,7 @@ function GuidePage() {
             id="guide-whatsnew"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-primary/30 bg-surface"
           >
-            <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="flex items-center justify-between surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 1, title: t('guide.toc.whatsnew', '새 기능') })}
               </h2>
@@ -117,7 +117,7 @@ function GuidePage() {
             id="guide-start"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 2, title: t('guide.toc.start', '시작하기') })}
               </h2>
@@ -144,7 +144,7 @@ function GuidePage() {
             id="guide-roles"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:60ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 3, title: t('guide.toc.roles', '역할과 권한') })}
               </h2>
@@ -191,7 +191,7 @@ function GuidePage() {
             id="guide-spec-flow"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 4, title: t('guide.toc.spec-flow', '사양서 작업 흐름') })}
               </h2>
@@ -228,7 +228,7 @@ function GuidePage() {
             id="guide-approval"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 5, title: t('guide.toc.approval', '승인과 배포') })}
               </h2>
@@ -252,7 +252,7 @@ function GuidePage() {
             id="guide-validation"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:240ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 6, title: t('guide.toc.validation', '검증엔진') })}
               </h2>
@@ -274,7 +274,7 @@ function GuidePage() {
             id="guide-more"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:300ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 7, title: t('guide.toc.more', '더 묻기') })}
               </h2>

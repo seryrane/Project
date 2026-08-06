@@ -20,6 +20,27 @@ export const Route = createFileRoute('/validation-engine')({ component: Validati
 const STATUS_KEYS = ['active', 'inactive'] as const
 const FREQ_KEYS = ['daily', 'weekly', 'hourly'] as const
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
   return (
     <span className={`flex items-center gap-1 text-xs font-medium ${RESULT_CLS[result]}`}>
@@ -82,11 +103,19 @@ function ValidationEnginePage() {
     }, 350)
   }
 
+  // 지난 7일 누적 오류 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). 오류는 늘면 나쁘다.
+  const cumulativeErrors = 56
+  const PREV_7D_ERRORS = 45
+  const errorsDelta = cumulativeErrors - PREV_7D_ERRORS
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+
   const stats = [
     {
       label: t('engine.stat.total', '전체 엔진'),
       value: tf('engine.countUnit', { n: engines.length }, '{n}개'),
       sub: tf('engine.activeUnit', { n: engines.filter((e) => e.active).length }, '활성 {n}개'),
+      // 등록 엔진 수는 관리 대장 헤드카운트라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
     },
     {
       label: t('engine.stat.schedules', '등록 스케줄'),
@@ -96,14 +125,22 @@ function ValidationEnginePage() {
         { n: Object.values(engineSchedules).flat().filter((s) => s.active).length },
         '활성 {n}개',
       ),
+      // 등록 스케줄 수도 관리 대장 헤드카운트 — 증감 없음
     },
-    // '성공'/'부분성공'은 엔진 실행 결과 상태값이라 그대로 둔다 (규약)
-    { label: t('engine.stat.todayRuns', '오늘 실행'), value: tf('engine.timesUnit', { n: 2 }, '{n}회'), sub: '성공 1 / 부분성공 1' },
+    {
+      // '성공'/'부분성공'은 엔진 실행 결과 상태값이라 그대로 둔다 (규약)
+      // 오늘 실행 횟수는 늘고 주는 방향이 좋고 나쁨을 가르지 않는다 — 증감 없음
+      label: t('engine.stat.todayRuns', '오늘 실행'),
+      value: tf('engine.timesUnit', { n: 2 }, '{n}회'),
+      sub: '성공 1 / 부분성공 1',
+    },
     {
       label: t('engine.stat.cumulativeErrors', '누적 오류'),
-      value: tf('engine.casesUnit', { n: 56 }, '{n}건'),
-      sub: t('engine.last7days', '최근 7일 기준'),
+      value: tf('engine.casesUnit', { n: cumulativeErrors }, '{n}건'),
+      sub: t('engine.last7days', '최근 7일 기준 · 이전 7일 대비'),
       cls: 'text-danger-ink',
+      delta: fmtDelta(errorsDelta),
+      deltaGood: errorsDelta <= 0,
     },
   ]
 
@@ -130,10 +167,14 @@ function ValidationEnginePage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">
-              {s.label} · {s.sub}
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              <div className="mt-1 text-[11px] text-ink-subtle">{s.sub}</div>
             </div>
           </div>
         ))}

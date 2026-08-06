@@ -116,7 +116,7 @@ function NoticePage() {
 
       {/* 목록 — 표는 자기 상자 안에서만 흐른다 */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
-        <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex items-center justify-between surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('notice.sectionTitle', { n: filtered.length })}</h2>
         </div>
         <ol>

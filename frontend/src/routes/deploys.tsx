@@ -57,7 +57,7 @@ function Pipeline() {
   return (
     <div className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
       {/* 머리 — 섹션 제목을 면+선으로 갈라 얹는다(규약 §7). 제목만이라 py-3.5 */}
-      <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+      <div className="surface-head px-5 py-3.5">
         <div className="text-sm font-semibold text-ink">{t('deploys.pipelineTitle', '배포 파이프라인')}</div>
       </div>
       {/* 몸 — 가로 스크롤은 몸 안에서만 두어, 머리 면은 overflow-hidden 으로 모서리를 지킨다 */}
@@ -138,7 +138,7 @@ function DeploysPage() {
               className="card-hover flex w-full flex-col card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface text-left"
             >
               {/* 머리 — 버전·환경·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
-              <span className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+              <span className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
                 <span className="font-mono text-[15px] font-semibold text-ink">{d.version}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${

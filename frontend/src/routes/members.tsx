@@ -26,6 +26,27 @@ const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], stri
   admin: 'bg-fill-review',
 }
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 function MembersPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
@@ -77,11 +98,36 @@ function MembersPage() {
     locked: memberList.filter((m) => effStatus(m) === '잠금').length,
   }
 
+  // 지난주 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10).
+  const PREV_WEEK = { active: 7, locked: 0 }
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+  const activeDelta = counts.active - PREV_WEEK.active
+  const lockedDelta = counts.locked - PREV_WEEK.locked
+  const deltaCaption = t('members.delta.caption', '지난주 대비')
+
   const stats = [
+    // 전체 회원은 계정 대장 헤드카운트라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
     { label: t('members.stat.all', '전체 회원'), value: counts.all },
-    { label: t('members.stat.active', '활성'), value: counts.active, cls: 'text-deployed-ink' },
+    {
+      label: t('members.stat.active', '활성'),
+      value: counts.active,
+      cls: 'text-deployed-ink',
+      delta: fmtDelta(activeDelta),
+      deltaGood: activeDelta >= 0,
+      caption: deltaCaption,
+    },
+    // 비활성은 자연 이탈·휴면 전환이 섞여 있어 늘고 주는 방향에 좋고 나쁨을 못 가른다 — 증감 없음
     { label: t('members.stat.inactive', '비활성'), value: counts.inactive, cls: 'text-ink-subtle' },
-    { label: t('members.stat.locked', '잠금'), value: counts.locked, cls: 'text-review-ink' },
+    {
+      label: t('members.stat.locked', '잠금'),
+      value: counts.locked,
+      cls: 'text-review-ink',
+      // 잠금 계정이 늘면 나쁘다 — 보안 위협 대응 중이라는 뜻
+      delta: fmtDelta(lockedDelta),
+      deltaGood: lockedDelta <= 0,
+      caption: deltaCaption,
+    },
   ]
 
   // 롤베이스 정합: 권한의 원천은 역할이다 — 사용자 쪽에서는 ①역할 배정을 바꾸고
@@ -143,9 +189,15 @@ function MembersPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+            </div>
           </div>
         ))}
       </div>

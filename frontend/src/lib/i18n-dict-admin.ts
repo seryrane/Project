@@ -81,6 +81,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'members.stat.active': { ko: '활성', en: 'Active' },
   'members.stat.inactive': { ko: '비활성', en: 'Inactive' },
   'members.stat.locked': { ko: '잠금', en: 'Locked' },
+  'members.delta.caption': { ko: '지난주 대비', en: 'vs last week' },
   'members.th.member': { ko: '회원', en: 'Member' },
   'members.th.dept': { ko: '부서', en: 'Department' },
   'members.th.gradeRole': { ko: '등급 · Role', en: 'Grade · Role' },
@@ -499,6 +500,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   },
   // 요약 타일 — 0 은 "지금 문제 없음"과 "자료가 안 들어옴"을 구별해 말한다 (규약 §10)
   'alerts.tile.dangerServers.label': { ko: '위험 · 주의 서버', en: 'Servers at risk' },
+  'alerts.delta.caption': { ko: '어제 대비', en: 'vs yesterday' },
   'alerts.tile.dangerServers.okCaption': { ko: '문제 없음 — 서버 {n}대 모두 정상', en: 'All clear — all {n} servers healthy' },
   'alerts.tile.dangerServers.warnCaption': { ko: '{n}대 점검 필요 — 아래 카드에서 확인', en: '{n} need attention — see cards below' },
   'alerts.tile.last24h.label': { ko: '24시간 발생 알림', en: 'Alerts in last 24h' },

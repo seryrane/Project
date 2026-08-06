@@ -65,7 +65,7 @@ function KpiMetricsPage() {
 
       {/* 시트성 표 — 산식·원천을 나란히 비교하는 화면이라 카드로 펴지 않는다 */}
       <section className="anim-fade-up card-spotlight mt-4 rounded-2xl border border-hairline bg-surface">
-        <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex items-center justify-between surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('kpi-metrics.sectionTitle', { n: rows.length })}</h2>
           <span className="text-[11px] text-ink-subtle">
             {t('kpi-metrics.sectionHint', '행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출')}

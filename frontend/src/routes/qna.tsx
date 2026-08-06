@@ -86,7 +86,7 @@ function QnaPage() {
       </div>
 
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface">
-        <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('qna.sectionTitle', { n: filtered.length })}</h2>
         </div>
         <ol>

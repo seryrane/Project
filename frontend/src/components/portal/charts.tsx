@@ -29,7 +29,7 @@ export function ChartCard({
           위에 그냥 얹혀 있으면 카드가 여럿 늘어선 대시보드에서 "어디부터가 다음 카드인지"와
           "이 숫자가 무엇에 대한 것인지"가 함께 흐려진다 (2026-08-06 사용자 지적).
           ⚠ 머리 면이 모서리를 넘지 않도록 overflow-hidden 이 함께 간다. */}
-      <div className="flex items-start justify-between gap-3 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+      <div className="flex items-start justify-between gap-3 surface-head px-5 py-3.5">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
           {subtitle && <p className="mt-0.5 text-xs text-ink-subtle">{subtitle}</p>}

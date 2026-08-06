@@ -94,7 +94,7 @@ function PrivacyPage() {
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_340px]">
         {/* 감사 로그 — 표는 자기 상자 안에서만 흐른다 */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '접속·반출 감사 로그')}</h2>
             <span className="text-[11px] text-ink-subtle">
               {t('privacy.auditLogHint', '다운로드·마스킹 해제는 사유가 필수로 남습니다')}
@@ -186,7 +186,7 @@ function PrivacyPage() {
 
         {/* 마스킹·보존 정책 — 되돌릴 수 있는 것은 묻지 않고 즉시 저장 */}
         <section className="anim-fade-up card-spotlight self-start rounded-2xl border border-hairline bg-surface [animation-delay:180ms]">
-          <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+          <div className="surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('privacy.maskPolicyTitle', '마스킹 · 보존 정책')}</h2>
           </div>
           <div className="space-y-3 p-5">

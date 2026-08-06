@@ -10,12 +10,40 @@ import type { ValidationReport } from '#/data/validationReports'
 
 export const Route = createFileRoute('/validation-reports')({ component: ValidationReportsPage })
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 function ValidationReportsPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<ValidationReport | null>(null)
   const [published, setPublished] = useState<Record<string, boolean>>({})
+
+  const draftCount = validationReports.filter((r) => r.status === '임시저장' && !published[r.id]).length
+  // 지난주 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). 임시저장이 늘면 나쁘다 — 발행되지 못한 채 쌓인다는 뜻.
+  const PREV_WEEK_DRAFTS = 0
+  const draftsDelta = draftCount - PREV_WEEK_DRAFTS
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
 
   const stats = [
     {
@@ -26,27 +54,29 @@ function ValidationReportsPage() {
         { n: validationReports.filter((r) => r.status === '발행').length },
         '발행 {n}건',
       ),
+      // 전체 리포트는 누적 총계라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
     },
     {
       label: t('reports.stat.createdThisWeek', '이번 주 생성'),
       value: tf('reports.countUnit', { n: 3 }, '{n}건'),
       sub: t('reports.autoManualSub', '자동 1 + 수동 2'),
+      // 생성 건수는 늘고 주는 방향에 좋고 나쁨이 없다 — 증감 없음
     },
     {
       label: t('reports.stat.topErrorType', '최다 오류 유형'),
       value: 'NULL_VALUE',
       sub: tf('reports.cumulativeUnit', { n: 55 }, '누적 {n}건'),
       cls: 'text-danger-ink',
+      // 유형 이름은 전과 견줄 수 있는 숫자가 아니다 — 증감 없음
     },
     {
       label: t('reports.stat.drafts', '임시저장'),
-      value: tf(
-        'reports.countUnit',
-        { n: validationReports.filter((r) => r.status === '임시저장' && !published[r.id]).length },
-        '{n}건',
-      ),
-      sub: t('reports.publishPending', '발행 대기 중'),
+      value: tf('reports.countUnit', { n: draftCount }, '{n}건'),
+      // 무엇과 견준 증감인지 보조설명에 함께 적는다 (규약 §10)
+      sub: `${t('reports.publishPending', '발행 대기 중')} · ${t('reports.delta.caption', '지난주 대비')}`,
       cls: 'text-review-ink',
+      delta: fmtDelta(draftsDelta),
+      deltaGood: draftsDelta <= 0,
     },
   ]
 
@@ -72,10 +102,14 @@ function ValidationReportsPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`truncate text-xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">
-              {s.label} · {s.sub}
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`truncate text-xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              <div className="mt-1 text-[11px] text-ink-subtle">{s.sub}</div>
             </div>
           </div>
         ))}
@@ -85,7 +119,7 @@ function ValidationReportsPage() {
           가를 것이 없다(가르면 카드가 통째로 회색이 된다). 대신 목록 전체가 하나의 물건이
           되게 머리를 세운다: 알림 이력·검증 결과와 같은 모양이다 (규약 §7·§9) */}
       <section className="mt-5 overflow-hidden rounded-2xl border border-hairline bg-surface">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">
             {tf('reports.listTitle', { n: validationReports.length }, '리포트 {n}건')}
           </h2>

@@ -61,7 +61,7 @@ export function Drawer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* 머리는 면(배경)+선으로 가른다 (규약 §7) */}
-        <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-6 py-4">
+        <div className="flex items-center justify-between surface-head px-6 py-4">
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
             type="button"

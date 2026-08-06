@@ -84,7 +84,7 @@ function KpiIviPage() {
 
       {mode === 'tableau' ? (
         <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface">
-          <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+          <div className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
             {/* 워크북 탭 — 등록된 것만. 등록은 관리자(코드 배포 없이 편입) */}
             <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
               {workbooks.map((w, i) => (
