@@ -133,7 +133,9 @@ NAV = [
         {"key": "dashboard", "label": "대시보드", "icon": "dashboard", "to": "/dashboard"},
     ]},
     {"id": "kpi", "title": "센터 KPI (ICDAP)", "items": [
-        {"key": "analytics", "label": "통계 & 분석", "icon": "stats", "to": "/analytics"},
+        {"key": "analytics", "label": "센터 KPI 대시보드", "icon": "stats", "to": "/analytics"},
+        {"key": "kpi-ivi", "label": "인포 IVI KPI", "icon": "report", "to": "/kpi-ivi"},
+        {"key": "kpi-metrics", "label": "지표 관리", "icon": "doc", "to": "/kpi-metrics"},
     ]},
     {"id": "admin", "title": "관리", "items": [
         {"key": "members", "label": "회원 관리", "icon": "users", "to": "/members"},
@@ -165,6 +167,8 @@ NAV = [
 # LNB 항목 키 → 필요한 메뉴 권한(매트릭스 낱말). 없으면 최소 메뉴(모두에게).
 NAV_REQUIRES = {
     "dashboard": "대시보드", "analytics": "통계 & 분석",
+    # KPI 하위 메뉴는 통계&분석 권한을 따른다 (별도 권한 낱말은 매트릭스 확장 때)
+    "kpi-ivi": "통계 & 분석", "kpi-metrics": "통계 & 분석",
     "members": "회원 관리", "roles": "권한 관리", "menus": "메뉴 관리",
     "specs": "사양서 관리", "approvals": "승인 관리", "deploys": "배포 관리",
     "engine": "검증엔진", "results": "검증엔진", "reports": "검증엔진",

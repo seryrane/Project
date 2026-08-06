@@ -28,6 +28,8 @@ const PAGES = [
   '/privacy',
   '/login',
   '/signup',
+  '/kpi-ivi',
+  '/kpi-metrics',
 ]
 
 /** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이
@@ -67,8 +69,10 @@ test('서랍 — 열리고, 잎을 고르면 닫힌다 (가지는 그대로)', a
   await page.locator('aside').getByRole('button', { name: /^관리/ }).click()
   await expect(aside).toBeInViewport()
 
-  // 잎(메뉴 항목)을 고르면 닫히고 이동한다
-  await page.locator('aside').getByRole('link', { name: /대시보드/ }).click()
+  // 잎(메뉴 항목)을 고르면 닫히고 이동한다.
+  // ⚠ exact — 이름 일부(/대시보드/)로 집으면 '센터 KPI 대시보드'가 생기는 날
+  //   둘이 걸려 회귀처럼 실패한다(느슨한 셀렉터 함정 — 실제로 겪음)
+  await page.locator('aside').getByRole('link', { name: '대시보드', exact: true }).click()
   await expect(page).toHaveURL(/\/dashboard/)
   await expect(page.locator('aside')).not.toBeInViewport()
 })

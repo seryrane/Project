@@ -16,9 +16,21 @@
   "items": [
    {
     "key": "analytics",
-    "label": "통계 & 분석",
+    "label": "센터 KPI 대시보드",
     "icon": "stats",
     "to": "/analytics"
+   },
+   {
+    "key": "kpi-ivi",
+    "label": "인포 IVI KPI",
+    "icon": "report",
+    "to": "/kpi-ivi"
+   },
+   {
+    "key": "kpi-metrics",
+    "label": "지표 관리",
+    "icon": "doc",
+    "to": "/kpi-metrics"
    }
   ]
  },

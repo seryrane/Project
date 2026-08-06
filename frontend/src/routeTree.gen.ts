@@ -16,6 +16,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as KpiIviRouteImport } from './routes/kpi-ivi'
+import { Route as KpiMetricsRouteImport } from './routes/kpi-metrics'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as MenusRouteImport } from './routes/menus'
@@ -63,6 +65,16 @@ const FaqRoute = FaqRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KpiIviRoute = KpiIviRouteImport.update({
+  id: '/kpi-ivi',
+  path: '/kpi-ivi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KpiMetricsRoute = KpiMetricsRouteImport.update({
+  id: '/kpi-metrics',
+  path: '/kpi-metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -139,6 +151,8 @@ export interface FileRoutesByFullPath {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/kpi-ivi': typeof KpiIviRoute
+  '/kpi-metrics': typeof KpiMetricsRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
@@ -161,6 +175,8 @@ export interface FileRoutesByTo {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/kpi-ivi': typeof KpiIviRoute
+  '/kpi-metrics': typeof KpiMetricsRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
@@ -184,6 +200,8 @@ export interface FileRoutesById {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/kpi-ivi': typeof KpiIviRoute
+  '/kpi-metrics': typeof KpiMetricsRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
@@ -208,6 +226,8 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/kpi-ivi'
+    | '/kpi-metrics'
     | '/login'
     | '/members'
     | '/menus'
@@ -230,6 +250,8 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/kpi-ivi'
+    | '/kpi-metrics'
     | '/login'
     | '/members'
     | '/menus'
@@ -252,6 +274,8 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/kpi-ivi'
+    | '/kpi-metrics'
     | '/login'
     | '/members'
     | '/menus'
@@ -275,6 +299,8 @@ export interface RootRouteChildren {
   DeploysRoute: typeof DeploysRoute
   FaqRoute: typeof FaqRoute
   GuideRoute: typeof GuideRoute
+  KpiIviRoute: typeof KpiIviRoute
+  KpiMetricsRoute: typeof KpiMetricsRoute
   LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
   MenusRoute: typeof MenusRoute
@@ -339,6 +365,20 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kpi-ivi': {
+      id: '/kpi-ivi'
+      path: '/kpi-ivi'
+      fullPath: '/kpi-ivi'
+      preLoaderRoute: typeof KpiIviRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kpi-metrics': {
+      id: '/kpi-metrics'
+      path: '/kpi-metrics'
+      fullPath: '/kpi-metrics'
+      preLoaderRoute: typeof KpiMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -443,6 +483,8 @@ const rootRouteChildren: RootRouteChildren = {
   DeploysRoute: DeploysRoute,
   FaqRoute: FaqRoute,
   GuideRoute: GuideRoute,
+  KpiIviRoute: KpiIviRoute,
+  KpiMetricsRoute: KpiMetricsRoute,
   LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
   MenusRoute: MenusRoute,

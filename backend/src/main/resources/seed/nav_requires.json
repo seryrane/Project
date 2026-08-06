@@ -1,6 +1,8 @@
 {
  "dashboard": "대시보드",
  "analytics": "통계 & 분석",
+ "kpi-ivi": "통계 & 분석",
+ "kpi-metrics": "통계 & 분석",
  "members": "회원 관리",
  "roles": "권한 관리",
  "menus": "메뉴 관리",

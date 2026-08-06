@@ -54,7 +54,10 @@ export const nav: Array<NavSection> = [
     id: 'kpi',
     title: '센터 KPI (ICDAP)',
     items: [
-      { key: 'analytics', label: '통계 & 분석', icon: 'stats', to: '/analytics' },
+      // FR-074 센터 KPI 대시보드 · FR-075 IVI(임베딩+자체 병행) · FR-070 지표 정의서
+      { key: 'analytics', label: '센터 KPI 대시보드', icon: 'stats', to: '/analytics' },
+      { key: 'kpi-ivi', label: '인포 IVI KPI', icon: 'report', to: '/kpi-ivi' },
+      { key: 'kpi-metrics', label: '지표 관리', icon: 'doc', to: '/kpi-metrics' },
     ],
   },
   {
