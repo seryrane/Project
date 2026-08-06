@@ -1,0 +1,11 @@
+# 테스트 DB 분리 — 개발 DB(파일)를 오염시키면 화면에 "테스트 공지"가 뜬다
+# (FastAPI 벌에서 실제로 겪고 분리한 규칙을 그대로 따른다)
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always

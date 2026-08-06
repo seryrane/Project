@@ -1,0 +1,17 @@
+node_modules
+.DS_Store
+# dev 서버는 Start-Process 로 분리 기동하며 로그를 파일로 뺀다 (CLAUDE.md 작업 규율)
+*.log
+dist
+dist-ssr
+*.local
+.env
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+test-results
+playwright-report

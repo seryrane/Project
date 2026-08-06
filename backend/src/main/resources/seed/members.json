@@ -1,0 +1,128 @@
+[
+ {
+  "id": "u-01",
+  "name": "김현대",
+  "email": "hyundae.kim@hmg.com",
+  "dept": "IT 전략팀",
+  "grade": "Super Admin",
+  "roles": [
+   "KPI_ADMIN",
+   "IBD_ADMIN"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.05 09:23"
+ },
+ {
+  "id": "u-02",
+  "name": "김민준",
+  "email": "minjun.kim@hmg.com",
+  "dept": "IT 전략팀",
+  "grade": "Editor",
+  "roles": [
+   "IBD_EDITOR"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.05 09:10"
+ },
+ {
+  "id": "u-03",
+  "name": "이서연",
+  "email": "seoyeon.lee@hmg.com",
+  "dept": "전동화기술팀",
+  "grade": "Editor",
+  "roles": [
+   "IBD_EDITOR",
+   "KPI_EDITOR"
+  ],
+  "status": "활성",
+  "fido": false,
+  "lastLogin": "2026.08.05 08:45"
+ },
+ {
+  "id": "u-04",
+  "name": "박준혁",
+  "email": "junhyuk.park@hmg.com",
+  "dept": "플랫폼운영팀",
+  "grade": "Admin",
+  "roles": [
+   "DEPLOY_MANAGER"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.04 17:32"
+ },
+ {
+  "id": "u-05",
+  "name": "한동현",
+  "email": "donghyun.han@hmg.com",
+  "dept": "법무팀",
+  "grade": "Viewer",
+  "roles": [
+   "IBD_APPROVER"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.05 07:58"
+ },
+ {
+  "id": "u-06",
+  "name": "최수진",
+  "email": "sujin.choi@hmg.com",
+  "dept": "마케팅팀",
+  "grade": "Viewer",
+  "roles": [],
+  "status": "비활성",
+  "fido": false,
+  "lastLogin": "2026.06.20 14:11"
+ },
+ {
+  "id": "u-07",
+  "name": "정다은",
+  "email": "daeun.jung@hmg.com",
+  "dept": "연구개발팀",
+  "grade": "Viewer",
+  "roles": [],
+  "status": "활성",
+  "fido": false,
+  "lastLogin": "2026.08.05 10:05"
+ },
+ {
+  "id": "u-08",
+  "name": "오지원",
+  "email": "jiwon.oh@hmg.com",
+  "dept": "디자인팀",
+  "grade": "Viewer",
+  "roles": [],
+  "status": "잠금",
+  "fido": false,
+  "lastLogin": "2026.07.10 16:45"
+ },
+ {
+  "id": "u-09",
+  "name": "윤성민",
+  "email": "seongmin.yun@hmg.com",
+  "dept": "플랫폼운영팀",
+  "grade": "Admin",
+  "roles": [
+   "DEPLOY_MANAGER"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.04 15:30"
+ },
+ {
+  "id": "u-10",
+  "name": "박서준",
+  "email": "seojun.park@hmg.com",
+  "dept": "IT 전략팀",
+  "grade": "Super Admin",
+  "roles": [
+   "KPI_ADMIN"
+  ],
+  "status": "활성",
+  "fido": true,
+  "lastLogin": "2026.08.05 08:12"
+ }
+]

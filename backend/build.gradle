@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'Monolithic backend'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
+    developmentOnly platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
+
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // 저장은 JdbcTemplate — FastAPI 벌(정본)의 kv+행 구조를 그대로 옮긴다.
+    // 엔티티 층을 얹지 않는 이유: 정본이 JSON 문서라 ORM 이 끼면 두 벌의 모양이 갈린다
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // 표적은 PostgreSQL(postgres 프로필). 이 PC 엔 PG 가 없어(도커 불가)
+    // 기본 프로필은 H2 의 PostgreSQL 호환 모드로 돈다 — SQL 은 두 쪽 공용으로 쓴다
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Boot 4 모듈 분리 — MockMvc 자동구성은 webmvc-test 스타터에 있다 (starter-test 에 안 들어온다)
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

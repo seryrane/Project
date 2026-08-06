@@ -1,0 +1,267 @@
+[
+ {
+  "key": "super",
+  "name": "Super Admin",
+  "desc": "전체 시스템 관리 권한 — 회원·권한·메뉴 관리 포함",
+  "system": true,
+  "assigned": 2,
+  "matrix": {
+   "대시보드": [
+    "조회"
+   ],
+   "통계 & 분석": [
+    "조회",
+    "다운로드"
+   ],
+   "회원 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제"
+   ],
+   "권한 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제"
+   ],
+   "메뉴 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제"
+   ],
+   "사양서 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제",
+    "업로드",
+    "다운로드",
+    "승인"
+   ],
+   "승인 관리": [
+    "조회",
+    "승인"
+   ],
+   "배포 관리": [
+    "조회",
+    "생성",
+    "승인"
+   ],
+   "검증엔진": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제"
+   ],
+   "커뮤니티": [
+    "조회",
+    "생성",
+    "수정",
+    "삭제"
+   ]
+  },
+  "scope": {},
+  "holders": [
+   {
+    "name": "김현대",
+    "scopeLabel": "전체"
+   },
+   {
+    "name": "박서준",
+    "scopeLabel": "전체"
+   }
+  ],
+  "features": [
+   "dashboard.read",
+   "validation.stats",
+   "spec.read",
+   "validation.history",
+   "approval.read",
+   "validation.errors",
+   "activity.read",
+   "monitoring.read",
+   "pipeline.read",
+   "member.read",
+   "community.read"
+  ]
+ },
+ {
+  "key": "admin",
+  "name": "Admin",
+  "desc": "서비스 운영 및 모니터링 권한 — 배포·검증 운영",
+  "system": true,
+  "assigned": 5,
+  "matrix": {
+   "대시보드": [
+    "조회"
+   ],
+   "통계 & 분석": [
+    "조회",
+    "다운로드"
+   ],
+   "회원 관리": [
+    "조회"
+   ],
+   "권한 관리": [
+    "조회"
+   ],
+   "메뉴 관리": [
+    "조회"
+   ],
+   "사양서 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "업로드",
+    "다운로드"
+   ],
+   "승인 관리": [
+    "조회",
+    "승인"
+   ],
+   "배포 관리": [
+    "조회",
+    "생성",
+    "승인"
+   ],
+   "검증엔진": [
+    "조회",
+    "생성",
+    "수정"
+   ],
+   "커뮤니티": [
+    "조회",
+    "생성"
+   ]
+  },
+  "scope": {},
+  "holders": [
+   {
+    "name": "박준혁",
+    "scopeLabel": "플랫폼운영팀"
+   },
+   {
+    "name": "이수진",
+    "scopeLabel": "전동화기술팀"
+   },
+   {
+    "name": "정민호",
+    "scopeLabel": "IT 전략팀"
+   }
+  ],
+  "features": [
+   "dashboard.read",
+   "approval.read",
+   "spec.read",
+   "activity.read",
+   "validation.stats",
+   "community.read"
+  ]
+ },
+ {
+  "key": "editor",
+  "name": "Editor",
+  "desc": "사양서 작성·수정 권한, 승인 요청 가능",
+  "system": true,
+  "assigned": 18,
+  "matrix": {
+   "대시보드": [
+    "조회"
+   ],
+   "통계 & 분석": [
+    "조회"
+   ],
+   "사양서 관리": [
+    "조회",
+    "생성",
+    "수정",
+    "업로드",
+    "다운로드"
+   ],
+   "승인 관리": [
+    "조회"
+   ],
+   "배포 관리": [
+    "조회"
+   ],
+   "검증엔진": [
+    "조회"
+   ],
+   "커뮤니티": [
+    "조회",
+    "생성"
+   ]
+  },
+  "scope": {
+   "통계 & 분석": "team",
+   "사양서 관리": "team",
+   "승인 관리": "own",
+   "배포 관리": "team",
+   "검증엔진": "team"
+  },
+  "holders": [
+   {
+    "name": "김민준",
+    "scopeLabel": "IT 전략팀"
+   },
+   {
+    "name": "이서연",
+    "scopeLabel": "전동화기술팀"
+   }
+  ],
+  "features": [
+   "dashboard.read",
+   "validation.stats",
+   "validation.errors",
+   "validation.history",
+   "monitoring.read",
+   "pipeline.read",
+   "community.read"
+  ]
+ },
+ {
+  "key": "viewer",
+  "name": "Viewer",
+  "desc": "사양서·지표 조회 전용 권한",
+  "system": true,
+  "assigned": 41,
+  "matrix": {
+   "대시보드": [
+    "조회"
+   ],
+   "통계 & 분석": [
+    "조회"
+   ],
+   "사양서 관리": [
+    "조회",
+    "다운로드"
+   ],
+   "커뮤니티": [
+    "조회"
+   ]
+  },
+  "scope": {
+   "통계 & 분석": "team",
+   "사양서 관리": "team"
+  },
+  "holders": [
+   {
+    "name": "한동현",
+    "scopeLabel": "법무팀"
+   },
+   {
+    "name": "최수진",
+    "scopeLabel": "마케팅팀"
+   }
+  ],
+  "features": [
+   "dashboard.read",
+   "validation.stats",
+   "spec.read",
+   "activity.read",
+   "community.read"
+  ]
+ }
+]

@@ -1,3 +1,29 @@
-.*.sw*
-node_modules
-scrap.js
+# Backend (Gradle / Spring Boot)
+backend/build/
+backend/.gradle/
+backend/bin/
+backend/out/
+
+# Backend (Python / FastAPI)
+backend-python/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# IDE
+.idea/
+*.iml
+.vscode/settings.json
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+backend-python/data/
+backend/data/
+backend/boot.log
+backend/boot-err.log

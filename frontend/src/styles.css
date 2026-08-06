@@ -1,0 +1,502 @@
+
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+@import "tailwindcss";
+
+@theme {
+  /* 좁은/넓은 화면 경계 720px — docs/화면_공통규칙.md §8, DESIGN.md Mobile 절 */
+  --breakpoint-pc: 45rem;
+
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Segoe UI', sans-serif;
+
+  /* ⚠ 고정폭 목록에 **한글 글꼴을 반드시 끝에 붙인다**. 글꼴 대체는 글자 하나 단위라,
+     한글이 없는 목록(Tailwind 기본값)이면 산식·주기처럼 한글이 섞인 칸에서 **그 한글만**
+     윈도 기본 글꼴로 떨어져 나가 화면에 딴 글꼴이 섞인다(2026-08-06 사용자 지적).
+     ASCII(ID·테이블명·수식)는 그대로 고정폭, 한글만 Pretendard 로 이어받는다. */
+  --font-mono:
+    ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, Menlo,
+    'Liberation Mono', 'Pretendard Variable', Pretendard, monospace;
+
+  --color-canvas: #0c0e15;
+  --color-surface: #141722;
+  --color-raised: #1a1e2c;
+  --color-hairline: #242938;
+  --color-ink: #eef0f6;
+  --color-ink-muted: #9aa1b5;
+  --color-ink-subtle: #676e84;
+  /* 기본 포인트 색 = 현대 남색. 브랜드 원색(#002C5F)은 어두운 캔버스에 묻히므로
+     다크에서는 같은 색조를 밝혀 쓰고, 라이트에서 원색을 쓴다 */
+  --color-primary: #5a90d2;
+  --color-primary-deep: #3f74b4;
+  --color-accent2: #82aee0;
+  --color-sidebar: #090b11;
+  --color-sidebar-ink: #a7adc0;
+  --color-chip: rgb(255 255 255 / 6%);
+  --color-chip-strong: rgb(255 255 255 / 11%);
+  --color-glow: rgb(90 144 210 / 25%);
+
+  --color-draft-bg: #232838;
+  --color-draft-ink: #a3aabf;
+  --color-review-bg: #322611;
+  --color-review-ink: #f2b65a;
+  --color-pending-bg: #262047;
+  --color-pending-ink: #b3a4ff;
+  --color-deployed-bg: #12301f;
+  --color-deployed-ink: #57dd92;
+  --color-danger-bg: #391b1f;
+  --color-danger-ink: #f78c95;
+  --color-added-bg: #123023;
+  --color-added-ink: #4fd38a;
+
+  /* chart-only status fills — CVD-validated against each theme's surface */
+  --color-fill-draft: #4e7de0;
+  --color-fill-review: #bd831e;
+  --color-fill-pending: #8b7cff;
+  --color-fill-deployed: #2fae6b;
+}
+
+/* Light theme — overrides the same tokens; the sidebar stays dark in both themes */
+[data-theme='light'] {
+  --color-canvas: #f4f5f9;
+  --color-surface: #ffffff;
+  --color-raised: #eef0f6;
+  --color-hairline: #e3e7f0;
+  --color-ink: #1b2033;
+  --color-ink-muted: #4d566e;
+  --color-ink-subtle: #8791a5;
+  --color-primary: #002c5f;
+  --color-primary-deep: #001e42;
+  --color-accent2: #1c4e8a;
+  --color-chip: rgb(27 32 51 / 6%);
+  --color-chip-strong: rgb(27 32 51 / 11%);
+  --color-glow: rgb(0 44 95 / 20%);
+
+  --color-draft-bg: #e9edf4;
+  --color-draft-ink: #5b6472;
+  --color-review-bg: #fdf0dc;
+  --color-review-ink: #96570a;
+  --color-pending-bg: #ece7ff;
+  --color-pending-ink: #5f43d6;
+  --color-deployed-bg: #dff3e8;
+  --color-deployed-ink: #177245;
+  --color-danger-bg: #fcebeb;
+  --color-danger-ink: #b3261e;
+  --color-added-bg: #dff3e8;
+  --color-added-ink: #12703f;
+
+  --color-fill-draft: #3f6ad0;
+  --color-fill-review: #b8770a;
+  --color-fill-pending: #6d5cf0;
+  --color-fill-deployed: #1d9d5f;
+}
+
+/* ── 포인트 색상 (개인 설정) ─────────────────────────────────────────
+   data-accent 가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 —
+   그라디언트·CTA·스포트라이트·차트가 전부 토큰을 보므로 이 블록이 전체를 바꾼다.
+   navy(기본 — 현대 남색)는 :root/[data-theme='light'] 값 그대로라 블록이 없다.
+   ⚠ 라이트 조합 선택자는 반드시 이 자리(라이트 테마 블록 뒤)에 — 순서가 명세다.
+   선택지 정본은 lib/accent.ts (여기와 1:1). */
+[data-accent='violet'] {
+  --color-primary: #8b7cff;
+  --color-primary-deep: #7463f2;
+  --color-accent2: #a08cff;
+  --color-glow: rgb(139 124 255 / 25%);
+}
+[data-theme='light'][data-accent='violet'] {
+  --color-primary: #6d5cf0;
+  --color-primary-deep: #5a49dd;
+  --color-accent2: #8a76ff;
+  --color-glow: rgb(109 92 240 / 20%);
+}
+/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 명도·채도를 벌려 구별한다
+   (남색은 어둡고 차분, 파랑은 밝고 선명). 청록은 초록과 너무 닮아 뺐다. */
+[data-accent='blue'] {
+  --color-primary: #63a3ff;
+  --color-primary-deep: #4a8bf5;
+  --color-accent2: #8ab9ff;
+  --color-glow: rgb(99 163 255 / 25%);
+}
+[data-theme='light'][data-accent='blue'] {
+  --color-primary: #2563eb;
+  --color-primary-deep: #1d4ed8;
+  --color-accent2: #60a5fa;
+  --color-glow: rgb(37 99 235 / 20%);
+}
+[data-accent='green'] {
+  --color-primary: #55cf85;
+  --color-primary-deep: #38b46c;
+  --color-accent2: #7fdfa5;
+  --color-glow: rgb(85 207 133 / 25%);
+}
+[data-theme='light'][data-accent='green'] {
+  --color-primary: #16a34a;
+  --color-primary-deep: #15803d;
+  --color-accent2: #22c55e;
+  --color-glow: rgb(22 163 74 / 20%);
+}
+[data-accent='amber'] {
+  --color-primary: #f0a84e;
+  --color-primary-deep: #dd9032;
+  --color-accent2: #f8c078;
+  --color-glow: rgb(240 168 78 / 25%);
+}
+[data-theme='light'][data-accent='amber'] {
+  --color-primary: #d97706;
+  --color-primary-deep: #b45309;
+  --color-accent2: #f59e0b;
+  --color-glow: rgb(217 119 6 / 20%);
+}
+[data-accent='rose'] {
+  --color-primary: #f27a9d;
+  --color-primary-deep: #e25a83;
+  --color-accent2: #f79cb6;
+  --color-glow: rgb(242 122 157 / 25%);
+}
+[data-theme='light'][data-accent='rose'] {
+  --color-primary: #db2777;
+  --color-primary-deep: #be185d;
+  --color-accent2: #ec4899;
+  --color-glow: rgb(219 39 119 / 20%);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* 스크롤바도 앱의 물건이다 (DESIGN.md Rules 8) — 브라우저 기본 회색 스크롤바가
+   남으면 그 줄만 딴 앱처럼 보인다. 전역으로 얇은 테마 스크롤바를 입힌다.
+   표준(scrollbar-width/color, Chrome 121+·Firefox)과 웹킷 의사요소를 병기 —
+   표준을 지원하는 브라우저는 표준이 이기고, 구형 웹킷은 의사요소를 쓴다 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-chip-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-chip-strong);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-chip-strong) 60%, var(--color-ink-subtle));
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 스크롤바 숨김 — 스크롤은 그대로. 표준(scrollbar-width) + 구형 웹킷 병기.
+   ⚠ 숨기면 "아래 더 있다"는 신호가 사라지므로, 쓰는 쪽은 가장자리 페이드를 함께 둔다 */
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* ---- Motion system -------------------------------------------------- */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+}
+@keyframes scale-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+}
+@keyframes slide-out-right {
+  to { transform: translateX(100%); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+}
+
+/* 부드러운 펼침 — height:auto 를 그리드 행 전환으로 푼다 (최신 CSS 관용구).
+   내용은 함께 살짝 떠오른다. 닫힘도 같은 곡선으로 되감긴다. */
+.reveal-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-grid.open {
+  grid-template-rows: 1fr;
+}
+.reveal-grid > * {
+  overflow: hidden;
+  min-height: 0;
+}
+.reveal-grid .reveal-inner {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 220ms ease 60ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1) 40ms;
+}
+.reveal-grid.open .reveal-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 포인터 추적 스포트라이트 — 커서 좌표(--mx/--my, AppShell 위임 리스너가 채움)를
+   따라 은은한 빛이 카드 위를 흐른다. 호버가 끝나면 잦아든다. */
+.card-spotlight {
+  position: relative;
+}
+.card-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* 은은해야 한다 — 세게 하면 카드가 손전등을 따라다니는 것처럼 보인다
+     ("너무 과해" 피드백으로 240px/100% → 320px/35% 로 낮춤: 넓고 옅게) */
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    var(--color-glow),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.card-spotlight:hover::before {
+  opacity: 0.35;
+}
+
+/* 클릭형 카드 공통 호버 — 살짝 떠오르고 테두리·글로우가 켜진다 (사양서 카드와 동일 감).
+   ⚠ transform 이 아니라 translate 속성이다 — 등장 애니메이션(fill: both)이 transform 을
+   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음). */
+.card-hover {
+  /* translate 만 CSS 스프링(linear() 곡선) — 살짝 넘었다 눌러앉는 손맛.
+     linear() 는 기계 곡선(cubic-bezier)로는 못 그리는 감쇠 진동을 표로 편 것 */
+  transition:
+    translate 380ms
+      linear(
+        0, 0.322 5.2%, 0.646 10.6%, 0.876 15.9%, 1.021 21.3%, 1.098 27%, 1.116 33.2%,
+        1.098 39.9%, 1.062 47.5%, 1.024 56.2%, 1.001 66.4%, 0.994 78.4%, 1
+      ),
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.card-hover:hover {
+  translate: 0 -2px;
+  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+  box-shadow: 0 6px 20px var(--color-glow);
+}
+
+/* CTA 셴 — 그라디언트 주 버튼에 호버 시 빛이 한 번 스치고 지나간다.
+   정본은 이 조합 선택자 하나: from-primary+to-accent2 유틸 조합이 곧 CTA 표식이라
+   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋 */
+@media (hover: hover) {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled),
+  a[class*='from-primary'][class*='to-accent2'] {
+    position: relative;
+    overflow: hidden;
+  }
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled)::after,
+  a[class*='from-primary'][class*='to-accent2']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 30%) 50%, transparent 68%);
+    transform: translateX(-130%);
+    pointer-events: none;
+  }
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):hover::after,
+  a[class*='from-primary'][class*='to-accent2']:hover::after {
+    transform: translateX(130%);
+    transition: transform 600ms ease;
+  }
+}
+
+/* 제목 줄바꿈 균형 — 두 줄로 꺾일 때 한 낱말만 떨어지는 것을 막는다 */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+/* 드래그 선택도 브랜드로 */
+::selection {
+  background: color-mix(in oklab, var(--color-primary) 35%, transparent);
+}
+
+/* 시트성 표의 가로 스크롤 상자 — 오른쪽에 열이 더 있다는 걸 가장자리 그림자로 말한다
+   (규약 §8: 표시가 없으면 사람은 "열이 이것뿐"이라고 읽는다).
+   background-attachment: local 인 덮개가 스크롤을 따라 움직여 그림자를 걷어 낸다 —
+   끝에 닿으면 그림자가 사라진다. ⚠ 행에 불투명 배경을 깔면 그림자가 가려진다 */
+.table-scroll {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--color-surface) 40%, transparent) left / 36px 100% no-repeat,
+    linear-gradient(to left, var(--color-surface) 40%, transparent) right / 36px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 40%), transparent) left / 12px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 40%), transparent) right / 12px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* 스켈레톤 — 빛이 쓸고 지나가는 셔머 (규약 §3: 곧 채워질 카드 자리에만).
+   ⚠ 영원히 도는 스켈레톤이 제일 나쁘다 — 실패하면 지우고 이유를 남긴다 */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--color-chip);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-ink-subtle) 14%, transparent) 50%,
+    transparent
+  );
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  to { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
+/* 보더 빔 — **일하는 중인 카드**의 테두리를 빛이 한 바퀴씩 돈다 (로딩·실행 중 전용).
+   @property 로 각도를 등록해야 conic-gradient 각도가 애니메이션된다.
+   마스크 두 장의 XOR 로 테두리 1px 만 남긴다 — 안쪽 내용은 건드리지 않는다 */
+@property --beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.card-loading {
+  position: relative;
+}
+.card-loading::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0 78%,
+    color-mix(in oklab, var(--color-primary) 85%, white) 90%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam-spin 2.2s linear infinite;
+  pointer-events: none;
+}
+@keyframes beam-spin {
+  to { --beam-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-loading::before { animation: none; }
+}
+
+/* 편집 매트릭스 — 켜진 칸이 하나라도 있는 줄은 은은하게 밝힌다 (:has + color-mix) */
+.perm-row:has(input:checked),
+.perm-row:has(button[aria-pressed='true']) {
+  background: color-mix(in oklab, var(--color-primary) 7%, transparent);
+}
+.perm-row:hover {
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
+/* 도트 스태거 등장 — --i 로 순번을 준다 */
+@keyframes dot-in {
+  from { opacity: 0; transform: scale(0.4); }
+}
+.anim-dot-in { animation: dot-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 24ms); }
+
+.anim-fade-in { animation: fade-in 160ms ease both; }
+.anim-fade-out { animation: fade-out 140ms ease both; }
+.anim-scale-in { animation: scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-scale-out { animation: scale-out 140ms ease both; }
+.anim-slide-in { animation: slide-in-right 280ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-slide-out { animation: slide-out-right 200ms ease both; }
+.anim-fade-up { animation: fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-toast-in { animation: toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Cross-page View Transitions (TanStack Router defaultViewTransition) */
+::view-transition-old(root) {
+  animation: fade-out 110ms ease both;
+}
+::view-transition-new(root) {
+  animation: scale-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* 좁은 화면에서만 조작을 키운다 — 규약 §8 (넓은 화면 밀도는 마우스의 이점이라 그대로 둔다).
+   min-height 로만 키운다: height 로 박으면 두 줄짜리 항목이 잘린다. */
+@media (max-width: 719.9px) {
+  button,
+  select {
+    min-height: 40px;
+  }
+  input:not([type='checkbox']):not([type='radio']) {
+    min-height: 40px;
+    font-size: 16px; /* 16px 미만이면 iOS 가 화면을 확대해 버린다 */
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 24px;
+    height: 24px;
+  }
+  /* 토글 스위치 — 40px 로 늘리면 알약이 뭉개진다(실측 40×40 정사각).
+     시각은 유지하고 히트 영역만 ::before 로 40px 이상 확장한다 */
+  button[role='switch'] {
+    min-height: 0;
+    position: relative;
+  }
+  button[role='switch']::before {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
+}
+
