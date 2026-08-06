@@ -110,7 +110,19 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 
 - 기본 다크. `<html data-theme="light">`로 라이트 전환 — 모든 색은 CSS 변수 토큰이라 통째로 교체됨. 토글은 상단바(해/달), localStorage `theme`에 저장.
 - **사이드바는 두 테마 모두 다크 유지** (브랜드 아이덴티티). 사이드바 내부는 white/* 유틸 사용 가능, 콘텐츠 영역은 반드시 `chip`/`chip-strong`/`hairline` 토큰 사용 (white/* 금지 — 라이트에서 깨짐).
-- 라이트 토큰: canvas #f4f5f9 · surface #fff · primary #002c5f(현대 남색) 등 (styles.css `[data-theme='light']` 블록).
+- 라이트 토큰(2026-08-06 개편 — C안 "브랜드 톤"): canvas **#e8eef7** · surface #fff · raised #f1f6fd ·
+  hairline #d9e3f1 · divider #e9eff8 · accent2 **#1f5fae** (styles.css `[data-theme='light']` 블록).
+- ⚠⚠ **고도(elevation)는 테마마다 다른 물리를 쓴다.** 다크에서 깊이는 *빛*(어두운 배경 위 글로우),
+  라이트에서 깊이는 *그림자*다. 같은 값을 두 테마에 쓰면 한쪽은 반드시 안 보인다 —
+  라이트가 밋밋했던 진짜 이유가 이것이었다(사용자 지적 → 실측: 바탕↔카드 1.09:1,
+  테두리 1.24:1, **그림자 0개**, 모든 그림자가 `--color-glow` 하나). 토큰은
+  `--shadow-1`(기본) · `--shadow-2`(호버) · `--shadow-cta`. 라이트 값은 `color-mix` 로
+  primary 에서 섞어 만들어 **포인트 색을 바꾸면 그림자도 따라온다**.
+- **선은 두 단계다** — 감싸는 선(`hairline`, 카드 테두리)과 나누는 선(`divider`, 표의 행).
+  한 값이 두 일을 하면 카드는 흐리고 표는 시끄럽다.
+- 카드에 그림자를 다는 방법: 마크업에 클래스를 새로 달지 않는다. **조합 선택자가 곧 표식**이다
+  (`bg-surface` + `border-hairline` + `rounded-xl/2xl`) — CTA 셴과 같은 방식. `rounded-lg` 이하
+  (버튼·입력·칩)는 일부러 뺐다: 작은 조작에까지 그림자를 걸면 화면이 통째로 무거워진다.
 - **포인트 색상(개인 설정)**: `<html data-accent="violet|blue|green|amber|rose">`가 강조 4토큰(primary·primary-deep·accent2·glow)만 갈아끼운다 — **기본은 현대 남색(navy)이라 속성 없음**. 선택지 정본은 `lib/accent.ts`(`DEFAULT_ACCENT` 포함, styles.css accent 블록과 1:1), 저장은 localStorage `accent` + 서버 `PUT /me/accent`. **컴포넌트는 아무것도 모른다** — 색을 primary/accent2 토큰으로만 쓰면 자동으로 따라온다(직접 hex 금지 이유가 하나 더 늘었다). 라이트 조합 선택자 `[data-theme='light'][data-accent=…]`는 라이트 테마 블록 **뒤**에 있어야 이긴다(순서가 명세).
 - **브랜드 남색은 테마마다 다른 값으로 쓴다** — 원색 #002C5F 는 라이트에서 그대로, 다크에서는 같은 색조를 밝힌 #5a90d2 로. 어두운 캔버스(#0c0e15)에 원색을 그대로 쓰면 버튼이 배경에 묻힌다.
 - ⚠ **고정폭 글꼴 목록 끝에 한글 글꼴을 붙인다** (`--font-mono`, 2026-08-06 사용자 지적): 글꼴 대체는 **글자 하나 단위**라, 한글이 없는 기본 mono 목록이면 산식·주기처럼 한글이 섞인 칸에서 그 한글만 윈도 기본 글꼴로 떨어져 나가 화면에 딴 글꼴이 섞인다. 목록 끝에 Pretendard 를 두면 ASCII 는 고정폭, 한글은 본문 글꼴로 이어받는다.
