@@ -55,9 +55,14 @@ function Pipeline() {
   const { t } = useI18n()
   const colors = ['bg-fill-draft/20 text-fill-draft', 'bg-review-bg text-review-ink', 'bg-pending-bg text-pending-ink', 'bg-deployed-bg text-deployed-ink']
   return (
-    <div className="overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface p-5">
-      <div className="text-sm font-semibold text-ink">{t('deploys.pipelineTitle', '배포 파이프라인')}</div>
-      <ol className="mt-4 flex min-w-max items-center">
+    <div className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+      {/* 머리 — 섹션 제목을 면+선으로 갈라 얹는다(규약 §7). 제목만이라 py-3.5 */}
+      <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="text-sm font-semibold text-ink">{t('deploys.pipelineTitle', '배포 파이프라인')}</div>
+      </div>
+      {/* 몸 — 가로 스크롤은 몸 안에서만 두어, 머리 면은 overflow-hidden 으로 모서리를 지킨다 */}
+      <div className="overflow-x-auto p-5">
+      <ol className="flex min-w-max items-center">
         {PIPELINE.map((p, i) => (
           <li key={p.key} className="flex items-center">
             {i > 0 && <span className="mx-3 h-px w-16 bg-hairline pc:w-32" aria-hidden />}
@@ -87,6 +92,7 @@ function Pipeline() {
           </li>
         ))}
       </ol>
+      </div>
     </div>
   )
 }
@@ -129,30 +135,33 @@ function DeploysPage() {
             <button
               type="button"
               onClick={() => setDetail(d)}
-              className="card-hover flex w-full items-start gap-4 card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left"
+              className="card-hover flex w-full flex-col card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface text-left"
             >
+              {/* 머리 — 버전·환경·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
+              <span className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
+                <span className="font-mono text-[15px] font-semibold text-ink">{d.version}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    d.env === 'Production' ? 'bg-pending-bg text-pending-ink' : 'bg-review-bg text-review-ink'
+                  }`}
+                >
+                  {d.env}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[d.status]}`}>
+                  {d.status}
+                </span>
+                {d.rollbackTo && (
+                  <span className="text-xs text-danger-ink">
+                    {tf('deploys.rollbackTo', { version: d.rollbackTo }, '← {version}으로 롤백')}
+                  </span>
+                )}
+                <span className="ml-auto font-mono text-xs text-ink-subtle">{d.id}</span>
+              </span>
+              {/* 몸 */}
+              <span className="flex items-start gap-4 p-5">
               <StatusIcon status={d.status} />
               <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[15px] font-semibold text-ink">{d.version}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                      d.env === 'Production' ? 'bg-pending-bg text-pending-ink' : 'bg-review-bg text-review-ink'
-                    }`}
-                  >
-                    {d.env}
-                  </span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[d.status]}`}>
-                    {d.status}
-                  </span>
-                  {d.rollbackTo && (
-                    <span className="text-xs text-danger-ink">
-                      {tf('deploys.rollbackTo', { version: d.rollbackTo }, '← {version}으로 롤백')}
-                    </span>
-                  )}
-                  <span className="ml-auto font-mono text-xs text-ink-subtle">{d.id}</span>
-                </span>
-                <span className="mt-2 flex flex-wrap gap-1.5">
+                <span className="flex flex-wrap gap-1.5">
                   {d.changes.map((c) => (
                     <span key={c} className="rounded-full bg-chip px-2 py-0.5 text-[11px] text-ink-muted">
                       {c}
@@ -186,6 +195,7 @@ function DeploysPage() {
                     </span>
                   )}
                 </span>
+              </span>
               </span>
             </button>
           </li>

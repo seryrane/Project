@@ -82,6 +82,8 @@ export const WORK_DICT: Record<string, Entry> = {
 
   // ── 검증 리포트 (/validation-reports) ────────────────────────────
   'reports.create': { ko: '+ 리포트 생성', en: '+ New report' },
+  'reports.listTitle': { ko: '리포트 {n}건', en: '{n} reports' },
+  'reports.listHint': { ko: '카드를 누르면 상세가 열립니다', en: 'Select a card to open details' },
   'reports.view': { ko: '보기', en: 'View' },
   'reports.publish': { ko: '발행', en: 'Publish' },
   'reports.goResults': { ko: '실행 상세는 검증 결과 조회 →', en: 'Run details in Validation Results →' },

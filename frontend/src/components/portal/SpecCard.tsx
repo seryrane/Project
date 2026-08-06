@@ -23,9 +23,11 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
       style={{ animationDelay: `${index * 70}ms` }}
       onClick={onDetail}
       // 카드 전체가 상세로 가는 문이다 — 누를 수 있으면 커서로 말한다 (규약 §9)
-      className="anim-fade-up flex cursor-pointer flex-col card-spotlight rounded-2xl border border-hairline bg-surface p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_6px_20px_var(--color-glow)]"
+      className="anim-fade-up flex cursor-pointer flex-col overflow-hidden card-spotlight rounded-2xl border border-hairline bg-surface transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-2)]"
     >
-      <div className="flex items-start justify-between">
+      {/* 머리 — 무엇인지(ID·상태·버전)를 면+선으로 갈라 얹는다. 카드가 여럿 늘어선
+          목록에서 카드 경계와 "이 카드가 무엇인가"가 함께 읽힌다 (규약 §7 · 덮개와 같은 해부) */}
+      <div className="flex items-start justify-between border-b border-hairline bg-canvas/50 px-5 py-3">
         <div className="flex items-center gap-2.5">
           <span className="font-mono text-xs font-semibold text-ink-subtle">{spec.id}</span>
           <StatusBadge status={cur.status} />
@@ -35,7 +37,9 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
         </span>
       </div>
 
-      <h3 className="mt-2.5 text-base font-semibold text-ink">{spec.name}</h3>
+      {/* 몸 */}
+      <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
+      <h3 className="text-base font-semibold text-ink">{spec.name}</h3>
       <div className="mt-0.5 text-xs text-ink-subtle">{spec.category}</div>
       <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-muted">
         {spec.description}
@@ -99,6 +103,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
             </button>
           )}
         </div>
+      </div>
       </div>
     </article>
   )

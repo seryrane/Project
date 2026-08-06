@@ -21,8 +21,15 @@ export function ChartCard({
   className?: string
 }) {
   return (
-    <section className={`card-spotlight rounded-2xl border border-hairline bg-surface p-5 ${className}`}>
-      <div className="flex items-start justify-between gap-3">
+    <section
+      className={`card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface ${className}`}
+    >
+      {/* 머리는 면(배경)+선으로 가른다 — 덮개(Modal·Drawer)와 **같은 해부**다(규약 §7).
+          카드도 머리·몸이 있는 물건인데 지금까지 한 상자에 이어 붙어 있었다: 제목이 숫자
+          위에 그냥 얹혀 있으면 카드가 여럿 늘어선 대시보드에서 "어디부터가 다음 카드인지"와
+          "이 숫자가 무엇에 대한 것인지"가 함께 흐려진다 (2026-08-06 사용자 지적).
+          ⚠ 머리 면이 모서리를 넘지 않도록 overflow-hidden 이 함께 간다. */}
+      <div className="flex items-start justify-between gap-3 border-b border-hairline bg-canvas/50 px-5 py-3.5">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
           {subtitle && <p className="mt-0.5 text-xs text-ink-subtle">{subtitle}</p>}
@@ -37,7 +44,7 @@ export function ChartCard({
           </button>
         )}
       </div>
-      <div className="mt-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   )
 }

@@ -187,9 +187,10 @@ function ApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setDetail(r)}
-                className="card-hover w-full card-spotlight rounded-2xl border border-hairline bg-surface p-5 text-left"
+                className="card-hover flex w-full flex-col card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface text-left"
               >
-                <span className="flex flex-wrap items-center gap-2">
+                {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
+                <span className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
                   {r.urgent && <UrgentChip />}
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
@@ -207,15 +208,18 @@ function ApprovalsPage() {
                     <b className={r.waitingDays >= 3 ? 'text-danger-ink' : 'text-ink-muted'}>{r.deadline}</b>
                   </span>
                 </span>
-                <span className="mt-2 block text-[15px] font-semibold text-ink">{r.title}</span>
-                <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">{r.summary}</span>
-                <span className="mt-3 flex items-center justify-between gap-3">
-                  <StepDots step={r.step} />
-                  {r.myTurn && (
-                    <span className="flex-1 rounded-lg bg-deployed-bg/60 py-1.5 text-center text-xs font-medium text-deployed-ink">
-                      {t('approvals.reviewThenProcess', '상세 검토 후 처리')}
-                    </span>
-                  )}
+                {/* 몸 */}
+                <span className="block px-5 pb-5 pt-4">
+                  <span className="block text-[15px] font-semibold text-ink">{r.title}</span>
+                  <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">{r.summary}</span>
+                  <span className="mt-3 flex items-center justify-between gap-3">
+                    <StepDots step={r.step} />
+                    {r.myTurn && (
+                      <span className="flex-1 rounded-lg bg-deployed-bg/60 py-1.5 text-center text-xs font-medium text-deployed-ink">
+                        {t('approvals.reviewThenProcess', '상세 검토 후 처리')}
+                      </span>
+                    )}
+                  </span>
                 </span>
               </button>
             </li>
@@ -235,9 +239,10 @@ function ApprovalsPage() {
             .map((r) => (
               <li
                 key={r.id}
-                className="card-spotlight rounded-2xl border border-hairline bg-surface p-5"
+                className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface"
               >
-                <span className="flex flex-wrap items-center gap-2">
+                {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3">
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
                   <span
@@ -256,9 +261,12 @@ function ApprovalsPage() {
                       '승인자 {approver} · {requestedAt} · 기한 {deadline}',
                     )}
                   </span>
-                </span>
-                <span className="mt-2 block text-[15px] font-semibold text-ink">{r.title}</span>
-                <span className="mt-1 block text-[13px] text-ink-muted">{r.summary}</span>
+                </div>
+                {/* 몸 */}
+                <div className="px-5 pb-5 pt-4">
+                  <span className="block text-[15px] font-semibold text-ink">{r.title}</span>
+                  <span className="mt-1 block text-[13px] text-ink-muted">{r.summary}</span>
+                </div>
               </li>
             ))}
         </ol>

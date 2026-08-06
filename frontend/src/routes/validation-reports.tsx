@@ -81,12 +81,26 @@ function ValidationReportsPage() {
         ))}
       </div>
 
-      <ol className="mt-5 space-y-3">
+      {/* 목록을 **머리 있는 패널**로 감싼다 — 리포트 카드는 한 줄짜리라 그 자체를 머리·몸으로
+          가를 것이 없다(가르면 카드가 통째로 회색이 된다). 대신 목록 전체가 하나의 물건이
+          되게 머리를 세운다: 알림 이력·검증 결과와 같은 모양이다 (규약 §7·§9) */}
+      <section className="mt-5 overflow-hidden rounded-2xl border border-hairline bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-ink">
+            {tf('reports.listTitle', { n: validationReports.length }, '리포트 {n}건')}
+          </h2>
+          <span className="text-[11px] text-ink-subtle">
+            {t('reports.listHint', '카드를 누르면 상세가 열립니다')}
+          </span>
+        </div>
+        <ol className="space-y-3 p-5">
         {validationReports.map((r, i) => {
           const status = published[r.id] ? '발행' : r.status
           return (
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
-              <div className="card-hover flex flex-wrap items-center gap-3 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
+              {/* 패널 안의 줄이라 **또 카드가 되지 않는다** — 흰 면 위에 흰 카드를 얹고
+                  그림자까지 주면 카드 안의 카드가 되어 무거워진다 (라이트 그림자 규칙 참고) */}
+              <div className="card-hover flex flex-wrap items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-4">
                 {/* basis — flex-wrap 줄에서 제목 블록이 짓눌리는 대신 액션이 다음 줄로 */}
                 <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
@@ -161,7 +175,8 @@ function ValidationReportsPage() {
             </li>
           )
         })}
-      </ol>
+        </ol>
+      </section>
 
       {detail && (
         <Modal title={detail.title} onClose={() => setDetail(null)} wide>

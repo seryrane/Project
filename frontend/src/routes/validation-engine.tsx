@@ -148,11 +148,15 @@ function ValidationEnginePage() {
             <li
               key={e.id}
               style={{ animationDelay: `${i * 60}ms` }}
-              className={`card-hover card-spotlight anim-fade-up rounded-2xl border bg-surface ${
+              className={`card-hover card-spotlight anim-fade-up overflow-hidden rounded-2xl border bg-surface ${
                 open ? 'border-primary/40' : 'border-hairline'
               } ${running != null ? 'card-loading' : ''}`}
             >
-              <div className="flex flex-wrap items-center gap-3 p-5">
+              {/* 머리 — 엔진이 무엇이고 지금 어떤 상태인가. 펼쳤을 때만 면으로 가른다:
+                  ⚠ **접힌 카드는 머리만 있는 물건이라 가를 것이 없다** — 그때도 면을 깔면
+                  카드가 통째로 회색이 되어 "일하는 면"이 사라진다. 아래를 가르는 선은
+                  펼친 몸이 이미 border-t 로 갖고 있다 (규약 §7) */}
+              <div className={`flex flex-wrap items-center gap-3 px-5 py-4 ${open ? 'bg-canvas/50' : ''}`}>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <rect x="7" y="7" width="10" height="10" rx="2" />
