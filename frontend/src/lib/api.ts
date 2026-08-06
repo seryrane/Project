@@ -8,9 +8,31 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 
+const TOKEN_KEY = 'auth.token'
+
+/** 약식 세션 토큰 (SSO·JWT 정책 확정 전) — 관문만 알고, 화면은 모른다 */
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+export function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token)
+}
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function apiGet<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`/api${path}`)
+    const res = await fetch(`/api${path}`, { headers: authHeaders() })
     if (!res.ok) return null
     return (await res.json()) as T
   } catch {
@@ -26,12 +48,36 @@ export async function apiSend(
   try {
     const res = await fetch(`/api${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     return res.ok
   } catch {
     return false
+  }
+}
+
+/** 본문이 필요한 호출 — 로그인처럼 실패 메시지를 그 자리에 보여야 하는 곳(규약 21절 예외) */
+export async function apiPost<T>(
+  path: string,
+  body: unknown,
+): Promise<{ ok: boolean; status: number; data: T | null; detail: string }> {
+  try {
+    const res = await fetch(`/api${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(body),
+    })
+    const data = (await res.json().catch(() => null)) as (T & { detail?: string }) | null
+    return {
+      ok: res.ok,
+      status: res.status,
+      data: res.ok ? data : null,
+      detail: (data && 'detail' in (data as object) ? String((data as { detail?: string }).detail) : '') || '',
+    }
+  } catch {
+    // 연결 실패에 사람의 말을 준다 (규약 21절)
+    return { ok: false, status: 0, data: null, detail: '서버에 연결하지 못했습니다 — 네트워크를 확인해 주세요.' }
   }
 }
 

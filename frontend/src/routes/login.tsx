@@ -1,0 +1,380 @@
+import { useEffect, useState } from 'react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+
+import { Modal } from '#/components/portal/Modal'
+import { MotionRoot, m } from '#/components/portal/motion'
+import { CtaButton } from '#/components/portal/Skeleton'
+import { ToastProvider, useToast } from '#/components/portal/toast'
+import { apiPost, setToken } from '#/lib/api'
+
+export const Route = createFileRoute('/login')({ component: LoginShell })
+
+/**
+ * 로그인 — 회의록·요구사항 반영 지점:
+ * - SSO 간편 로그인 + "일반 로그인도 할 수도 있겠다"(회의록) → 둘 다 자리를 만든다.
+ *   협력사(LG전자 등)는 HMG-SSO 미커버라 일반 로그인·가입 승인이 필요하다.
+ * - 로그인 이력은 서버가 감사 로그로 남긴다(요구사항: 5년 보관).
+ * - FIDO 는 약식 2차(사용자 지시) — 등록 계정이면 인증 단계가 하나 더 선다.
+ * 실패(401)는 그 자리에서 보여 준다 — 내보내면 입력이 날아간다(규약 21절 예외).
+ */
+const REMEMBER_KEY = 'auth.rememberId'
+
+const DEMO_ACCOUNTS = [
+  { id: 'hyundae.kim', name: '김현대', grade: 'Super Admin', fido: true },
+  { id: 'seoyeon.lee', name: '이서연', grade: 'Editor', fido: false },
+  { id: 'donghyun.han', name: '한동현', grade: 'Viewer', fido: true },
+] as const
+
+function LoginShell() {
+  return (
+    <ToastProvider>
+      <MotionRoot>
+        <LoginPage />
+      </MotionRoot>
+    </ToastProvider>
+  )
+}
+
+function LoginPage() {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [id, setId] = useState('')
+  const [pw, setPw] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [remember, setRemember] = useState(false)
+  const [caps, setCaps] = useState(false)
+  const [error, setError] = useState('')
+  const [fidoTicket, setFidoTicket] = useState<{ ticket: string; name: string } | null>(null)
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+
+  // ID 기억 — 켜고 로그인한 아이디를 다음 방문에 미리 채운다
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBER_KEY)
+    if (saved) {
+      setId(saved)
+      setRemember(true)
+    }
+  }, [])
+
+  // 실시간 유효성 — 제출 전에 알 수 있는 것은 그 자리에서 말한다
+  const idHint =
+    id !== '' && !/^[\w.-]+(@[\w.-]+\.[a-z]{2,})?$/i.test(id.trim())
+      ? '이메일 또는 이메일 아이디(@ 앞부분) 형식이 아닙니다'
+      : ''
+  const pwHint = pw !== '' && pw.length < 8 ? '비밀번호는 8자 이상입니다' : ''
+  const canSubmit = id.trim() !== '' && pw.length >= 8 && idHint === ''
+
+  const finish = (token: string, name: string) => {
+    setToken(token)
+    if (remember) localStorage.setItem(REMEMBER_KEY, id.trim())
+    else localStorage.removeItem(REMEMBER_KEY)
+    toast(`${name}님, 어서 오세요`)
+    void navigate({ to: '/dashboard' })
+  }
+
+  const login = async () => {
+    setError('')
+    const res = await apiPost<
+      { step: 'done'; token: string; user: { name: string } } | { step: 'fido'; ticket: string; name: string }
+    >('/auth/login', { id: id.trim(), password: pw })
+    if (!res.ok || !res.data) {
+      setError(res.detail || '로그인하지 못했습니다.')
+      return
+    }
+    if (res.data.step === 'fido') {
+      setFidoTicket({ ticket: res.data.ticket, name: res.data.name })
+      return
+    }
+    finish(res.data.token, res.data.user.name)
+  }
+
+  return (
+    <div className="flex min-h-dvh bg-canvas text-ink">
+      {/* 좌: 브랜드 패널 — 좁은 화면에서는 접는다 */}
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-sidebar p-10 pc:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-[120px]"
+        />
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white">
+            H
+          </span>
+          <span className="leading-tight">
+            <span className="block text-sm font-semibold text-white">HMG Admin</span>
+            <span className="block text-[11px] text-sidebar-ink/60">통합 관리자 포털</span>
+          </span>
+        </div>
+        <m.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative"
+        >
+          <h2 className="text-2xl font-bold leading-snug text-white">
+            사양이 정본이 되는 곳,
+            <br />
+            작성부터 검증까지 한 흐름으로.
+          </h2>
+          <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/70">
+            KPI(ICDAP) · 사양관리(IDMS) 통합 포털 — 센터 구성원과 협력사(모비스·오토에버·해외
+            연구소)가 같은 곳에서 일합니다.
+          </p>
+        </m.div>
+        <p className="text-[11px] text-sidebar-ink/50">© HMG · 프로토타입 v0.5</p>
+      </div>
+
+      {/* 우: 로그인 카드 */}
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-6 pc:hidden">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white">
+              H
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold">로그인</h1>
+          <p className="mt-1 text-[13px] text-ink-subtle">
+            HMG-SSO 간편 로그인 또는 일반 계정으로 들어옵니다
+          </p>
+
+          {/* SSO — 프로토콜 미정(요구사항)이라 자리만. 협력사는 아래 일반 로그인 */}
+          <button
+            type="button"
+            onClick={() => toast('HMG-SSO 연동은 프로토콜 확정 후 연결됩니다 (OAuth2/OIDC/SAML/LDAP 미정)')}
+            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-surface text-[13px] font-semibold transition-colors hover:border-primary/40"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded bg-gradient-to-br from-primary to-accent2 text-[10px] font-bold text-white">
+              H
+            </span>
+            HMG-SSO 로 간편 로그인
+          </button>
+
+          <div className="my-5 flex items-center gap-3 text-[11px] text-ink-subtle">
+            <span className="h-px flex-1 bg-hairline" /> 또는 일반 계정 <span className="h-px flex-1 bg-hairline" />
+          </div>
+
+          {!fidoTicket ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+              }}
+              className="space-y-3.5"
+            >
+              <label className="block">
+                <span className="text-xs font-medium text-ink-subtle">이메일 또는 아이디</span>
+                <input
+                  value={id}
+                  onChange={(e) => setId(e.target.value)}
+                  autoComplete="username"
+                  placeholder="name@hmg.com 또는 name"
+                  className={`mt-1 h-11 w-full rounded-xl border bg-surface px-3.5 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
+                    idHint ? 'border-danger-ink/50' : 'border-hairline'
+                  }`}
+                />
+                {idHint && <span className="mt-1 block text-[11px] text-danger-ink">{idHint}</span>}
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-ink-subtle">비밀번호</span>
+                <span className="relative mt-1 block">
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={pw}
+                    onChange={(e) => setPw(e.target.value)}
+                    onKeyUp={(e) => setCaps(e.getModifierState('CapsLock'))}
+                    autoComplete="current-password"
+                    placeholder="8자 이상"
+                    className={`h-11 w-full rounded-xl border bg-surface px-3.5 pr-11 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
+                      pwHint ? 'border-danger-ink/50' : 'border-hairline'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-ink-subtle transition-colors hover:text-ink"
+                  >
+                    {showPw ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
+                        <circle cx="12" cy="12" r="2.5" />
+                        <path d="m4 4 16 16" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
+                        <circle cx="12" cy="12" r="2.5" />
+                      </svg>
+                    )}
+                  </button>
+                </span>
+                {pwHint && <span className="mt-1 block text-[11px] text-danger-ink">{pwHint}</span>}
+                {caps && (
+                  <span className="mt-1 block text-[11px] text-pending-ink">⇪ Caps Lock 이 켜져 있습니다</span>
+                )}
+              </label>
+
+              <div className="flex items-center justify-between text-[12px]">
+                <label className="flex cursor-pointer items-center gap-1.5 text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    className="h-4 w-4 accent-[var(--color-primary)]"
+                  />
+                  아이디 기억
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-primary hover:underline"
+                >
+                  비밀번호를 잊으셨나요?
+                </button>
+              </div>
+
+              {/* 실패는 그 자리에서 — 시도 횟수(n/5)와 잠금 안내가 서버에서 온다 */}
+              {error && (
+                <p className="rounded-xl border border-danger-ink/30 bg-danger-bg px-3.5 py-2.5 text-[12px] leading-relaxed text-danger-ink">
+                  {error}
+                </p>
+              )}
+
+              <CtaButton
+                disabled={!canSubmit}
+                busyLabel="확인 중…"
+                onAction={login}
+                className="h-11 w-full"
+              >
+                로그인
+              </CtaButton>
+            </form>
+          ) : (
+            /* FIDO 2차 — 약식(사용자 지시). 본개발에서 WebAuthn 으로 교체 */
+            <m.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-primary/30 bg-surface p-5 text-center"
+            >
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/12 text-primary">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+                  <path d="M12 11v4M7 10.5V9a5 5 0 0 1 10 0v1.5M5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 18.5 12h-13A1.5 1.5 0 0 0 4 13.5v6A1.5 1.5 0 0 0 5.5 21Z" />
+                </svg>
+              </span>
+              <h2 className="mt-3 text-[15px] font-semibold">FIDO 2차 인증</h2>
+              <p className="mt-1 text-[12px] leading-relaxed text-ink-subtle">
+                {fidoTicket.name}님 계정에 보안 키가 등록되어 있습니다.
+                <br />
+                기기의 지문·보안 키로 본인을 확인해 주세요. (약식 시뮬레이션)
+              </p>
+              <CtaButton
+                busyLabel="인증 중…"
+                className="mt-4 h-11 w-full"
+                onAction={async () => {
+                  const res = await apiPost<{ token: string; user: { name: string } }>('/auth/fido', {
+                    ticket: fidoTicket.ticket,
+                  })
+                  if (!res.ok || !res.data) {
+                    setFidoTicket(null)
+                    setError(res.detail || 'FIDO 인증에 실패했습니다 — 다시 로그인해 주세요.')
+                    return
+                  }
+                  finish(res.data.token, res.data.user.name)
+                }}
+              >
+                지문 · 보안 키로 인증
+              </CtaButton>
+              <button
+                type="button"
+                onClick={() => setFidoTicket(null)}
+                className="mt-2 text-[11px] text-ink-subtle hover:text-ink"
+              >
+                다른 계정으로 로그인
+              </button>
+            </m.div>
+          )}
+
+          <p className="mt-5 text-center text-[12px] text-ink-subtle">
+            협력사·외부 계정이신가요?{' '}
+            <Link to="/signup" className="font-medium text-primary hover:underline">
+              가입 신청
+            </Link>
+            <span className="mx-1.5">·</span>승인 후 이용할 수 있습니다
+          </p>
+
+          {/* 데모 계정 — 프로토타입 리뷰용. 역할별로 메뉴가 어떻게 갈리는지 바로 본다 */}
+          <div className="mt-6 rounded-2xl border border-hairline/70 bg-surface/60 p-4">
+            <p className="text-[11px] font-semibold text-ink-subtle">
+              데모 계정 (비밀번호 공통: <code className="rounded bg-chip px-1 font-mono">hmg1234!</code>)
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {DEMO_ACCOUNTS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => {
+                    setId(a.id)
+                    setPw('hmg1234!')
+                    setError('')
+                  }}
+                  className="rounded-full border border-hairline px-2.5 py-1 text-[11px] text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                >
+                  {a.name} · {a.grade}
+                  {a.fido && ' · FIDO'}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-ink-subtle">
+              역할이 다르면 로그인 후 메뉴가 다르게 파생됩니다 — Editor 로 들어오면 관리
+              메뉴가 보이지 않습니다.
+            </p>
+          </div>
+        </m.div>
+      </div>
+
+      {/* 비밀번호 찾기 — 계정 존재 여부를 노출하지 않는다 */}
+      {forgotOpen && (
+        <Modal title="비밀번호 찾기" onClose={() => setForgotOpen(false)}>
+          <p className="text-[13px] leading-relaxed text-ink-muted">
+            가입한 이메일을 입력하면 재설정 안내를 보냅니다.
+          </p>
+          <label className="mt-3 block">
+            <span className="text-xs font-medium text-ink-subtle">이메일</span>
+            <input
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="name@hmg.com"
+              className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
+            />
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setForgotOpen(false)}
+              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              취소
+            </button>
+            <CtaButton
+              disabled={!/.+@.+\..+/.test(forgotEmail)}
+              busyLabel="보내는 중…"
+              onAction={async () => {
+                const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
+                setForgotOpen(false)
+                setForgotEmail('')
+                toast(res.data?.message ?? '가입된 이메일이라면 재설정 안내를 보냈습니다.')
+              }}
+            >
+              재설정 메일 보내기
+            </CtaButton>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}

@@ -20,6 +20,12 @@
 ## 2. 공통 플랫폼 기반
 
 - **인증**: HMG-SSO (OAuth2/OIDC/SAML/LDAP 중 미정), JWT Access/Refresh 정책, Teams 내 접속, Tableau 임베딩 시 이중 로그인 차단(SSO 토큰 연계) 필요
+  - 회의록 시그널: "SSO 간편 로그인 + **일반 로그인도 할 수도 있겠다**" · 로그인 범위는
+    센터 + 협력사(모비스·오토에버·해외 연구소 — **LG전자는 HMG-SSO 미커버**) →
+    SSO 밖 계정의 일반 로그인·가입 승인 경로가 필요하다
+  - 프로토타입 반영(2026-08-06, 약식): /login(SSO 자리+일반 로그인·ID 기억·비번 표시·
+    CapsLock·5회 잠금·FIDO 약식 2차·비번 찾기) · /signup(접수→관리자 승인, Viewer 시작) ·
+    로그인 이력 감사 기록(요구사항: 5년 보관) · 토큰은 약식 세션(JWT 정책 확정 시 교체)
 - **권한(RBAC)**: 조직 + 메뉴 + 사용자 예외 정책. 등급: Super Admin / Admin / Editor / Viewer. 서비스별 Role 분리(예: KPI_ADMIN, IBD_APPROVER), 국가/차종/조직 기반 데이터 권한, 조직 변경 시 권한 자동 변경 고려
 - **메뉴**: 관리자 UI 기반 동적 등록, Role 연결, 동적 URL 등록으로 신규 시스템 편입
 - **알림**: Email / Teams / Webhook (+SMS 언급), 수신자 룰

@@ -8,10 +8,10 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
 from app import db
-from app.api.me import ME
+from app.api.me import current_user
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ def notices() -> list[dict[str, Any]]:
 
 
 @router.post("/notices")
-def create_notice(body: dict[str, Any]) -> dict[str, Any]:
+def create_notice(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
     # TODO(인증 확정 시): 커뮤니티 '생성' 권한 검사
     with db.connect() as conn:
         count = conn.execute("SELECT COUNT(*) c FROM notices").fetchone()["c"]
@@ -37,7 +37,7 @@ def create_notice(body: dict[str, Any]) -> dict[str, Any]:
             "id": f"N-{count + 100:03d}",
             "title": str(body.get("title") or "").strip(),
             "category": body.get("category") or "시스템",
-            "author": ME["name"],
+            "author": current_user(authorization)["name"],
             "date": today(),
             "views": 0,
             "pinned": bool(body.get("pinned")),
@@ -61,14 +61,14 @@ def questions() -> list[dict[str, Any]]:
 
 
 @router.post("/questions")
-def create_question(body: dict[str, Any]) -> dict[str, Any]:
+def create_question(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
     with db.connect() as conn:
         count = conn.execute("SELECT COUNT(*) c FROM questions").fetchone()["c"]
         question = {
             "id": f"Q-{count + 100:03d}",
             "title": str(body.get("title") or "").strip(),
             "category": body.get("category") or "기타",
-            "author": ME["name"],
+            "author": current_user(authorization)["name"],
             "date": today(),
             "body": str(body.get("body") or "").strip(),
             "answers": [],
@@ -83,17 +83,18 @@ def create_question(body: dict[str, Any]) -> dict[str, Any]:
 
 
 @router.post("/questions/{qid}/answers")
-def add_answer(qid: str, body: dict[str, Any]) -> dict[str, Any]:
+def add_answer(qid: str, body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
     text = str(body.get("body") or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="답변 내용을 입력해 주세요.")
+    user = current_user(authorization)
     with db.connect() as conn:
         row = conn.execute("SELECT json FROM questions WHERE id = ?", (qid,)).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="질문이 없습니다.")
         question = json.loads(row["json"])
         question["answers"].append(
-            {"author": ME["name"], "role": "Super Admin", "date": today(), "body": text}
+            {"author": user["name"], "role": user["gradeName"], "date": today(), "body": text}
         )
         conn.execute(
             "UPDATE questions SET json = ? WHERE id = ?",

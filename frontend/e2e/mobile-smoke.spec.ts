@@ -26,6 +26,8 @@ const PAGES = [
   '/faq',
   '/guide',
   '/privacy',
+  '/login',
+  '/signup',
 ]
 
 /** SSR 마크업은 수화 전에도 눌리지만 아무 일도 안 한다 — 조용히 빠져나가는 판이

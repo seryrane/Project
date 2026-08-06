@@ -16,12 +16,14 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as MenusRouteImport } from './routes/menus'
 import { Route as NoticeRouteImport } from './routes/notice'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as QnaRouteImport } from './routes/qna'
 import { Route as RolesRouteImport } from './routes/roles'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SpecsRouteImport } from './routes/specs'
 import { Route as ValidationEngineRouteImport } from './routes/validation-engine'
 import { Route as ValidationReportsRouteImport } from './routes/validation-reports'
@@ -63,6 +65,11 @@ const GuideRoute = GuideRouteImport.update({
   path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -91,6 +98,11 @@ const QnaRoute = QnaRouteImport.update({
 const RolesRoute = RolesRouteImport.update({
   id: '/roles',
   path: '/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpecsRoute = SpecsRouteImport.update({
@@ -127,12 +139,14 @@ export interface FileRoutesByFullPath {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
   '/notice': typeof NoticeRoute
   '/privacy': typeof PrivacyRoute
   '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
+  '/signup': typeof SignupRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -147,12 +161,14 @@ export interface FileRoutesByTo {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
   '/notice': typeof NoticeRoute
   '/privacy': typeof PrivacyRoute
   '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
+  '/signup': typeof SignupRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -168,12 +184,14 @@ export interface FileRoutesById {
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
   '/guide': typeof GuideRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/menus': typeof MenusRoute
   '/notice': typeof NoticeRoute
   '/privacy': typeof PrivacyRoute
   '/qna': typeof QnaRoute
   '/roles': typeof RolesRoute
+  '/signup': typeof SignupRoute
   '/specs': typeof SpecsRoute
   '/validation-engine': typeof ValidationEngineRoute
   '/validation-reports': typeof ValidationReportsRoute
@@ -190,12 +208,14 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/login'
     | '/members'
     | '/menus'
     | '/notice'
     | '/privacy'
     | '/qna'
     | '/roles'
+    | '/signup'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -210,12 +230,14 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/login'
     | '/members'
     | '/menus'
     | '/notice'
     | '/privacy'
     | '/qna'
     | '/roles'
+    | '/signup'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -230,12 +252,14 @@ export interface FileRouteTypes {
     | '/deploys'
     | '/faq'
     | '/guide'
+    | '/login'
     | '/members'
     | '/menus'
     | '/notice'
     | '/privacy'
     | '/qna'
     | '/roles'
+    | '/signup'
     | '/specs'
     | '/validation-engine'
     | '/validation-reports'
@@ -251,12 +275,14 @@ export interface RootRouteChildren {
   DeploysRoute: typeof DeploysRoute
   FaqRoute: typeof FaqRoute
   GuideRoute: typeof GuideRoute
+  LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
   MenusRoute: typeof MenusRoute
   NoticeRoute: typeof NoticeRoute
   PrivacyRoute: typeof PrivacyRoute
   QnaRoute: typeof QnaRoute
   RolesRoute: typeof RolesRoute
+  SignupRoute: typeof SignupRoute
   SpecsRoute: typeof SpecsRoute
   ValidationEngineRoute: typeof ValidationEngineRoute
   ValidationReportsRoute: typeof ValidationReportsRoute
@@ -315,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/members': {
       id: '/members'
       path: '/members'
@@ -355,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/roles'
       fullPath: '/roles'
       preLoaderRoute: typeof RolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/specs': {
@@ -403,12 +443,14 @@ const rootRouteChildren: RootRouteChildren = {
   DeploysRoute: DeploysRoute,
   FaqRoute: FaqRoute,
   GuideRoute: GuideRoute,
+  LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
   MenusRoute: MenusRoute,
   NoticeRoute: NoticeRoute,
   PrivacyRoute: PrivacyRoute,
   QnaRoute: QnaRoute,
   RolesRoute: RolesRoute,
+  SignupRoute: SignupRoute,
   SpecsRoute: SpecsRoute,
   ValidationEngineRoute: ValidationEngineRoute,
   ValidationReportsRoute: ValidationReportsRoute,

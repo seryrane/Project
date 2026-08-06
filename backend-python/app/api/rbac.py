@@ -9,10 +9,10 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
 from app import db
-from app.api.me import ME
+from app.api.me import current_user
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ def roles() -> list[dict[str, Any]]:
 
 
 @router.post("/submissions")
-def submit(body: dict[str, Any]) -> dict[str, Any]:
+def submit(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
     """변경 상신 접수 — kind: role-change | member-exception | ...
 
     자기 잠금 방지는 서버가 최종으로 막는다(화면 검사는 한 브라우저 안의 약속).
@@ -53,7 +53,7 @@ def submit(body: dict[str, Any]) -> dict[str, Any]:
             "INSERT INTO submissions(kind, json, created_at) VALUES(?,?,?)",
             (
                 kind,
-                json.dumps({"by": ME["name"], **body}, ensure_ascii=False),
+                json.dumps({"by": current_user(authorization)["name"], **body}, ensure_ascii=False),
                 datetime.now(UTC).isoformat(),
             ),
         )

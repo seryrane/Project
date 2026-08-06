@@ -3,7 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
 import type { IconName, NavItem, NavSection } from '#/data/nav'
-import { useApi } from '#/lib/api'
+import { apiSend, clearToken, useApi } from '#/lib/api'
 import { ACTION_SPECS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import { unseenCount } from '#/data/whatsnew'
 
@@ -629,7 +629,6 @@ function Shell({
                 [
                   { icon: 'user' as IconName, label: '마이페이지' },
                   { icon: 'settings' as IconName, label: '개인 설정' },
-                  { icon: 'logout' as IconName, label: '로그아웃' },
                 ] as const
               ).map((m) => (
                 <button
@@ -645,6 +644,20 @@ function Shell({
                   {m.label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(null)
+                  // 서버 세션도 걷는다 — 실패해도 화면 토큰은 지운다(로그아웃이 막히면 안 된다)
+                  void apiSend('POST', '/auth/logout')
+                  clearToken()
+                  void navigate({ to: '/login' })
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+              >
+                <Icon name="logout" size={15} />
+                로그아웃
+              </button>
             </div>
           )}
         </>

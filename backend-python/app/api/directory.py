@@ -8,10 +8,10 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
 from app import db
-from app.api.me import ME
+from app.api.me import current_user
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def members() -> list[dict[str, Any]]:
 
 
 @router.post("/members/{mid}/lock-toggle")
-def toggle_lock(mid: str) -> dict[str, Any]:
+def toggle_lock(mid: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
     items = db.kv_get("members") or []
     target = next((m for m in items if m["id"] == mid), None)
     if target is None:
@@ -33,15 +33,16 @@ def toggle_lock(mid: str) -> dict[str, Any]:
     # 계정 잠금은 감사 대상 — 화면이 아니라 서버가 남긴다 (화면만 남기면 빠뜨린다)
     add_audit({"action": "열람" if new_status == "활성" else "마스킹 해제",
                "target": f"{target['name']} 계정 {new_status}",
-               "reason": "회원 관리 화면에서 처리"})
+               "reason": "회원 관리 화면에서 처리"},
+              current_user(authorization)["name"])
     return next(m for m in updated if m["id"] == mid)
 
 
 # ── 감사 로그 ────────────────────────────────────────────────────────
-def add_audit(entry: dict[str, Any]) -> None:
+def add_audit(entry: dict[str, Any], user_name: str) -> None:
     record = {
         "at": datetime.now(UTC).strftime("%Y.%m.%d %H:%M"),
-        "user": ME["name"],
+        "user": user_name,
         **entry,
     }
     with db.connect() as conn:
@@ -59,7 +60,7 @@ def audit() -> list[dict[str, Any]]:
 
 
 @router.post("/audit")
-def record_audit(body: dict[str, Any]) -> dict[str, str]:
+def record_audit(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, str]:
     """다운로드 등 반출 행위를 화면이 알린다 — 사유는 필수(처리방침 제4조)."""
     if not str(body.get("reason") or "").strip():
         raise HTTPException(status_code=400, detail="사유를 입력해 주세요.")
@@ -67,5 +68,5 @@ def record_audit(body: dict[str, Any]) -> dict[str, str]:
         "action": body.get("action") or "다운로드",
         "target": str(body.get("target") or ""),
         "reason": str(body.get("reason")),
-    })
+    }, current_user(authorization)["name"])
     return {"status": "ok"}

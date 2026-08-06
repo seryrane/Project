@@ -16,7 +16,7 @@
 from fastapi import FastAPI
 
 from app import db, seeds
-from app.api import community, directory, hello, me, rbac
+from app.api import auth, community, directory, hello, me, rbac
 
 app = FastAPI(title="hmg-portal-backend", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
@@ -24,6 +24,7 @@ db.init()
 seeds.seed_if_empty()
 
 app.include_router(hello.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
 app.include_router(community.router, prefix="/api")
 app.include_router(directory.router, prefix="/api")

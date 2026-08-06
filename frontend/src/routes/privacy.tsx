@@ -95,7 +95,8 @@ function PrivacyPage() {
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
           <ol className="space-y-2 p-4 pc:hidden">
             {auditList.map((l) => {
-              const danger = l.action !== '열람'
+              // 위험 액션은 반출 계열만 — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다
+              const danger = l.action === '다운로드' || l.action === '마스킹 해제'
               return (
                 <li
                   key={`${l.at}.${l.target}`}
@@ -133,7 +134,8 @@ function PrivacyPage() {
               </thead>
               <tbody>
                 {auditList.map((l) => {
-                  const danger = l.action !== '열람'
+                  // 위험 액션은 반출 계열만 — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다
+              const danger = l.action === '다운로드' || l.action === '마스킹 해제'
                   return (
                     <tr
                       key={`${l.at}.${l.target}`}
