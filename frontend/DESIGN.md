@@ -110,6 +110,8 @@ Diff(버전 비교): 변경 전 `bg #391b1f + 취소선 text #f78c95`, 변경 �
 
 - 기본 다크. `<html data-theme="light">`로 라이트 전환 — 모든 색은 CSS 변수 토큰이라 통째로 교체됨. 토글은 상단바(해/달), localStorage `theme`에 저장.
 - **사이드바는 두 테마 모두 다크 유지** (브랜드 아이덴티티). 사이드바 내부는 white/* 유틸 사용 가능, 콘텐츠 영역은 반드시 `chip`/`chip-strong`/`hairline` 토큰 사용 (white/* 금지 — 라이트에서 깨짐).
+- ⚠⚠ **사이드바 안에서 `primary` 를 쓰지 않는다 — `sidebar-accent` 를 쓴다.** 사이드바는 늘 어두운데 라이트 테마의 primary 는 아주 어두운 남색(#002C5F)이라 **어두운 면 위 어두운 글자**가 된다(2026-08-06 실사고: PoC 배지·LNB 알림 배지가 라이트에서 식별 불가). `--color-sidebar-accent` 는 라이트에서 흰색을 섞어 밝히므로 포인트 색을 바꿔도 따라온다.
+- ⚠ **조작(검색칸·아이콘 버튼·칩)은 면보다 한 단계 눌린다** — 라이트에서 `bg-surface` 인 button/a/input 계열은 `--color-field`(#eef3fa)로 자동 치환된다(styles.css). 흰 헤더 위 흰 버튼은 "누를 수 있는 것"으로 안 읽힌다. 덮개(팝오버·드로어)와 카드는 흰 면 그대로 둔다.
 - 라이트 토큰(2026-08-06 개편 — C안 "브랜드 톤"): canvas **#e8eef7** · surface #fff · raised #f1f6fd ·
   hairline #d9e3f1 · divider #e9eff8 · accent2 **#1f5fae** (styles.css `[data-theme='light']` 블록).
 - ⚠⚠ **고도(elevation)는 테마마다 다른 물리를 쓴다.** 다크에서 깊이는 *빛*(어두운 배경 위 글로우),

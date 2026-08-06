@@ -47,7 +47,7 @@ function NavRow({
       {item.badge != null && (
         <span
           className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
-            active ? 'bg-white/25 text-white' : 'bg-primary/25 text-primary'
+            active ? 'bg-white/25 text-white' : 'bg-sidebar-accent/25 text-sidebar-accent'
           }`}
         >
           {item.badge}
@@ -55,7 +55,7 @@ function NavRow({
       )}
       {/* 레일 모드: 배지가 접혀도 "기다리는 일이 있다"는 신호는 남긴다 */}
       {rail && item.badge != null && (
-        <span className="absolute right-1 top-1 hidden h-1.5 w-1.5 rounded-full bg-primary pc:block pc:group-hover/rail:hidden" />
+        <span className="absolute right-1 top-1 hidden h-1.5 w-1.5 rounded-full bg-sidebar-accent pc:block pc:group-hover/rail:hidden" />
       )}
     </>
   )
@@ -212,7 +212,9 @@ function Shell({
           <div className={`min-w-0 flex-1 leading-tight ${railHide}`}>
             <div className="flex items-center gap-1.5">
               <span className="truncate text-sm font-semibold text-white">HMG Admin</span>
-              <span className="rounded-full bg-primary/25 px-1.5 py-px text-[10px] font-semibold text-primary">
+              {/* 사이드바 안이라 primary 가 아니라 sidebar-accent 다 — 라이트에서 primary 는
+                  아주 어두운 남색이라 어두운 사이드바에서 안 보인다(styles.css 주석 참고) */}
+              <span className="rounded-full bg-sidebar-accent/25 px-1.5 py-px text-[10px] font-semibold text-sidebar-accent">
                 PoC
               </span>
             </div>

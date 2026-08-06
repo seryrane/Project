@@ -61,6 +61,16 @@
   --shadow-2: 0 6px 20px var(--color-glow);
   --shadow-cta: 0 2px 10px var(--color-glow);
 
+  /* 조작(검색칸·아이콘 버튼·칩)이 앉는 면. 다크는 표면과 같아도 테두리가 충분히 갈라
+     주므로 그대로 두고, 라이트에서만 한 단계 누른다 — 아래 [data-theme='light'] 참고 */
+  --color-field: var(--color-surface);
+
+  /* ⚠⚠ **사이드바는 두 테마 모두 어둡다** — 그래서 사이드바 안에서 `primary` 를 그대로
+     쓰면 라이트 테마에서 사고가 난다: 라이트의 primary 는 아주 어두운 남색(#002C5F)이라
+     **어두운 면 위에 어두운 글자**가 된다(2026-08-06 사용자: PoC 배지·승인 배지가 식별 불가).
+     사이드바 안에서는 반드시 이 토큰을 쓴다 — 라이트에서는 흰색을 섞어 밝혀 준다. */
+  --color-sidebar-accent: var(--color-primary);
+
   /* chart-only status fills — CVD-validated against each theme's surface */
   --color-fill-draft: #4e7de0;
   --color-fill-review: #bd831e;
@@ -105,6 +115,13 @@
   --shadow-cta:
     0 1px 2px color-mix(in oklab, var(--color-primary) 30%, transparent),
     0 8px 18px -8px color-mix(in oklab, var(--color-primary) 50%, transparent);
+
+  /* 조작은 흰 면과 같은 색이면 안 된다 (2026-08-06 사용자 지적:
+     "검색창이나 버튼이 전부 하얀색이라 밋밋하다") */
+  --color-field: #eef3fa;
+
+  /* 어두운 사이드바 위에서 읽히도록 밝힌 강조색 — 포인트 색을 바꿔도 따라온다 */
+  --color-sidebar-accent: color-mix(in oklab, var(--color-primary) 45%, white);
 
   --color-draft-bg: #e9edf4;
   --color-draft-ink: #5b6472;
@@ -359,6 +376,15 @@ select option {
    카드는 또렷하게, 표는 조용하게. 선이 두 단계인 이유가 이것이다 */
 [data-theme='light'] :is(td, th)[class*='border-hairline'] {
   border-color: var(--color-divider);
+}
+
+/* **조작은 면보다 한 단계 눌린다.**
+   흰 헤더 위의 흰 검색칸, 흰 카드 위의 흰 칩은 "누를 수 있는 것"으로 안 읽힌다.
+   ⚠ 덮개(팝오버·드로어)와 카드는 흰 면 그대로 둔다 — 여기서 button/a/입력 계열만
+   고르는 이유가 그것이다(`div.bg-surface` 인 알림 팝오버는 흰색을 지킨다).
+   다크는 배경이 어두워 같은 값도 테두리로 충분히 갈리므로 라이트에서만 건다. */
+[data-theme='light'] :is(button, a, input, textarea, select).bg-surface {
+  background-color: var(--color-field);
 }
 
 /* CTA 셴 — 그라디언트 주 버튼에 호버 시 빛이 한 번 스치고 지나간다.
