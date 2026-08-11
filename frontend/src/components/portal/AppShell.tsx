@@ -16,7 +16,7 @@ import { Icon } from './Icon'
 import { MotionRoot } from './motion'
 import { MyAbilities } from './MyAbilities'
 import { Preferences } from './Preferences'
-import { ToastProvider, useToast } from './toast'
+import { useToast } from './toast'
 
 function NavRow({
   item,
@@ -303,8 +303,10 @@ function Shell({
       <div className={`flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-clip ${rail ? 'pc:ml-16' : 'pc:ml-60'}`}>
         {/* 앱 헤더는 어떤 덮개도 먹지 않는다 — 지금 어디인지와 나가는 길이 함께 사라진다 (규약 §8).
             헤더에는 사용자 관점의 필수 정보(현재 위치·기다리는 일·내 계정)를 상시 노출한다 */}
-        {/* 글라스 헤더 — blur 에 saturate 를 얹으면 비쳐 보이는 색이 탁해지지 않는다 */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-hairline bg-canvas/75 px-4 backdrop-blur-md backdrop-saturate-150 pc:px-8">
+        {/* 글라스 헤더 — blur 에 saturate 를 얹으면 비쳐 보이는 색이 탁해지지 않는다.
+            ⚠ 면은 `topbar` 토큰이다(styles.css). 캔버스와 같은 색(`bg-canvas/75`)이면
+            라이트에서 헤더와 본문이 붙어 버린다 — 2026-08-11 사용자 지적으로 갈랐다 */}
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-topbar-line bg-topbar px-4 shadow-[var(--shadow-topbar)] backdrop-blur-md backdrop-saturate-150 pc:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
@@ -337,14 +339,14 @@ function Shell({
               type="button"
               aria-label="검색"
               onClick={() => setPaletteOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink pc:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink pc:hidden"
             >
               <Icon name="search" size={16} />
             </button>
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
+              className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-field px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
               <span className="flex min-w-0 items-center gap-2">
                 <Icon name="search" size={14} />
@@ -359,7 +361,7 @@ function Shell({
               onClick={() => setAskOpen(true)}
               aria-label={t('ask.title')}
               title={t('ask.title')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-[15px] text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-[15px] text-ink-muted transition-colors hover:text-ink"
             >
               💬
             </button>
@@ -368,7 +370,7 @@ function Shell({
               type="button"
               onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
               aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
             >
               {locale === 'ko' ? '한' : 'EN'}
             </button>
@@ -376,7 +378,7 @@ function Shell({
               type="button"
               onClick={toggle}
               aria-label="테마 전환"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
               {theme === 'dark' ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -393,7 +395,7 @@ function Shell({
               type="button"
               aria-label={`알림 ${unread}건`}
               onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface text-ink-muted transition-colors hover:text-ink"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
               <Icon name="bell" size={17} />
               {/* ⚠ 배지에 흰 글자를 박지 않는다 — 다크에서 danger-ink 는 **밝은 빨강**이라
@@ -570,7 +572,8 @@ function Shell({
         아이콘 하나는 다른 조작들 사이에서 눈에 안 띈다(2026-08-06 사용자: "챗봇은 어디에도
         안 보이는데"). 어디서나 같은 것을 여는 물건은 **어디서나 같은 자리**에 있어야 한다.
 
-        자리 다툼은 미리 갈라 뒀다 — 토스트는 이 버튼 **위로** 쌓는다(toast.tsx).
+        자리 다툼은 미리 갈라 뒀다 — 좁은 화면에서 토스트는 이 버튼 **위로** 쌓고,
+        넓은 화면에서는 토스트가 아예 우측 상단으로 비켜서 겹치지 않는다(toast.tsx).
         z 는 서랍·모달(50 이상)보다 낮다: 덮개를 쓰는 중에 이 버튼이 그 위에 떠 있으면
         "끝내고 닫는" 흐름을 방해한다.
       */}
@@ -623,12 +626,13 @@ function Shell({
   )
 }
 
+/** ⚠ ToastProvider 를 여기에 다시 감싸지 않는다 — 루트(`routes/__root.tsx`)가 정본이다.
+ *  여기 있으면 **화면 컴포넌트가 Provider 위**에 놓여 화면발 토스트가 조용히 죽는다
+ *  (2026-08-11에 그 상태를 발견해서 루트로 올렸다). */
 export function AppShell(props: { active: string; title: string; children: React.ReactNode }) {
   return (
-    <ToastProvider>
-      <MotionRoot>
-        <Shell {...props} />
-      </MotionRoot>
-    </ToastProvider>
+    <MotionRoot>
+      <Shell {...props} />
+    </MotionRoot>
   )
 }

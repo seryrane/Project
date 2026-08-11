@@ -129,6 +129,59 @@ test('물어보기 — 떠 있는 버튼으로 열리고 Esc 로 닫힌다', asy
   await expect(page.getByRole('heading', { name: '물어보기' })).not.toBeVisible()
 })
 
+/**
+ * 토스트 — 규약 §2. 이 판이 있는 이유는 **한 번 통째로 죽어 있었기 때문**이다:
+ * ToastProvider 가 AppShell 안에 있어서, AppShell 을 자식으로 렌더하는 화면 컴포넌트는
+ * 트리에서 Provider **위**에 놓였다 → 화면에서 부른 `useToast()` 가 기본값(빈 함수)을
+ * 집어 아무 일도 안 했다. 화면은 멀쩡하고 오류도 없어서 **눈으로만 보면 안 잡힌다**
+ * (2026-08-11 발견, Provider 를 __root.tsx 로 올려 고침).
+ */
+test('토스트 — 화면에서 부른 것이 실제로 뜨고, 좁은 화면에서는 아래에 선다', async ({ page }) => {
+  await ready(page, '/kpi-metrics')
+  const trigger = page.getByRole('button', { name: '+ 지표 추가' })
+  await expect(trigger).toHaveCount(1) // 이름 일부로 집으면 버튼이 늘 때 조용히 어긋난다
+  await trigger.click()
+
+  const toast = page.locator('[role="status"] > div')
+  await expect(toast, '화면발 토스트가 실제로 떠야 한다 — Provider 자리 회귀 감시').toBeVisible()
+
+  const box = (await toast.boundingBox())!
+  const vp = page.viewportSize()!
+  expect(box.y, '좁은 화면에서 토스트는 아래쪽(주소창·엄지 규칙)').toBeGreaterThan(vp.height / 2)
+  // 떠 있는 [물어보기] 버튼을 먹으면 그 버튼을 못 누른다 — 자리를 미리 갈라 뒀다
+  const fab = (await page.getByRole('button', { name: '물어보기' }).last().boundingBox())!
+  expect(box.y + box.height, '토스트는 떠 있는 버튼 위로 쌓인다').toBeLessThanOrEqual(fab.y + 1)
+})
+
+test('토스트 — 같은 말이 연달아 와도 줄이 늘지 않는다 (규약 §2 겹침·모임)', async ({ page }) => {
+  await ready(page, '/kpi-metrics')
+  const trigger = page.getByRole('button', { name: '+ 지표 추가' })
+  for (let i = 0; i < 4; i++) await trigger.click()
+
+  const toasts = page.locator('[role="status"] > div')
+  await expect(toasts, '같은 말은 한 줄로 접힌다').toHaveCount(1)
+  await expect(toasts.first(), '접힌 개수를 꼬리표로 센다').toContainText('외 3건')
+})
+
+test.describe('넓은 화면', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
+
+  test('토스트 — 헤더 바로 아래 우측 상단에 서고, 헤더를 가리지 않는다', async ({ page }) => {
+    await ready(page, '/kpi-metrics')
+    await page.getByRole('button', { name: '+ 지표 추가' }).click()
+
+    const toast = page.locator('[role="status"] > div')
+    await expect(toast).toBeVisible()
+    const box = (await toast.boundingBox())!
+    const header = (await page.locator('header').boundingBox())!
+
+    expect(box.y, '헤더(h-14)를 덮지 않는다 — 방금 누른 조작이 가려지면 안 된다')
+      .toBeGreaterThanOrEqual(header.y + header.height - 1)
+    expect(box.y, '그래도 시선이 있는 위쪽이다').toBeLessThan(160)
+    expect(1280 - (box.x + box.width), '우측에 붙는다').toBeLessThan(48)
+  })
+})
+
 test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지 않는다', async ({ page }) => {
   await ready(page, '/specs')
   await page.waitForLoadState('networkidle')

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 
+import { ToastProvider } from '#/components/portal/toast'
 import { applySavedAccent } from '#/lib/accent'
 import { I18nProvider } from '#/lib/i18n'
 
@@ -41,7 +42,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         {/* devtools 패널은 걷어냈다 — vite.config.ts 의 로그 에코 사고 주석 참고 */}
         {/* 다국어는 루트에서 — 로그인처럼 셸 밖 화면도 같은 사전을 쓴다 (규약 §4) */}
-        <I18nProvider>{children}</I18nProvider>
+        {/* ⚠⚠ **토스트도 루트에서.** 예전에는 `AppShell` 안에 Provider 가 있었는데,
+            화면 컴포넌트는 그 AppShell 을 **자식으로 렌더하는 쪽**이라 트리에서 Provider
+            **위**에 있었다 — 화면에서 부른 `useToast()` 는 기본값(빈 함수)을 집어서
+            **아무 일도 안 했다**. 승인·배포·지표 등 화면발 토스트가 통째로 죽어 있었고,
+            살아 보이던 것은 셸 자신이 띄우는 것(알림 모두 읽음)뿐이었다.
+            증상은 "토스트가 안 보인다"였지만 원인은 자리도 색도 아니었다 (2026-08-11).
+            로그인처럼 셸 밖 화면도 같은 자리를 쓴다 — 다국어와 같은 이유다. */}
+        <I18nProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </I18nProvider>
         <Scripts />
       </body>
     </html>
