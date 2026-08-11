@@ -206,6 +206,51 @@ test('토스트 — [되돌리기]를 누르면 방금 한 일이 물러난다',
   await expect(undo, '무른 일의 토스트는 남지 않는다').toHaveCount(0)
 })
 
+/**
+ * 덮개 접근성 — 예전에는 Esc 와 스크롤 잠금만 있었다. 포커스는 뒤 화면에 남아 Tab 이
+ * 덮개 뒤를 돌아다녔다(WCAG 2.4.3·2.1.2). 관문 하나(useCover)가 지키는 약속을 여기서 잰다.
+ */
+test('덮개 — 열면 포커스가 안으로, Tab 은 안에 갇히고, 닫으면 연 버튼으로 돌아온다', async ({
+  page,
+}) => {
+  await ready(page, '/members')
+  // ⚠ 여는 자리는 **버튼**이어야 한다 — 표의 행(tr onClick)은 애초에 포커스를 못 받아
+  //   "돌아온다"를 잴 수 없다(그 자체가 남은 숙제다)
+  const opener = page.getByRole('button', { name: '+ 회원 등록' })
+  await opener.click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog, 'role=dialog 로 열린다').toBeVisible()
+  await expect(dialog).toHaveAttribute('aria-modal', 'true')
+  expect(await dialog.evaluate((el) => el.contains(document.activeElement)), '포커스가 덮개 안으로').toBe(
+    true,
+  )
+
+  // 스무 번 눌러도 덮개 밖으로 새지 않는다
+  for (let i = 0; i < 20; i++) await page.keyboard.press('Tab')
+  expect(await dialog.evaluate((el) => el.contains(document.activeElement)), 'Tab 이 갇힌다').toBe(true)
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  expect(await opener.evaluate((el) => el === document.activeElement), '연 버튼으로 돌아온다').toBe(true)
+})
+
+/** 보고 있는 상태는 주소에 있다 — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
+test('필터 — 주소에 남아 새로고침을 견디고, 뒤로가기로 되돌아간다', async ({ page }) => {
+  await ready(page, '/specs')
+  await page.getByRole('button', { name: /검토 중/ }).click()
+  await expect(page).toHaveURL(/status=/)
+
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: /검토 중/ }),
+    '새로고침해도 고른 칩이 그대로',
+  ).toHaveClass(/text-primary/)
+
+  await page.goBack()
+  await expect(page, '뒤로가기는 필터를 벗긴다').not.toHaveURL(/status=/)
+})
+
 test.describe('넓은 화면', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
 

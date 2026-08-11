@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
@@ -10,8 +10,21 @@ import { KPI_AREAS, METRIC_STATUS_CLS, kpiMetrics } from '#/data/kpi'
 import type { KpiMetric } from '#/data/kpi'
 import { apiSend } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
+import { orNone, pickOne } from '#/lib/urlState'
 
-export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage })
+const ALL_AREA = '전체'
+
+/** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) */
+interface KpiSearch {
+  area?: string
+}
+
+export const Route = createFileRoute('/kpi-metrics')({
+  component: KpiMetricsPage,
+  validateSearch: (search: Record<string, unknown>): KpiSearch => ({
+    area: pickOne(search.area, KPI_AREAS),
+  }),
+})
 
 /**
  * 지표 관리 (FR-070) — 지표 정의서가 정본이다: 정의·산식·원천 테이블·갱신 주기.
@@ -21,11 +34,14 @@ export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage
 function KpiMetricsPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
-  const [area, setArea] = useState('전체')
+  const { area = ALL_AREA } = Route.useSearch()
+  const navigate = useNavigate()
+  const setArea = (v: string) =>
+    void navigate({ to: '/kpi-metrics', search: { area: orNone(v, ALL_AREA) } })
   const [detail, setDetail] = useState<KpiMetric | null>(null)
 
   const rows = useMemo(
-    () => kpiMetrics.filter((m) => area === '전체' || m.area === area),
+    () => kpiMetrics.filter((m) => area === ALL_AREA || m.area === area),
     [area],
   )
   const approved = kpiMetrics.filter((m) => m.status === '승인').length
@@ -58,8 +74,8 @@ function KpiMetricsPage() {
             한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
         <ChipSelect
           options={[allLabel, ...KPI_AREAS]}
-          value={area === '전체' ? allLabel : area}
-          onChange={(v) => setArea(v === allLabel ? '전체' : v)}
+          value={area === ALL_AREA ? allLabel : area}
+          onChange={(v) => setArea(v === allLabel ? ALL_AREA : v)}
         />
       </div>
 

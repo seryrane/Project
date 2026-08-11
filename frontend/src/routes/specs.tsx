@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
@@ -6,30 +6,53 @@ import { ChipSelect } from '#/components/portal/Chips'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useI18n } from '#/lib/i18n'
+import { orNone, pickOne, pickText } from '#/lib/urlState'
 import { currentVersion, specs } from '#/data/specs'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
-
-export const Route = createFileRoute('/specs')({
-  component: SpecsPage,
-  // 대시보드 승인 큐 등에서 특정 사양서를 바로 연다: /specs?open=SP-001
-  validateSearch: (search: Record<string, unknown>): { open?: string } => ({
-    open: typeof search.open === 'string' ? search.open : undefined,
-  }),
-})
 
 const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
 
 // 필터 내부 값(sentinel)은 한국어 원문 그대로 — 화면에 보일 때만 사전을 입힌다
 const ALL_CATEGORY = '전체 카테고리'
+const ALL_STATUS = '전체 상태'
+
+const specCategories = Array.from(new Set(specs.map((s) => s.category)))
+
+/** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
+interface SpecsSearch {
+  open?: string
+  q?: string
+  cat?: string
+  status?: SpecStatus
+}
+
+export const Route = createFileRoute('/specs')({
+  component: SpecsPage,
+  // 대시보드 승인 큐 등에서 특정 사양서를 바로 연다: /specs?open=SP-001
+  validateSearch: (search: Record<string, unknown>): SpecsSearch => ({
+    open: pickText(search.open),
+    q: pickText(search.q),
+    cat: pickOne(search.cat, specCategories),
+    status: pickOne(search.status, allStatuses),
+  }),
+})
 
 function SpecsPage() {
   const { t, tf } = useI18n()
-  const { open } = Route.useSearch()
+  const { open, q: query = '', cat: category = ALL_CATEGORY, status = ALL_STATUS } = Route.useSearch()
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState(ALL_CATEGORY)
-  const [status, setStatus] = useState('전체 상태')
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
+
+  /** 고르는 것(칩)은 뒤로가기로 되돌 수 있게 쌓고, 글자 입력은 replace 로 덮는다
+   *  — 한 글자마다 히스토리가 쌓이면 뒤로가기가 못 쓰게 된다 (lib/urlState.ts) */
+  // ⚠ `prev` 는 **모든 화면의 검색 타입을 합친 것**으로 들어온다(navigate 가 라우트에
+  //   묶여 있지 않아서) — 이 화면 몫으로 좁혀서 편다
+  const setSearch = (patch: Partial<SpecsSearch>, replace = false) =>
+    void navigate({
+      to: '/specs',
+      search: (prev) => ({ ...(prev as SpecsSearch), ...patch }),
+      replace,
+    })
 
   // ?open=SP-001 은 상세 본문 페이지로 보낸다 (대시보드 승인 큐·알림 → 여기 → 상세)
   useEffect(() => {
@@ -38,7 +61,7 @@ function SpecsPage() {
     if (target) navigate({ to: '/specs/$specId', params: { specId: target.id }, replace: true })
   }, [open, navigate])
 
-  const categories = useMemo(() => Array.from(new Set(specs.map((s) => s.category))), [])
+  const categories = specCategories
 
   const filtered = specs.filter((s) => {
     const q = query.trim().toLowerCase()
@@ -48,7 +71,7 @@ function SpecsPage() {
       s.id.toLowerCase().includes(q) ||
       s.tags.some((tag) => tag.toLowerCase().includes(q))
     const matchesCategory = category === ALL_CATEGORY || s.category === category
-    const matchesStatus = status === '전체 상태' || currentVersion(s).status === status
+    const matchesStatus = status === ALL_STATUS || currentVersion(s).status === status
     return matchesQuery && matchesCategory && matchesStatus
   })
 
@@ -84,7 +107,7 @@ function SpecsPage() {
       <div className="mt-6 flex flex-col gap-3 pc:flex-row">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
           placeholder={t('specs.searchPlaceholder', '사양서 명, ID, 태그 검색...')}
           className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
         />
@@ -94,7 +117,9 @@ function SpecsPage() {
             options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
             value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
             onChange={(v) =>
-              setCategory(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v)
+              setSearch({
+                cat: orNone(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v, ALL_CATEGORY),
+              })
             }
           />
         </div>
@@ -102,9 +127,9 @@ function SpecsPage() {
 
       {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
       <div className="mt-3 flex flex-wrap gap-2">
-        {['전체 상태', ...allStatuses].map((st) => {
+        {[ALL_STATUS, ...allStatuses].map((st) => {
           const count =
-            st === '전체 상태'
+            st === ALL_STATUS
               ? specs.length
               : specs.filter((sp) => currentVersion(sp).status === st).length
           const selected = status === st
@@ -112,14 +137,14 @@ function SpecsPage() {
             <button
               key={st}
               type="button"
-              onClick={() => setStatus(st)}
+              onClick={() => setSearch({ status: orNone(st as SpecStatus, ALL_STATUS as SpecStatus) })}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
                 selected
                   ? 'border-primary/50 bg-primary/15 text-primary'
                   : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
               }`}
             >
-              {st === '전체 상태' ? t('common.all', '전체') : st}
+              {st === ALL_STATUS ? t('common.all', '전체') : st}
               <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
             </button>
           )

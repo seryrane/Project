@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 
 import { m } from './motion'
+import { coverProps, useCover } from './useCover'
 
 /**
  * 모달 관문 — 규약(docs/화면_공통규칙.md) §1·§7 을 이 한 곳이 지킨다.
@@ -21,27 +22,11 @@ export function Modal({
   wide?: boolean
 }) {
   const [closing, setClosing] = useState(false)
+  const titleId = useId()
 
   const close = useCallback(() => setClosing(true), [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-    }
-    document.addEventListener('keydown', onKey)
-    // 뒤 화면 잠금 — overscroll 만으로는 안 구르는 자리(배경막·머리)를 잡고 끌 때 뒤가 구른다.
-    // ⚠ 스크롤바는 html 에 붙어 있어서 body 만 잠그면 12px 트랙이 남아 시트가 화면 폭에
-    // 못 미친다(모바일 스모크가 실측으로 잡음) — html 까지 함께 잠근다
-    const prevBody = document.body.style.overflow
-    const prevHtml = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevBody
-      document.documentElement.style.overflow = prevHtml
-    }
-  }, [close])
+  // Esc · 뒤 화면 잠금 · 포커스 이동/가둠/복귀는 관문 하나가 지킨다 (useCover)
+  const panelRef = useCover(close)
 
   return (
     <m.div
@@ -52,6 +37,8 @@ export function Modal({
       onClick={close}
     >
       <m.div
+        ref={panelRef}
+        {...coverProps(titleId)}
         className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-2xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] pc:max-h-[85vh] pc:rounded-2xl ${
           wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
         }`}
@@ -70,7 +57,9 @@ export function Modal({
       >
         {/* 머리는 면(배경)+선으로 가른다 — 선 하나면 스크롤 중 내용 첫 줄처럼 읽힌다 (규약 §7) */}
         <div className="flex items-center justify-between rounded-t-2xl surface-head px-5 py-3.5 pc:px-6 pc:py-4">
-          <h2 className="min-w-0 truncate text-lg font-semibold">{title}</h2>
+          <h2 id={titleId} className="min-w-0 truncate text-lg font-semibold">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={close}

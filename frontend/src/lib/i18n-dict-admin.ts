@@ -344,8 +344,8 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'analytics.chart.specQuality.title': { ko: '사양서 품질 지표', en: 'Spec quality metrics' },
   'analytics.chart.specQuality.subtitle': { ko: '6개 축 · 100점 만점', en: '6 axes · out of 100' },
   'analytics.chart.specQuality.caption': {
-    ko: '초록 = 85점 이상 · 보라 = 개선 여지',
-    en: 'Green = 85+ · Purple = room to improve',
+    ko: '초록 = 85점 이상 · 회색 = 개선 여지',
+    en: 'Green = 85+ · Grey = room to improve',
   },
   'analytics.chart.todayPerf.title': { ko: '오늘 시스템 성능', en: "Today's system performance" },
   'analytics.chart.todayPerf.subtitle': { ko: '응답시간 (ms) · 08~15시', en: 'Response time (ms) · 08:00–15:00' },

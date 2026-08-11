@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 
 import { m } from './motion'
+import { coverProps, useCover } from './useCover'
 
 /* Right-hand slide-over panel — motion 스프링 presence.
    Call the `close` render-prop (not the parent's onClose) so the exit
@@ -15,26 +16,11 @@ export function Drawer({
   children: (close: () => void) => React.ReactNode
 }) {
   const [closing, setClosing] = useState(false)
+  const titleId = useId()
 
   const close = useCallback(() => setClosing(true), [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', onKey)
-    // 규약 §7: 덮개가 열려 있는 동안 뒤 화면 스크롤을 잠근다 (스크롤바가 html 에
-    // 붙어 있으므로 html 까지 — body 만 잠그면 12px 트랙이 남는다)
-    const prevBody = document.body.style.overflow
-    const prevHtml = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevBody
-      document.documentElement.style.overflow = prevHtml
-    }
-  }, [close])
+  // 규약 §7 — Esc · 뒤 화면 잠금 · 포커스 이동/가둠/복귀를 관문 하나가 지킨다 (useCover)
+  const panelRef = useCover(close)
 
   return (
     <m.div
@@ -45,6 +31,8 @@ export function Drawer({
       onClick={close}
     >
       <m.div
+        ref={panelRef}
+        {...coverProps(titleId)}
         className="absolute inset-y-0 right-0 flex w-full max-w-[520px] flex-col border-l border-hairline bg-surface shadow-[-24px_0_80px_rgb(0_0_0/40%)]"
         initial={{ x: '100%' }}
         animate={{ x: closing ? '100%' : 0 }}
@@ -62,7 +50,9 @@ export function Drawer({
       >
         {/* 머리는 면(배경)+선으로 가른다 (규약 §7) */}
         <div className="flex items-center justify-between surface-head px-6 py-4">
-          <h2 className="text-lg font-semibold">{title}</h2>
+          <h2 id={titleId} className="text-lg font-semibold">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={close}

@@ -14,10 +14,28 @@ import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, 
 import type { Action } from '#/data/roles'
 import { apiSend, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
-
-export const Route = createFileRoute('/members')({ component: MembersPage })
+import { orNone, pickOne, pickText } from '#/lib/urlState'
 
 const GRADES: Array<Grade> = ['Super Admin', 'Admin', 'Editor', 'Viewer']
+const MEMBER_STATES = ['활성', '비활성', '잠금'] as const
+const ALL_STATUS = '전체 상태'
+const ALL_GRADE = '전체 등급'
+
+/** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
+interface MembersSearch {
+  q?: string
+  status?: string
+  grade?: string
+}
+
+export const Route = createFileRoute('/members')({
+  component: MembersPage,
+  validateSearch: (search: Record<string, unknown>): MembersSearch => ({
+    q: pickText(search.q),
+    status: pickOne(search.status, MEMBER_STATES),
+    grade: pickOne(search.grade, GRADES),
+  }),
+})
 
 const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], string> = {
   auth: 'bg-fill-draft',
@@ -51,9 +69,15 @@ function MembersPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState('전체 상태')
-  const [grade, setGrade] = useState('전체 등급')
+  const { q: query = '', status = ALL_STATUS, grade = ALL_GRADE } = Route.useSearch()
+  /** 칩은 뒤로가기로 되돌 수 있게 쌓고, 글자 입력은 replace 로 덮는다 (lib/urlState.ts) */
+  // ⚠ `prev` 는 모든 화면의 검색 타입을 합친 것으로 들어온다 — 이 화면 몫으로 좁힌다
+  const setSearch = (patch: Partial<MembersSearch>, replace = false) =>
+    void navigate({
+      to: '/members',
+      search: (prev) => ({ ...(prev as MembersSearch), ...patch }),
+      replace,
+    })
   const [detail, setDetail] = useState<Member | null>(null)
   const [tab, setTab] = useState<'info' | 'activity' | 'perm'>('info')
   const [creating, setCreating] = useState(false)
@@ -84,8 +108,8 @@ function MembersPage() {
         const q = query.trim()
         return (
           (q === '' || `${m.name} ${m.email} ${m.dept}`.includes(q)) &&
-          (status === '전체 상태' || st === status) &&
-          (grade === '전체 등급' || m.grade === grade)
+          (status === ALL_STATUS || st === status) &&
+          (grade === ALL_GRADE || m.grade === grade)
         )
       }),
     [memberList, query, status, grade, lockOverride],
@@ -205,7 +229,7 @@ function MembersPage() {
       <div className="mt-5 flex flex-col gap-3">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
           placeholder={t('members.searchPlaceholder')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
@@ -213,15 +237,15 @@ function MembersPage() {
           {/* 상태·등급 값은 데이터 어휘라 그대로 — "전체" 칩(UI 어휘)만 언어를 입힌다.
               내부 값은 한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
           <ChipSelect
-            options={[allStatusLabel, '활성', '비활성', '잠금']}
-            value={status === '전체 상태' ? allStatusLabel : status}
-            onChange={(v) => setStatus(v === allStatusLabel ? '전체 상태' : v)}
+            options={[allStatusLabel, ...MEMBER_STATES]}
+            value={status === ALL_STATUS ? allStatusLabel : status}
+            onChange={(v) => setSearch({ status: orNone(v === allStatusLabel ? ALL_STATUS : v, ALL_STATUS) })}
           />
           <span className="hidden h-4 w-px bg-hairline pc:block" aria-hidden />
           <ChipSelect
             options={[allGradeLabel, ...GRADES]}
-            value={grade === '전체 등급' ? allGradeLabel : grade}
-            onChange={(v) => setGrade(v === allGradeLabel ? '전체 등급' : v)}
+            value={grade === ALL_GRADE ? allGradeLabel : grade}
+            onChange={(v) => setSearch({ grade: orNone(v === allGradeLabel ? ALL_GRADE : v, ALL_GRADE) })}
           />
         </div>
       </div>

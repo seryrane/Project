@@ -49,7 +49,11 @@ function AttainmentBars() {
                   className="absolute inset-y-0 left-0 rounded-r-[4px] transition-opacity"
                   style={{
                     width: `${(o.value / max) * 100}%`,
-                    backgroundColor: met ? 'var(--color-fill-deployed)' : 'var(--color-fill-pending)',
+                    // ⚠ 미달을 **다른 색조**로 칠하지 않는다 — 하나의 양(달성률)에 두 색을
+                    //   쓰면 화면이 무지개가 되고(2026-08-11 사용자 지적: "막대 색이 촌스럽다"),
+                    //   판단은 이미 목표선·숫자·증감 칩 세 곳이 하고 있다.
+                    //   달성만 색을 얻고 미달은 중립으로 물러선다.
+                    backgroundColor: met ? 'var(--color-fill-deployed)' : 'var(--color-fill-draft)',
                     opacity: hover == null || hover === i ? 1 : 0.45,
                   }}
                 />
@@ -214,7 +218,8 @@ function AnalyticsPage() {
                     className="block h-full rounded-full"
                     style={{
                       width: `${q.value}%`,
-                      backgroundColor: q.value >= 85 ? 'var(--color-fill-deployed)' : 'var(--color-fill-pending)',
+                      // 위 조직별 막대와 같은 규칙 — 기준을 넘긴 것만 색을 얻는다
+                      backgroundColor: q.value >= 85 ? 'var(--color-fill-deployed)' : 'var(--color-fill-draft)',
                     }}
                   />
                 </span>

@@ -6,10 +6,24 @@ import { Avatar } from '#/components/portal/Avatar'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
+import { orNone, pickOne } from '#/lib/urlState'
 import { KIND_CLS, approvalRequests, myRequests, processedRequests } from '#/data/approvals'
 import type { ApprovalRequest } from '#/data/approvals'
 
-export const Route = createFileRoute('/approvals')({ component: ApprovalsPage })
+const TAB_KEYS = ['mine', 'all', 'requested', 'done'] as const
+const DEFAULT_TAB: Tab = 'mine'
+
+/** 지금 보고 있는 탭을 주소에 둔다 (lib/urlState.ts) — 상세를 보고 뒤로 와도 그 탭이다 */
+interface ApprovalsSearch {
+  tab?: Tab
+}
+
+export const Route = createFileRoute('/approvals')({
+  component: ApprovalsPage,
+  validateSearch: (search: Record<string, unknown>): ApprovalsSearch => ({
+    tab: pickOne(search.tab, TAB_KEYS),
+  }),
+})
 
 /** 결재 단계 점 — ● 지난 단계 · ◉ 현재 · ○ 남은 단계 */
 function StepDots({ step }: { step: [number, number] }) {
@@ -77,7 +91,9 @@ function ApprovalsPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('mine')
+  const { tab = DEFAULT_TAB } = Route.useSearch()
+  const setTab = (next: Tab) =>
+    void navigate({ to: '/approvals', search: { tab: orNone(next, DEFAULT_TAB) } })
   const [query, setQuery] = useState('')
   // 프로토타입: 처리 결과는 화면 상태로만 든다
   const [decided, setDecided] = useState<Record<string, '승인' | '반려'>>({})
