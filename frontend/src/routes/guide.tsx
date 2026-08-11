@@ -36,7 +36,9 @@ function GuidePage() {
   }
 
   return (
-    <AppShell active="guide" title={t('nav.guide', '사용자 가이드')}>
+    // 글을 읽는 화면이라 본문 폭을 읽기 폭으로 — 표·대시보드와 같은 1680 로 펴면
+    // 한 줄이 너무 길어져 눈이 다음 줄을 못 찾는다 (AppShell width)
+    <AppShell active="guide" title={t('nav.guide', '사용자 가이드')} width="doc">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.guide', '사용자 가이드')}</h1>

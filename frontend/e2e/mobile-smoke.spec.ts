@@ -163,6 +163,49 @@ test('토스트 — 같은 말이 연달아 와도 줄이 늘지 않는다 (규�
   await expect(toasts.first(), '접힌 개수를 꼬리표로 센다').toContainText('외 3건')
 })
 
+/**
+ * 포커스 — 2026-08-11 검토에서 잰 상태가 `outline-none` 58곳 · 전역 규칙 0개였다.
+ * 규칙은 styles.css 한 줄(`:focus-visible`)이 정본이라, 여기서는 **키보드가 닿는 자리마다
+ * 실제로 링이 그려지는지**를 본다 — 화면마다 링을 다시 그리지 않기로 한 판단의 감시자다.
+ */
+test('포커스 — 키보드가 닿는 자리마다 링이 보인다 (WCAG 2.4.7)', async ({ page }) => {
+  await ready(page, '/members')
+  const bad: Array<string> = []
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press('Tab')
+    const stop = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null
+      if (!el || el === document.body) return null
+      const cs = getComputedStyle(el)
+      return {
+        name: `${el.tagName} "${(el.getAttribute('aria-label') ?? el.textContent).trim().slice(0, 16)}"`,
+        style: cs.outlineStyle,
+        width: parseFloat(cs.outlineWidth),
+        // 링을 안 그리는 대신 다른 표시를 쓰는 자리도 있을 수 있어 함께 본다
+        shadow: cs.boxShadow,
+      }
+    })
+    if (!stop) continue
+    if (stop.style === 'none' || stop.width < 2) bad.push(`${stop.name} outline=${stop.style} ${stop.width}px`)
+  }
+  expect(bad, '링 없이 지나가는 자리').toEqual([])
+})
+
+/** 되돌리기 — 규약 §2 "성공: 토스트(+되돌리기)". 문구로만 안내하던 것을 손잡이로 바꿨다 */
+test('토스트 — [되돌리기]를 누르면 방금 한 일이 물러난다', async ({ page }) => {
+  await ready(page, '/privacy')
+  const sw = page.getByRole('switch', { name: '연락처 마스킹' })
+  const before = await sw.getAttribute('aria-checked')
+  await sw.click()
+  await expect(sw).not.toHaveAttribute('aria-checked', before ?? '')
+
+  const undo = page.getByRole('button', { name: '되돌리기' })
+  await expect(undo, '되돌릴 수 있는 일에는 손잡이가 붙는다').toBeVisible()
+  await undo.click()
+  await expect(sw, '토글이 원래 자리로').toHaveAttribute('aria-checked', before ?? '')
+  await expect(undo, '무른 일의 토스트는 남지 않는다').toHaveCount(0)
+})
+
 test.describe('넓은 화면', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
 
@@ -179,6 +222,56 @@ test.describe('넓은 화면', () => {
       .toBeGreaterThanOrEqual(header.y + header.height - 1)
     expect(box.y, '그래도 시선이 있는 위쪽이다').toBeLessThan(160)
     expect(1280 - (box.x + box.width), '우측에 붙는다').toBeLessThan(48)
+  })
+})
+
+/** 본문 폭 — 한 값이 두 일을 하던 자리(예전 max-w-7xl 1280). 설계서 폭은 1680 이고,
+ *  글 읽는 화면은 읽기 폭에서 멈춘다. 1920 을 실제로 켜고 잰다 */
+test.describe('설계서 폭(1920)', () => {
+  test.use({ viewport: { width: 1920, height: 900 }, isMobile: false })
+
+  test('본문 폭 — 데이터 화면은 1680 까지 펴고, 글 화면은 960 에서 멈춘다', async ({ page }) => {
+    await ready(page, '/members')
+    const data = (await page.locator('main').boundingBox())!
+    // 세로 스크롤바(≈15px)만큼 줄 수 있어 폭 자체가 아니라 "설계서 폭에 닿았는지"를 본다
+    expect(data.width, '표 화면은 설계서 폭 1680').toBeGreaterThan(1640)
+
+    await ready(page, '/guide')
+    const doc = (await page.locator('main').boundingBox())!
+    expect(doc.width, '글 화면은 읽기 폭 960').toBeLessThanOrEqual(960)
+  })
+
+  /** ⚠ 이 판의 요점은 **뷰포트를 1920 으로 고정한 채** 칸 폭만 바꾼다는 것이다 —
+   *  두 경우의 열 수가 다르면 안쪽이 뷰포트가 아니라 칸을 보고 있다는 증거다.
+   *  칸 크기는 사람이 [위젯 편집]에서 바꾸는 값이라 저장소(dashboard.layout.v1)로 심는다. */
+  test('대시보드 위젯 — 칸을 좁히면 안쪽이 칸을 보고 접힌다 (@container)', async ({ page }) => {
+    const columns = () =>
+      page.evaluate(() => {
+        const grid = document.querySelector<HTMLElement>('main [class*="grid-cols-2"]')
+        return grid ? getComputedStyle(grid).gridTemplateColumns.split(' ').length : 0
+      })
+
+    // ⚠ 배치 정본은 **계정(서버)**이다 — 저장소만 심으면 서버 응답이 덮어써서 판이 거짓말을
+    //   한다(처음에 그렇게 새 판이 통과해 버렸다). 서버는 "저장된 배치 없음"으로 세운다.
+    await page.route('**/api/me/dashboard-layout', (route) =>
+      route.fulfill({ json: { layout: null } }),
+    )
+
+    // 전체 칸(3) — 타일 4개가 한 줄에 선다
+    await page.addInitScript(() =>
+      localStorage.setItem('dashboard.layout.v1', JSON.stringify([{ id: 'kpi', size: 3 }])),
+    )
+    await ready(page, '/dashboard')
+    await expect(page.getByText('총 사양서')).toBeVisible()
+    expect(await columns(), '전체 칸에서는 4열').toBe(4)
+
+    // 1칸으로 줄인다 — 뷰포트는 그대로 1920
+    await page.addInitScript(() =>
+      localStorage.setItem('dashboard.layout.v1', JSON.stringify([{ id: 'kpi', size: 1 }])),
+    )
+    await ready(page, '/dashboard')
+    await expect(page.getByText('총 사양서')).toBeVisible()
+    expect(await columns(), '1칸이면 2열 — 뷰포트로 접었다면 여기서도 4열이 나온다').toBe(2)
   })
 })
 

@@ -6,6 +6,13 @@
   /* 좁은/넓은 화면 경계 720px — docs/화면_공통규칙.md §8, DESIGN.md Mobile 절 */
   --breakpoint-pc: 45rem;
 
+  /* 본문 폭 두 가지 — **화면 종류가 고른다**(AppShell 의 `width` prop).
+     한 값(max-w-7xl=1280)이 두 일을 하고 있어서 1920 에서 표는 좁고 글은 넓었다:
+     사이드바 240 을 뺀 1680 이 설계서(Figma 02 화면·웹)의 본문 폭인데 400px 를 비워 뒀다.
+     data = 표·매트릭스·대시보드(설계서 폭), doc = 가이드·방침처럼 글을 읽는 화면. */
+  --container-data: 105rem; /* 1680px */
+  --container-doc: 60rem; /* 960px — 한글 본문 글줄이 길어지지 않는 선 */
+
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Segoe UI', sans-serif;
@@ -79,6 +86,10 @@
 
   /* 카드·덮개 머리가 앉는 면 (.surface-head) */
   --color-head: rgb(255 255 255 / 5%);
+
+  /* 포커스 링 — 포인트 색을 따라간다(강조색을 바꾸면 링도 같이 바뀐다).
+     ⚠ 사이드바 안에서는 이 값을 쓰지 않는다 — 아래 `aside :focus-visible` 참고 */
+  --color-ring: var(--color-primary);
 
   /* ⚠ **앱 헤더(GNB)는 캔버스와 같은 색이면 안 된다** (2026-08-11 사용자 지적: 라이트에서
      헤더와 본문이 구분이 안 된다). 예전에는 `bg-canvas/75` 였는데, 라이트 캔버스가
@@ -278,6 +289,27 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
 }
+
+/* ---- 포커스 ----------------------------------------------------------
+   ⚠⚠ **지금 어디 있는지는 화면이 말해야 한다.** 2026-08-11 검토에서 잰 상태:
+   `outline-none` 58곳 · `focus-visible` 2곳 · 전역 규칙 0개 — 키보드로 쓰면 커서가
+   어디 있는지 보이지 않았다. 입력칸은 `focus:border-primary/60` 로 대신했는데 테두리
+   한 겹은 신호가 약하고, 나머지 조작은 브라우저 기본 링이라 테마와 따로 놀았다.
+   여기 한 줄이 정본이다 — 화면마다 링을 그리지 않는다 (WCAG 2.4.7·2.4.11).
+
+   ⚠ 이 규칙은 **레이어 밖**에 있어서 `@layer utilities` 의 `.outline-none` 을 이긴다
+   (특정도는 같지만 레이어 없는 쪽이 이긴다). 그래서 58곳을 손대지 않아도 링이 산다 —
+   `outline-none` 은 마우스 클릭 자국을 지우는 제 일을 계속한다(:focus-visible 만 링). */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+/* 사이드바는 두 테마 모두 어둡다 — 라이트의 primary(원색 남색 #002C5F)로 링을 그리면
+   어두운 면 위 어두운 선이 된다. 배지·활성 표시와 같은 이유로 밝힌 색을 쓴다 */
+aside :focus-visible {
+  outline-color: var(--color-sidebar-accent);
+}
+
 
 /* 스크롤바도 앱의 물건이다 (DESIGN.md Rules 8) — 브라우저 기본 회색 스크롤바가
    남으면 그 줄만 딴 앱처럼 보인다. 전역으로 얇은 테마 스크롤바를 입힌다.

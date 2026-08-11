@@ -152,9 +152,10 @@ export const COMMUNITY_DICT: Record<string, Entry> = {
   'privacy.maskPhoneDesc': { ko: '010-****-5678 로 표시', en: 'Shown as 010-****-5678' },
   'privacy.label.maskEmail': { ko: '이메일 마스킹', en: 'Email masking' },
   'privacy.maskEmailDesc': { ko: 'hy****@hmg.com 로 표시', en: 'Shown as hy****@hmg.com' },
+  // 무를 길은 토스트의 [되돌리기] 버튼 (규약 §2) — 문구에서 안내를 뺀다
   'privacy.toast.maskToggle': {
-    ko: '{field}을 {state} — 같은 토글로 되돌립니다',
-    en: '{field} {state} — flip the same toggle to undo',
+    ko: '{field}을 {state}',
+    en: '{field} {state}',
   },
   'privacy.state.on': { ko: '켰습니다', en: 'turned on' },
   'privacy.state.off': { ko: '껐습니다', en: 'turned off' },

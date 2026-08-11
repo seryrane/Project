@@ -2,11 +2,21 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 
 import { useI18n } from '#/lib/i18n'
 
+/** 토스트에 붙일 수 있는 것 — 지금은 되돌리기 하나 (규약 §2: 성공은 토스트+되돌리기) */
+export interface ToastOptions {
+  /** 누르면 방금 한 일을 무르고 토스트를 닫는다. 없으면 버튼이 안 붙는다 */
+  onUndo?: () => void
+  /** 버튼 이름 — 기본 "되돌리기". 무르는 일이 특수할 때만 바꾼다 */
+  undoLabel?: string
+}
+
 interface Toast {
   id: number
   message: string
   /** 같은 말이 연달아 온 횟수 — 1이면 안 보이고, 2부터 `외 N건`으로 접힌다 */
   count: number
+  onUndo?: () => void
+  undoLabel?: string
 }
 
 /** 규약 §2 겹침·모임 — 한 번에 최대 3개. 넘으면 **오래된 것부터** 밀어낸다
@@ -15,7 +25,7 @@ const MAX = 3
 /** 사라지는 시간. 같은 말이 다시 오면 이 시계를 되감는다 */
 const LIFE = 3200
 
-const ToastContext = createContext<(message: string) => void>(() => {})
+const ToastContext = createContext<(message: string, options?: ToastOptions) => void>(() => {})
 
 export function useToast() {
   return useContext(ToastContext)
@@ -23,7 +33,7 @@ export function useToast() {
 
 /** ⚠ `I18nProvider` **안**에 둔다(정본 배치: routes/__root.tsx) — `외 N건`이 사전을 탄다. */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const { tf } = useI18n()
+  const { t: tt, tf } = useI18n()
   const [toasts, setToasts] = useState<Array<Toast>>([])
   const nextId = useRef(0)
   /** ⚠ 목록을 ref 로도 들고 간다 — 겹침 판정·개수 제한은 setState 업데이터 **밖**에서
@@ -58,21 +68,34 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     [clearTimer, sync],
   )
 
+  /** 되돌리기를 누르면 그 자리에서 토스트가 사라진다 — 무른 일에 대한 토스트가 남아
+   *  있으면 사람이 "무른 게 맞나" 다시 확인하러 간다 */
+  const dismiss = useCallback(
+    (id: number) => {
+      clearTimer(id)
+      sync(listRef.current.filter((x) => x.id !== id))
+    },
+    [clearTimer, sync],
+  )
+
   const push = useCallback(
-    (message: string) => {
+    (message: string, options?: ToastOptions) => {
       const list = listRef.current
       // ⚠ 빈 목록에서 `list[list.length - 1]` 은 undefined 인데 타입은 Toast 라고 말한다
       //   (noUncheckedIndexedAccess 없음) — 길이로 갈라 undefined 를 타입에 남긴다
       const last = list.length > 0 ? list[list.length - 1] : undefined
       // "연달아 오면 하나로" — 맨 뒤(가장 최근)와 같은 말일 때만 접는다. 사이에 다른 말이
       // 끼었으면 그것은 다른 일이 벌어진 것이라 따로 세운다.
-      if (last && last.message === message) {
+      // ⚠ **되돌리기가 붙은 것은 접지 않는다** — 버튼 하나로 두 일을 무를 수는 없다.
+      //   접어 버리면 마지막 하나만 물러 놓고 "다 물렀다"고 보이게 된다.
+      const foldable = last && last.message === message && !last.onUndo && !options?.onUndo
+      if (foldable) {
         sync(list.map((x) => (x.id === last.id ? { ...x, count: x.count + 1 } : x)))
         arm(last.id)
         return
       }
       const id = nextId.current++
-      const grown = [...list, { id, message, count: 1 }]
+      const grown = [...list, { id, message, count: 1, ...options }]
       const kept = grown.slice(Math.max(0, grown.length - MAX))
       // 밀려난 것의 시계는 같이 거둔다 — 안 그러면 남은 토스트를 나중에 지운다
       for (const gone of grown.slice(0, grown.length - kept.length)) clearTimer(gone.id)
@@ -126,6 +149,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <span className="ml-auto shrink-0 rounded-full bg-chip-strong px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-muted">
                 {tf('toast.more', { n: t.count - 1 }, '외 {n}건')}
               </span>
+            )}
+            {/* 되돌리기 — 되돌릴 수 있는 일은 묻지 않고 하고, 무를 길을 여기 둔다 (규약 §2).
+                ⚠ 감싼 상자가 pointer-events-none 이라 이 버튼만 다시 켠다 */}
+            {t.onUndo && (
+              <button
+                type="button"
+                onClick={() => {
+                  t.onUndo?.()
+                  dismiss(t.id)
+                }}
+                className="pointer-events-auto ml-auto shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1 text-[12px] font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-chip-strong"
+              >
+                {t.undoLabel ?? tt('common.undo', '되돌리기')}
+              </button>
             )}
           </div>
         ))}

@@ -88,13 +88,19 @@ const NOTIFICATIONS: Array<{
   { icon: 'bell', text: '[공지] 8월 정기 점검 — 8/9(토) 02:00~06:00', time: '어제', todo: false, to: '/notice' },
 ]
 
+/** 본문 폭 — 표·대시보드는 설계서 폭(1680), 글을 읽는 화면은 읽기 폭(960) */
+export type ContentWidth = 'data' | 'doc'
+
 function Shell({
   active,
   title,
+  width = 'data',
   children,
 }: {
   active: string
   title: string
+  /** 본문 폭 — 'data'(표·대시보드, 1680) 기본, 'doc'(글 읽는 화면, 960) */
+  width?: ContentWidth
   children: React.ReactNode
 }) {
   const { theme, toggle } = useTheme()
@@ -423,7 +429,14 @@ function Shell({
             </button>
           </div>
         </header>
-        <main className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-6 pc:px-8 pc:py-8">
+        {/* 본문 폭은 **화면 종류가 고른다** (styles.css 의 container-data/doc).
+            한 값(예전 max-w-7xl)이 두 일을 하면 1920 에서 표는 좁고 글은 넓다 —
+            데이터형은 설계서 폭 1680 까지 펴고, 글 읽는 화면은 960 에서 멈춘다. */}
+        <main
+          className={`relative mx-auto w-full flex-1 px-4 py-6 pc:px-8 pc:py-8 ${
+            width === 'doc' ? 'max-w-doc' : 'max-w-data'
+          }`}
+        >
           <div
             aria-hidden
             className="pointer-events-none absolute -top-20 right-24 h-64 w-64 rounded-full bg-primary/10 blur-[100px]"
@@ -629,7 +642,12 @@ function Shell({
 /** ⚠ ToastProvider 를 여기에 다시 감싸지 않는다 — 루트(`routes/__root.tsx`)가 정본이다.
  *  여기 있으면 **화면 컴포넌트가 Provider 위**에 놓여 화면발 토스트가 조용히 죽는다
  *  (2026-08-11에 그 상태를 발견해서 루트로 올렸다). */
-export function AppShell(props: { active: string; title: string; children: React.ReactNode }) {
+export function AppShell(props: {
+  active: string
+  title: string
+  width?: ContentWidth
+  children: React.ReactNode
+}) {
   return (
     <MotionRoot>
       <Shell {...props} />

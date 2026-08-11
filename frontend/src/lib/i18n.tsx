@@ -50,6 +50,7 @@ const CORE_DICT: Record<string, Entry> = {
 
   // 같은 토스트가 연달아 올 때 접는 꼬리표 (규약 §2 겹침·모임)
   'toast.more': { ko: '외 {n}건', en: '+{n} more' },
+  'common.undo': { ko: '되돌리기', en: 'Undo' },
 
   // ── 사양서 카드 (공용 컴포넌트라 화면 사전이 아니라 여기) ──────────
   'specCard.detail': { ko: '상세 보기', en: 'View detail' },

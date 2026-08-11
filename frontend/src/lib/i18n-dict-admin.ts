@@ -224,13 +224,15 @@ export const ADMIN_DICT: Record<string, Entry> = {
     ko: '{name} 메뉴 설정을 저장했습니다 — LNB 에 바로 반영됩니다',
     en: "Saved settings for {name} — reflected in the LNB right away",
   },
+  // 무를 길은 이제 토스트의 [되돌리기] 버튼이 쥐고 있다 — 문구에서 안내를 뺀다
+  // (버튼이 있는데 "같은 토글로 되돌립니다"까지 적으면 길이 두 개로 들린다)
   'menus.toast.hidden': {
-    ko: '{name} 메뉴를 숨겼습니다 — 같은 토글로 되돌립니다',
-    en: "Hid the {name} menu — use the same toggle to bring it back",
+    ko: '{name} 메뉴를 숨겼습니다',
+    en: 'Hid the {name} menu',
   },
   'menus.toast.shown': {
-    ko: '{name} 메뉴를 노출합니다 — 같은 토글로 되돌립니다',
-    en: 'Showing the {name} menu — use the same toggle to undo',
+    ko: '{name} 메뉴를 노출합니다',
+    en: 'Showing the {name} menu',
   },
   'menus.childCount': { ko: '{n}개 하위', en: '{n} sub-items' },
   'menus.minimalHint': { ko: '권한 없이 모든 역할에 보이는 메뉴', en: 'Visible to every role, no permission needed' },

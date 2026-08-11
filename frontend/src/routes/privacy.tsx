@@ -46,7 +46,8 @@ function PrivacyPage() {
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
 
   return (
-    <AppShell active="privacy" title={t('nav.privacy', '개인정보보호')}>
+    // 방침 전문·안내가 본체인 화면 — 읽기 폭 (AppShell width)
+    <AppShell active="privacy" title={t('nav.privacy', '개인정보보호')} width="doc">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.privacy', '개인정보보호')}</h1>
@@ -208,8 +209,9 @@ function PrivacyPage() {
                         field: t('privacy.label.maskPhone', '연락처 마스킹'),
                         state: v ? t('privacy.state.on', '켰습니다') : t('privacy.state.off', '껐습니다'),
                       },
-                      `연락처 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`,
+                      `연락처 마스킹을 ${v ? '켰습니다' : '껐습니다'}`,
                     ),
+                    { onUndo: () => setMaskPhone(!v) },
                   )
                 }}
                 label={t('privacy.label.maskPhone', '연락처 마스킹')}
@@ -233,8 +235,9 @@ function PrivacyPage() {
                         field: t('privacy.label.maskEmail', '이메일 마스킹'),
                         state: v ? t('privacy.state.on', '켰습니다') : t('privacy.state.off', '껐습니다'),
                       },
-                      `이메일 마스킹을 ${v ? '켰습니다' : '껐습니다'} — 같은 토글로 되돌립니다`,
+                      `이메일 마스킹을 ${v ? '켰습니다' : '껐습니다'}`,
                     ),
+                    { onUndo: () => setMaskEmail(!v) },
                   )
                 }}
                 label={t('privacy.label.maskEmail', '이메일 마스킹')}

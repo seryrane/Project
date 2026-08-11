@@ -41,7 +41,8 @@ function FaqPage() {
   )
 
   return (
-    <AppShell active="faq" title="FAQ">
+    // 묻고 답하는 글이 본체 — 읽기 폭 (AppShell width)
+    <AppShell active="faq" title="FAQ" width="doc">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.faq', 'FAQ')}</h1>

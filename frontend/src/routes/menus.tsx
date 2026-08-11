@@ -118,13 +118,18 @@ function MenusPage() {
     })
   }
 
+  const setActive = (id: string, active: boolean) =>
+    setItems((list) => list.map((x) => (x.id === id ? { ...x, active } : x)))
+
   const toggleActive = (m: MenuItem) => {
-    setItems((list) => list.map((x) => (x.id === m.id ? { ...x, active: !x.active } : x)))
-    // 되돌릴 수 있으니 묻지 않는다 — 되돌릴 길을 문구로 (규약 §2)
+    const before = m.active
+    setActive(m.id, !before)
+    // 되돌릴 수 있으니 묻지 않는다 — 대신 **무를 길을 토스트에 손잡이로** 준다 (규약 §2).
+    // 문구로 "같은 토글을 다시 누르세요"라고 안내하던 자리였는데, 그러려면 사람이 방금
+    // 만진 행을 다시 찾아야 한다. 되돌리기는 그 자리에 있어야 되돌리기다.
     toast(
-      m.active
-        ? tf('menus.toast.hidden', { name: m.name })
-        : tf('menus.toast.shown', { name: m.name }),
+      before ? tf('menus.toast.hidden', { name: m.name }) : tf('menus.toast.shown', { name: m.name }),
+      { onUndo: () => setActive(m.id, before) },
     )
   }
 

@@ -20,6 +20,16 @@ const config = defineConfig({
     // 임시 외부 확인용 — cloudflared 터널이 보내는 Host 를 허용한다.
     // dev 전용 설정이라 배포에는 영향 없다
     allowedHosts: ['.trycloudflare.com', '.stock-autotrade.com'],
+    /**
+     * ⚠⚠ **터널 너머의 리뷰어는 옛 화면을 본다** (2026-08-11 실사고).
+     * Cloudflare 엣지가 `/src/styles.css` 같은 dev 자산을 **확장자만 보고 캐시**한다.
+     * 그러면 브라우저는 **새 마크업 + 옛 CSS** 조합을 받는다 — 이번엔 위젯에 새로 붙인
+     * `@container`·`@sm:` 규칙이 옛 CSS 에 없어서 4열이어야 할 KPI 타일이 1열로 펴지고
+     * 스파크라인이 카드 폭만큼 부풀었다("위젯이 너무 크다"). 로컬은 멀쩡해서 코드에서
+     * 원인을 찾으면 영영 못 찾는다 — 같은 서버인데 **경유지가 다른 것**이 원인이다.
+     * no-store 를 붙이면 엣지가 캐시하지 않는다. dev 전용이라 운영 성능과 무관.
+     */
+    headers: { 'Cache-Control': 'no-store' },
   },
 })
 

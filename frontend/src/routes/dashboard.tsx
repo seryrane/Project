@@ -220,7 +220,9 @@ function DashboardPage() {
 
   const widgetBody: Record<WidgetId, React.ReactNode> = {
     kpi: (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      // 칸이 정한다 (위 @container): 1칸(≈530)이면 2열, 전체 칸(≈1600)이면 4열.
+      // 예전 `sm:grid-cols-2 xl:grid-cols-4` 는 1칸으로 줄여 놔도 4열을 고집했다
+      <div className="grid grid-cols-1 gap-5 @sm:grid-cols-2 @3xl:grid-cols-4">
         <StatTile
           label={t('dash.stat.totalSpecs', '총 사양서')}
           value="128"
@@ -340,7 +342,8 @@ function DashboardPage() {
         subtitle={t('dash.system.subtitle', '서버 리소스 · 30초마다 갱신 (Mock)')}
         action={{ label: t('nav.alerts') }}
       >
-        <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
+        {/* 서버 한 줄에 게이지 3개 + 배지가 들어간다 — 칸이 넉넉할 때만 2열 (위 @container) */}
+        <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 @3xl:grid-cols-2">
           {serverResources.map((s) => (
             <div key={s.name} className="flex items-center gap-3">
               <span className="w-16 shrink-0 font-mono text-xs font-semibold text-ink">{s.name}</span>
@@ -586,7 +589,12 @@ function DashboardPage() {
               setDragIdx(null)
               setDropIdx(null)
             }}
-            className={`relative ${SPAN[slot.size]} ${
+            /* ⚠⚠ `@container` — **위젯 안은 뷰포트가 아니라 자기 칸 폭을 본다.**
+               이 화면의 칸은 사람이 바꾼다(1칸·2칸·전체). 뷰포트 브레이크포인트(sm:·xl:)로
+               접으면 1920 에서 1칸(≈530px)짜리 위젯이 "넓은 화면"인 줄 알고 4열로 펴져
+               글자가 짓눌린다 — 뷰포트로는 영영 못 맞추는 부류다.
+               안쪽은 @lg:·@3xl: 같은 컨테이너 변형으로 쓴다 (2026-08-11 시범 채택). */
+            className={`relative @container ${SPAN[slot.size]} ${
               editing ? 'cursor-grab rounded-2xl ring-2 active:cursor-grabbing' : ''
             } ${
               editing
