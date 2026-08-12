@@ -134,7 +134,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="anim-toast-in relative flex max-w-[min(88vw,26rem)] items-center gap-2.5 overflow-hidden rounded-xl border border-hairline bg-raised py-3 pl-5 pr-4 text-[13px] text-ink shadow-[var(--shadow-2)] ring-1 ring-primary/15"
+            className="anim-toast-in relative flex max-w-[min(88vw,26rem)] items-center gap-2.5 overflow-hidden rounded-xl border border-hairline bg-cover-glass py-3 pl-5 pr-4 text-[13px] text-ink shadow-[var(--shadow-cover)] ring-1 ring-primary/15 backdrop-blur-xl"
           >
             {/* 왼쪽 색 띠 — 흰 카드 위에 떠도 "무언가 떴다"가 먼저 읽힌다 */}
             <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-deployed-ink" />

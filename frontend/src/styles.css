@@ -70,9 +70,16 @@
      같은 값을 두 테마에 쓰면 한쪽은 반드시 안 보인다 — 라이트가 밋밋했던 진짜 이유다
      (2026-08-06 사용자 지적 → 진단: 라이트에는 그림자가 0개였고 전부 글로우였다).
      색은 primary 에서 섞어 만든다 — 포인트 색을 바꾸면 그림자도 따라온다. */
-  --shadow-1: none;
-  --shadow-2: 0 6px 20px var(--color-glow);
-  --shadow-cta: 0 2px 10px var(--color-glow);
+  /* 유리판 세 겹 — 윗변 하이라이트(유리의 잘린 모서리) · 접지 그림자(1~2px, 판이
+     바닥에 닿은 자국) · 환경 그림자(멀리 번지는 것). 셋이 있어야 "떠 있다"로 읽힌다.
+     ⚠ 예전 다크는 `none` 이었다 — 깊이를 전부 글로우로만 냈더니 층이 아니라 발광이었다. */
+  --shadow-1:
+    inset 0 1px 0 rgb(255 255 255 / 6%), 0 1px 2px rgb(0 0 0 / 45%),
+    0 10px 30px -14px rgb(0 0 0 / 70%);
+  --shadow-2:
+    inset 0 1px 0 rgb(255 255 255 / 9%), 0 2px 6px rgb(0 0 0 / 45%),
+    0 20px 44px -18px rgb(0 0 0 / 80%), 0 6px 24px var(--color-glow);
+  --shadow-cta: inset 0 1px 0 rgb(255 255 255 / 18%), 0 2px 10px var(--color-glow);
 
   /* 조작(검색칸·아이콘 버튼·칩)이 앉는 면. 다크는 표면과 같아도 테두리가 충분히 갈라
      주므로 그대로 두고, 라이트에서만 한 단계 누른다 — 아래 [data-theme='light'] 참고 */
@@ -90,6 +97,24 @@
   /* 포커스 링 — 포인트 색을 따라간다(강조색을 바꾸면 링도 같이 바뀐다).
      ⚠ 사이드바 안에서는 이 값을 쓰지 않는다 — 아래 `aside :focus-visible` 참고 */
   --color-ring: var(--color-primary);
+
+  /* 덮개(Modal·Drawer)의 유리 면 — 여기는 backdrop-blur 를 실제로 건다(뒤가 겹치는
+     자리이고, 덮개가 떠 있는 동안 뒤는 멈춰 있어 블러를 다시 계산할 일이 없다).
+     카드보다 **덜 투명하다** — 글을 읽고 입력하는 자리라 뒤가 비치면 눈이 피로하다. */
+  /* 카드 유리 면 — 뒤의 바탕 빛이 은은히 비친다 (아래 body::before) */
+  --color-card-glass: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  --color-cover-glass: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  --shadow-cover:
+    inset 0 1px 0 rgb(255 255 255 / 8%), 0 2px 8px rgb(0 0 0 / 40%),
+    0 32px 80px -24px rgb(0 0 0 / 75%);
+
+  /* 사이드바 윗머리에 도는 브랜드 빛 — 어두운 기둥이 그냥 검은 판이 아니라
+     '빛을 받는 면'이 된다. 세기는 아주 낮게(로고 주변만 살짝 밝다) */
+  --sidebar-sheen: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-sidebar-accent) 14%, transparent),
+    transparent 32%
+  );
 
   /* ⚠ **앱 헤더(GNB)는 캔버스와 같은 색이면 안 된다** (2026-08-11 사용자 지적: 라이트에서
      헤더와 본문이 구분이 안 된다). 예전에는 `bg-canvas/75` 였는데, 라이트 캔버스가
@@ -156,12 +181,14 @@
   /* 카드 윗변의 1px 흰 하이라이트가 유리처럼 또렷하게 만든다(안쪽 그림자). */
   --shadow-1:
     inset 0 1px 0 rgb(255 255 255 / 90%),
-    0 1px 2px color-mix(in oklab, var(--color-primary) 12%, transparent),
-    0 8px 20px -12px color-mix(in oklab, var(--color-primary) 30%, transparent);
+    0 1px 2px color-mix(in oklab, var(--color-primary) 14%, transparent),
+    0 4px 10px -6px color-mix(in oklab, var(--color-primary) 18%, transparent),
+    0 14px 30px -16px color-mix(in oklab, var(--color-primary) 38%, transparent);
   --shadow-2:
     inset 0 1px 0 rgb(255 255 255 / 90%),
-    0 2px 4px color-mix(in oklab, var(--color-primary) 14%, transparent),
-    0 16px 34px -14px color-mix(in oklab, var(--color-primary) 45%, transparent);
+    0 2px 4px color-mix(in oklab, var(--color-primary) 16%, transparent),
+    0 8px 18px -8px color-mix(in oklab, var(--color-primary) 24%, transparent),
+    0 26px 50px -18px color-mix(in oklab, var(--color-primary) 50%, transparent);
   --shadow-cta:
     0 1px 2px color-mix(in oklab, var(--color-primary) 30%, transparent),
     0 8px 18px -8px color-mix(in oklab, var(--color-primary) 50%, transparent);
@@ -179,6 +206,14 @@
      글자가 지킨다** — 면은 "여기가 머리다"라는 힌트만 하고, 경계는 카드 테두리·그림자와
      머리의 라벨 타이포(아래 .surface-head .font-mono)가 만든다. */
   --color-head: #f4f6fa;
+
+  /* ⚠⚠ **라이트에서는 카드를 불투명하게 둔다** (2026-08-12 실측). 유리는 어두운 면에서
+     성립한다 — 흰 카드가 옅은 캔버스 위에 있는 라이트에서 투명도를 주면 카드가 바탕을
+     빨아들여 **층이 오히려 죽는다**(KPI 타일이 배경에 녹아 붙었다). 라이트의 '유리'는
+     윗변 하이라이트 + 다층 그림자가 대신한다 — 두 테마는 깊이의 물리가 다르다(위 elevation 절).
+     덮개는 뒤가 실제로 겹치므로 라이트에서도 살짝 투명하게 둔다. */
+  --color-card-glass: var(--color-surface);
+  --color-cover-glass: color-mix(in oklab, var(--color-surface) 94%, transparent);
 
   /* 헤더는 흰 면 — 옅은 남색 캔버스(#e8eef7) 위에 종이처럼 뜬다.
      ⚠ 캔버스보다 **어둡게** 눌러 크롬처럼 만드는 안은 버렸다: 보조 글자(ink-subtle)가
@@ -300,6 +335,44 @@
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
+}
+
+/* ⚠ **유리는 뒤에 비칠 것이 있어야 유리다.** 반투명 카드만 만들고 바탕이 단색이면
+   그냥 조금 흐린 단색이 된다 — 층이 안 생긴다. 바탕에 브랜드 색 빛 세 덩이를 아주
+   옅게 깔아 카드마다 비치는 정도가 달라지게 한다(2026-08-12 '유리와 깊이' 방향).
+   ⚠ `position: fixed` — 스크롤해도 빛은 화면에 붙어 있다. 함께 흐르면 배경이
+   움직이는 물건처럼 읽혀 어지럽다. z-index 는 음수라 본문 아래로 깔린다. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* ⚠ 세기는 **아주 낮게**. 처음에 22%/14%/12% 로 깔았더니 어두운 캔버스가 통째로
+     라벤더 안개가 되어 '깊은 다크'라는 정체성이 날아갔다(2026-08-12 실측) — 유리에
+     비치는 것은 *빛의 기미*지 색면이 아니다. 카드가 뜨려면 바탕이 카드보다 어두워야 한다. */
+  background:
+    radial-gradient(
+      55rem 38rem at 12% -8%,
+      color-mix(in oklab, var(--color-primary) 9%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45rem 32rem at 92% 2%,
+      color-mix(in oklab, var(--color-accent2) 6%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      38rem 28rem at 65% 108%,
+      color-mix(in oklab, var(--color-primary) 5%, transparent),
+      transparent 70%
+    );
+}
+/* 라이트는 같은 세기로 깔면 배경이 물든 것처럼 보인다 — 4분의 1로 낮춘다.
+   흰 카드가 뜨려면 바탕이 **카드보다 어두워야** 하는데, 빛이 세면 바탕이 밝아져
+   카드가 도로 배경에 붙는다 */
+[data-theme='light'] body::before {
+  opacity: 0.25;
 }
 
 /* ---- 포커스 ----------------------------------------------------------
@@ -466,16 +539,49 @@ select option {
     box-shadow 200ms ease;
 }
 .card-hover:hover {
-  translate: 0 -2px;
+  /* 3px — 유리판이 한 층 더 뜬다(2026-08-12 '유리와 깊이'). 2px 는 그림자가 두꺼워진
+     지금 눈에 안 띄고, 4px 이상은 표가 흔들리는 것처럼 보인다 */
+  translate: 0 -3px;
   border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
   box-shadow: var(--shadow-2);
 }
 
-/* 라이트에서 **카드가 뜬다** — 조합 선택자가 곧 "카드" 표식이다(CTA 셴과 같은 방식:
+/* ── 유리와 깊이 (2026-08-12 사용자 채택 방향) ────────────────────────────
+   **카드는 판이다** — 조합 선택자가 곧 "카드" 표식이다(CTA 셴과 같은 방식:
    35곳 마크업에 클래스를 새로 달지 않는다). rounded-lg 이하(버튼·입력·칩)는 일부러
-   뺐다 — 작은 조작에까지 그림자를 걸면 화면이 통째로 무거워진다. */
-[data-theme='light'] .bg-surface[class*='border-hairline']:is([class*='rounded-2xl'], [class*='rounded-xl']) {
+   뺐다 — 작은 조작에까지 그림자를 걸면 화면이 통째로 무거워진다.
+
+   층은 세 가지가 함께 만든다:
+   ① **반투명 면** — 뒤의 바탕(body::before 의 브랜드 빛)이 은은히 비친다
+   ② **윗변 1px 하이라이트** — 유리판의 잘린 모서리. 이것 하나가 "면"을 "판"으로 바꾼다
+   ③ **다층 그림자** — 접지(1px)·주(중거리)·환경(멀리) 셋을 겹쳐 거리감을 만든다
+
+   ⚠⚠ **카드에는 `backdrop-filter` 를 걸지 않는다.** 유리라고 전부 흐리면 스크롤할 때마다
+   카드 수만큼 블러를 다시 계산한다 — 표·차트가 20개씩 얹히는 화면에서 프레임이 무너진다.
+   흐림은 **덮개·헤더·팝오버처럼 정말 뒤가 겹치는 몇 곳**만 쓴다(그쪽은 정지 화면이다).
+   반투명 + 하이라이트만으로도 눈은 "유리"로 읽는다. */
+.bg-surface[class*='border-hairline']:is([class*='rounded-2xl'], [class*='rounded-xl']) {
+  background-color: var(--color-card-glass);
   box-shadow: var(--shadow-1);
+}
+
+/* 투명도를 줄여 달라고 한 사람에게는 유리를 걷는다 — 층은 그림자만으로 남는다 */
+@media (prefers-reduced-transparency: reduce) {
+  .bg-surface[class*='border-hairline']:is([class*='rounded-2xl'], [class*='rounded-xl']) {
+    background-color: var(--color-surface);
+  }
+  .bg-cover-glass,
+  header {
+    background-color: var(--color-surface);
+    backdrop-filter: none;
+  }
+}
+
+/* 사이드바 — 어두운 기둥에 빛과 모서리를 준다. 두 테마 모두 다크라 값이 하나다.
+   오른쪽 안쪽 1px 하이라이트가 본문과 만나는 자리를 '모서리'로 만든다 */
+aside {
+  background-image: var(--sidebar-sheen);
+  box-shadow: inset -1px 0 0 rgb(255 255 255 / 6%);
 }
 
 /* 주 버튼(그라디언트)의 그림자도 라이트에서는 글로우가 아니라 그림자다.

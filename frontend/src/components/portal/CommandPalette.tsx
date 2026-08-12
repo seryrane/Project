@@ -95,7 +95,7 @@ export function CommandPalette({ onClose, onAsk }: { onClose: () => void; onAsk:
       onClick={onClose}
     >
       <div
-        className="anim-scale-in mx-auto mt-[14vh] w-full max-w-lg overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_32px_90px_rgb(0_0_0/50%)]"
+        className="anim-scale-in mx-auto mt-[14vh] w-full max-w-lg overflow-hidden rounded-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-hairline px-4">

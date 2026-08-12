@@ -24,7 +24,8 @@ export function Drawer({
 
   return (
     <m.div
-      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]"
+      // 뒤가 실제로 겹치는 자리 — 여기서는 진짜로 흐린다(카드에는 안 건다)
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[3px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.18 : 0.22 }}
@@ -33,7 +34,7 @@ export function Drawer({
       <m.div
         ref={panelRef}
         {...coverProps(titleId)}
-        className="absolute inset-y-0 right-0 flex w-full max-w-[520px] flex-col border-l border-hairline bg-surface shadow-[-24px_0_80px_rgb(0_0_0/40%)]"
+        className="absolute inset-y-0 right-0 flex w-full max-w-[520px] flex-col border-l border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl"
         initial={{ x: '100%' }}
         animate={{ x: closing ? '100%' : 0 }}
         // 등장은 스프링(살짝 눌러앉는 감), 퇴장은 짧은 트윈 — 퇴장 스프링은 굼떠 보인다

@@ -30,7 +30,9 @@ export function Modal({
 
   return (
     <m.div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 backdrop-blur-sm pc:items-center pc:p-6"
+      // 덮개는 뒤가 실제로 겹치는 몇 안 되는 자리라 **여기서는 진짜로 흐린다**
+      // (카드에는 안 건다 — styles.css 의 '유리와 깊이' 절 참고)
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md pc:items-center pc:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.16 : 0.2 }}
@@ -39,7 +41,7 @@ export function Modal({
       <m.div
         ref={panelRef}
         {...coverProps(titleId)}
-        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-2xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/55%)] pc:max-h-[85vh] pc:rounded-2xl ${
+        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
           wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
         }`}
         // 데스크톱은 살짝 떠오르며 눌러앉고, 모바일 시트도 같은 값으로 자연스럽다.

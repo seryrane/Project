@@ -455,7 +455,7 @@ function Shell({
             className="fixed inset-0 z-40 cursor-default"
           />
           {menu === 'bell' && (
-            <div className="anim-scale-in fixed right-3 top-16 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-hairline bg-surface shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-24">
+            <div className="anim-scale-in fixed right-3 top-16 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-xl pc:right-24">
               <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
                 <span className="text-sm font-semibold">{t('gnb.notifications')}</span>
                 <button
@@ -521,7 +521,7 @@ function Shell({
             </div>
           )}
           {menu === 'user' && (
-            <div className="anim-scale-in fixed right-3 top-16 z-50 w-56 rounded-xl border border-hairline bg-surface py-1.5 shadow-[0_24px_80px_rgb(0_0_0/45%)] pc:right-8">
+            <div className="anim-scale-in fixed right-3 top-16 z-50 w-56 rounded-xl border border-hairline bg-cover-glass py-1.5 shadow-[var(--shadow-cover)] backdrop-blur-xl pc:right-8">
               <div className="border-b border-hairline px-4 pb-2.5 pt-1.5">
                 <div className="text-[13px] font-semibold">{meInfo.name}</div>
                 <div className="text-xs text-ink-subtle">{meInfo.email} · {meInfo.gradeName}</div>
