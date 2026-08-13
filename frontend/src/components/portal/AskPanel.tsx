@@ -97,9 +97,7 @@ function AskAnswerCard({
   return (
     <div className="space-y-3 rounded-xl border border-hairline bg-surface p-3.5">
       <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-ink-subtle">
-          {t('ask.understood')}
-        </div>
+        <div className="section-label">{t('ask.understood')}</div>
         <div className="mt-0.5 text-[13px] text-ink">{understood}</div>
         {/* 0 을 평온함으로 읽지 않는다 — 값이 없어도 총계는 그대로 보여 준다(정본 §4) */}
         <div className="mt-1 text-[12px] font-semibold text-primary">
@@ -153,9 +151,7 @@ function AskAnswerCard({
 
       {evidence.length > 0 && (
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-ink-subtle">
-            {t('ask.evidence')}
-          </div>
+          <div className="section-label">{t('ask.evidence')}</div>
           <ul className="mt-1 space-y-0.5 text-[12px] text-ink-muted">
             {evidence.map((e) => (
               <li key={e}>· {e}</li>
@@ -167,9 +163,8 @@ function AskAnswerCard({
       {/* 특이사항은 있을 때만 — 없다고 길게 적으면 다음부터 아무도 안 읽는다(정본 §4) */}
       {anomalies.length > 0 && (
         <div className="rounded-lg bg-danger-bg px-3 py-2">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-danger-ink">
-            {t('ask.anomalies')}
-          </div>
+          {/* 같은 머리표인데 색만 경고색 — 형태를 바꾸지 않는다(형태가 바뀌면 다른 물건이 된다) */}
+          <div className="section-label !text-danger-ink">{t('ask.anomalies')}</div>
           <ul className="mt-1 space-y-0.5 text-[12px] text-danger-ink">
             {anomalies.map((a) => (
               <li key={a}>· {a}</li>
@@ -328,9 +323,7 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
   return (
     <div className="space-y-4">
       <section>
-        <h3 className="text-[11px] font-semibold tracking-[0.06em] text-ink-subtle">
-          {t('ask.suggested')}
-        </h3>
+        <h3 className="section-label">{t('ask.suggested')}</h3>
         {catalogStatus === 'loading' && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[0, 1, 2, 3].map((i) => (
@@ -346,11 +339,8 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
           <div className="mt-2 space-y-2.5">
             {catalog.categories.map((cat) => (
               <div key={cat.key}>
-                {/* 갈래 이름은 자간을 벌려 "머리표"로 읽히게 한다 — 커맨드 팔레트의 갈래와
-                    같은 수법이다. 덮개마다 다른 손대중을 쓰면 한 벌로 안 읽힌다 */}
-                <div className="text-[10px] font-semibold tracking-[0.06em] text-ink-subtle">
-                  {cat.label}
-                </div>
+                {/* 갈래 이름 — 팔레트 그룹과 **같은 정본**(styles.css `.section-label`) */}
+                <div className="section-label">{cat.label}</div>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {cat.questions.map((q) => (
                     <button

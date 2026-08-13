@@ -193,7 +193,8 @@ function KpiMetricsPage() {
                   ] as const
                 ).map(([label, value, mono]) => (
                   <div key={label} className="rounded-xl border border-hairline/70 bg-canvas/40 px-3.5 py-2.5">
-                    <span className="block text-[11px] text-ink-subtle">{label}</span>
+                    {/* 값 위의 이름표 — 정본은 styles.css `.section-label` (덮개마다 손대중 금지) */}
+                    <span className="section-label block">{label}</span>
                     <span className={`mt-0.5 block text-[13px] text-ink ${mono ? 'font-mono text-xs' : ''}`}>
                       {value}
                     </span>

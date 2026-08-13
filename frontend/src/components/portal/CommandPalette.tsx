@@ -227,12 +227,9 @@ export function CommandPalette({
             lastGroup = c.group
             return (
               <div key={`${c.group}-${c.label}`}>
-                {/* 갈래 이름 — 자간을 벌려 "값"이 아니라 "머리표"로 읽히게 한다
-                    (규약 §7 머리 절의 같은 수법). 위 여백이 갈래를 가른다 */}
+                {/* 갈래 이름 — 정본은 styles.css `.section-label` 하나다(손으로 적으면 갈린다) */}
                 {header && (
-                  <div className="px-3 pb-1.5 pt-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-subtle first:pt-1">
-                    {header}
-                  </div>
+                  <div className="section-label px-3 pb-1.5 pt-3 first:pt-1">{header}</div>
                 )}
                 {/* ⚠ 고른 줄은 **면 + 왼쪽 기둥**으로 말한다(규약 §16 "고른 것은 면으로").
                     옅은 보라 면 하나만으로는 어두운 배경에서 거의 안 보였다 —
