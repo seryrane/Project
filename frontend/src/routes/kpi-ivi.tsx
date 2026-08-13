@@ -200,7 +200,40 @@ function KpiIviPage() {
 
       {/* 워크북 등록 — 짧게 적고 닫는 일이라 모달 */}
       {adding && (
-        <Modal title={t('kpi-ivi.modal.title', 'Tableau 워크북 등록')} onClose={() => setAdding(false)}>
+        <Modal
+          title={t('kpi-ivi.modal.title', 'Tableau 워크북 등록')}
+          onClose={() => setAdding(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setAdding(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={newTitle.trim() === '' || !newUrl.startsWith('https://')}
+                busyLabel={t('kpi-ivi.registering')}
+                onAction={async () => {
+                  const next = [
+                    ...workbooks,
+                    { id: `E-${workbooks.length + 10}`, title: newTitle.trim(), url: newUrl.trim(), area: 'IVI' },
+                  ]
+                  await apiSend('PUT', '/embeds', { items: next })
+                  reload()
+                  setAdding(false)
+                  setNewTitle('')
+                  setNewUrl('')
+                  setCurrent(next.length - 1)
+                  toast(t('kpi-ivi.toast.registered', '워크북을 등록했습니다 — 바로 표시됩니다'))
+                }}
+              >
+                {t('kpi-ivi.register')}
+              </CtaButton>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">
             {t(
               'kpi-ivi.modal.desc',
@@ -232,34 +265,6 @@ function KpiIviPage() {
             />
             {urlHint && <span className="mt-1 block text-xs text-danger-ink">{urlHint}</span>}
           </label>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setAdding(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={newTitle.trim() === '' || !newUrl.startsWith('https://')}
-              busyLabel={t('kpi-ivi.registering')}
-              onAction={async () => {
-                const next = [
-                  ...workbooks,
-                  { id: `E-${workbooks.length + 10}`, title: newTitle.trim(), url: newUrl.trim(), area: 'IVI' },
-                ]
-                await apiSend('PUT', '/embeds', { items: next })
-                reload()
-                setAdding(false)
-                setNewTitle('')
-                setNewUrl('')
-                setCurrent(next.length - 1)
-                toast(t('kpi-ivi.toast.registered', '워크북을 등록했습니다 — 바로 표시됩니다'))
-              }}
-            >
-              {t('kpi-ivi.register')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </AppShell>

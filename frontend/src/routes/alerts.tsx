@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChartCard, MultiLineChart } from '#/components/portal/charts'
+import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
@@ -233,6 +234,10 @@ function AlertsPage() {
   const rows = sortedEvents.filter(
     (e) => (severityFilter === '전체' || e.severity === severityFilter) && (!openOnly || e.status === '미해결'),
   )
+  /* 발은 관문이 그린다 (규약 §9) — 거른 수와 전체 수를 함께 말하고, 21줄부터 쪽이 선다.
+     좁은 화면 카드와 넓은 화면 표가 **같은 쪽**을 본다 — 둘이 갈리면 폭을 줄였을 때
+     보던 줄이 사라진다. */
+  const { page, pageCount, pageRows, setPage } = usePaged(rows)
 
   /* ── 요약 타일 — 0 을 평온함으로 읽지 않는다(규약 §10): 각 0 은 이유가 다르다 ── */
   const last24h = alertEvents.filter((e) => ALERTS_NOW - parseAlertAt(e.at) <= 86_400_000)
@@ -425,7 +430,7 @@ function AlertsPage() {
 
         {/* 좁은 화면: 카드 — 행 하나가 독립 개체라 열 비교가 필요 없다 */}
         <ol className="space-y-2 p-4 pc:hidden">
-          {rows.map((e) => (
+          {pageRows.map((e) => (
             <li key={e.id}>
               <button
                 type="button"
@@ -468,7 +473,7 @@ function AlertsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((e) => (
+                {pageRows.map((e) => (
                   <tr
                     key={e.id}
                     onClick={() => setDetail(e)}
@@ -504,6 +509,15 @@ function AlertsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="px-4 pb-4 pc:px-5 pc:pb-4">
+          <ListFoot
+            total={sortedEvents.length}
+            shown={rows.length}
+            page={page}
+            pageCount={pageCount}
+            onPage={setPage}
+          />
         </div>
       </section>
 
@@ -659,7 +673,30 @@ function AlertsPage() {
 
       {/* 알림 규칙 편집 — 짧게 고치고 닫는 일이라 모달. 되돌릴 수 있으니 확인 모달 없이 저장 */}
       {rulesModalOpen && (
-        <Modal title={t('alerts.rules.modalTitle', '알림 규칙 편집')} onClose={() => setRulesModalOpen(false)}>
+        <Modal
+          title={t('alerts.rules.modalTitle', '알림 규칙 편집')}
+          onClose={() => setRulesModalOpen(false)}
+          /* ⚠ 지표 셋 × 임계값 둘 + 수신 방법까지라 몸이 길다 — [저장]이 몸 안에 있으면
+             다 만지고 한참 내려가야 나온다 (규약 §7) */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRulesModalOpen(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={saveRules}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('common.save')}
+              </button>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">{t('alerts.rules.modalDesc')}</p>
 
           <div className="mt-4 space-y-3">
@@ -718,22 +755,6 @@ function AlertsPage() {
             </div>
           </div>
 
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setRulesModalOpen(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={saveRules}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('common.save')}
-            </button>
-          </div>
         </Modal>
       )}
     </AppShell>

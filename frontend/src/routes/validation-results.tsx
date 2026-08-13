@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { ChartCard, StatusStackBar, TrendLineChart } from '#/components/portal/charts'
 import { useToast } from '#/components/portal/toast'
@@ -269,6 +270,9 @@ function ValidationResultsPage() {
             )}
           </tbody>
         </table>
+        <div className="px-4 pb-4">
+          <ListFoot total={validationRuns.length} shown={rows.length} />
+        </div>
       </div>
 
       {/* 오류 상세 — 어느 행·어느 필드가 왜 걸렸는지 + 다음 행동(재검증·사양서) */}

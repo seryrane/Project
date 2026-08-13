@@ -3,6 +3,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { useToast } from '#/components/portal/toast'
@@ -133,6 +134,9 @@ function KpiMetricsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="px-4 pb-4 pc:px-5">
+          <ListFoot total={kpiMetrics.length} shown={rows.length} />
         </div>
       </section>
 

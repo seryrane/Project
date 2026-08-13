@@ -156,7 +156,35 @@ function FaqPage() {
 
       {/* FAQ 추가 — 운영진용. 짧게 적고 닫는 일이라 모달 */}
       {adding && (
-        <Modal title={t('faq.add', 'FAQ 추가')} onClose={() => setAdding(false)}>
+        <Modal
+          title={t('faq.add', 'FAQ 추가')}
+          onClose={() => setAdding(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setAdding(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={newQ.trim() === '' || newA.trim() === ''}
+                busyLabel={t('faq.adding', '추가 중…')}
+                onAction={async () => {
+                  await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
+                  setAdding(false)
+                  setNewQ('')
+                  setNewA('')
+                  reload()
+                  toast(t('faq.toast.added', 'FAQ 를 추가했습니다'))
+                }}
+              >
+                {t('common.add')}
+              </CtaButton>
+            </div>
+          }
+        >
           <div>
             <span className="text-xs font-medium text-ink-subtle">{t('faq.label.category', '카테고리')}</span>
             <div className="mt-1.5">
@@ -186,29 +214,6 @@ function FaqPage() {
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setAdding(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={newQ.trim() === '' || newA.trim() === ''}
-              busyLabel={t('faq.adding', '추가 중…')}
-              onAction={async () => {
-                await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
-                setAdding(false)
-                setNewQ('')
-                setNewA('')
-                reload()
-                toast(t('faq.toast.added', 'FAQ 를 추가했습니다'))
-              }}
-            >
-              {t('common.add')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </AppShell>

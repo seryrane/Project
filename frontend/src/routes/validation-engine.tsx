@@ -512,7 +512,36 @@ function ValidationEnginePage() {
 
       {/* 스케줄 추가 */}
       {scheduling && (
-        <Modal title={t('engine.modal.addSchedule', '스케줄 추가')} onClose={() => setScheduling(false)}>
+        <Modal
+          title={t('engine.modal.addSchedule', '스케줄 추가')}
+          onClose={() => setScheduling(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setScheduling(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduling(false)
+                  toast(
+                    t(
+                      'engine.toast.scheduleRegistered',
+                      '스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('engine.submitSchedule', '스케줄 등록')}
+              </button>
+            </div>
+          }
+        >
           <div>
             <span className="text-xs font-medium text-ink-subtle">
               {t('engine.label.engine', '검증 엔진')} <b className="text-danger-ink">*</b>
@@ -555,36 +584,37 @@ function ValidationEnginePage() {
             </span>
             <Switch checked={schedOn} onChange={setSchedOn} label={t('engine.schedToggleAria', '스케줄 활성화')} />
           </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setScheduling(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setScheduling(false)
-                toast(
-                  t(
-                    'engine.toast.scheduleRegistered',
-                    '스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다',
-                  ),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('engine.submitSchedule', '스케줄 등록')}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* 삭제 확인 — 되돌릴 수 없는 것에만 묻는다 (규약 §2) */}
       {deleting && (
-        <Modal title={t('engine.modal.delete', '엔진 삭제')} onClose={() => setDeleting(null)}>
+        <Modal
+          title={t('engine.modal.delete', '엔진 삭제')}
+          onClose={() => setDeleting(null)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleting(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEngines((list) => list.filter((x) => x.id !== deleting.id))
+                  setDeleting(null)
+                  toast(tf('engine.toast.deleted', { name: deleting.name }, '{name}을 삭제했습니다'))
+                }}
+                className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                {t('common.delete', '삭제')}
+              </button>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">
             {tf(
               'engine.deleteConfirm',
@@ -592,26 +622,6 @@ function ValidationEnginePage() {
               '{name}을 삭제합니다. 연결된 스케줄 {n}개도 함께 삭제되고, 되돌릴 수 없습니다. 지난 검증 결과·리포트는 남습니다.',
             )}
           </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeleting(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEngines((list) => list.filter((x) => x.id !== deleting.id))
-                setDeleting(null)
-                toast(tf('engine.toast.deleted', { name: deleting.name }, '{name}을 삭제했습니다'))
-              }}
-              className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              {t('common.delete', '삭제')}
-            </button>
-          </div>
         </Modal>
       )}
     </AppShell>

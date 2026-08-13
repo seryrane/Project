@@ -392,6 +392,29 @@ function ApprovalsPage() {
             setOpinion('')
           }}
           wide
+          /* ⚠ 발은 **내 차례일 때만** 선다 — 조작이 없는데 빈 발을 세우면 "여기서 무언가
+             해야 하나"로 읽힌다 (규약 §7). 내 차례가 아니면 몸이 그 사실을 말한다. */
+          footer={
+            detail.myTurn ? (
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={opinion.trim() === ''}
+                  onClick={() => decide(detail, '반려')}
+                  className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  ✕ {t('common.reject', '반려')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => decide(detail, '승인')}
+                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+                >
+                  ✓ {t('common.approve', '승인')}
+                </button>
+              </div>
+            ) : undefined
+          }
         >
           <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -497,8 +520,8 @@ function ApprovalsPage() {
           </div>
 
           {detail.myTurn ? (
-            <>
-              <div className="mt-4">
+            <div className="mt-4">
+              <div>
                 <label className="text-xs font-medium text-ink-subtle" htmlFor="opinion">
                   {t('approvals.label.opinion', '승인 의견')}{' '}
                   <span className="text-ink-subtle">
@@ -514,24 +537,7 @@ function ApprovalsPage() {
                   className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
                 />
               </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  disabled={opinion.trim() === ''}
-                  onClick={() => decide(detail, '반려')}
-                  className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-                >
-                  ✕ {t('common.reject', '반려')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => decide(detail, '승인')}
-                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-                >
-                  ✓ {t('common.approve', '승인')}
-                </button>
-              </div>
-            </>
+            </div>
           ) : (
             <p className="mt-4 rounded-lg bg-chip px-3 py-2 text-xs text-ink-subtle">
               {tf(

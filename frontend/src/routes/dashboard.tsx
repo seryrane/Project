@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
 import { apiGet, apiSend } from '#/lib/api'
@@ -447,6 +448,14 @@ function DashboardPage() {
               </li>
             ))}
         </ol>
+        {/* ⚠ 카드가 `slice(0, 3)` 으로 자르는 순간 조용히 거짓말을 한다 — 6건 중 3건만
+            보여 주면서 아무 표시가 없었다(2026-08-13 실측). 위젯은 쪽을 나누지 않고
+            **전체로 가는 길**을 발에 둔다 (규약 §9). */}
+        <ListFoot
+          total={notices.length}
+          shown={Math.min(3, notices.length)}
+          more={{ label: t('dash.action.viewAll', '전체 보기'), onClick: () => navigate({ to: '/notice' }) }}
+        />
       </ChartCard>
     ),
     activity: (

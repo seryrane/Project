@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
@@ -410,6 +411,9 @@ function MembersPage() {
             )}
           </tbody>
         </table>
+        <div className="px-4 pb-4">
+          <ListFoot total={memberList.length} shown={rows.length} unit="명" />
+        </div>
       </div>
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}

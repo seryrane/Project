@@ -381,6 +381,32 @@ test.describe('넓은 화면', () => {
     expect(await page.evaluate(() => document.body.style.overflow), '잠금이 풀린다').toBe('')
   })
 
+  test('LNB 하단 페이드 — 아래에 더 있을 때만 걸린다 (규약 §21)', async ({ page }) => {
+    // ⚠ 예전에는 마스크가 늘 걸려 있어, 메뉴가 다 보이는 큰 화면에서도 마지막 항목이
+    //   흐려졌다. 늘 켜져 있는 신호는 신호가 아니라 흐림이다.
+    const masked = () =>
+      page.evaluate(() => {
+        const nav = document.querySelector<HTMLElement>('nav.scrollbar-hidden')
+        return !!nav && getComputedStyle(nav).maskImage !== 'none'
+      })
+
+    // 짧은 화면 — 메뉴가 넘친다
+    await page.setViewportSize({ width: 1280, height: 560 })
+    await ready(page, '/dashboard')
+    expect(await masked(), '넘칠 때는 아래에 더 있다고 말한다').toBe(true)
+
+    // 바닥까지 굴리면 더 없다 — 신호를 끈다
+    await page.evaluate(() => {
+      const nav = document.querySelector<HTMLElement>('nav.scrollbar-hidden')!
+      nav.scrollTop = nav.scrollHeight
+    })
+    await expect.poll(masked, { message: '바닥에서는 페이드가 사라진다' }).toBe(false)
+
+    // 긴 화면 — 메뉴가 다 보인다
+    await page.setViewportSize({ width: 1280, height: 1600 })
+    await expect.poll(masked, { message: '스크롤이 없으면 페이드도 없다' }).toBe(false)
+  })
+
   test('우측패널 — 가리개가 없고 뒤 화면이 굴러간다 (규약 §1 RIGHT)', async ({ page }) => {
     // ⚠⚠ 이 관문은 **모달처럼 굴고 있었다**: 까만 배경막(black/60+blur)을 깔고 뒤 화면을
     //    잠갔다. 규약은 정반대다 — "가리개는 두지 않는다. 뒤가 읽혀야 대조다"(§1),
@@ -513,6 +539,28 @@ test.describe('설계서 폭(1920)', () => {
     await expect(page.getByText('총 사양서')).toBeVisible()
     expect(await columns(), '1칸이면 2열 — 뷰포트로 접었다면 여기서도 4열이 나온다').toBe(2)
   })
+})
+
+/* 규약 §9 "목록은 몇 건인지 말하고 끝난다" — 발이 없던 시절 표 열셋이 전부, 필터를 걸어
+   줄이 절반이 되어도 아무 말이 없었다. 보는 사람은 그게 전부인지 걸러진 것인지 모른다. */
+test('목록 발 — 거르면 "전체 N건 중 M건"으로 바뀐다 (규약 §9)', async ({ page }) => {
+  await ready(page, '/alerts')
+  const foot = page.getByText(/^전체 \d+건/).first()
+  await expect(foot, '거르기 전에는 전체 수만 말한다').toHaveText(/^전체 \d+건$/)
+
+  // 미해결만 보기 — 줄이 줄어든다
+  await page.getByRole('switch').first().click()
+  await expect(foot, '거른 뒤에는 전체와 거른 수를 함께 말한다').toHaveText(/^전체 \d+건 중 \d+건$/)
+})
+
+test('위젯 발 — 잘라 보여 주면 몇 건인지 말하고 전체로 가는 길을 준다 (규약 §9)', async ({ page }) => {
+  await ready(page, '/dashboard')
+  const card = page.locator('section').filter({ hasText: '최근 공지' }).first()
+  await expect(
+    card.getByText(/^전체 \d+건 중 \d+건$/),
+    '카드가 slice 로 자르면 조용히 거짓말을 한다 — 몇 건 중 몇 건인지 적는다',
+  ).toBeVisible()
+  await expect(card.getByRole('button', { name: /전체 보기/ }), '위젯은 쪽을 나누지 않고 전체 목록으로 보낸다').toBeVisible()
 })
 
 test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지 않는다', async ({ page }) => {

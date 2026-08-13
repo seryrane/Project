@@ -230,7 +230,39 @@ function QnaPage() {
 
       {/* 질문 작성 */}
       {writing && (
-        <Modal title={t('qna.ask', '질문하기')} onClose={() => setWriting(false)}>
+        <Modal
+          title={t('qna.ask', '질문하기')}
+          onClose={() => setWriting(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setWriting(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={newTitle.trim() === ''}
+                busyLabel={t('qna.submitting', '등록 중…')}
+                onAction={async () => {
+                  await apiSend('POST', '/questions', {
+                    title: newTitle,
+                    category: newCat,
+                    body: newBody,
+                  })
+                  setWriting(false)
+                  setNewTitle('')
+                  setNewBody('')
+                  reload()
+                  toast(t('qna.toast.posted', '질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다'))
+                }}
+              >
+                {t('qna.submit', '등록')}
+              </CtaButton>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('qna.label.title', '제목')} <b className="text-danger-ink">*</b>
@@ -263,33 +295,6 @@ function QnaPage() {
           <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
             {t('qna.faqHint', '비슷한 질문이 FAQ 에 있을 수 있습니다 — 등록 전에 FAQ 를 한 번 확인해 보세요.')}
           </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setWriting(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={newTitle.trim() === ''}
-              busyLabel={t('qna.submitting', '등록 중…')}
-              onAction={async () => {
-                await apiSend('POST', '/questions', {
-                  title: newTitle,
-                  category: newCat,
-                  body: newBody,
-                })
-                setWriting(false)
-                setNewTitle('')
-                setNewBody('')
-                reload()
-                toast(t('qna.toast.posted', '질문을 등록했습니다 — 답변이 달리면 알림으로 알려 드립니다'))
-              }}
-            >
-              {t('qna.submit', '등록')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </AppShell>

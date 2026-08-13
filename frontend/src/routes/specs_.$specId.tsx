@@ -494,6 +494,34 @@ function SpecDetailPage() {
         <Modal
           title={t('specDetail.approvalModalTitle', '승인 요청 상신')}
           onClose={() => setRequesting(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRequesting(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 상신은 되돌리기 어렵다) */}
+              <CtaButton
+                busyLabel={t('specDetail.submitting', '상신 중…')}
+                onAction={async () => {
+                  await simulate()
+                  setRequesting(false)
+                  setSubmitted(true)
+                  toast(
+                    t(
+                      'specDetail.toast.submitted',
+                      '승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요',
+                    ),
+                  )
+                }}
+              >
+                {t('specDetail.submit', '상신')}
+              </CtaButton>
+            </div>
+          }
         >
           <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5 text-[13px]">
             <b className="text-ink">
@@ -522,32 +550,6 @@ function SpecDetailPage() {
                 '{primary} (1차) → {final} (최종)',
               )}
             </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setRequesting(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 상신은 되돌리기 어렵다) */}
-            <CtaButton
-              busyLabel={t('specDetail.submitting', '상신 중…')}
-              onAction={async () => {
-                await simulate()
-                setRequesting(false)
-                setSubmitted(true)
-                toast(
-                  t(
-                    'specDetail.toast.submitted',
-                    '승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요',
-                  ),
-                )
-              }}
-            >
-              {t('specDetail.submit', '상신')}
-            </CtaButton>
           </div>
         </Modal>
       )}

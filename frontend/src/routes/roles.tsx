@@ -464,7 +464,49 @@ function RolesPage() {
 
       {/* 새 역할 — 기반 역할 복사로 시작한다 (시안 2 채택) */}
       {creating && (
-        <Modal title={t('roles.newTitle', '새 역할 추가')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('roles.newTitle', '새 역할 추가')}
+          onClose={() => setCreating(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(false)
+                  setRoles((rs) => [
+                    ...rs,
+                    {
+                      key: `custom-${rs.length}`,
+                      name: '시니어 편집자',
+                      desc: '편집자 + 승인 요청 없이 배포 요청 가능 (시연용)',
+                      system: false,
+                      assigned: 0,
+                      matrix: roles.find((r) => r.key === 'editor')?.matrix ?? {},
+                      holders: [],
+                    },
+                  ])
+                  toast(
+                    tf(
+                      'roles.toast.created',
+                      { editLabel: t('roles.editPerms') },
+                      '역할을 생성했습니다 — [{editLabel}]에서 매트릭스를 다듬으세요',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('roles.create')}
+              </button>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('roles.label.roleName', '역할 이름')} <b className="text-danger-ink">*</b>
@@ -492,49 +534,41 @@ function RolesPage() {
               '기존 역할을 복사해 시작하면 매트릭스를 처음부터 채우지 않아도 됩니다 — 생성 후 [{editLabel}]에서 다듬으세요.',
             )}
           </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreating(false)
-                setRoles((rs) => [
-                  ...rs,
-                  {
-                    key: `custom-${rs.length}`,
-                    name: '시니어 편집자',
-                    desc: '편집자 + 승인 요청 없이 배포 요청 가능 (시연용)',
-                    system: false,
-                    assigned: 0,
-                    matrix: roles.find((r) => r.key === 'editor')?.matrix ?? {},
-                    holders: [],
-                  },
-                ])
-                toast(
-                  tf(
-                    'roles.toast.created',
-                    { editLabel: t('roles.editPerms') },
-                    '역할을 생성했습니다 — [{editLabel}]에서 매트릭스를 다듬으세요',
-                  ),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('roles.create')}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* 삭제 — 배정 인원이 있으면 막는다 (유령 권한을 만들지 않는다) */}
       {deleting && (
-        <Modal title={t('roles.deleteTitle', '역할 삭제')} onClose={() => setDeleting(null)}>
+        <Modal
+          title={t('roles.deleteTitle', '역할 삭제')}
+          onClose={() => setDeleting(null)}
+          /* 발은 관문 슬롯으로 (규약 §7) — 몸 안의 마지막 줄로 두면 내용이 길어질 때
+             마무리 조작이 스크롤에 밀려 사라진다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleting(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+              {!deleting.system && deleting.assigned === 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoles((rs) => rs.filter((r) => r.key !== deleting.key))
+                    setDeleting(null)
+                    toast(tf('roles.toast.deleted', { name: deleting.name }))
+                  }}
+                  className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  {t('common.delete')}
+                </button>
+              )}
+            </div>
+          }
+        >
           {deleting.system ? (
             <p className="text-[13px] leading-relaxed text-ink-muted">
               {tf(
@@ -561,28 +595,6 @@ function RolesPage() {
               <b className="text-danger-ink">{t('roles.delete.irreversible', '되돌릴 수 없습니다.')}</b>
             </p>
           )}
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeleting(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.close')}
-            </button>
-            {!deleting.system && deleting.assigned === 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setRoles((rs) => rs.filter((r) => r.key !== deleting.key))
-                  setDeleting(null)
-                  toast(tf('roles.toast.deleted', { name: deleting.name }))
-                }}
-                className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                {t('common.delete')}
-              </button>
-            )}
-          </div>
         </Modal>
       )}
     </AppShell>

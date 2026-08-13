@@ -213,7 +213,41 @@ function ValidationReportsPage() {
       </section>
 
       {detail && (
-        <Modal title={detail.title} onClose={() => setDetail(null)} wide>
+        <Modal
+          title={detail.title}
+          onClose={() => setDetail(null)}
+          wide
+          /* ⚠ 이 모달은 표까지 품어 몸이 길다 — 발이 몸 안에 있으면 인쇄·다운로드가
+             스크롤 끝까지 내려가야 나온다 (규약 §7) */
+          footer={
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDetail(null)
+                  navigate({ to: '/validation-results' })
+                }}
+                className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('reports.goResults', '실행 상세는 검증 결과 조회 →')}
+              </button>
+              <button
+                type="button"
+                onClick={() => toast(t('reports.toast.print', '인쇄 — 본개발에서 연결됩니다'))}
+                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('reports.print', '🖨 인쇄')}
+              </button>
+              <button
+                type="button"
+                onClick={() => toast(t('reports.toast.pdfDownload', 'PDF 다운로드 — 본개발에서 연결됩니다'))}
+                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('reports.downloadPdf', '⬇ PDF 다운로드')}
+              </button>
+            </div>
+          }
+        >
           <dl className="grid grid-cols-2 gap-3 text-[13px] pc:grid-cols-3">
             {[
               { k: t('reports.dl.engine', '대상 엔진'), v: detail.engine },
@@ -288,32 +322,6 @@ function ValidationReportsPage() {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setDetail(null)
-                navigate({ to: '/validation-results' })
-              }}
-              className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('reports.goResults', '실행 상세는 검증 결과 조회 →')}
-            </button>
-            <button
-              type="button"
-              onClick={() => toast(t('reports.toast.print', '인쇄 — 본개발에서 연결됩니다'))}
-              className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('reports.print', '🖨 인쇄')}
-            </button>
-            <button
-              type="button"
-              onClick={() => toast(t('reports.toast.pdfDownload', 'PDF 다운로드 — 본개발에서 연결됩니다'))}
-              className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('reports.downloadPdf', '⬇ PDF 다운로드')}
-            </button>
-          </div>
         </Modal>
       )}
     </AppShell>

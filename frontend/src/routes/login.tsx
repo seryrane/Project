@@ -345,7 +345,33 @@ function LoginPage() {
 
       {/* 비밀번호 찾기 — 계정 존재 여부를 노출하지 않는다 */}
       {forgotOpen && (
-        <Modal title={t('login.forgotTitle', '비밀번호 찾기')} onClose={() => setForgotOpen(false)}>
+        <Modal
+          title={t('login.forgotTitle', '비밀번호 찾기')}
+          onClose={() => setForgotOpen(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={!/.+@.+\..+/.test(forgotEmail)}
+                busyLabel={t('login.forgotSending', '보내는 중…')}
+                onAction={async () => {
+                  const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
+                  setForgotOpen(false)
+                  setForgotEmail('')
+                  toast(res.data?.message ?? t('login.forgotSent', '가입된 이메일이라면 재설정 안내를 보냈습니다.'))
+                }}
+              >
+                {t('login.forgotSubmit', '재설정 메일 보내기')}
+              </CtaButton>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">
             {t('login.forgotDesc', '가입한 이메일을 입력하면 재설정 안내를 보냅니다.')}
           </p>
@@ -358,27 +384,6 @@ function LoginPage() {
               className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setForgotOpen(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={!/.+@.+\..+/.test(forgotEmail)}
-              busyLabel={t('login.forgotSending', '보내는 중…')}
-              onAction={async () => {
-                const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
-                setForgotOpen(false)
-                setForgotEmail('')
-                toast(res.data?.message ?? t('login.forgotSent', '가입된 이메일이라면 재설정 안내를 보냈습니다.'))
-              }}
-            >
-              {t('login.forgotSubmit', '재설정 메일 보내기')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </div>

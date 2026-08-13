@@ -247,6 +247,25 @@ function Shell({
     ? 'pc:opacity-0 pc:pointer-events-none pc:group-hover/rail:opacity-100 pc:group-hover/rail:pointer-events-auto transition-opacity duration-150'
     : ''
 
+  /* LNB 하단 페이드는 **아래에 더 있을 때만** 켠다 (아래 nav 주석).
+     ⚠ `ResizeObserver` 를 안 쓴다 — 내용 높이를 바꾸는 것은 딱 셋(접힘·레일 여부·메뉴
+     자체)이라 그 셋을 의존성으로 다시 재면 충분하고, 관찰자를 달면 탭이 뒤에 있을 때
+     콜백이 안 도는 자리가 생긴다(2026-08-13에 히트맵에서 같은 함정을 밟았다). */
+  const navRef = useRef<HTMLElement>(null)
+  const [navFade, setNavFade] = useState(false)
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    const update = () => setNavFade(el.scrollHeight - el.clientHeight - el.scrollTop > 4)
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      el.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [rail, collapsed, displayNav])
+
   const bellItems = NOTIFICATIONS.filter((n) => bellTab === 'all' || n.todo)
 
   return (
@@ -306,8 +325,17 @@ function Shell({
           </button>
         </div>
 
-        {/* 스크롤바는 숨기고, 아래에 더 있다는 신호는 하단 페이드가 말한다 */}
-        <nav className="scrollbar-hidden relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)]">
+        {/* 스크롤바는 숨기고, 아래에 더 있다는 신호는 하단 페이드가 말한다.
+            ⚠⚠ 페이드는 **더 있을 때만** 건다. 예전에는 마스크가 늘 걸려 있어서, 메뉴가
+            짧아 스크롤이 아예 없을 때도 마지막 항목이 흐려졌다 — 신호가 늘 켜져 있으면
+            그건 신호가 아니라 **흐림**이다(규약 §21 "화면이 자기 상태를 말한다").
+            바닥까지 굴린 뒤에도 끈다 — 더 없는데 더 있다고 말하지 않는다. */}
+        <nav
+          ref={navRef}
+          className={`scrollbar-hidden relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 ${
+            navFade ? '[mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)]' : ''
+          }`}
+        >
           {displayNav.map((section) => {
             /* ⚠⚠ **레일에서는 접힘을 적용하지 않는다** (2026-08-13 사용자 지적: "호버 시와
                아닐 때 위치가 너무 위아래로 움직임", 그리고 그 앞의 "고정핀 해제 해봐").
