@@ -547,7 +547,7 @@ test.describe('설계서 폭(1920)', () => {
 test.describe('표 관문', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
 
-  for (const route of ['/alerts', '/kpi-metrics', '/members', '/validation-results']) {
+  for (const route of ['/alerts', '/kpi-metrics', '/members', '/validation-results', '/privacy']) {
     test(`${route} — 표가 관문의 약속을 지킨다 (규약 §9)`, async ({ page }) => {
       await ready(page, route)
       const table = page.locator('table').first()
@@ -557,7 +557,7 @@ test.describe('표 관문', () => {
         const thead = t.tHead!
         const box = t.closest('.table-scroll')
         const foot = [...document.querySelectorAll<HTMLElement>('div')].find(
-          (d) => /^전체 \d+/.test(d.innerText ?? '') && d.className.includes('border-t'),
+          (d) => /^전체 \d+/.test(d.innerText) && d.className.includes('border-t'),
         )
         return {
           stickyHead: getComputedStyle(thead).position,

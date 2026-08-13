@@ -1,6 +1,7 @@
 package com.example.backend;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +10,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.backend.store.JsonStore;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 // Spring Boot 4 — MockMvc 자동구성이 webmvc 모듈로 옮겨졌다
@@ -26,6 +31,9 @@ class ApiSmokeTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private JsonStore store;
 
     @Test
     void health() throws Exception {
@@ -49,6 +57,42 @@ class ApiSmokeTest {
 
         mvc.perform(get("/api/me/abilities"))
             .andExpect(jsonPath("$.roles[0]", is("Super Admin")));
+    }
+
+    /**
+     * 사양서 카탈로그도 **권한을 탄다** — 화면(⌘K 팔레트)이 정적 목록을 읽던 시절에는
+     * 사양서 관리 조회 권한이 없어도 이름이 그대로 보였다. 메뉴와 같은 저울(`canView`)을
+     * 쓰는지, 그리고 권한을 걷으면 **빈 목록**이 되는지(403 이 아니다) 확인한다.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void specCatalogFollowsPermission() throws Exception {
+        mvc.perform(get("/api/specs"))
+            .andExpect(jsonPath("$[*].name", hasItem("VN7 엔진 사양서")));
+
+        // ⚠ `/submissions` 는 **접수만** 한다(매트릭스를 적용하지 않는다) — 권한을 바꾸려면
+        //    역할 정본을 직접 건드려야 한다. 상신으로 바꾸려다 한 번 헛짚었다.
+        List<Map<String, Object>> before = store.kvGet("roles", JsonStore.LIST);
+        List<Map<String, Object>> stripped = before.stream().map(role -> {
+            if (!"super".equals(role.get("key"))) {
+                return role;
+            }
+            Map<String, Object> copy = new HashMap<>(role);
+            Map<String, Object> matrix = new HashMap<>((Map<String, Object>) role.get("matrix"));
+            matrix.put("사양서 관리", List.of());
+            copy.put("matrix", matrix);
+            return copy;
+        }).toList();
+
+        store.kvPut("roles", stripped);
+        try {
+            // 못 보는 사람에게는 **빈 목록**이다 — 403 이 아니다(없는 것과 막힌 것을 가른다)
+            mvc.perform(get("/api/specs")).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+        } finally {
+            // 되돌린다 — 이 테스트가 뒤 테스트의 전제를 바꾸지 않게
+            store.kvPut("roles", before);
+        }
+        mvc.perform(get("/api/specs")).andExpect(jsonPath("$[*].name", hasItem("VN7 엔진 사양서")));
     }
 
     @Test

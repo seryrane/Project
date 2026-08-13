@@ -36,14 +36,25 @@ export function DataTable<T>({
   rows,
   rowKey,
   onRowClick,
+  rowTone,
   minWidth,
   empty,
   className = '',
 }: {
   columns: Array<Column<T>>
-  rows: Array<T>
+  /** ⚠ 읽기만 한다 — `as const` 로 굳힌 mock 도 그대로 받는다(감사 로그가 그렇다) */
+  rows: ReadonlyArray<T>
   rowKey: (row: T, index: number) => string
   onRowClick?: (row: T) => void
+  /**
+   * 줄이 스스로 상태를 말할 자리 — 되돌아온 클래스가 그 줄에 붙는다.
+   *
+   * ⚠ **면 색은 반투명으로만** 준다. 불투명 배경을 깔면 가장자리 그림자를 덮어서
+   * "오른쪽에 열이 더 있다"는 신호가 사라진다(styles.css `.table-scroll` 주석).
+   * ⚠ 그리고 이건 **색만으로 말하지 않는다**(규약 §16) — 줄 색은 훑기용 보조이고,
+   *   무엇이 위험한지는 셀 안 칩·글자가 따로 말해야 한다.
+   */
+  rowTone?: (row: T) => string | undefined
   /** 열이 눌리지 않는 최소 폭 — 이보다 좁으면 가로로 굴린다 */
   minWidth: number
   /** ⚠ "없다"와 "못 불러왔다"를 가른다 (§3·§9) — 부른 쪽이 어느 쪽인지 안다 */
@@ -74,9 +85,12 @@ export function DataTable<T>({
                 key={rowKey(row, i)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 /* 누를 수 있으면 커서와 호버로 말한다 (§9) — 못 누르는 표에는 안 건다 */
+                /* 누를 수 있으면 커서와 호버로 말한다 (§9) — 못 누르는 표에는 안 건다.
+                   ⚠ 감사 로그는 못 누르는데 호버가 걸려 있었다: 눌러 보고 아무 일도 안
+                   일어나야 "아, 못 누르는구나"를 알게 되는 화면이었다. */
                 className={`border-b border-hairline/60 transition-colors last:border-0 ${
                   onRowClick ? 'cursor-pointer hover:bg-chip' : ''
-                }`}
+                } ${rowTone?.(row) ?? ''}`}
               >
                 {columns.map((c) => (
                   <td key={c.header} className={`px-3 py-2.5 first:pl-4 ${num(c)} ${c.cellClassName ?? ''}`}>
@@ -122,6 +136,8 @@ export function DataTable<T>({
  *   아니라 **고른 하나의 하위 배열**을 펴는 표다. 쪽도 빈 상태도 없고 폭이 420~480px 라
  *   목록 규격(min-w·가장자리 그림자)을 씌우면 장식만 는다.
  * - `guide` 역할 등급 설명 — 정적 문서 2열 표. 관문에 넣을 실익이 없다.
- * - `privacy` 감사 로그 — 행에 위험 틴트 배경을 깔아 가장자리 그림자를 덮는다.
- *   틴트를 관문 규격으로 올릴지부터 정해야 해서 이번에는 뺐다.
+ *
+ * ⚠ 감사 로그(`privacy`)는 한때 "행 틴트가 가장자리 그림자를 덮는다"는 이유로 뺐는데,
+ *   **재 보니 틴트가 알파 0.2 라 안 덮었다** — 걱정만으로 미룬 것이었다. `rowTone` 을
+ *   두고 옮겼다. 미룰 때는 재 보고 미룬다.
  */

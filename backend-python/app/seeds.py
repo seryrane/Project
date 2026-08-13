@@ -251,6 +251,23 @@ FAQS = [
      "a": "검증 결과 조회에서 해당 실행을 열면 오류 상세가 보입니다.", "helpful": 12},
 ]
 
+# ── 사양서 카탈로그 (frontend/src/data/specs.ts 의 목록 축) ────────────────
+# ⚠⚠ 이름만 담는 **카탈로그**다. 본문(버전 이력·필드)은 아직 화면 mock 에 있다.
+# 이걸 서버로 올린 이유는 본문이 필요해서가 아니라 **권한 때문**이다: ⌘K 팔레트가
+# 정적 목록을 읽고 있어서, 사양서 관리 조회 권한이 없는 사람에게도 **사양서 이름이
+# 그대로 떴다.** 눌러서 막히는 게 아니라 있는지조차 몰라야 할 것의 이름이 새는 게
+# 문제다 — LNB 를 서버가 걸러 주는 것과 같은 이유로 여기도 서버가 거른다.
+SPECS = [
+    {"id": "SP-001", "name": "VN7 엔진 사양서", "category": "파워트레인",
+     "updated": "2026.07.15"},
+    {"id": "SP-002", "name": "전기차 배터리 규격서", "category": "전동화",
+     "updated": "2026.07.14"},
+    {"id": "SP-003", "name": "자율주행 센서 통합 규격", "category": "자율주행",
+     "updated": "2026.07.10"},
+    {"id": "SP-004", "name": "차체 구조 안전 기준서", "category": "차체/안전",
+     "updated": "2026.07.12"},
+]
+
 MEMBERS = [
     {"id": "u-01", "name": "김현대", "email": "hyundae.kim@hmg.com", "dept": "IT 전략팀",
      "grade": "Super Admin", "roles": ["KPI_ADMIN", "IBD_ADMIN"], "status": "활성",
@@ -410,6 +427,9 @@ def seed_if_empty() -> None:
         db.kv_put("whatsnew", WHATSNEW)
     if db.kv_get("embeds") is None:
         db.kv_put("embeds", EMBEDS)
+    # 사양서 카탈로그 — 사양서 CRUD 가 아직 없어 **코드가 정본**이다(화면에서 못 고친다).
+    # nav 와 같은 이유로 항상 덮는다: 비어 있을 때만 채우면 목록을 고쳐도 옛 값이 계속 나온다.
+    db.kv_put("specs", SPECS)
 
     # 챗봇 재료 — nav/nav_requires 와 같은 이유로 항상 덮는다: 화면에서 편집하는 값이 아니라
     # 코드가 정본이고(사양서·검증 CRUD 가 아직 없어 이 시드 자체가 "셀 재료" 다), 비어 있을 때만

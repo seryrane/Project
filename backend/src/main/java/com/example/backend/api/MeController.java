@@ -59,20 +59,14 @@ public class MeController {
     public List<Map<String, Object>> myMenu() {
         List<Map<String, Object>> nav = store.kvGet("nav", JsonStore.LIST);
         Map<String, Object> requires = store.kvGet("nav_requires", JsonStore.MAP);
-        Map<String, Object> matrix = (Map<String, Object>) myRole().get("matrix");
 
         List<Map<String, Object>> sections = new ArrayList<>();
         for (Map<String, Object> section : nav) {
             List<Map<String, Object>> items = new ArrayList<>();
             for (Map<String, Object> item : (List<Map<String, Object>>) section.get("items")) {
                 String key = (String) item.get("key");
-                if (!requires.containsKey(key)) {
-                    items.add(item);
-                    continue;
-                }
-                List<String> actions =
-                    (List<String>) matrix.getOrDefault(requires.get(key), List.of());
-                if (actions.contains("조회")) {
+                // requires 가 없는 항목은 최소 메뉴 — 모든 역할에 보인다
+                if (!requires.containsKey(key) || canView((String) requires.get(key))) {
                     items.add(item);
                 }
             }
@@ -83,6 +77,34 @@ public class MeController {
             }
         }
         return sections;
+    }
+
+    /**
+     * 이 역할이 그 메뉴를 조회할 수 있나. `/me/menu` 가 항목을 거르는 그 판단이다 —
+     * 다른 목록도 같은 저울을 써야 화면마다 다른 답이 나오지 않는다.
+     */
+    @SuppressWarnings("unchecked")
+    public boolean canView(String menu) {
+        Map<String, Object> matrix = (Map<String, Object>) myRole().get("matrix");
+        return ((List<String>) matrix.getOrDefault(menu, List.of())).contains("조회");
+    }
+
+    /**
+     * 사양서 **카탈로그**(이름 축) — 본문이 아니라 목록이다.
+     *
+     * ⚠⚠ 이걸 서버로 올린 이유는 본문이 필요해서가 아니라 **이름이 새기 때문**이다.
+     * ⌘K 팔레트가 정적 목록을 읽고 있어서, 사양서 관리 조회 권한이 없는 사람에게도
+     * 사양서 이름이 그대로 떴다. 눌러서 막히는 게 아니라 **있는지조차 몰라야 할 것의
+     * 이름이 보이는 것**이 문제다 — LNB 와 같은 이유로 여기도 서버가 거른다.
+     * 못 보는 사람에게는 **빈 목록**이다(403 이 아니다 — 없는 것과 막힌 것을 가른다).
+     */
+    @GetMapping("/specs")
+    public List<Map<String, Object>> specs() {
+        if (!canView("사양서 관리")) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = store.kvGet("specs", JsonStore.LIST);
+        return out == null ? List.of() : out;
     }
 
     /** 대시보드 위젯 프리셋 파생용 — 역할에 기능이 붙고 떨어지면 프리셋도 따라간다 */

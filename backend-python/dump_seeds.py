@@ -16,6 +16,7 @@ DATA = {
     "questions": seeds.QUESTIONS,
     "faqs": seeds.FAQS,
     "members": seeds.MEMBERS,
+    "specs": seeds.SPECS,
     "audit": seeds.AUDIT,
     "whatsnew": seeds.WHATSNEW,
 }

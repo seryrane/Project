@@ -3,10 +3,16 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { useToast } from '#/components/portal/toast'
 import { useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
+
+/** 위험 액션은 **반출 계열만** — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다.
+ *  좁은 화면 카드와 넓은 화면 표가 **같은 저울**을 쓰도록 한 곳에 둔다. */
+const isDanger = (action: string) => action === '다운로드' || action === '마스킹 해제'
 
 export const Route = createFileRoute('/privacy')({ component: PrivacyPage })
 
@@ -104,8 +110,7 @@ function PrivacyPage() {
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
           <ol className="space-y-2 p-4 pc:hidden">
             {auditList.map((l) => {
-              // 위험 액션은 반출 계열만 — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다
-              const danger = l.action === '다운로드' || l.action === '마스킹 해제'
+              const danger = isDanger(l.action)
               return (
                 <li
                   key={`${l.at}.${l.target}`}
@@ -132,49 +137,47 @@ function PrivacyPage() {
             })}
           </ol>
 
-          <div className="hidden overflow-x-auto pc:block">
-            <table className="w-full min-w-[560px] border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-hairline bg-canvas/60 text-left text-ink-subtle">
-                  <th className="px-4 py-2.5 font-medium">{t('privacy.th.at', '시각')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.user', '사용자')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.action', '액션')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('privacy.th.target', '대상')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('privacy.label.reason', '사유')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditList.map((l) => {
-                  // 위험 액션은 반출 계열만 — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다
-              const danger = l.action === '다운로드' || l.action === '마스킹 해제'
-                  return (
-                    <tr
-                      key={`${l.at}.${l.target}`}
-                      className={`border-b border-hairline/50 transition-colors last:border-0 hover:bg-chip ${
-                        danger ? 'bg-pending-bg/20' : ''
+          {/* ⚠ 줄 틴트는 **반투명**으로만 준다 — 불투명하면 관문의 가장자리 그림자를
+              덮어서 "오른쪽에 열이 더 있다"는 신호가 사라진다. 그리고 색만으로 말하지
+              않는다(§16): 위험은 액션 칩의 색과 ⚠ 글자가 이미 말하고, 줄 색은 긴 로그를
+              훑을 때의 보조다. */}
+          <div className="hidden px-4 pb-4 pc:block">
+            <DataTable
+              rows={auditList}
+              rowKey={(l) => `${l.at}.${l.target}`}
+              rowTone={(l) => (isDanger(l.action) ? 'bg-pending-bg/20' : undefined)}
+              minWidth={560}
+              empty={{ title: t('privacy.auditEmpty', '기록된 접근이 없습니다.') }}
+              columns={[
+                {
+                  header: t('privacy.th.at', '시각'),
+                  cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+                  cell: (l) => l.at,
+                },
+                {
+                  header: t('privacy.th.user', '사용자'),
+                  cellClassName: 'whitespace-nowrap text-ink',
+                  cell: (l) => l.user,
+                },
+                {
+                  header: t('privacy.th.action', '액션'),
+                  cellClassName: 'whitespace-nowrap',
+                  cell: (l) => (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        isDanger(l.action) ? 'bg-pending-bg text-pending-ink' : 'bg-chip text-ink-muted'
                       }`}
                     >
-                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums text-ink-subtle">
-                        {l.at}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-ink">{l.user}</td>
-                      <td className="whitespace-nowrap px-3 py-2.5">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            danger ? 'bg-pending-bg text-pending-ink' : 'bg-chip text-ink-muted'
-                          }`}
-                        >
-                          {l.action}
-                          {danger && ' ⚠'}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-ink-muted">{l.target}</td>
-                      <td className="px-3 py-2.5 text-ink-subtle">{l.reason}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                      {l.action}
+                      {isDanger(l.action) && ' ⚠'}
+                    </span>
+                  ),
+                },
+                { header: t('privacy.th.target', '대상'), cellClassName: 'text-ink-muted', cell: (l) => l.target },
+                { header: t('privacy.label.reason', '사유'), cellClassName: 'text-ink-subtle', cell: (l) => l.reason },
+              ]}
+            />
+            <ListFoot total={auditList.length} shown={auditList.length} unit="건" />
           </div>
           <div className="border-t border-hairline px-5 py-2.5 text-xs text-ink-subtle">
             {tf(

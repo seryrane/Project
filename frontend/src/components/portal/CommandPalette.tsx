@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import type { IconName, NavSection } from '#/data/nav'
 import { specs } from '#/data/specs'
+import { useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 
 import { Icon } from './Icon'
@@ -62,6 +63,13 @@ export function CommandPalette({
     inputRef.current?.focus()
   }, [])
 
+  /* 사양서 카탈로그 — 정본은 서버(`/api/specs`)다. 서버가 없으면 mock 으로 돌아간다
+     (시연 모드, 관문 lib/api.ts). ⚠ 이름 축만 받는다 — 팔레트가 필요한 건 이름이다. */
+  const { data: specCatalog } = useApi<Array<{ id: string; name: string }>>(
+    '/specs',
+    specs.map((s) => ({ id: s.id, name: s.name })),
+  )
+
   // 페이지 명령은 LNB 와 **같은 목록**에서 파생한다 — 손으로 다시 적으면 새 화면이
   // 생길 때마다 팔레트만 모르는 화면이 남는다(실제로 두 개만 알고 있었다).
   // 라벨은 LNB 와 같은 규칙으로 언어를 입힌다 (EN: labelEn → 사전 → ko).
@@ -87,9 +95,10 @@ export function CommandPalette({
               }],
         ),
       ),
-      // TODO(본개발): 사양서도 서버에서 받는다 — 지금은 목데이터라 권한 축이 없다.
-      //   메뉴와 같은 이유로 여기도 걸러진 목록이어야 한다.
-      ...specs.map((s) => ({
+      // ⚠⚠ 사양서도 **서버가 걸러 준다** (2026-08-13). 예전에는 정적 `data/specs` 를
+      //   읽어서, 사양서 관리 조회 권한이 없는 사람에게도 **사양서 이름이 그대로 떴다** —
+      //   메뉴에서 고친 것과 똑같은 병이다. 못 보면 빈 목록이 와서 이 무리가 통째로 없다.
+      ...specCatalog.map((s) => ({
         group: t('palette.specs'),
         label: s.name,
         hint: s.id,
@@ -97,7 +106,7 @@ export function CommandPalette({
         to: '/specs',
       })),
     ],
-    [locale, t, onAsk, nav],
+    [locale, t, onAsk, nav, specCatalog],
   )
 
   const q = query.trim().toLowerCase()

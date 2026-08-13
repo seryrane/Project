@@ -29,7 +29,7 @@ public class SeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        for (String name : List.of("roles", "faqs", "members", "whatsnew")) {
+        for (String name : List.of("roles", "faqs", "members", "whatsnew", "specs")) {
             Integer exists = store.jdbc()
                 .queryForObject("SELECT COUNT(*) FROM kv WHERE name = ?", Integer.class, name);
             if (exists == null || exists == 0) {
