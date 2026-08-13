@@ -56,7 +56,11 @@ export function Modal({
       <m.div
         ref={panelRef}
         {...coverProps(titleId)}
-        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
+        /* ⚠ **`overflow-hidden` 이 없었다.** 규약 §7 이 못박은 것 — 머리·발에 면을 깔면
+           그 면이 둥근 모서리를 넘어 **각지게 삐져나온다.** 머리에 `rounded-t-2xl` 을
+           따로 붙여 위쪽만 가리고 있었는데, 발에도 면이 생기면서 아래쪽이 드러났다.
+           상자 하나가 모서리를 책임지면 안쪽 조각들은 모서리를 몰라도 된다. */
+        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
           wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
         }`}
         // 데스크톱은 살짝 떠오르며 눌러앉고, 모바일 시트도 같은 값으로 자연스럽다.
@@ -106,9 +110,12 @@ export function Modal({
           {typeof children === 'function' ? children(close) : children}
         </div>
         {/* 발 — 몸 **밖**에 있어서 스크롤에 안 밀린다. 위 선으로 가른다(규약 §7 3단 해부).
+            ⚠ **머리와 같은 면을 깐다.** 선 하나만 있으면 발이 "몸의 마지막 줄"처럼 읽혀서,
+            내용이 넘쳐 스크롤이 걸린 순간 어디까지가 몸인지 흐려진다. 머리·발이 같은 면을
+            쓰면 3단이 눈에 보이고, 가운데(몸)만 굴러간다는 것도 함께 읽힌다.
             좁은 화면에서는 홈 인디케이터만큼 더 띄운다 — 안 그러면 주 동작이 그 밑에 깔린다 */}
         {footer != null && (
-          <div className="shrink-0 border-t border-hairline px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] pc:px-6">
+          <div className="shrink-0 border-t border-hairline surface-head px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] pc:px-6">
             {typeof footer === 'function' ? footer(close) : footer}
           </div>
         )}

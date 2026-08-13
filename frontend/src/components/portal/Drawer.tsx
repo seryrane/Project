@@ -108,9 +108,11 @@ export function Drawer({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           {children(close)}
         </div>
-        {/* 발 — 몸 밖이라 스크롤에 안 밀린다. 좁은 화면에서는 홈 인디케이터만큼 더 띄운다 */}
+        {/* 발 — 몸 밖이라 스크롤에 안 밀린다. **머리와 같은 면**을 깔아 3단을 눈에 보이게
+            한다(Modal 과 같은 손 — 관문 둘이 다르게 생기면 한 벌로 안 읽힌다).
+            좁은 화면에서는 홈 인디케이터만큼 더 띄운다 */}
         {footer != null && (
-          <div className="shrink-0 border-t border-hairline px-6 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-hairline surface-head px-6 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
             {typeof footer === 'function' ? footer(close) : footer}
           </div>
         )}

@@ -261,12 +261,15 @@ function Shell({
         />
       )}
 
-      {/* 한 요소가 두 역할을 한다 — 넓은 화면에서는 **붙박이 내비**(z-nav), 좁은 화면에서는
-          본문을 덮는 **서랍**(z-modal). 층을 하나로 박으면 한쪽이 반드시 틀린다:
-          늘 z-nav 면 서랍이 가림막 아래로 들어가고, 늘 z-modal 이면 넓은 화면에서
-          사이드바가 덮개 위에 남는다 (규약 §8 사다리) */}
+      {/* 한 요소가 두 역할을 한다 — 넓은 화면에서는 **본문 위로 펼쳐지는 붙박이**(z-panel),
+          좁은 화면에서는 본문을 덮는 **서랍**(z-modal). 층을 하나로 박으면 한쪽이 반드시
+          틀린다: 늘 z-panel 이면 좁은 화면에서 서랍이 가림막 아래로 들어가고, 늘 z-modal
+          이면 넓은 화면에서 사이드바가 덮개 위에 남는다 (규약 §8 사다리).
+          ⚠ **`z-nav`(헤더와 같은 층)로 두면 안 된다** — 레일이 호버로 펴질 때 본문 위로
+          넘어가는데, 헤더도 본문 컬럼 안에 있어서 DOM 순서상 헤더가 펴진 메뉴를 덮는다
+          (2026-08-13 사용자 지적 "LNB가 헤더에 가려짐". styles.css 사다리 주석 참고) */}
       <aside
-        className={`group/rail fixed inset-y-0 left-0 z-modal flex w-60 flex-col overflow-x-hidden border-r border-sidebar-line bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:z-nav pc:translate-x-0 ${
+        className={`group/rail fixed inset-y-0 left-0 z-modal flex w-60 flex-col overflow-x-hidden border-r border-sidebar-line bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:z-panel pc:translate-x-0 ${
           navOpen ? 'translate-x-0' : '-translate-x-full'
         } ${rail ? 'pc:w-16 pc:hover:w-60 pc:hover:shadow-[12px_0_40px_rgb(0_0_0/40%)]' : 'pc:w-60'}`}
       >
