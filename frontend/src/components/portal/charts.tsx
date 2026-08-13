@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { Fragment, useId, useRef, useState } from 'react'
 
 /* Chart primitives following the dataviz mark specs:
    2px lines, ≥8px markers with 2px surface rings, ≤24px bars with 4px rounded
@@ -6,10 +6,21 @@ import { useId, useRef, useState } from 'react'
    hairline solid gridlines, text in ink tokens (never the series color).
    비교(이전 기간) 선은 중립 회색 점선 — 계열 색과 상태 색을 섞지 않는다. */
 
+export interface ChartHero {
+  /** 이 카드가 하는 **한마디**. 크게 선다 */
+  value: string
+  unit?: string
+  delta?: string
+  deltaGood?: boolean
+  /** 숫자가 못 하는 말 한 줄 (기간·기준 등) */
+  note?: string
+}
+
 export function ChartCard({
   title,
   subtitle,
   action,
+  hero,
   children,
   className = '',
 }: {
@@ -17,12 +28,19 @@ export function ChartCard({
   subtitle?: string
   /** 카드는 다음 행동으로 끝난다 (규약 §10) — 우상단 링크 */
   action?: { label: string; onClick?: () => void }
+  hero?: ChartHero
   children: React.ReactNode
   className?: string
 }) {
   return (
+    /* ⚠⚠ **카드는 제 키를 다 쓴다** (2026-08-13 사용자 지적: "횡한 게 문제").
+       실측: 같은 줄의 카드는 격자가 키를 맞춰 505px 인데 몸통은 215px 에서 끝나
+       **283px 가 그냥 빈 흰 면**이었다. 그게 "횡하다"의 정체다.
+       고침은 그림을 늘리는 게 아니라 **몸통이 카드를 채우고, 남는 자리를 위아래로
+       가르는 것**이다(주인공 숫자는 위, 그림은 바닥에). 늘린 여백은 우연이 아니라
+       숨 쉬는 자리로 읽힌다. */
     <section
-      className={`card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface ${className}`}
+      className={`card-spotlight flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-surface ${className}`}
     >
       {/* 머리는 면(배경)+선으로 가른다 — 덮개(Modal·Drawer)와 **같은 해부**다(규약 §7).
           카드도 머리·몸이 있는 물건인데 지금까지 한 상자에 이어 붙어 있었다: 제목이 숫자
@@ -44,7 +62,25 @@ export function ChartCard({
           </button>
         )}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="flex flex-1 flex-col justify-between gap-4 p-5">
+        {/* ⚠ **주인공 숫자**(dataviz `marks-and-anatomy.md` 의 hero number).
+            사용자 지적: "차트가 대시보드에서 제일 중요한 요소인데 눈에 띄는 부분이 없음".
+            선 세 가닥이 같은 무게로 놓이면 어디부터 봐야 할지 화면이 말해 주지 않는다.
+            카드가 **한마디**를 먼저 하고, 그림은 그 한마디의 근거로 아래에 선다. */}
+        {hero && (
+          <div>
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-4xl font-semibold leading-none tracking-tight tabular-nums text-ink">
+                {hero.value}
+              </span>
+              {hero.unit && <span className="text-sm font-medium text-ink-muted">{hero.unit}</span>}
+              {hero.delta && <DeltaChip delta={hero.delta} good={hero.deltaGood ?? true} />}
+            </div>
+            {hero.note && <p className="mt-1.5 text-xs text-ink-subtle">{hero.note}</p>}
+          </div>
+        )}
+        {children}
+      </div>
     </section>
   )
 }
@@ -161,6 +197,33 @@ function niceMax(v: number): number {
   return nice * step
 }
 
+/** 눈금 간격을 사람이 읽는 수(1·1.5·2·2.5·3·4·5·10 × 10ⁿ)로 맞춘다 */
+function niceStep(v: number): number {
+  const p = Math.pow(10, Math.floor(Math.log10(v || 1)))
+  const f = (v || 1) / p
+  const n = f <= 1 ? 1 : f <= 1.5 ? 1.5 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 3 ? 3 : f <= 4 ? 4 : f <= 5 ? 5 : 10
+  return n * p
+}
+
+/**
+ * 선 차트의 **세로 범위**. 바닥을 무조건 0 으로 잡지 않는다.
+ *
+ * ⚠⚠ dataviz: "bars start at 0 / **lines need not**". 막대는 길이가 곧 양이라 0 을 자르면
+ * 거짓말이 되지만, 선은 **변화**를 말하는 물건이라 0 을 강요하면 데이터가 위쪽에 눌린다.
+ * 실측: KPI 달성률 84~97% 를 0~120 축에 그리니 선이 플롯의 위 30% 에만 붙고 아래
+ * 70% 가 빈 그러데이션이었다 — 사용자가 "횡하다"고 한 화면의 절반이 이거다.
+ * 데이터가 0 에서 멀면(최소/최대 > 0.35) 바닥을 **최소값 아래 눈금**으로 올린다.
+ * 자른 사실은 축 글자가 그대로 말한다(0 이 아닌 숫자가 바닥에 찍힌다) — 숨기지 않는다.
+ */
+function axisRange(lo: number, hi: number): [number, number] {
+  if (!(lo > 0) || lo / (hi || 1) < 0.35) return [0, niceMax((hi || 1) * 1.08)]
+  const pad = (hi - lo || hi * 0.1) * 0.45
+  const step = niceStep((hi - lo + pad * 1.6) / 2)
+  const floor = Math.max(0, Math.floor((lo - pad) / step) * step)
+  const top = floor + step * 2 >= hi ? floor + step * 2 : Math.ceil((hi + pad * 0.3) / step) * step
+  return [floor, top]
+}
+
 /**
  * 도넛 — **부분-전체를 한눈에** 보는 자리에만.
  *
@@ -265,19 +328,19 @@ export function TrendLineChart({
   const [hover, setHover] = useState<number | null>(null)
 
   const cmp = compare && compare.length === data.length ? compare : undefined
-  const peak = Math.max(...data.map((d) => d.value), ...(cmp?.map((d) => d.value) ?? [0]))
-  const max = niceMax(peak * 1.08)
-  /* ⚠ 눈금 다섯 → **셋**(0·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
+  const all = [...data.map((d) => d.value), ...(cmp?.map((d) => d.value) ?? [])]
+  const [floor, max] = axisRange(Math.min(...all), Math.max(...all))
+  /* ⚠ 눈금 다섯 → **셋**(바닥·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
      참고로 잰 대시보드들은 격자를 아예 안 그리거나 한두 줄만 둔다. 다만 이건 운영 화면이라
      "얼마나 되나"를 읽어야 해서 눈금을 없애지는 않는다. 셋이면 위·가운데·아래로 읽힌다. */
-  const ticks = [0, max / 2, max]
+  const ticks = [floor, (floor + max) / 2, max]
   const x = (i: number) => PAD.l + (i / (data.length - 1)) * (W - PAD.l - PAD.r)
-  const y = (v: number) => PAD.t + (1 - v / max) * (H - PAD.t - PAD.b)
+  const y = (v: number) => PAD.t + (1 - (v - floor) / (max - floor)) * (H - PAD.t - PAD.b)
 
   const path = (s: Array<TrendPoint>) =>
     s.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join('')
   const line = path(data)
-  const area = `${line}L${x(data.length - 1).toFixed(1)},${y(0)}L${x(0).toFixed(1)},${y(0)}Z`
+  const area = `${line}L${x(data.length - 1).toFixed(1)},${y(floor)}L${x(0).toFixed(1)},${y(floor)}Z`
 
   const labelEvery = Math.max(1, Math.round(data.length / 5))
   const last = data[data.length - 1]
@@ -320,7 +383,7 @@ export function TrendLineChart({
                   (DESIGN.md "선은 두 단계다"를 차트에도 적용). */}
               <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
               <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
-                {t}
+                {Math.round(t * 10) / 10}
                 {t > 0 ? unit : ''}
               </text>
             </g>
@@ -350,7 +413,20 @@ export function TrendLineChart({
           {(hover != null ? [hover, data.length - 1] : [data.length - 1]).map((i) => (
             <circle key={i} cx={x(i)} cy={y(data[i].value)} r="4" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="2" />
           ))}
-          <text x={x(data.length - 1) - 6} y={y(last.value) - 9} textAnchor="end" fontSize="11" fontWeight="600" fill="var(--color-ink)">
+          {/* ⚠ 끝값은 선 위에 놓이므로 **면 색 테두리**를 둘러 글자가 선을 이긴다
+              (paint-order: stroke → 획을 먼저 칠하고 글자를 덮는다). 실측에서 비교
+              점선과 겹쳐 읽히지 않았다. */}
+          <text
+            x={x(data.length - 1) - 6}
+            y={y(last.value) - 11}
+            textAnchor="end"
+            fontSize="11"
+            fontWeight="600"
+            fill="var(--color-ink)"
+            stroke="var(--color-surface)"
+            strokeWidth="3.5"
+            paintOrder="stroke"
+          >
             {last.value}
             {unit}
           </text>
@@ -530,15 +606,20 @@ export function GroupedBarChart({
 export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries>; unit?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<number | null>(null)
+  /* ⚠⚠ **강조**(dataviz: "One series is the point, rest are context").
+     사용자 지적: "눈에 띄는 부분이 없음". 같은 굵기·같은 채도의 선 셋은 서로를 지운다.
+     범례를 **누르는 물건**으로 바꿔서, 하나를 고르면 나머지는 중립 회색으로 물러난다
+     (감추지 않는다 — 맥락은 남아야 견줄 수 있다). 아무것도 고르지 않으면 지금과 같다. */
+  const [focus, setFocus] = useState<string | null>(null)
   const n = series[0].data.length
-  const peak = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)))
-  const max = niceMax(peak * 1.1)
-  /* ⚠ 눈금 다섯 → **셋**(0·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
+  const flat = series.flatMap((s) => s.data.map((d) => d.value))
+  const [floor, max] = axisRange(Math.min(...flat), Math.max(...flat))
+  /* ⚠ 눈금 다섯 → **셋**(바닥·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
      참고로 잰 대시보드들은 격자를 아예 안 그리거나 한두 줄만 둔다. 다만 이건 운영 화면이라
      "얼마나 되나"를 읽어야 해서 눈금을 없애지는 않는다. 셋이면 위·가운데·아래로 읽힌다. */
-  const ticks = [0, max / 2, max]
+  const ticks = [floor, (floor + max) / 2, max]
   const x = (i: number) => PAD.l + (i / (n - 1)) * (W - PAD.l - PAD.r)
-  const y = (v: number) => PAD.t + (1 - v / max) * (H - PAD.t - PAD.b)
+  const y = (v: number) => PAD.t + (1 - (v - floor) / (max - floor)) * (H - PAD.t - PAD.b)
   const path = (s: LineSeries) =>
     s.data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join('')
   const labelEvery = Math.max(1, Math.round(n / 6))
@@ -553,13 +634,28 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
 
   return (
     <div>
-      {/* 2계열 이상이면 범례는 늘 있다 */}
-      <div className="mb-2 flex flex-wrap items-center gap-4 text-xs text-ink-muted">
-        {series.map((s) => (
-          <span key={s.name} className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: s.color }} /> {s.name}
-          </span>
-        ))}
+      {/* 2계열 이상이면 범례는 늘 있다 — 그리고 여기서는 **고르는 물건**이다 */}
+      <div className="mb-2 flex flex-wrap items-center gap-1 text-xs">
+        {series.map((s) => {
+          const on = focus === s.name
+          return (
+            <button
+              key={s.name}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setFocus(on ? null : s.name)}
+              className={`flex items-center gap-1.5 rounded-full px-2 py-1 transition-colors hover:bg-chip ${
+                on ? 'bg-chip font-semibold text-ink' : 'text-ink-muted'
+              }`}
+            >
+              <span
+                className="h-0.5 w-4 rounded-full"
+                style={{ backgroundColor: focus && !on ? 'var(--color-ink-subtle)' : s.color }}
+              />
+              {s.name}
+            </button>
+          )
+        })}
       </div>
       <div ref={ref} className="relative" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
         <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="다계열 추이">
@@ -582,16 +678,35 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
               </text>
             ) : null,
           )}
-          {series.map((s) => (
-            <path key={s.name} d={path(s)} pathLength="1" className="chart-line" fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-          ))}
+          {/* 고른 선을 **맨 뒤에** 그려서 겹치는 자리에서 위로 온다 */}
+          {[...series]
+            .sort((a, b) => Number(a.name === focus) - Number(b.name === focus))
+            .map((s) => {
+              const dim = focus != null && s.name !== focus
+              return (
+                <path
+                  key={s.name}
+                  d={path(s)}
+                  pathLength="1"
+                  className="chart-line transition-[stroke,stroke-width,opacity] duration-200"
+                  fill="none"
+                  stroke={dim ? 'var(--color-ink-subtle)' : s.color}
+                  strokeWidth={s.name === focus ? 2.75 : 2}
+                  strokeOpacity={dim ? 0.4 : 1}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              )
+            })}
           {hover != null && (
             <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />
           )}
           {hover != null &&
-            series.map((s) => (
-              <circle key={s.name} cx={x(hover)} cy={y(s.data[hover].value)} r="4" fill={s.color} stroke="var(--color-surface)" strokeWidth="2" />
-            ))}
+            series
+              .filter((s) => focus == null || s.name === focus)
+              .map((s) => (
+                <circle key={s.name} cx={x(hover)} cy={y(s.data[hover].value)} r="4" fill={s.color} stroke="var(--color-surface)" strokeWidth="2" />
+              ))}
         </svg>
         {hover != null && (
           <div
@@ -616,6 +731,138 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
   )
 }
 
+/**
+ * **작은 배수** — 크기가 다른 계열을 한 축에 겹치지 않는다.
+ *
+ * ⚠⚠ 이게 dataviz 가 말하는 "#1 chart mistake" 의 정공법이다. `오늘 시스템 성능`을
+ * 실측해 보니 세 계열이 350ms / 200ms / 20ms 라, 한 축에 겹치니 **스토리지 선이 192px
+ * 플롯에서 2px** 만 썼다 — 선이 있는데 아무 말도 못 한다. 축을 둘로 나누는 것(dual-axis)은
+ * 금지다(같은 높이가 다른 뜻이 되어 거짓 교차가 생긴다). 남은 정답은 둘 —
+ * **작은 배수**, 아니면 공통 기준 대비 지수화. 응답시간은 "몇 ms 냐"가 곧 내용이라
+ * 지수로 바꾸면 뜻이 사라진다. 그래서 배수다.
+ *
+ * 줄마다 **제 축**을 쓰고, 왼쪽에 이름과 **지금 값**을 크게 둔다(직접 라벨 — 범례 상자가
+ * 필요 없다). 세로 십자선은 세 줄을 관통해서, 축이 달라도 "같은 시각"은 함께 읽힌다.
+ */
+export function SmallMultiples({
+  series,
+  unit = '',
+  /** 값이 클수록 나쁜 지표인가 (응답시간·오류 등) — 증감 칩의 좋고 나쁨을 가른다 */
+  lowerIsBetter = false,
+}: {
+  series: Array<LineSeries>
+  unit?: string
+  lowerIsBetter?: boolean
+}) {
+  const plotRef = useRef<HTMLDivElement>(null)
+  const [hover, setHover] = useState<number | null>(null)
+  const n = series[0].data.length
+
+  const onMove = (e: React.PointerEvent) => {
+    const rect = plotRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const i = Math.round(((e.clientX - rect.left) / rect.width) * (n - 1))
+    setHover(Math.min(n - 1, Math.max(0, i)))
+  }
+
+  return (
+    <div
+      className="flex flex-1 flex-col gap-1"
+      onPointerMove={onMove}
+      onPointerLeave={() => setHover(null)}
+    >
+      {series.map((s, si) => {
+        const vals = s.data.map((d) => d.value)
+        /* 줄마다 제 축 — 바닥을 0 이 아니라 **제 최소값 조금 아래**로 둔다.
+           dataviz: "bars start at 0 / lines need not". 0 을 강요하면 여기서도 선이 눌린다. */
+        const lo = Math.min(...vals)
+        const hi = Math.max(...vals)
+        const pad = (hi - lo || hi || 1) * 0.35
+        const min = Math.max(0, lo - pad)
+        const max = hi + pad * 0.4
+        const at = (v: number) => 100 - ((v - min) / (max - min || 1)) * 100
+        const px = (i: number) => (i / (n - 1)) * 100
+        const line = s.data.map((d, i) => `${i === 0 ? 'M' : 'L'}${px(i).toFixed(2)},${at(d.value).toFixed(2)}`).join('')
+        const area = `${line}L100,100L0,100Z`
+        const shown = hover ?? n - 1
+        const first = vals[0]
+        const cur = vals[shown]
+        const diff = first === 0 ? 0 : Math.round(((cur - first) / first) * 100)
+
+        return (
+          /* 좁은 화면에서는 이름 칸을 줄인다 — 393px 에서 8.5rem 을 그대로 두면
+             그림에 200px 밖에 안 남는다 (규약 §8 모바일) */
+          <div key={s.name} className="grid min-h-0 flex-1 grid-cols-[5.5rem_minmax(0,1fr)] gap-3 pc:grid-cols-[8.5rem_minmax(0,1fr)]">
+            <div className="min-w-0 self-center">
+              <div className="truncate text-xs text-ink-muted">{s.name}</div>
+              <div className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="text-xl font-semibold leading-none tabular-nums text-ink">
+                  {cur}
+                  <span className="ml-0.5 text-xs font-medium text-ink-subtle">{unit}</span>
+                </span>
+                {diff !== 0 && (
+                  <DeltaChip delta={`${diff > 0 ? '+' : ''}${diff}%`} good={lowerIsBetter ? diff < 0 : diff > 0} />
+                )}
+              </div>
+            </div>
+            {/* ⚠ `preserveAspectRatio="none"` 로 **세로를 칸에 맞춰 늘린다** — 카드가 커지면
+                그림도 커진다(비어 있던 자리가 곧 그림이 된다). 늘어나도 선 굵기가 변하지
+                않도록 `non-scaling-stroke` 가 함께 간다. 이 안에는 글자를 넣지 않는다
+                (글자는 늘어나면 찌그러진다 — 왼쪽 HTML 이 대신 말한다).
+                ⚠⚠ 그리고 svg 는 **절대 위치**여야 한다. 흐름 안에 두면 `h-full` 이 auto
+                높이 위에서 풀려서 viewBox 비율(1:1)로 되돌아가고, 카드가 폭 만큼 키가
+                커진다 — 실측으로 카드가 505 → **2777px** 이 됐다. 절대 위치면 키 계산에
+                끼지 않아, 칸의 키는 flex 가 정하고 그림이 그 키를 따라간다. */}
+            <div ref={si === 0 ? plotRef : undefined} className="relative min-h-[44px]">
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="absolute inset-0 block h-full w-full"
+                role="img"
+                aria-label={`${s.name} 추이`}
+              >
+                <path d={area} fill={s.color} opacity="0.12" />
+                <path
+                  d={line}
+                  pathLength="1"
+                  className="chart-line"
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              {/* 점과 십자선은 HTML — 늘어난 좌표계 안에서 원이 타원이 되지 않는다 */}
+              <span
+                className="pointer-events-none absolute top-0 h-full w-px bg-divider transition-opacity"
+                style={{ left: `${px(shown)}%`, opacity: hover == null ? 0 : 1 }}
+              />
+              <span
+                className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface"
+                style={{ left: `${px(shown)}%`, top: `${at(cur)}%`, backgroundColor: s.color }}
+              />
+            </div>
+          </div>
+        )
+      })}
+      <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3 pc:grid-cols-[8.5rem_minmax(0,1fr)]">
+        <span />
+        {/* ⚠ 가운데 칸은 **가리키는 지점**을 말한다. 손을 안 얹었으면 한가운데 눈금을
+            보여 준다 — 예전엔 마지막 값을 넣어서 오른쪽 라벨과 "15시 / 15시"로 겹쳤다. */}
+        <span className="flex justify-between text-[10px] text-ink-subtle">
+          <span>{series[0].data[0].date}</span>
+          <span className={hover == null ? '' : 'font-semibold text-ink'}>
+            {series[0].data[hover ?? Math.floor((n - 1) / 2)].date}
+          </span>
+          <span>{series[0].data[n - 1].date}</span>
+        </span>
+      </div>
+    </div>
+  )
+}
+
 /* ---- 요일×시간 히트맵: 단일 색상 명도 램프 ---- */
 export function TimeHeatmap({
   rows,
@@ -633,61 +880,48 @@ export function TimeHeatmap({
   const min = Math.min(...flat)
   const max = Math.max(...flat)
   const span = max - min || 1
-  const CELL_W = 34
-  const CELL_H = 17
-  const GAP = 3
-  const LEFT = 24
-  const TOP = 4
-  const width = LEFT + cols.length * (CELL_W + GAP)
-  const height = TOP + rows.length * (CELL_H + GAP) + 16
   return (
-    /* ⚠⚠ **히트맵은 배율로 줄이지 않는다** (2026-08-13 실측). `viewBox` + `w-full` 로 두면
-       24칸짜리 가로가 카드 폭에 맞춰 **0.7배로 눌려서**, `fontSize="10"` 으로 적은 축 글자가
-       화면에서는 **7.04px** 로 그려졌다 — 읽기 한계 아래다. 코드의 숫자와 화면 크기가
-       다르니 코드만 봐서는 영영 안 보이는 부류다.
-       자기 크기로 그리고, 좁으면 **자기 상자 안에서 가로로 흐르게** 한다(규약 §8: 페이지는
-       안 밀리고, 오른쪽에 더 있다는 것은 가장자리 그림자가 말한다). */
-    <div className="table-scroll">
-      <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ minWidth: width }}
-        className="block"
+    /* ⚠⚠ **SVG 를 버리고 CSS 격자로 그린다** (2026-08-13, 세 번 고치고 얻은 결론).
+       ① `viewBox` + `w-full` → 24칸이 0.7배로 눌려 축 글자가 7.04px 로 그려졌다
+       ② 자연 크기로 고정 → 1614px 카드에 357px 차트만 서서 가로 채움 **22%**("횡하다")
+       ③ 상자 폭을 재서 칸 폭 계산 → `ResizeObserver` 가 안 도는 자리가 있어 첫 값에 머문다
+       셋 다 **SVG 를 늘리려다 생긴 문제**다. 격자는 원래 HTML 이 잘하는 일이다 —
+       칸은 `1fr` 로 컨테이너를 따라 늘고, 글자는 진짜 텍스트라 배율을 안 탄다.
+       (dataviz `components.md`: "build each in plain HTML") */
+    <div>
+      <div
+        className="grid gap-[3px]"
+        style={{ gridTemplateColumns: `auto repeat(${cols.length}, minmax(0, 1fr))` }}
         role="img"
         aria-label="요일·시간 분포"
       >
         {rows.map((r, ri) => (
-          <text key={r} x={LEFT - 7} y={TOP + ri * (CELL_H + GAP) + CELL_H - 4} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
-            {r}
-          </text>
+          <Fragment key={r}>
+            <div className="pr-2 text-right text-[10px] leading-[28px] text-ink-subtle">{r}</div>
+            {values[ri].map((v, ci) => (
+              <div
+                key={`${ri}-${ci}`}
+                /* 둥근 칸은 '농도'로, 각진 격자는 '표'로 읽힌다 */
+                className="h-7 rounded-[4px] transition-[outline-color] outline outline-1 outline-transparent"
+                style={{
+                  backgroundColor: 'var(--color-primary)',
+                  opacity: 0.08 + ((v - min) / span) * 0.86,
+                  outlineColor: hover?.[0] === ri && hover[1] === ci ? 'var(--color-ink)' : 'transparent',
+                }}
+                onPointerEnter={() => setHover([ri, ci])}
+                onPointerLeave={() => setHover(null)}
+              />
+            ))}
+          </Fragment>
         ))}
-        {cols.map((c, ci) => (
-          <text key={c} x={LEFT + ci * (CELL_W + GAP) + CELL_W / 2} y={height - 4} textAnchor="middle" fontSize="10" fill="var(--color-ink-subtle)">
+        {/* 가로축 — 첫 칸은 세로축 라벨 자리라 비운다 */}
+        <div />
+        {cols.map((c) => (
+          <div key={c} className="pt-1 text-center text-[10px] text-ink-subtle">
             {c}
-          </text>
+          </div>
         ))}
-        {values.map((row, ri) =>
-          row.map((v, ci) => (
-            <rect
-              key={`${ri}-${ci}`}
-              x={LEFT + ci * (CELL_W + GAP)}
-              y={TOP + ri * (CELL_H + GAP)}
-              width={CELL_W}
-              height={CELL_H}
-              /* 셀 모서리를 조금 더 둥글게 — 각진 격자는 '표'로 읽히고, 둥근 칸은 '농도'로
-                 읽힌다(참고 대시보드들의 히트맵이 공통으로 쓰는 손) */
-              rx="4"
-              fill="var(--color-primary)"
-              fillOpacity={0.08 + ((v - min) / span) * 0.86}
-              stroke={hover?.[0] === ri && hover[1] === ci ? 'var(--color-ink)' : 'none'}
-              strokeWidth="1.2"
-              onPointerEnter={() => setHover([ri, ci])}
-              onPointerLeave={() => setHover(null)}
-            />
-          )),
-        )}
-      </svg>
+      </div>
       <div className="mt-1.5 text-xs text-ink-subtle">
         {hover ? (
           <>

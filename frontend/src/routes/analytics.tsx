@@ -5,7 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import {
   ChartCard,
   GroupedBarChart,
-  MultiLineChart,
+  SmallMultiples,
   StatTile,
   TimeHeatmap,
   TrendLineChart,
@@ -54,7 +54,9 @@ function AttainmentBars() {
                     //   쓰면 화면이 무지개가 되고(2026-08-11 사용자 지적: "막대 색이 촌스럽다"),
                     //   판단은 이미 목표선·숫자·증감 칩 세 곳이 하고 있다.
                     //   달성만 색을 얻고 미달은 중립으로 물러선다.
-                    backgroundColor: met ? 'var(--color-fill-deployed)' : 'var(--color-fill-draft)',
+                    // ⚠ 미달은 **맥락 색**(중립)이지 `fill-draft`(초안 상태색)가 아니다.
+                    //   여섯 줄 중 넷이 회청색이라 화면 전체가 탁해 보였다 (2026-08-13).
+                    backgroundColor: met ? 'var(--color-fill-deployed)' : 'var(--color-chart-muted)',
                     opacity: hover == null || hover === i ? 1 : 0.45,
                   }}
                 />
@@ -85,6 +87,22 @@ function AttainmentBars() {
     </div>
   )
 }
+
+/** 카드마다 **한마디**를 뽑는다 — 그림이 근거고, 이 숫자가 결론이다 (dataviz hero number) */
+const sum = (xs: Array<{ value: number }>) => xs.reduce((s, d) => s + d.value, 0)
+const kpiNow = kpiMonthlyActual[kpiMonthlyActual.length - 1].value
+const kpiPrev = kpiMonthlyActual[kpiMonthlyActual.length - 2].value
+const approvalRate = Math.round((sum(weeklyApprovals.승인) / sum(weeklyApprovals.요청)) * 100)
+const qualityAvg = Math.round(sum(qualityMetrics.map((q) => ({ value: q.value }))) / qualityMetrics.length)
+const heatPeak = (() => {
+  let best = { r: 0, c: 0, v: -1 }
+  approvalTimeHeat.values.forEach((row, r) =>
+    row.forEach((v, c) => {
+      if (v > best.v) best = { r, c, v }
+    }),
+  )
+  return best
+})()
 
 function AnalyticsPage() {
   const { t } = useI18n()
@@ -140,6 +158,13 @@ function AnalyticsPage() {
           title={t('analytics.chart.monthlyAttain.title', '월별 KPI 달성률 — 목표 vs 실적')}
           subtitle={t('analytics.chart.monthlyAttain.subtitle', '2026년 · 단위: % · 8월은 진행 중이라 예상치다')}
           action={{ label: t('analytics.action.kpi') }}
+          hero={{
+            value: String(kpiNow),
+            unit: '%',
+            delta: `${kpiNow - kpiPrev > 0 ? '+' : ''}${kpiNow - kpiPrev}%p`,
+            deltaGood: kpiNow >= kpiPrev,
+            note: t('analytics.hero.kpi', '8월 실적 (진행 중) · 목표 95.5%'),
+          }}
           className="anim-fade-up [animation-delay:80ms] xl:col-span-2"
         >
           <TrendLineChart
@@ -193,6 +218,11 @@ function AnalyticsPage() {
         <ChartCard
           title={t('analytics.chart.weeklyApprovals.title', '주차별 승인 처리 현황')}
           subtitle={t('analytics.chart.weeklyApprovals.subtitle', '최근 5주 · 단위: 건')}
+          hero={{
+            value: String(approvalRate),
+            unit: '%',
+            note: `5주 승인률 — 요청 ${sum(weeklyApprovals.요청)}건 중 ${sum(weeklyApprovals.승인)}건`,
+          }}
           className="anim-fade-up [animation-delay:260ms] xl:col-span-2"
         >
           {/* ⚠ 선이 아니라 **묶은 막대**다 (2026-08-13 사용자 지적: "너무 단순하고 공백도 많고").
@@ -212,6 +242,11 @@ function AnalyticsPage() {
         <ChartCard
           title={t('analytics.chart.specQuality.title', '사양서 품질 지표')}
           subtitle={t('analytics.chart.specQuality.subtitle', '6개 축 · 100점 만점')}
+          hero={{
+            value: String(qualityAvg),
+            unit: '점',
+            note: t('analytics.hero.quality', '6개 축 평균 · 85점이 기준선'),
+          }}
           className="anim-fade-up [animation-delay:320ms]"
         >
           <div className="space-y-2">
@@ -224,7 +259,7 @@ function AnalyticsPage() {
                     style={{
                       width: `${q.value}%`,
                       // 위 조직별 막대와 같은 규칙 — 기준을 넘긴 것만 색을 얻는다
-                      backgroundColor: q.value >= 85 ? 'var(--color-fill-deployed)' : 'var(--color-fill-draft)',
+                      backgroundColor: q.value >= 85 ? 'var(--color-fill-deployed)' : 'var(--color-chart-muted)',
                     }}
                   />
                 </span>
@@ -232,7 +267,7 @@ function AnalyticsPage() {
               </div>
             ))}
             <p className="pt-1 text-xs text-ink-subtle">
-              {t('analytics.chart.specQuality.caption', '초록 = 85점 이상 · 보라 = 개선 여지')}
+              {t('analytics.chart.specQuality.caption', '초록 = 85점 이상 · 회색 = 개선 여지')}
             </p>
           </div>
         </ChartCard>
@@ -242,8 +277,14 @@ function AnalyticsPage() {
           subtitle={t('analytics.chart.todayPerf.subtitle', '응답시간 (ms) · 08~15시')}
           className="anim-fade-up [animation-delay:380ms] xl:col-span-2"
         >
-          <MultiLineChart
+          {/* ⚠⚠ **한 축에 겹치지 않는다** (2026-08-13). 실측: API 150~210 / DB 210~370 /
+              스토리지 18~24 ms 였고, 한 축에 그리니 스토리지 선이 192px 플롯에서 **2px**
+              만 썼다 — 그려 놓긴 했는데 아무 말도 못 하는 선이다. 축을 둘로 쪼개는 것은
+              금지(dual-axis)라 남은 정답인 **작은 배수**로 간다. 줄마다 제 축을 쓰고
+              지금 값이 왼쪽에 크게 선다. */}
+          <SmallMultiples
             unit="ms"
+            lowerIsBetter
             series={[
               { name: t('analytics.legend.apiServer', 'API 서버'), color: 'var(--color-series-1)', data: todayPerformance.api },
               { name: t('analytics.legend.db', 'DB'), color: 'var(--color-series-2)', data: todayPerformance.db },
@@ -255,6 +296,11 @@ function AnalyticsPage() {
         <ChartCard
           title={t('analytics.chart.monthlyDeploys.title', '월별 배포 이력')}
           subtitle={t('analytics.chart.monthlyDeploys.subtitle', '최근 5개월 · 단위: 회')}
+          hero={{
+            value: String(sum(monthlyDeploys.운영)),
+            unit: '회',
+            note: `5개월 운영 배포 · 롤백 ${sum(monthlyDeploys.롤백)}회`,
+          }}
           className="anim-fade-up [animation-delay:440ms]"
         >
           {/* 5개월 × 3계열 — 위 주차별과 같은 이유로 막대다(달마다 셋을 견준다) */}
@@ -271,6 +317,10 @@ function AnalyticsPage() {
         <ChartCard
           title={t('analytics.chart.approvalHeat.title', '요일별 승인 처리 시간 분포')}
           subtitle={t('analytics.chart.approvalHeat.subtitle', '최근 4주 평균 · 짙을수록 많음')}
+          hero={{
+            value: `${approvalTimeHeat.rows[heatPeak.r]} ${approvalTimeHeat.cols[heatPeak.c]}`,
+            note: `가장 붐비는 칸 — ${heatPeak.v}건`,
+          }}
           className="anim-fade-up [animation-delay:500ms] xl:col-span-3"
         >
           <TimeHeatmap
