@@ -305,68 +305,92 @@
    그라디언트·CTA·스포트라이트·차트가 전부 토큰을 보므로 이 블록이 전체를 바꾼다.
    navy(기본 — 현대 남색)는 :root/[data-theme='light'] 값 그대로라 블록이 없다.
    ⚠ 라이트 조합 선택자는 반드시 이 자리(라이트 테마 블록 뒤)에 — 순서가 명세다.
-   선택지 정본은 lib/accent.ts (여기와 1:1). */
+   선택지 정본은 lib/accent.ts (여기와 1:1).
+
+   ⚠⚠ **다섯 색을 oklch 로 다시 잡았다** (2026-08-13 "색감톤" 판). 예전에는 손으로 고른
+   hex 였는데, 재 보니 두 가지가 함께 틀어져 있었다:
+
+     accent   라이트 카드 위   캔버스 위      ← 라이트는 바닥이 둘이라 캔버스로 잰다
+     violet    4.73           4.06
+     blue      5.17           4.43
+     green     3.30           2.83
+     amber     3.19           2.73
+     rose      4.60           3.94
+                              └─ **다섯 다 WCAG AA(4.5) 미달**
+
+   원인은 하나다 — **채도만 높고 명도가 부족했다.** 강조색은 글자로도 쓰이는데(링크·활성
+   칩·다음 행동) 밝은 캔버스 위에서 4.5 를 못 넘었다. 그리고 같은 이유로 화면에서 "톤이
+   튄다"는 인상을 줬다: 눈에 들어오는 것은 명도 차이가 아니라 채도였다.
+
+   **채도를 내리고 명도로 대비를 세운다** — 톤을 낮추는 일과 대비를 세우는 일이 같은
+   방향이다. 라이트 L .45 / C .12, 다크 L .74 / C .11 로 통일하고 색상(H)만 바꾼다.
+   oklch 로 적는 이유가 이것이다 — L·C 를 눈에 보이는 값으로 직접 잡아야 다섯 색의
+   **무게를 맞출** 수 있다. hex 로는 그게 손대중이 된다(차트 필에서 이미 배운 것).
+
+   ⚠ green·amber 는 명도를 낮추면 숲색·황동색이 된다. 밝은 초록·주황을 **글자로 쓰면서**
+   AA 를 넘길 방법은 없다 — 이름이 주는 인상보다 읽히는 것이 먼저다.
+   ⚠ 기본 navy(현대 남색)는 브랜드라 그대로 둔다. 이미 11.8:1 로 여유가 있다. */
 [data-accent='violet'] {
-  --color-primary: #8b7cff;
-  --color-primary-deep: #7463f2;
-  --color-accent2: #a08cff;
-  --color-glow: rgb(139 124 255 / 25%);
+  --color-primary: oklch(0.74 0.11 288);
+  --color-primary-deep: oklch(0.66 0.11 288);
+  --color-accent2: oklch(0.81 0.09 288);
+  --color-glow: oklch(0.74 0.11 288 / 22%);
 }
 [data-theme='light'][data-accent='violet'] {
-  --color-primary: #6d5cf0;
-  --color-primary-deep: #5a49dd;
-  --color-accent2: #8a76ff;
-  --color-glow: rgb(109 92 240 / 20%);
+  --color-primary: oklch(0.45 0.12 288);
+  --color-primary-deep: oklch(0.38 0.12 288);
+  --color-accent2: oklch(0.55 0.12 288);
+  --color-glow: oklch(0.45 0.12 288 / 18%);
 }
-/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 명도·채도를 벌려 구별한다
-   (남색은 어둡고 차분, 파랑은 밝고 선명). 청록은 초록과 너무 닮아 뺐다. */
+/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 색상(H)을 벌려 구별한다.
+   청록은 초록과 너무 닮아 뺐다. */
 [data-accent='blue'] {
-  --color-primary: #63a3ff;
-  --color-primary-deep: #4a8bf5;
-  --color-accent2: #8ab9ff;
-  --color-glow: rgb(99 163 255 / 25%);
+  --color-primary: oklch(0.74 0.11 250);
+  --color-primary-deep: oklch(0.66 0.11 250);
+  --color-accent2: oklch(0.81 0.09 250);
+  --color-glow: oklch(0.74 0.11 250 / 22%);
 }
 [data-theme='light'][data-accent='blue'] {
-  --color-primary: #2563eb;
-  --color-primary-deep: #1d4ed8;
-  --color-accent2: #60a5fa;
-  --color-glow: rgb(37 99 235 / 20%);
+  --color-primary: oklch(0.45 0.12 250);
+  --color-primary-deep: oklch(0.38 0.12 250);
+  --color-accent2: oklch(0.55 0.12 250);
+  --color-glow: oklch(0.45 0.12 250 / 18%);
 }
 [data-accent='green'] {
-  --color-primary: #55cf85;
-  --color-primary-deep: #38b46c;
-  --color-accent2: #7fdfa5;
-  --color-glow: rgb(85 207 133 / 25%);
+  --color-primary: oklch(0.74 0.11 158);
+  --color-primary-deep: oklch(0.66 0.11 158);
+  --color-accent2: oklch(0.81 0.09 158);
+  --color-glow: oklch(0.74 0.11 158 / 22%);
 }
 [data-theme='light'][data-accent='green'] {
-  --color-primary: #16a34a;
-  --color-primary-deep: #15803d;
-  --color-accent2: #22c55e;
-  --color-glow: rgb(22 163 74 / 20%);
+  --color-primary: oklch(0.45 0.12 158);
+  --color-primary-deep: oklch(0.38 0.12 158);
+  --color-accent2: oklch(0.55 0.12 158);
+  --color-glow: oklch(0.45 0.12 158 / 18%);
 }
 [data-accent='amber'] {
-  --color-primary: #f0a84e;
-  --color-primary-deep: #dd9032;
-  --color-accent2: #f8c078;
-  --color-glow: rgb(240 168 78 / 25%);
+  --color-primary: oklch(0.74 0.11 72);
+  --color-primary-deep: oklch(0.66 0.11 72);
+  --color-accent2: oklch(0.81 0.09 72);
+  --color-glow: oklch(0.74 0.11 72 / 22%);
 }
 [data-theme='light'][data-accent='amber'] {
-  --color-primary: #d97706;
-  --color-primary-deep: #b45309;
-  --color-accent2: #f59e0b;
-  --color-glow: rgb(217 119 6 / 20%);
+  --color-primary: oklch(0.45 0.12 72);
+  --color-primary-deep: oklch(0.38 0.12 72);
+  --color-accent2: oklch(0.55 0.12 72);
+  --color-glow: oklch(0.45 0.12 72 / 18%);
 }
 [data-accent='rose'] {
-  --color-primary: #f27a9d;
-  --color-primary-deep: #e25a83;
-  --color-accent2: #f79cb6;
-  --color-glow: rgb(242 122 157 / 25%);
+  --color-primary: oklch(0.74 0.11 18);
+  --color-primary-deep: oklch(0.66 0.11 18);
+  --color-accent2: oklch(0.81 0.09 18);
+  --color-glow: oklch(0.74 0.11 18 / 22%);
 }
 [data-theme='light'][data-accent='rose'] {
-  --color-primary: #db2777;
-  --color-primary-deep: #be185d;
-  --color-accent2: #ec4899;
-  --color-glow: rgb(219 39 119 / 20%);
+  --color-primary: oklch(0.45 0.12 18);
+  --color-primary-deep: oklch(0.38 0.12 18);
+  --color-accent2: oklch(0.55 0.12 18);
+  --color-glow: oklch(0.45 0.12 18 / 18%);
 }
 
 :root {
