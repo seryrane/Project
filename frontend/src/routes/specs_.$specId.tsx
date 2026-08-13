@@ -640,8 +640,13 @@ function FieldEditor({
           />
         </label>
       </div>
-      {/* 발 — 주 동작은 오른쪽 끝 (규약 §7) */}
-      <div className="mt-5 flex justify-end gap-2 border-t border-hairline pt-4">
+      {/* 발 — 주 동작은 오른쪽 끝 (규약 §7).
+          ⚠ **붙박이로 붙든다.** 필드 편집기는 입력이 여덟 칸이라 몸이 늘 넘치는데, 예전에는
+          그냥 마지막 요소라 [저장]이 스크롤 아래로 사라졌다. 서랍의 `footer` 슬롯 대신
+          여기서 sticky 로 붙드는 이유는 초안(draft) 상태가 이 컴포넌트 안에 있어서다 —
+          밖으로 빼면 상태를 위로 올려야 한다(AskPanel 과 같은 판단).
+          ⚠ 음수 여백은 서랍 몸의 좌우 여백(px-6)과 같은 값이어야 한다 */}
+      <div className="sticky bottom-0 -mx-6 -mb-5 mt-5 flex justify-end gap-2 border-t border-hairline bg-cover-glass px-6 py-4 backdrop-blur-xl">
         <button
           type="button"
           onClick={onCancel}

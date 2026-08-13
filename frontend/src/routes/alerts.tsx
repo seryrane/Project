@@ -550,13 +550,46 @@ function AlertsPage() {
 
       {/* 알림 상세 — 그 시점 자원 값 + 같은 대상의 최근 알림 + 조치 안내 + 다음 행동 */}
       {detail && (
-        <Drawer title={tf('alerts.detailTitle', { id: detail.id }, '알림 상세 — {id}')} onClose={() => setDetail(null)}>
-          {(close) => {
+        <Drawer
+          title={tf('alerts.detailTitle', { id: detail.id }, '알림 상세 — {id}')}
+          onClose={() => setDetail(null)}
+          /* ⚠ 이 서랍의 발은 **[다음 행동]** 이다 — 알림을 열어 본 사람이 실제로 할 일이
+             거기 있다. 자원 값·최근 알림·조치 안내가 쌓여 몸이 늘 넘치는데 몸 안에 두면
+             그 다음 행동이 스크롤 아래로 사라진다. 알림을 연 뜻이 같이 사라진다 (규약 §7) */
+          footer={(close) => (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="mr-auto text-[11px] text-ink-subtle">
+                {t('alerts.detail.nextActions', '다음 행동')}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  navigate({ to: '/validation-results' })
+                }}
+                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('alerts.goResults', '검증 결과 조회 →')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  navigate({ to: '/deploys' })
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('alerts.goDeploys', '배포 관리 →')}
+              </button>
+            </div>
+          )}
+        >
+          {() => {
             const recent = sortedEvents.filter((e) => e.serverName === detail.serverName && e.id !== detail.id).slice(0, 4)
             const actionKey = detail.metric ?? 'info'
             return (
-              <div className="flex h-full flex-col">
-                <div className="flex-1 space-y-4">
+              <div>
+                <div className="space-y-4">
                   <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[detail.severity]}`}>
@@ -615,31 +648,6 @@ function AlertsPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-hairline pt-4">
-                  <span className="mr-auto self-center text-[11px] text-ink-subtle">
-                    {t('alerts.detail.nextActions', '다음 행동')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      close()
-                      navigate({ to: '/validation-results' })
-                    }}
-                    className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    {t('alerts.goResults', '검증 결과 조회 →')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      close()
-                      navigate({ to: '/deploys' })
-                    }}
-                    className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-                  >
-                    {t('alerts.goDeploys', '배포 관리 →')}
-                  </button>
-                </div>
               </div>
             )
           }}

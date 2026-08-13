@@ -414,11 +414,51 @@ function MembersPage() {
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}
       {detail && (
-        <Drawer title={tf('members.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
-          {(close) => {
+        <Drawer
+          title={tf('members.detailTitle', { name: detail.name })}
+          onClose={() => setDetail(null)}
+          /* ⚠ 권한 탭이 들어 있어 몸이 길다 — 예전에는 [상신]이 매트릭스 아래라
+             권한을 다 만지고 한참 내려가야 했고, 버튼에 붙은 **바꾼 개수**도 같이
+             안 보였다(역할 편집 모달과 같은 병. 규약 §7) */
+          footer={(close) => {
             const st = effStatus(detail)
             return (
-              <div className="flex h-full flex-col">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
+                  className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  {t('members.resetPw')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleLock(detail)}
+                  className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
+                >
+                  {st === '잠금' ? t('members.unlock') : t('members.lock')}
+                </button>
+                <button
+                  type="button"
+                  disabled={tab !== 'perm' || dirtyCount === 0}
+                  onClick={() => {
+                    close()
+                    toast(tf('members.toast.submitChanges', { name: detail.name, n: dirtyCount }))
+                    navigate({ to: '/approvals' })
+                  }}
+                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {t('members.submit')}
+                  {dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
+                </button>
+              </div>
+            )
+          }}
+        >
+          {() => {
+            const st = effStatus(detail)
+            return (
+              <div>
                 <div className="flex items-center gap-3">
                   <Avatar name={detail.name} size={44} />
                   <div className="min-w-0">
@@ -676,36 +716,6 @@ function MembersPage() {
                   )}
                 </div>
 
-                {/* 발 — 주 동작 오른쪽 끝 (규약 §7) */}
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-hairline pt-4">
-                  <button
-                    type="button"
-                    onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
-                    className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    {t('members.resetPw')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleLock(detail)}
-                    className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
-                  >
-                    {st === '잠금' ? t('members.unlock') : t('members.lock')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={tab !== 'perm' || dirtyCount === 0}
-                    onClick={() => {
-                      close()
-                      toast(tf('members.toast.submitChanges', { name: detail.name, n: dirtyCount }))
-                      navigate({ to: '/approvals' })
-                    }}
-                    className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
-                  >
-                    {t('members.submit')}
-                    {dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
-                  </button>
-                </div>
               </div>
             )
           }}

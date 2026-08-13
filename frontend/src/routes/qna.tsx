@@ -131,10 +131,42 @@ function QnaPage() {
 
       {/* 상세 — 질문 + 답변 스레드. 답변 입력은 커뮤니티 생성 권한(운영진) */}
       {reading && (
-        <Drawer title={tf('qna.drawerTitle', { id: reading.id })} onClose={() => setReading(null)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1 space-y-4">
+        <Drawer
+          title={tf('qna.drawerTitle', { id: reading.id })}
+          onClose={() => setReading(null)}
+          /* ⚠ 답변 달기가 **발**이다 (규약 §7). 몸 안에 두면 답변이 여러 개 달린 질문에서
+             입력칸이 스크롤 아래로 밀린다 — 답을 달러 온 사람이 답을 읽고 나서 입력칸을
+             다시 찾아 내려가야 한다. 이 화면은 답을 다는 것이 목적이라 더 그렇다 */
+          footer={(close) => (
+            <div>
+              <textarea
+                rows={2}
+                value={answerDraft}
+                onChange={(e) => setAnswerDraft(e.target.value)}
+                placeholder={t('qna.answerPh', '답변을 입력하세요 (운영진)')}
+                className="w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              />
+              <div className="mt-2 flex justify-end">
+                <CtaButton
+                  disabled={answerDraft.trim() === ''}
+                  busyLabel={t('qna.submitting', '등록 중…')}
+                  onAction={async () => {
+                    await apiSend('POST', `/questions/${reading.id}/answers`, { body: answerDraft })
+                    setAnswerDraft('')
+                    close()
+                    reload()
+                    toast(t('qna.toast.answered', '답변을 등록했습니다 — 질문자에게 알림이 갑니다'))
+                  }}
+                >
+                  {t('qna.answerSubmit', '답변 등록')}
+                </CtaButton>
+              </div>
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div className="space-y-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span
@@ -191,31 +223,6 @@ function QnaPage() {
                 </div>
               </div>
 
-              {/* 답변 달기 — 등록으로 끝난다 (카드는 다음 행동으로 끝난다) */}
-              <div className="mt-4 border-t border-hairline pt-3.5">
-                <textarea
-                  rows={2}
-                  value={answerDraft}
-                  onChange={(e) => setAnswerDraft(e.target.value)}
-                  placeholder={t('qna.answerPh', '답변을 입력하세요 (운영진)')}
-                  className="w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
-                />
-                <div className="mt-2 flex justify-end">
-                  <CtaButton
-                    disabled={answerDraft.trim() === ''}
-                    busyLabel={t('qna.submitting', '등록 중…')}
-                    onAction={async () => {
-                      await apiSend('POST', `/questions/${reading.id}/answers`, { body: answerDraft })
-                      setAnswerDraft('')
-                      close()
-                      reload()
-                      toast(t('qna.toast.answered', '답변을 등록했습니다 — 질문자에게 알림이 갑니다'))
-                    }}
-                  >
-                    {t('qna.answerSubmit', '답변 등록')}
-                  </CtaButton>
-                </div>
-              </div>
             </div>
           )}
         </Drawer>

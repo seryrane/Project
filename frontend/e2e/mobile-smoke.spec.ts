@@ -161,6 +161,26 @@ test('우측패널 — 좁은 화면에서 앱 헤더를 덮지 않는다 (규�
   await expect(page.getByRole('button', { name: '메뉴 열기' })).toBeVisible()
 })
 
+test('우측패널 발 — 본문이 길어도 마무리 조작이 스크롤에 안 밀린다 (규약 §7)', async ({ page }) => {
+  // 모달과 **같은 불변식을 관문 둘 다** 지키는지 본다. 방침 전문은 확실히 넘치는 몸이다.
+  await ready(page, '/privacy')
+  await page.getByRole('button', { name: /처리방침 전문|전문 보기/ }).first().click()
+  const panel = page.getByRole('dialog')
+  await expect(panel).toBeVisible()
+
+  const close = panel.getByRole('button', { name: '닫기' }).last()
+  await expect(close, '열자마자 보인다').toBeInViewport()
+  const before = (await close.boundingBox())!
+
+  const body = panel.locator('div.overflow-y-auto')
+  await body.evaluate((el) => el.scrollTo(0, el.scrollHeight))
+  await expect(body, '몸이 실제로 넘친다').toBeVisible()
+
+  await expect(close, '굴려도 그대로 보인다').toBeInViewport()
+  const after = (await close.boundingBox())!
+  expect(Math.abs(after.y - before.y), '발은 몸이 굴러도 자리를 안 옮긴다').toBeLessThan(2)
+})
+
 test('모달 발 — 내용이 길어도 저장·취소가 스크롤에 안 밀린다 (규약 §7)', async ({ page }) => {
   // ⚠ 관문에 **발 슬롯이 없었다.** 액션 줄을 내용 안에 넣을 수밖에 없어서, 본문을 길게
   //   쓰면 [등록]이 화면 밖으로 나갔다 — 다 채워 놓고 저장 버튼을 찾으러 다시 내려가야 했다.
