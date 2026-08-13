@@ -309,35 +309,54 @@ function Shell({
         {/* 스크롤바는 숨기고, 아래에 더 있다는 신호는 하단 페이드가 말한다 */}
         <nav className="scrollbar-hidden relative flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-28px),transparent)]">
           {displayNav.map((section) => {
-            const isCollapsed = collapsed[section.id]
+            /* ⚠⚠ **레일에서는 접힘을 적용하지 않는다** (2026-08-13 사용자 지적: "호버 시와
+               아닐 때 위치가 너무 위아래로 움직임", 그리고 그 앞의 "고정핀 해제 해봐").
+               접힘은 **펼친 사이드바에서 목록을 줄이는 장치**다. 아이콘만 남는 레일에서는
+               이미 목록이 최소인데 접힘까지 걸리면 두 가지가 한꺼번에 망가진다:
+               ① 접힌 섹션의 아이콘이 통째로 사라져 **아이콘 레일이 아이콘을 삼킨다**
+                  (실제로 대시보드 아이콘 하나만 남은 화면이 나왔다)
+               ② 호버로 펴는 순간 접힌 것이 되살아나며 줄 수가 확 바뀌어 **화면이 튄다**
+               레일에서 항목 집합을 항상 같게 두면, 호버는 **라벨만 나타나는 일**이 된다. */
+            const isCollapsed = !rail && collapsed[section.id]
             return (
               <div key={section.id} className="mt-2 first:mt-0">
+                {/* ⚠ 레일에서는 **이름표**, 펼친 상태에서는 **접는 버튼**.
+                    레일은 접힘이 안 먹는 자리라(위 isCollapsed 주석) 버튼으로 두면
+                    눌러도 아무 일이 안 일어난다 — 안 되는 조작을 놔두느니 조작이 아닌
+                    것으로 만든다(규약 §21 "화면이 자기 상태를 말한다"). 체브론도 같이 뺀다.
+                    ⚠ 글자 밝기는 낮추지 않는다 — LNB 에서 가장 흐린 글자였다(2.96:1,
+                    2026-08-06 전수 감사). "덜 중요하다"는 굵기·크기가 이미 말한다. */}
                 {section.title ? (
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(section.id)}
-                    /* ⚠ LNB 에서 가장 흐린 글자였다 — 2.96:1(2026-08-06 전수 감사).
-                       "덜 중요하다"는 굵기·크기가 이미 말하고 있으니 밝기까지 낮출 필요가
-                       없다. 45% → 70% (4.74:1) */
-                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:text-sidebar-ink ${railHide}`}
-                  >
-                    {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
-                    <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
-                      aria-hidden
+                  rail ? (
+                    <div
+                      className={`truncate whitespace-nowrap px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink ${railHide}`}
                     >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </button>
+                      {section.title}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.id)}
+                      className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:text-sidebar-strong"
+                    >
+                      {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
+                      <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
+                        aria-hidden
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+                  )
                 ) : null}
                 <div
                   className={`grid transition-[grid-template-rows] duration-200 ease-out ${
