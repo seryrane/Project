@@ -181,7 +181,10 @@ export function TrendLineChart({
   const cmp = compare && compare.length === data.length ? compare : undefined
   const peak = Math.max(...data.map((d) => d.value), ...(cmp?.map((d) => d.value) ?? [0]))
   const max = niceMax(peak * 1.08)
-  const ticks = [0, max / 4, max / 2, (max * 3) / 4, max]
+  /* ⚠ 눈금 다섯 → **셋**(0·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
+     참고로 잰 대시보드들은 격자를 아예 안 그리거나 한두 줄만 둔다. 다만 이건 운영 화면이라
+     "얼마나 되나"를 읽어야 해서 눈금을 없애지는 않는다. 셋이면 위·가운데·아래로 읽힌다. */
+  const ticks = [0, max / 2, max]
   const x = (i: number) => PAD.l + (i / (data.length - 1)) * (W - PAD.l - PAD.r)
   const y = (v: number) => PAD.t + (1 - v / max) * (H - PAD.t - PAD.b)
 
@@ -226,7 +229,10 @@ export function TrendLineChart({
           </defs>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-hairline)" strokeWidth="1" />
+              {/* ⚠ 격자는 **나누는 선**(divider)이지 감싸는 선(hairline)이 아니다.
+                  둘을 같은 값으로 쓰면 카드 테두리와 격자가 같은 무게로 보여 화면이 시끄럽다
+                  (DESIGN.md "선은 두 단계다"를 차트에도 적용). */}
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
               <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
                 {t}
                 {t > 0 ? unit : ''}
@@ -299,7 +305,10 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
   const n = series[0].data.length
   const peak = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)))
   const max = niceMax(peak * 1.1)
-  const ticks = [0, max / 4, max / 2, (max * 3) / 4, max]
+  /* ⚠ 눈금 다섯 → **셋**(0·중간·최대). 격자가 다섯 줄이면 데이터보다 격자가 먼저 보인다 —
+     참고로 잰 대시보드들은 격자를 아예 안 그리거나 한두 줄만 둔다. 다만 이건 운영 화면이라
+     "얼마나 되나"를 읽어야 해서 눈금을 없애지는 않는다. 셋이면 위·가운데·아래로 읽힌다. */
+  const ticks = [0, max / 2, max]
   const x = (i: number) => PAD.l + (i / (n - 1)) * (W - PAD.l - PAD.r)
   const y = (v: number) => PAD.t + (1 - v / max) * (H - PAD.t - PAD.b)
   const path = (s: LineSeries) =>
@@ -328,7 +337,10 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
         <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="다계열 추이">
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-hairline)" strokeWidth="1" />
+              {/* ⚠ 격자는 **나누는 선**(divider)이지 감싸는 선(hairline)이 아니다.
+                  둘을 같은 값으로 쓰면 카드 테두리와 격자가 같은 무게로 보여 화면이 시끄럽다
+                  (DESIGN.md "선은 두 단계다"를 차트에도 적용). */}
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
               <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
                 {Math.round(t)}
                 {t > 0 ? unit : ''}
@@ -401,8 +413,22 @@ export function TimeHeatmap({
   const width = LEFT + cols.length * (CELL_W + GAP)
   const height = TOP + rows.length * (CELL_H + GAP) + 16
   return (
-    <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" role="img" aria-label="요일·시간 분포">
+    /* ⚠⚠ **히트맵은 배율로 줄이지 않는다** (2026-08-13 실측). `viewBox` + `w-full` 로 두면
+       24칸짜리 가로가 카드 폭에 맞춰 **0.7배로 눌려서**, `fontSize="10"` 으로 적은 축 글자가
+       화면에서는 **7.04px** 로 그려졌다 — 읽기 한계 아래다. 코드의 숫자와 화면 크기가
+       다르니 코드만 봐서는 영영 안 보이는 부류다.
+       자기 크기로 그리고, 좁으면 **자기 상자 안에서 가로로 흐르게** 한다(규약 §8: 페이지는
+       안 밀리고, 오른쪽에 더 있다는 것은 가장자리 그림자가 말한다). */
+    <div className="table-scroll">
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ minWidth: width }}
+        className="block"
+        role="img"
+        aria-label="요일·시간 분포"
+      >
         {rows.map((r, ri) => (
           <text key={r} x={LEFT - 7} y={TOP + ri * (CELL_H + GAP) + CELL_H - 4} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
             {r}
@@ -421,7 +447,9 @@ export function TimeHeatmap({
               y={TOP + ri * (CELL_H + GAP)}
               width={CELL_W}
               height={CELL_H}
-              rx="3"
+              /* 셀 모서리를 조금 더 둥글게 — 각진 격자는 '표'로 읽히고, 둥근 칸은 '농도'로
+                 읽힌다(참고 대시보드들의 히트맵이 공통으로 쓰는 손) */
+              rx="4"
               fill="var(--color-primary)"
               fillOpacity={0.08 + ((v - min) / span) * 0.86}
               stroke={hover?.[0] === ri && hover[1] === ci ? 'var(--color-ink)' : 'none'}
