@@ -161,6 +161,92 @@ function niceMax(v: number): number {
   return nice * step
 }
 
+/**
+ * 도넛 — **부분-전체를 한눈에** 보는 자리에만.
+ *
+ * dataviz 규칙: "Part-to-whole at a glance only, ≤ 6 segments". 그리고 **값이 비슷하면
+ * 쓰지 않는다** — 각도는 길이보다 견주기 어려워서, 24 와 26 을 도넛으로 그리면 어느 쪽이
+ * 큰지 알 수 없다. 그런 데이터는 막대다.
+ * 사양서 상태(79/24/18/7)는 한 조각이 확실히 커서 "대부분 배포 완료"가 한눈에 읽힌다 —
+ * 도넛이 맞는 자리다.
+ *
+ * - 가운데는 비우고 **합계**를 넣는다(도넛의 구멍이 곧 숫자 자리다)
+ * - 조각 사이 2px 면 색 틈 — 테두리를 그리지 않는다
+ * - 범례에 값과 비율을 함께 — 각도로 못 읽는 것을 글이 말한다(툴팁만으로 가두지 않는다)
+ */
+export function DonutChart({
+  data,
+  centerLabel,
+}: {
+  data: Array<{ label: string; value: number; fill: string }>
+  centerLabel?: string
+}) {
+  const [hover, setHover] = useState<number | null>(null)
+  const total = data.reduce((s, d) => s + d.value, 0) || 1
+  const R = 54
+  const RI = 34
+  const C = 2 * Math.PI * R
+  /** 조각 사이 틈(면 색) — 각도가 아니라 길이로 준다(작은 조각도 같은 틈) */
+  const GAP = 3
+  let acc = 0
+  return (
+    <div className="flex flex-wrap items-center gap-5">
+      <svg viewBox="0 0 128 128" className="block h-32 w-32 shrink-0" role="img" aria-label="구성비">
+        <g transform="rotate(-90 64 64)">
+          {data.map((d, i) => {
+            const len = (d.value / total) * C
+            const seg = Math.max(0, len - GAP)
+            const el = (
+              <circle
+                key={d.label}
+                cx="64"
+                cy="64"
+                r={R}
+                fill="none"
+                stroke={d.fill}
+                strokeWidth={R - RI}
+                strokeDasharray={`${seg} ${C - seg}`}
+                strokeDashoffset={-acc}
+                opacity={hover != null && hover !== i ? 0.35 : 1}
+                className="donut-seg"
+                onPointerEnter={() => setHover(i)}
+                onPointerLeave={() => setHover(null)}
+              />
+            )
+            acc += len
+            return el
+          })}
+        </g>
+        {/* 가운데 숫자 — 도넛의 구멍은 빈 자리가 아니라 합계가 앉는 자리다 */}
+        <text x="64" y="62" textAnchor="middle" fontSize="20" fontWeight="600" fill="var(--color-ink)">
+          {hover != null ? data[hover].value : total}
+        </text>
+        <text x="64" y="78" textAnchor="middle" fontSize="9" fill="var(--color-ink-subtle)">
+          {hover != null ? data[hover].label : (centerLabel ?? '전체')}
+        </text>
+      </svg>
+      {/* 범례가 값을 말한다 — 각도로 못 읽는 것을 툴팁에만 가두지 않는다 */}
+      <ul className="min-w-0 flex-1 space-y-1.5">
+        {data.map((d, i) => (
+          <li
+            key={d.label}
+            className="flex items-center gap-2 text-[13px]"
+            onPointerEnter={() => setHover(i)}
+            onPointerLeave={() => setHover(null)}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-[2px]" style={{ backgroundColor: d.fill }} />
+            <span className="min-w-0 flex-1 truncate text-ink-muted">{d.label}</span>
+            <span className="shrink-0 tabular-nums text-ink">{d.value}</span>
+            <span className="w-10 shrink-0 text-right text-xs tabular-nums text-ink-subtle">
+              {Math.round((d.value / total) * 100)}%
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /** 시계열은 선. compare(이전 동일 기간)를 주면 중립 점선 + 범례가 함께 선다 —
  *  숫자는 전과 견줘야 판단이 된다 (규약 §10). */
 export function TrendLineChart({
@@ -257,7 +343,7 @@ export function TrendLineChart({
             />
           )}
           <path d={area} fill={`url(#${gid})`} />
-          <path d={line} fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={line} pathLength="1" className="chart-line" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
           {hover != null && (
             <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />
           )}
@@ -497,7 +583,7 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
             ) : null,
           )}
           {series.map((s) => (
-            <path key={s.name} d={path(s)} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            <path key={s.name} d={path(s)} pathLength="1" className="chart-line" fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
           ))}
           {hover != null && (
             <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />

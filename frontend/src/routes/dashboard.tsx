@@ -10,6 +10,7 @@ import { useI18n } from '#/lib/i18n'
 import {
   ActivityHeatmap,
   ChartCard,
+  DonutChart,
   ErrorBarChart,
   StatTile,
   StatusStackBar,
@@ -273,7 +274,12 @@ function DashboardPage() {
         subtitle={t('dash.status.subtitle', '전체 128건 기준')}
         action={{ label: t('nav.specs'), onClick: goSpecs }}
       >
-        <StatusStackBar data={statusDistribution} />
+        {/* ⚠ 누적 막대 → **도넛** (2026-08-13). 79/24/18/7 은 한 조각이 확실히 커서
+            "대부분 배포 완료"가 한눈에 읽힌다 — dataviz 가 도넛을 허용하는 조건
+            ("part-to-whole at a glance only, ≤6 segments")에 맞는 자리다.
+            ⚠ 값이 비슷한 데이터에는 쓰지 않는다 — 각도는 길이보다 견주기 어렵다.
+            그래서 범례가 값과 비율을 함께 말한다(각도로 못 읽는 것을 글이 맡는다). */}
+        <DonutChart data={statusDistribution} centerLabel={t('dash.status.center', '전체 사양서')} />
       </ChartCard>
     ),
     heatmap: (

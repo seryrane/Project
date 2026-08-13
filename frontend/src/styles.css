@@ -150,10 +150,15 @@
   /* 밝기 순서에도 뜻이 있다 — 다크에서 **밝을수록 앞으로 나온다**.
      끝난 것(배포·초안)은 조용히 두고, 사람 손이 필요한 것(검토·승인 대기)을 앞세운다.
      예전에는 62% 를 차지하는 '배포 완료'가 가장 밝아 화면 전체가 초록 덩어리였다. */
-  --color-fill-draft: oklch(0.47 0.04 250);
-  --color-fill-deployed: oklch(0.63 0.11 158);
-  --color-fill-pending: oklch(0.72 0.15 295);
-  --color-fill-review: oklch(0.84 0.12 82);
+  /* ⚠ **채도를 한 단계 올렸다** (2026-08-13 사용자 지적: "칙칙한 색상을 쓰니 전체적으로
+     느낌도 별로가 된다"). 밝기 사다리는 그대로 두되 — 그게 색맹에서 갈리는 근거다 —
+     C 를 0.04~0.15 → 0.07~0.17 로 올렸다. 특히 `draft` 는 C 0.04 라 **사실상 회색**이어서
+     네 조각짜리 누적 막대에서 한 칸이 죽어 보였다. 중립이되 무채색은 아니게 잡았다.
+     ⚠ 값을 바꾸면 반드시 `node scripts/validate-palette.mjs` 를 돌려 통과시킨다. */
+  --color-fill-draft: oklch(0.5 0.05 250);
+  --color-fill-deployed: oklch(0.63 0.14 158);
+  --color-fill-pending: oklch(0.72 0.17 295);
+  --color-fill-review: oklch(0.84 0.15 82);
 
   /* ═══ 계열 색 (차트에서 **누구인지**를 말하는 색) ═══
      ⚠⚠ **상태색을 계열색으로 쓰지 않는다** (dataviz 규칙 · 2026-08-13 적발).
@@ -311,10 +316,11 @@
 
   /* 흰 면 위라 사다리가 반대로 선다 — 어두운 쪽이 진하게 읽힌다.
      라이트는 폭이 좁다(너무 밝으면 흰 면에서 사라진다) → L 0.46~0.78 안에서 네 칸. */
-  --color-fill-pending: oklch(0.46 0.16 295);
-  --color-fill-deployed: oklch(0.58 0.11 158);
-  --color-fill-review: oklch(0.7 0.13 82);
-  --color-fill-draft: oklch(0.78 0.03 250);
+  /* 라이트도 같은 이유로 채도를 올린다 — 흰 면 위라 사다리는 반대(어두울수록 앞) */
+  --color-fill-pending: oklch(0.46 0.18 295);
+  --color-fill-deployed: oklch(0.58 0.14 158);
+  --color-fill-review: oklch(0.7 0.16 82);
+  --color-fill-draft: oklch(0.74 0.05 250);
 
   /* 계열 색 — 라이트 면(#ffffff)에서 다시 검증한 값. 다크와 색상은 같고 명도만 다르다.
      ⚠ 청록은 다크 값(#199e70)을 그대로 쓴다 — 밝은 쪽(#1baf7a)은 흰 면에서 대비 2.82 로
@@ -970,6 +976,27 @@ h1, h2, h3 {
 .chart-bar {
   animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* 선이 **왼쪽에서 그려진다** — 시간이 흐르는 방향으로 손이 지나간다.
+   ⚠ `pathLength="1"` 을 path 에 붙여 길이를 정규화한다 — 실제 경로 길이를 재지 않아도
+   대시로 그릴 수 있고, 데이터가 바뀌어 경로가 길어져도 속도가 그대로다. */
+@keyframes line-draw {
+  from { stroke-dashoffset: 1; }
+}
+.chart-line {
+  stroke-dasharray: 1;
+  animation: line-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 도넛 조각이 **살짝 부풀며 든다** — 합계에서 각자의 몫으로 갈라지는 모양 */
+@keyframes donut-fill {
+  from { opacity: 0; transform: scale(0.92); }
+}
+.donut-seg {
+  transform-origin: 64px 64px;
+  animation: donut-fill 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* 45rem = --breakpoint-pc. @theme 토큰은 미디어 쿼리 안에서 못 쓰므로 값을 적는다 */
 @media (min-width: 45rem) {
   .anim-toast-in { animation-name: toast-in-top; }
