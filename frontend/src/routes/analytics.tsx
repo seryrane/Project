@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import {
   ChartCard,
+  GroupedBarChart,
   MultiLineChart,
   StatTile,
   TimeHeatmap,
@@ -194,12 +195,16 @@ function AnalyticsPage() {
           subtitle={t('analytics.chart.weeklyApprovals.subtitle', '최근 5주 · 단위: 건')}
           className="anim-fade-up [animation-delay:260ms] xl:col-span-2"
         >
-          <MultiLineChart
+          {/* ⚠ 선이 아니라 **묶은 막대**다 (2026-08-13 사용자 지적: "너무 단순하고 공백도 많고").
+              5주 × 3계열은 읽는 사람의 일이 "흐름 보기"가 아니라 **주마다 셋을 견주기**다 —
+              선으로 그리면 점이 다섯뿐이라 큰 도화지에 짧은 선 몇 가닥만 남는다.
+              dataviz 규칙 "Tell distinct series apart → grouped bar". */}
+          <GroupedBarChart
             unit="건"
             series={[
-              { name: t('analytics.legend.requested', '요청'), color: 'var(--color-fill-draft)', data: weeklyApprovals.요청 },
-              { name: t('analytics.legend.approved', '승인'), color: 'var(--color-fill-deployed)', data: weeklyApprovals.승인 },
-              { name: t('analytics.legend.rejected', '반려'), color: 'var(--color-fill-review)', data: weeklyApprovals.반려 },
+              { name: t('analytics.legend.requested', '요청'), color: 'var(--color-series-1)', data: weeklyApprovals.요청 },
+              { name: t('analytics.legend.approved', '승인'), color: 'var(--color-series-3)', data: weeklyApprovals.승인 },
+              { name: t('analytics.legend.rejected', '반려'), color: 'var(--color-series-2)', data: weeklyApprovals.반려 },
             ]}
           />
         </ChartCard>
@@ -240,9 +245,9 @@ function AnalyticsPage() {
           <MultiLineChart
             unit="ms"
             series={[
-              { name: t('analytics.legend.apiServer', 'API 서버'), color: 'var(--color-fill-draft)', data: todayPerformance.api },
-              { name: t('analytics.legend.db', 'DB'), color: 'var(--color-fill-review)', data: todayPerformance.db },
-              { name: t('analytics.legend.storage', '파일 스토리지'), color: 'var(--color-fill-deployed)', data: todayPerformance.storage },
+              { name: t('analytics.legend.apiServer', 'API 서버'), color: 'var(--color-series-1)', data: todayPerformance.api },
+              { name: t('analytics.legend.db', 'DB'), color: 'var(--color-series-2)', data: todayPerformance.db },
+              { name: t('analytics.legend.storage', '파일 스토리지'), color: 'var(--color-series-3)', data: todayPerformance.storage },
             ]}
           />
         </ChartCard>
@@ -252,12 +257,13 @@ function AnalyticsPage() {
           subtitle={t('analytics.chart.monthlyDeploys.subtitle', '최근 5개월 · 단위: 회')}
           className="anim-fade-up [animation-delay:440ms]"
         >
-          <MultiLineChart
+          {/* 5개월 × 3계열 — 위 주차별과 같은 이유로 막대다(달마다 셋을 견준다) */}
+          <GroupedBarChart
             unit="회"
             series={[
-              { name: t('analytics.legend.prod', '운영 배포'), color: 'var(--color-fill-draft)', data: monthlyDeploys.운영 },
-              { name: t('analytics.legend.staging', '스테이징'), color: 'var(--color-fill-deployed)', data: monthlyDeploys.스테이징 },
-              { name: t('analytics.legend.rollback', '롤백'), color: 'var(--color-fill-review)', data: monthlyDeploys.롤백 },
+              { name: t('analytics.legend.prod', '운영 배포'), color: 'var(--color-series-1)', data: monthlyDeploys.운영 },
+              { name: t('analytics.legend.staging', '스테이징'), color: 'var(--color-series-3)', data: monthlyDeploys.스테이징 },
+              { name: t('analytics.legend.rollback', '롤백'), color: 'var(--color-series-2)', data: monthlyDeploys.롤백 },
             ]}
           />
         </ChartCard>

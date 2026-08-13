@@ -155,6 +155,23 @@
   --color-fill-pending: oklch(0.72 0.15 295);
   --color-fill-review: oklch(0.84 0.12 82);
 
+  /* ═══ 계열 색 (차트에서 **누구인지**를 말하는 색) ═══
+     ⚠⚠ **상태색을 계열색으로 쓰지 않는다** (dataviz 규칙 · 2026-08-13 적발).
+     예전에는 차트 3계열이 `fill-draft`·`fill-deployed`·`fill-review` 를 빌려 썼다 —
+     "API 서버 / DB / 파일 스토리지"처럼 **좋고 나쁨이 없는 자리**에도 초록(=배포 완료)이
+     붙었다. 상태색은 뜻을 나르는 색이라, 뜻 없는 것에 붙이면 읽는 사람이 없는 뜻을 읽는다.
+
+     값은 **눈으로 고르지 않고 검증기로 골랐다** (`dataviz/scripts/validate_palette.js`,
+     우리 면 기준 — 라이트 #ffffff · 다크 #141722, `--pairs all`):
+       밝기 대역 · 채도 바닥 · 색맹 3종 분리 · 정상시야 분리 · 면 대비  → 전부 PASS
+     ⚠ **셋까지다.** 네 번째(황색)를 넣으면 주황과 정상시야 ΔE 13.7 로 FAIL 한다 —
+     색을 더 만들어서 풀 수 있는 문제가 아니다. 계열이 넷 이상이면 접거나 나눈다.
+     ⚠ 순서가 곧 안전장치다 — 계열이 줄어도 살아남은 것은 자기 색을 지킨다(색은 순위가
+     아니라 **누구**를 따라간다). */
+  --color-series-1: #3987e5;
+  --color-series-2: #d95926;
+  --color-series-3: #199e70;
+
   /* ═══ 층 사다리 (규약 §8) — 정본은 **여기 한 곳**이다 ═══
      `z-nav` `z-modal` 처럼 이름으로만 고른다. `z-50` 같은 숫자를 마크업에 적지 않는다.
 
@@ -298,6 +315,13 @@
   --color-fill-deployed: oklch(0.58 0.11 158);
   --color-fill-review: oklch(0.7 0.13 82);
   --color-fill-draft: oklch(0.78 0.03 250);
+
+  /* 계열 색 — 라이트 면(#ffffff)에서 다시 검증한 값. 다크와 색상은 같고 명도만 다르다.
+     ⚠ 청록은 다크 값(#199e70)을 그대로 쓴다 — 밝은 쪽(#1baf7a)은 흰 면에서 대비 2.82 로
+     3:1 을 못 넘어 "보이는 라벨이나 표 보기"를 의무로 달게 된다. 어둡게 잡아 그 빚을 없앴다. */
+  --color-series-1: #2a78d6;
+  --color-series-2: #eb6834;
+  --color-series-3: #199e70;
 }
 
 /* ── 포인트 색상 (개인 설정) ─────────────────────────────────────────
@@ -936,6 +960,16 @@ h1, h2, h3 {
 .anim-fade-up { animation: fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-toast-in { animation: toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-sheet-in { animation: sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* 막대가 **바닥에서 자란다** — 값이 0 에서 제자리까지 올라오는 것이 곧 "얼마"라는 말이다.
+   ⚠ 원점(transform-origin)을 바닥에 두는 것은 마크업이 한다(막대마다 baseline y 가 다르다).
+   ⚠ 계열마다 조금씩 늦게 시작해 한 덩어리로 튀어오르지 않게 한다 — 눈이 하나씩 따라간다. */
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+}
+.chart-bar {
+  animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 /* 45rem = --breakpoint-pc. @theme 토큰은 미디어 쿼리 안에서 못 쓰므로 값을 적는다 */
 @media (min-width: 45rem) {
   .anim-toast-in { animation-name: toast-in-top; }

@@ -52,10 +52,13 @@ const HEALTH_CLS: Record<ServerHealth, string> = {
 }
 const SEVERITY_SLUG: Record<AlertSeverity, string> = { 위험: 'danger', 주의: 'warn', 정보: 'info' }
 const STATUS_SLUG: Record<AlertStatus, string> = { 미해결: 'open', 해결: 'resolved' }
+/** ⚠ CPU·메모리·디스크는 **좋고 나쁨이 없는 식별**이다 — 상태색(fill-*)을 쓰면 읽는 사람이
+ *  없는 뜻을 읽는다(디스크가 보라면 "승인 대기"인가?). 계열 색은 따로 있다(styles.css).
+ *  ⚠ 순서가 곧 정체성이다 — 서버를 바꿔도 CPU 는 늘 1번 색이다. */
 const METRIC_FILL: Record<AlertMetric, string> = {
-  cpu: 'var(--color-fill-draft)',
-  mem: 'var(--color-fill-review)',
-  disk: 'var(--color-fill-pending)',
+  cpu: 'var(--color-series-1)',
+  mem: 'var(--color-series-2)',
+  disk: 'var(--color-series-3)',
 }
 
 const SEVERITY_FILTERS = ['전체', '위험', '주의', '정보'] as const

@@ -292,11 +292,153 @@ export function TrendLineChart({
   )
 }
 
-/* ---- 다계열 선 차트: 계열 색은 CVD 검증 fill 토큰에서만, 범례 필수 ---- */
+/* ---- 다계열 선 차트: 계열 색은 검증 통과한 series 토큰에서만, 범례 필수 ----
+   ⚠ **선은 추세를 볼 때 쓴다.** 점이 대여섯 개뿐이면 읽는 사람의 일은 "흐름 보기"가 아니라
+   "칸끼리 견주기"라서, 큰 도화지에 짧은 선 몇 가닥만 남고 공백이 화면을 먹는다
+   (2026-08-13 사용자 지적: "너무 단순하고 공백도 많고"). 그 자리는 아래 GroupedBarChart 다. */
 export interface LineSeries {
   name: string
-  color: string // var(--color-fill-*) — 검증 통과값만
+  color: string // var(--color-series-*) — 검증 통과값만 (상태색 금지)
   data: Array<TrendPoint>
+}
+
+/**
+ * 묶은 막대 — **적은 칸 × 여러 계열**을 견주는 자리.
+ *
+ * dataviz 규칙의 "Tell distinct series apart → grouped bar"에 해당한다. 5주 × 3계열 같은
+ * 데이터는 선으로 그리면 점이 다섯 개라 흐름이 안 보이고 공백만 남는다 — 막대로 세우면
+ * 주(週) 안에서 셋을 바로 견주고, 주끼리도 높이로 견준다.
+ *
+ * 마크 규격(dataviz):
+ * - 데이터 끝만 4px 둥글게, **바닥은 직각** — 바닥이 둥글면 0 지점이 떠 보인다
+ * - 이웃 막대 사이 2px 면 색 틈 — 테두리를 그리지 않고 틈으로 가른다
+ * - 격자는 나누는 선(divider) 한 겹, 눈금 셋
+ * - 값은 점마다 안 적는다 — 축과 툴팁이 나른다(범례는 늘 있다)
+ */
+export function GroupedBarChart({
+  series,
+  unit = '',
+  height = 200,
+}: {
+  series: Array<LineSeries>
+  unit?: string
+  height?: number
+}) {
+  const [hover, setHover] = useState<[number, number] | null>(null)
+  const n = series[0].data.length
+  const peak = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)))
+  const max = niceMax(peak * 1.1)
+  // ⚠ 위 선 차트의 W/H 와 이름이 겹치지 않게 — 같은 파일에 두 좌표계가 산다
+  const BW = 640
+  const BH = height
+  const PADB = { l: 40, r: 12, t: 10, b: 26 }
+  const ticks = [0, max / 2, max]
+  const y = (v: number) => PADB.t + (1 - v / max) * (BH - PADB.t - PADB.b)
+  const bandW = (BW - PADB.l - PADB.r) / n
+  /** 한 칸 안에서 계열이 나눠 갖는 폭 — 양 옆에 숨 쉴 자리를 남긴다(막대가 붙으면 벽이 된다) */
+  const groupW = bandW * 0.66
+  const barW = groupW / series.length
+
+  return (
+    <div>
+      {/* 2계열 이상이면 범례는 늘 있다 (색만으로 정체를 말하지 않는다) */}
+      <div className="mb-2 flex flex-wrap items-center gap-4 text-xs text-ink-muted">
+        {series.map((s) => (
+          <span key={s.name} className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-[2px]" style={{ backgroundColor: s.color }} /> {s.name}
+          </span>
+        ))}
+      </div>
+      <div className="relative">
+        <svg viewBox={`0 0 ${BW} ${BH}`} className="block w-full" role="img" aria-label="계열 비교">
+          {ticks.map((t) => (
+            <g key={t}>
+              <line x1={PADB.l} x2={BW - PADB.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
+              <text x={PADB.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
+                {Math.round(t)}
+                {t > 0 ? unit : ''}
+              </text>
+            </g>
+          ))}
+          {series[0].data.map((d, i) => (
+            <text
+              key={d.date}
+              x={PADB.l + bandW * i + bandW / 2}
+              y={BH - 8}
+              textAnchor="middle"
+              fontSize="10"
+              fill="var(--color-ink-subtle)"
+            >
+              {d.date}
+            </text>
+          ))}
+          {series.map((s, si) =>
+            s.data.map((d, i) => {
+              const x = PADB.l + bandW * i + (bandW - groupW) / 2 + barW * si
+              const top = y(d.value)
+              const h = Math.max(0, y(0) - top)
+              const on = hover?.[0] === i && hover[1] === si
+              return (
+                <g key={`${s.name}-${d.date}`}>
+                  {/* 이웃과 2px 면 색 틈 — 테두리 대신 틈이 가른다 */}
+                  <rect
+                    x={x + 1}
+                    y={top}
+                    width={Math.max(1, barW - 2)}
+                    height={h}
+                    rx="3"
+                    fill={s.color}
+                    /* ⚠ 바닥은 직각이어야 하는데 rx 는 네 모서리를 다 둥글린다 —
+                       바닥을 덮는 사각형을 겹쳐 아래 두 모서리를 되돌린다 */
+                    opacity={hover && !on ? 0.35 : 1}
+                    className="chart-bar"
+                    style={{ transformOrigin: `0 ${y(0)}px` }}
+                  />
+                  <rect
+                    x={x + 1}
+                    y={Math.max(top, y(0) - 3)}
+                    width={Math.max(1, barW - 2)}
+                    height={Math.min(3, h)}
+                    fill={s.color}
+                    opacity={hover && !on ? 0.35 : 1}
+                    className="chart-bar"
+                    style={{ transformOrigin: `0 ${y(0)}px` }}
+                  />
+                  {/* 히트 타깃은 마크보다 넉넉하게 — 얇은 막대를 정확히 겨누게 하지 않는다 */}
+                  <rect
+                    x={x}
+                    y={PADB.t}
+                    width={barW}
+                    height={BH - PADB.t - PADB.b}
+                    fill="transparent"
+                    onPointerEnter={() => setHover([i, si])}
+                    onPointerLeave={() => setHover(null)}
+                  />
+                </g>
+              )
+            }),
+          )}
+        </svg>
+        {hover && (
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 rounded-lg border border-hairline bg-raised px-3 py-1.5 text-xs shadow-lg"
+            style={{
+              left: `${((PADB.l + bandW * hover[0] + bandW / 2) / BW) * 100}%`,
+              top: `${(y(series[hover[1]].data[hover[0]].value) / BH) * 100 - 18}%`,
+            }}
+          >
+            <span className="font-semibold tabular-nums text-ink">
+              {series[hover[1]].data[hover[0]].value}
+              {unit}
+            </span>
+            <span className="ml-1.5 text-ink-subtle">
+              {series[hover[1]].name} · {series[0].data[hover[0]].date}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries>; unit?: string }) {
