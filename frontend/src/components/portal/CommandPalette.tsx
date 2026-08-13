@@ -247,7 +247,7 @@ export function CommandPalette({
                     <span aria-hidden className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" />
                   )}
                   <span className={`shrink-0 ${i === active ? 'text-primary' : 'text-ink-subtle'}`}>
-                    <Icon name={c.icon ?? 'search'} size={15} />
+                    <Icon name={c.icon ?? 'search'} size="md" />
                   </span>
                   {/* 이름 칸 — 긴 사양서 제목이 힌트를 밀어내지 않게 넷을 다 갖춘다(§8) */}
                   <span className="min-w-0 flex-1 truncate">{c.label}</span>

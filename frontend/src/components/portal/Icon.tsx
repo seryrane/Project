@@ -128,17 +128,33 @@ const iconPaths: Record<IconName, React.ReactNode> = {
   ),
 }
 
-export function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
+/**
+ * 크기는 **둘뿐이다** (2026-08-13 정리).
+ * 예전에는 부르는 곳마다 14·15·16·17·20·22 를 손으로 적었다 — 글자 사다리와 똑같은 병이다.
+ * 15 와 16 은 눈으로 못 가르는데 화면마다 다른 값이 섞이면 리듬만 깨진다.
+ *   `md`(16) — 메뉴·버튼·목록 등 거의 전부
+ *   `lg`(20) — 떠 있는 버튼처럼 혼자 서는 자리
+ */
+const SIZES = { md: 16, lg: 20 } as const
+
+export function Icon({ name, size = 'md' }: { name: IconName; size?: keyof typeof SIZES }) {
+  const px = SIZES[size]
   return (
     <svg
-      width={size}
-      height={size}
+      width={px}
+      height={px}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.7"
+      /* ⚠⚠ **획 굵기를 크기에서 떼어 낸다.** `strokeWidth` 는 viewBox 단위라 24 칸을 몇 px 로
+         그리느냐에 따라 화면 굵기가 달라진다 — 예전 값(1.7)으로 재면 14px 아이콘은 0.99px,
+         22px 아이콘은 1.56px 였다(**57% 차이**). 같은 세트인데 자리마다 다른 펜으로 그린 셈이다.
+         `non-scaling-stroke` 는 획을 **화면 픽셀**로 고정한다 — 크기를 바꿔도 굵기가 같다.
+         ⚠ 이 속성은 상속이 보장되지 않아 styles.css 에서 `[data-icon] *` 로 건다. */
+      strokeWidth="1.25"
       strokeLinecap="round"
       strokeLinejoin="round"
+      data-icon=""
       aria-hidden
       className="shrink-0"
     >

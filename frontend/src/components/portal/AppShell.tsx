@@ -301,7 +301,7 @@ function Shell({
             className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink transition-colors hover:bg-sidebar-hover hover:text-sidebar-strong pc:flex ${railHide}`}
           >
             <span className={pinned ? '' : 'rotate-45'}>
-              <Icon name="pin" size={15} />
+              <Icon name="pin" size="md" />
             </span>
           </button>
         </div>
@@ -408,7 +408,7 @@ function Shell({
                  흰 헤더 위에서 호버가 아예 안 보인다. 본문 쪽 조작 면 토큰을 쓴다 */
               className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-chip pc:hidden"
             >
-              <Icon name="menu" size={20} />
+              <Icon name="menu" size="lg" />
             </button>
             <div className="truncate text-[13px] text-ink-subtle">
               <span className="hidden pc:inline">
@@ -426,7 +426,7 @@ function Shell({
               to="/specs"
               className="hidden h-9 items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 pc:flex"
             >
-              <Icon name="plus" size={14} />
+              <Icon name="plus" size="md" />
               {t('gnb.newSpec')}
             </Link>
             <button
@@ -435,7 +435,7 @@ function Shell({
               onClick={() => setPaletteOpen(true)}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink pc:hidden"
             >
-              <Icon name="search" size={16} />
+              <Icon name="search" size="md" />
             </button>
             <button
               type="button"
@@ -443,7 +443,7 @@ function Shell({
               className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-field px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <Icon name="search" size={14} />
+                <Icon name="search" size="md" />
                 <span className="truncate">{t('gnb.searchPlaceholder')}</span>
               </span>
               <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px] text-ink-muted">⌘K</kbd>
@@ -489,7 +489,7 @@ function Shell({
               onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
               className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
-              <Icon name="bell" size={17} />
+              <Icon name="bell" size="md" />
               {/* ⚠ 배지에 흰 글자를 박지 않는다 — 다크에서 danger-ink 는 **밝은 빨강**이라
                   흰 글자가 2.3:1 로 떨어진다(2026-08-06 감사). 상태색은 bg/ink 가 짝이라
                   서로를 뒤집어 쓰면 두 테마 모두 대비가 선다.
@@ -594,7 +594,7 @@ function Shell({
                       className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-chip"
                     >
                       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
-                        <Icon name={n.icon} size={14} />
+                        <Icon name={n.icon} size="md" />
                       </span>
                       <span className="min-w-0">
                         <span className="block text-[13px] leading-snug text-ink">{n.text}</span>
@@ -626,7 +626,7 @@ function Shell({
                 }}
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
-                <Icon name="shield" size={15} />
+                <Icon name="shield" size="md" />
                 {t('gnb.myAbilities')}
               </button>
               <button
@@ -637,7 +637,7 @@ function Shell({
                 }}
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
-                <Icon name="user" size={15} />
+                <Icon name="user" size="md" />
                 {t('gnb.myPage')}
               </button>
               <button
@@ -648,7 +648,7 @@ function Shell({
                 }}
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
-                <Icon name="settings" size={15} />
+                <Icon name="settings" size="md" />
                 {t('gnb.settings')}
               </button>
               <button
@@ -662,7 +662,7 @@ function Shell({
                 }}
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-ink-muted transition-colors hover:bg-chip hover:text-ink"
               >
-                <Icon name="logout" size={15} />
+                <Icon name="logout" size="md" />
                 {t('gnb.logout')}
               </button>
           </div>
@@ -689,7 +689,7 @@ function Shell({
         title={t('ask.title')}
         className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-fab flex h-[var(--fab-size)] w-[var(--fab-size)] items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent2 text-white shadow-[0_10px_30px_var(--color-glow)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
       >
-        <Icon name="chat" size={22} />
+        <Icon name="chat" size="lg" />
       </button>
 
       {/* ⚠ 팔레트에 **서버가 걸러 준 메뉴**를 내려 준다 — 예전에는 팔레트가 정적
