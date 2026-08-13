@@ -191,7 +191,7 @@ function MenusPage() {
             )}
           </span>
         </span>
-        <code className="hidden font-mono text-[11px] text-ink-subtle sm:block">{m.path}</code>
+        <code className="hidden font-mono text-xs text-ink-subtle sm:block">{m.path}</code>
         {m.minimal ? (
           <span
             className="rounded-full bg-deployed-bg px-1.5 py-0.5 text-[10px] font-medium text-deployed-ink"
@@ -282,7 +282,7 @@ function MenusPage() {
                   placeholder="e.g. Members"
                   className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
                 />
-                <span className="mt-1 block text-[11px] leading-relaxed text-ink-subtle">
+                <span className="mt-1 block text-xs leading-relaxed text-ink-subtle">
                   {t(
                     'menus.nameEnHint',
                     '영문(EN) 화면의 LNB·검색 팔레트가 이 이름을 씁니다 — 비우면 기본 번역으로 나갑니다',
@@ -326,7 +326,7 @@ function MenusPage() {
                             if (tpl) setDraft((d) => d && { ...d, template: tpl.key })
                           }}
                         />
-                        <span className="mt-1.5 block text-[11px] text-ink-subtle">
+                        <span className="mt-1.5 block text-xs text-ink-subtle">
                           {TEMPLATES.find((tpl) => tpl.key === draft.template)?.desc}
                         </span>
                       </span>
@@ -339,7 +339,7 @@ function MenusPage() {
                       {draft.template === 'list-detail' && (
                         <>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">{t('menus.label.columns', '표 컬럼')}</span>
+                            <span className="text-xs text-ink-subtle">{t('menus.label.columns', '표 컬럼')}</span>
                             <div className="mt-1.5">
                               <ChipMulti
                                 options={COLUMN_OPTIONS}
@@ -357,7 +357,7 @@ function MenusPage() {
                             />
                           </div>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">
+                            <span className="text-xs text-ink-subtle">
                               {t('menus.label.detailSurface', '상세가 열리는 곳 (규약 §1)')}
                             </span>
                             <div className="mt-1.5">
@@ -372,7 +372,7 @@ function MenusPage() {
                       )}
                       {draft.template === 'dashboard' && (
                         <div>
-                          <span className="text-[11px] text-ink-subtle">
+                          <span className="text-xs text-ink-subtle">
                             {t('menus.label.widgets', '배치할 위젯 (역할 권한이 다시 거른다)')}
                           </span>
                           <div className="mt-1.5">
@@ -387,7 +387,7 @@ function MenusPage() {
                       {draft.template === 'board' && (
                         <>
                           <label className="block">
-                            <span className="text-[11px] text-ink-subtle">
+                            <span className="text-xs text-ink-subtle">
                               {t('menus.label.categories', '카테고리 (콤마로 구분)')}
                             </span>
                             <input
@@ -398,7 +398,7 @@ function MenusPage() {
                             />
                           </label>
                           <div>
-                            <span className="text-[11px] text-ink-subtle">{t('menus.label.writeGrade', '작성 가능 등급')}</span>
+                            <span className="text-xs text-ink-subtle">{t('menus.label.writeGrade', '작성 가능 등급')}</span>
                             <div className="mt-1.5">
                               <ChipSelect
                                 options={['Viewer 이상', 'Editor 이상', 'Admin 이상'] as const}
@@ -421,7 +421,7 @@ function MenusPage() {
                       )}
                       {draft.template === 'blank' && (
                         <label className="block">
-                          <span className="text-[11px] text-ink-subtle">
+                          <span className="text-xs text-ink-subtle">
                             {t(
                               'menus.label.embedUrl',
                               '외부 시스템 URL — 등록하면 이 메뉴가 그 화면을 임베드합니다 (신규 시스템 편입)',
@@ -439,7 +439,7 @@ function MenusPage() {
                   </div>
                 </>
               ) : (
-                <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+                <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
                   {tf(
                     'menus.systemMenuHint',
                     { addLabel: t('menus.add', '메뉴 추가') },
@@ -465,7 +465,7 @@ function MenusPage() {
               <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
                 <span className="text-[13px]">
                   <b className="font-medium text-ink">{t('menus.minimalBadge', '최소 메뉴')}</b>
-                  <span className="block text-[11px] text-ink-subtle">
+                  <span className="block text-xs text-ink-subtle">
                     {t('menus.minimalDesc', '권한 없이 모든 역할에 보입니다')}
                   </span>
                 </span>
@@ -489,7 +489,7 @@ function MenusPage() {
                     />
                   </div>
                   {draft.roles.length === 0 && (
-                    <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-[11px] text-danger-ink">
+                    <p className="mt-1.5 rounded-lg bg-danger-bg px-3 py-2 text-xs text-danger-ink">
                       {tf(
                         'menus.noRolesWarning',
                         { minimalLabel: t('menus.minimalBadge', '최소 메뉴') },
@@ -669,7 +669,7 @@ function MenusPage() {
           <div className="mt-3 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px]">
               <b className="font-medium text-ink">{t('menus.minimalBadge', '최소 메뉴')}</b>
-              <span className="block text-[11px] text-ink-subtle">
+              <span className="block text-xs text-ink-subtle">
                 {t('menus.minimalDesc', '권한 없이 모든 역할에 보입니다')}
               </span>
             </span>

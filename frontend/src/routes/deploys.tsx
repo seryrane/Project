@@ -139,15 +139,15 @@ function DeploysPage() {
             >
               {/* 머리 — 버전·환경·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
               <span className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
-                <span className="font-mono text-[15px] font-semibold text-ink">{d.version}</span>
+                <span className="font-mono text-base font-semibold text-ink">{d.version}</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     d.env === 'Production' ? 'bg-pending-bg text-pending-ink' : 'bg-review-bg text-review-ink'
                   }`}
                 >
                   {d.env}
                 </span>
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[d.status]}`}>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[d.status]}`}>
                   {d.status}
                 </span>
                 {d.rollbackTo && (
@@ -163,7 +163,7 @@ function DeploysPage() {
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap gap-1.5">
                   {d.changes.map((c) => (
-                    <span key={c} className="rounded-full bg-chip px-2 py-0.5 text-[11px] text-ink-muted">
+                    <span key={c} className="rounded-full bg-chip px-2 py-0.5 text-xs text-ink-muted">
                       {c}
                     </span>
                   ))}
@@ -173,7 +173,7 @@ function DeploysPage() {
                     {d.specs.map((s) => (
                       <span
                         key={s.id}
-                        className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                        className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
                       >
                         {s.name} {s.version}
                       </span>
@@ -209,13 +209,13 @@ function DeploysPage() {
             <span className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-lg font-semibold text-ink">{detail.version}</span>
               <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                   detail.env === 'Production' ? 'bg-pending-bg text-pending-ink' : 'bg-review-bg text-review-ink'
                 }`}
               >
                 {detail.env}
               </span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[detail.status]}`}>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[detail.status]}`}>
                 {detail.status}
               </span>
             </span>

@@ -42,7 +42,7 @@ function StepDots({ step }: { step: [number, number] }) {
           }`}
         />
       ))}
-      <span className="ml-1 text-[11px] tabular-nums text-ink-subtle">
+      <span className="ml-1 text-xs tabular-nums text-ink-subtle">
         {cur}/{total}
       </span>
     </span>
@@ -51,14 +51,14 @@ function StepDots({ step }: { step: [number, number] }) {
 
 function KindChip({ kind }: { kind: keyof typeof KIND_CLS }) {
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${KIND_CLS[kind]}`}>{kind}</span>
+    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${KIND_CLS[kind]}`}>{kind}</span>
   )
 }
 
 function UrgentChip() {
   const { t } = useI18n()
   return (
-    <span className="rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-ink">
+    <span className="rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger-ink">
       {t('approvals.urgent', '긴급')}
     </span>
   )
@@ -69,7 +69,7 @@ function UrgentChip() {
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -214,12 +214,12 @@ function ApprovalsPage() {
         {stats.map((s) => (
           <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
               {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+              {s.caption && <div className="mt-1 text-xs text-ink-subtle">{s.caption}</div>}
             </div>
           </div>
         ))}
@@ -265,11 +265,11 @@ function ApprovalsPage() {
                   {r.urgent && <UrgentChip />}
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
-                  <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
+                  <span className="rounded-full bg-review-bg px-2 py-0.5 text-xs font-semibold text-review-ink">
                     {t('approvals.waitingBadge', '대기')}
                   </span>
                   {r.myTurn && (
-                    <span className="rounded-full bg-pending-bg px-2 py-0.5 text-[11px] font-semibold text-pending-ink">
+                    <span className="rounded-full bg-pending-bg px-2 py-0.5 text-xs font-semibold text-pending-ink">
                       {t('approvals.tab.mine', '내 차례')}
                     </span>
                   )}
@@ -281,7 +281,7 @@ function ApprovalsPage() {
                 </span>
                 {/* 몸 */}
                 <span className="block px-5 pb-5 pt-4">
-                  <span className="block text-[15px] font-semibold text-ink">{r.title}</span>
+                  <span className="block text-base font-semibold text-ink">{r.title}</span>
                   <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">{r.summary}</span>
                   <span className="mt-3 flex items-center justify-between gap-3">
                     <StepDots step={r.step} />
@@ -317,7 +317,7 @@ function ApprovalsPage() {
                   <KindChip kind={r.kind} />
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                       r.status === '승인'
                         ? 'bg-deployed-bg text-deployed-ink'
                         : 'bg-review-bg text-review-ink'
@@ -335,7 +335,7 @@ function ApprovalsPage() {
                 </div>
                 {/* 몸 */}
                 <div className="px-5 pb-5 pt-4">
-                  <span className="block text-[15px] font-semibold text-ink">{r.title}</span>
+                  <span className="block text-base font-semibold text-ink">{r.title}</span>
                   <span className="mt-1 block text-[13px] text-ink-muted">{r.summary}</span>
                 </div>
               </li>
@@ -398,13 +398,13 @@ function ApprovalsPage() {
               {detail.urgent && <UrgentChip />}
               <KindChip kind={detail.kind} />
               <span className="font-mono text-xs text-ink-subtle">{detail.id}</span>
-              <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
+              <span className="rounded-full bg-review-bg px-2 py-0.5 text-xs font-semibold text-review-ink">
                 {t('approvals.waitingBadge', '대기')}
               </span>
               <StepDots step={detail.step} />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-[15px] font-semibold text-ink">{detail.title}</span>
+              <span className="text-base font-semibold text-ink">{detail.title}</span>
               {detail.specId && (
                 <button
                   type="button"

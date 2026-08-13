@@ -26,7 +26,7 @@ export function ChipSelect<T extends string>({
             aria-pressed={on}
             onClick={() => onChange(o)}
             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-              mono ? 'font-mono text-[11px]' : ''
+              mono ? 'font-mono text-xs' : ''
             } ${
               on
                 ? 'border-primary/50 bg-primary/8 text-primary'

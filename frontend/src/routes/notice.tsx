@@ -96,7 +96,7 @@ function NoticePage() {
               style={{ animationDelay: `${i * 60}ms` }}
               className="card-spotlight card-hover anim-fade-up rounded-2xl border border-primary/30 bg-surface p-4 text-left"
             >
-              <span className="flex items-center gap-2 text-[11px] font-semibold text-primary">
+              <span className="flex items-center gap-2 text-xs font-semibold text-primary">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                   <path d="M16 3l5 5-6 2-4 4 1 5-4-4-5 4 4-5-4-4 5 1 4-4 2-6z" />
                 </svg>
@@ -133,14 +133,14 @@ function NoticePage() {
                 <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
                   {n.title}
                   {isNew(n.date) && (
-                    <span className="ml-1.5 rounded bg-danger-bg px-1 py-0.5 text-[9px] font-bold text-danger-ink">
+                    <span className="ml-1.5 rounded bg-danger-bg px-1 py-0.5 text-[10px] font-bold text-danger-ink">
                       NEW
                     </span>
                   )}
                 </span>
                 <span className="hidden shrink-0 text-xs text-ink-subtle sm:block">{n.author}</span>
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{n.date}</span>
-                <span className="hidden w-14 shrink-0 text-right text-[11px] tabular-nums text-ink-subtle sm:block">
+                <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{n.date}</span>
+                <span className="hidden w-14 shrink-0 text-right text-xs tabular-nums text-ink-subtle sm:block">
                   {tf('notice.views', { n: n.views })}
                 </span>
               </button>
@@ -182,10 +182,10 @@ function NoticePage() {
                     {reading.category}
                   </span>
                   {reading.pinned && (
-                    <span className="text-[11px] font-semibold text-primary">{t('notice.pinned', '고정 공지')}</span>
+                    <span className="text-xs font-semibold text-primary">{t('notice.pinned', '고정 공지')}</span>
                   )}
                 </div>
-                <h3 className="mt-2 text-[15px] font-bold leading-snug text-ink">{reading.title}</h3>
+                <h3 className="mt-2 text-base font-bold leading-snug text-ink">{reading.title}</h3>
                 <p className="mt-1.5 text-xs text-ink-subtle">
                   {reading.author} · {reading.date} · {tf('notice.views', { n: reading.views })}
                 </p>
@@ -276,7 +276,7 @@ function NoticePage() {
           <div className="mt-3 flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px]">
               <b className="font-medium text-ink">{t('notice.label.pinToTop', '상단 고정')}</b>
-              <span className="block text-[11px] text-ink-subtle">
+              <span className="block text-xs text-ink-subtle">
                 {t('notice.pinToTopDesc', '목록 위 고정 카드로 노출됩니다')}
               </span>
             </span>

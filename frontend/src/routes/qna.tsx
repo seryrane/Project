@@ -111,7 +111,7 @@ function QnaPage() {
                     {q.category}
                   </span>
                   <span className="hidden shrink-0 text-xs text-ink-subtle sm:block">{q.author}</span>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{q.date}</span>
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{q.date}</span>
                   {answered && (
                     <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-primary">
                       {tf('qna.answers', { n: q.answers.length }, '답변 {n}')}
@@ -184,7 +184,7 @@ function QnaPage() {
                       {reading.category}
                     </span>
                   </div>
-                  <h3 className="mt-2 text-[15px] font-bold leading-snug text-ink">{reading.title}</h3>
+                  <h3 className="mt-2 text-base font-bold leading-snug text-ink">{reading.title}</h3>
                   <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-subtle">
                     <Avatar name={reading.author} size={18} />
                     {reading.author} · {reading.date}
@@ -210,10 +210,10 @@ function QnaPage() {
                           <div className="flex items-center gap-1.5 text-xs">
                             <Avatar name={a.author} size={18} />
                             <b className="font-medium text-ink">{a.author}</b>
-                            <span className="rounded bg-primary/10 px-1 py-0.5 text-[9px] font-medium text-primary">
+                            <span className="rounded bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary">
                               {a.role}
                             </span>
-                            <span className="ml-auto text-[11px] text-ink-subtle">{a.date}</span>
+                            <span className="ml-auto text-xs text-ink-subtle">{a.date}</span>
                           </div>
                           <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">{a.body}</p>
                         </li>
@@ -260,7 +260,7 @@ function QnaPage() {
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+          <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
             {t('qna.faqHint', '비슷한 질문이 FAQ 에 있을 수 있습니다 — 등록 전에 FAQ 를 한 번 확인해 보세요.')}
           </p>
           <div className="mt-5 flex justify-end gap-2">

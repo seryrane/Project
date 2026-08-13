@@ -53,7 +53,7 @@ export function ChartCard({
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -392,12 +392,12 @@ export function TimeHeatmap({
     <div>
       <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" role="img" aria-label="요일·시간 분포">
         {rows.map((r, ri) => (
-          <text key={r} x={LEFT - 7} y={TOP + ri * (CELL_H + GAP) + CELL_H - 4} textAnchor="end" fontSize="9.5" fill="var(--color-ink-subtle)">
+          <text key={r} x={LEFT - 7} y={TOP + ri * (CELL_H + GAP) + CELL_H - 4} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
             {r}
           </text>
         ))}
         {cols.map((c, ci) => (
-          <text key={c} x={LEFT + ci * (CELL_W + GAP) + CELL_W / 2} y={height - 4} textAnchor="middle" fontSize="9" fill="var(--color-ink-subtle)">
+          <text key={c} x={LEFT + ci * (CELL_W + GAP) + CELL_W / 2} y={height - 4} textAnchor="middle" fontSize="10" fill="var(--color-ink-subtle)">
             {c}
           </text>
         ))}
@@ -482,7 +482,7 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
             x={LEFT - 8}
             y={TOP + w.row * (CELL + GAP) + CELL - 4}
             textAnchor="end"
-            fontSize="9.5"
+            fontSize="10"
             fill="var(--color-ink-subtle)"
           >
             {w.label}

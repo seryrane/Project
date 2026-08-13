@@ -49,7 +49,7 @@ const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], stri
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -215,12 +215,12 @@ function MembersPage() {
         {stats.map((s) => (
           <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
               {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+              {s.caption && <div className="mt-1 text-xs text-ink-subtle">{s.caption}</div>}
             </div>
           </div>
         ))}
@@ -270,7 +270,7 @@ function MembersPage() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <b className="font-medium text-ink">{m.name}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>
                         {st}
                       </span>
                     </span>
@@ -300,7 +300,7 @@ function MembersPage() {
                   </span>
                 </span>
                 <span className="mt-2.5 flex flex-wrap items-center gap-1">
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[m.grade]}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
                     {m.grade}
                   </span>
                   {m.roles.map((r) => (
@@ -308,7 +308,7 @@ function MembersPage() {
                       {r}
                     </span>
                   ))}
-                  <span className="ml-auto font-mono text-[11px] tabular-nums text-ink-subtle">
+                  <span className="ml-auto font-mono text-xs tabular-nums text-ink-subtle">
                     FIDO {m.fido ? 'ON' : 'OFF'} · {m.lastLogin}
                   </span>
                 </span>
@@ -360,7 +360,7 @@ function MembersPage() {
                   <td className="whitespace-nowrap px-4 py-3 text-ink-muted">{m.dept}</td>
                   <td className="px-4 py-3">
                     <span className="flex flex-wrap items-center gap-1">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[m.grade]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
                         {m.grade}
                       </span>
                       {m.roles.map((r) => (
@@ -371,10 +371,10 @@ function MembersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`font-mono text-[11px] font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
+                    <span className={`font-mono text-xs font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
                       {m.fido ? 'ON' : 'OFF'}
                     </span>
                   </td>
@@ -463,9 +463,9 @@ function MembersPage() {
                   <Avatar name={detail.name} size={44} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <b className="text-[15px] text-ink">{detail.name}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>{st}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[detail.grade]}`}>
+                      <b className="text-base text-ink">{detail.name}</b>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[detail.grade]}`}>
                         {detail.grade}
                       </span>
                     </div>
@@ -546,7 +546,7 @@ function MembersPage() {
                           <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{a.at}</span>
                         </li>
                       ))}
-                      <p className="pt-1 text-[11px] text-ink-subtle">
+                      <p className="pt-1 text-xs text-ink-subtle">
                         {t(
                           'members.activity.retention',
                           '감사로그는 5년 보관됩니다 — 전체 이력은 본개발에서 별도 조회 화면으로.',
@@ -561,13 +561,13 @@ function MembersPage() {
                       <div className="rounded-xl border border-hairline p-3.5">
                         <div className="text-xs font-semibold text-ink">{t('members.perm.roleAssign', '역할 배정')}</div>
                         <div className="mt-2">
-                          <span className="text-[11px] text-ink-subtle">{t('members.perm.gradeSingle', '등급 (단일)')}</span>
+                          <span className="text-xs text-ink-subtle">{t('members.perm.gradeSingle', '등급 (단일)')}</span>
                           <div className="mt-1.5">
                             <ChipSelect options={GRADES} value={draftGrade} onChange={setDraftGrade} />
                           </div>
                         </div>
                         <div className="mt-2.5">
-                          <span className="text-[11px] text-ink-subtle">
+                          <span className="text-xs text-ink-subtle">
                             {t('members.perm.serviceRoleMulti', '서비스 Role (겸직 가능)')}
                           </span>
                           <div className="mt-1.5">
@@ -588,7 +588,7 @@ function MembersPage() {
                               close()
                               navigate({ to: '/roles' })
                             }}
-                            className="text-[11px] font-medium text-primary transition-opacity hover:opacity-80"
+                            className="text-xs font-medium text-primary transition-opacity hover:opacity-80"
                           >
                             {t('members.defineRoles')}
                           </button>
@@ -703,7 +703,7 @@ function MembersPage() {
                             + {t('common.add')}
                           </button>
                         </div>
-                        <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+                        <p className="mt-2 text-xs leading-relaxed text-ink-subtle">
                           {t(
                             'members.perm.exceptionNote1',
                             '예외는 감사 대상입니다 — 역할로 풀 수 있으면 역할을 고치세요. 변경은',

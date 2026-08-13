@@ -83,7 +83,7 @@ function KpiMetricsPage() {
       <section className="anim-fade-up card-spotlight mt-4 rounded-2xl border border-hairline bg-surface">
         <div className="flex items-center justify-between surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('kpi-metrics.sectionTitle', { n: rows.length })}</h2>
-          <span className="text-[11px] text-ink-subtle">
+          <span className="text-xs text-ink-subtle">
             {t('kpi-metrics.sectionHint', '행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출')}
           </span>
         </div>
@@ -116,16 +116,16 @@ function KpiMetricsPage() {
                       {m.area}
                     </span>
                   </td>
-                  <td className="max-w-56 truncate px-3 py-2.5 font-mono text-[11px] text-ink-muted">
+                  <td className="max-w-56 truncate px-3 py-2.5 font-mono text-xs text-ink-muted">
                     {m.formula}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-[11px] text-ink-subtle">
+                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-ink-subtle">
                     {m.sourceTable}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.cycle}</td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.owner}</td>
                   <td className="whitespace-nowrap px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
                       {m.status}
                     </span>
                   </td>
@@ -178,10 +178,10 @@ function KpiMetricsPage() {
                   <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] text-ink-muted">
                     {detail.area}
                   </span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${METRIC_STATUS_CLS[detail.status]}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[detail.status]}`}>
                     {detail.status}
                   </span>
-                  <span className="ml-auto font-mono text-[11px] text-ink-subtle">{detail.id}</span>
+                  <span className="ml-auto font-mono text-xs text-ink-subtle">{detail.id}</span>
                 </div>
                 <p className="text-[13px] leading-relaxed text-ink-muted">{detail.desc}</p>
                 {(
@@ -211,7 +211,7 @@ function KpiMetricsPage() {
                       <b className="block font-semibold text-ink">
                         {tf('kpi-metrics.linkedSpec', { id: detail.linkedSpec })}
                       </b>
-                      <span className="block text-[11px] text-ink-subtle">
+                      <span className="block text-xs text-ink-subtle">
                         {t('kpi-metrics.linkedSpecDesc', '이 지표의 원천 필드를 정의하는 IDMS 사양서로 이동')}
                       </span>
                     </span>
@@ -219,7 +219,7 @@ function KpiMetricsPage() {
                   </Link>
                 )}
                 {detail.status !== '승인' && (
-                  <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+                  <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
                     {t(
                       'kpi-metrics.notApprovedNotice',
                       '미승인 지표는 대시보드에 표출되지 않습니다 — 산식 확정 후 현업 승인 절차를 거칩니다 (FR-070 AC②).',

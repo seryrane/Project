@@ -311,7 +311,7 @@ function DashboardPage() {
                   </span>
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
                     q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-pending-bg text-pending-ink'
                   }`}
                 >
@@ -386,7 +386,7 @@ function DashboardPage() {
                 </span>
               </span>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
                   p.status === '성공'
                     ? 'bg-deployed-bg text-deployed-ink'
                     : p.status === '실행중'
@@ -422,7 +422,7 @@ function DashboardPage() {
             .map((n) => (
               <li key={n.id} className="flex items-start gap-2 text-[13px]">
                 <span
-                  className={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                  className={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                     n.pinned ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-subtle'
                   }`}
                 >
@@ -628,7 +628,7 @@ function DashboardPage() {
                   type="button"
                   onClick={() => resize(idx)}
                   title={t('dash.resizeTitle', '크기 바꾸기')}
-                  className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+                  className="rounded-full px-2 py-0.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-chip hover:text-ink"
                 >
                   {t(`dash.size.${slot.size}`, SIZE_LABEL[slot.size])}
                 </button>

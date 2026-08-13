@@ -18,7 +18,7 @@ export function MyAbilities() {
           <Avatar name="김현대" size={30} />
           <span className="min-w-0 leading-tight">
             <span className="block text-[13px] font-semibold text-ink">김현대</span>
-            <span className="block text-[11px] text-ink-subtle">
+            <span className="block text-xs text-ink-subtle">
               역할 <b className="text-ink-muted">{myRole.name}</b> — 아래 권한은 이 역할에서
               파생됩니다
             </span>
@@ -55,7 +55,7 @@ export function MyAbilities() {
           ))}
         </ul>
       </div>
-      <p className="mt-3 border-t border-hairline pt-3 text-[11px] leading-relaxed text-ink-subtle">
+      <p className="mt-3 border-t border-hairline pt-3 text-xs leading-relaxed text-ink-subtle">
         ⚠ 표시는 되돌리기 어려운 권한입니다. 권한이 예상과 다르면 관리자에게 문의하세요 —
         변경은 [권한 관리]에서 상신으로 처리됩니다.
       </p>

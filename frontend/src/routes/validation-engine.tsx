@@ -25,7 +25,7 @@ const FREQ_KEYS = ['daily', 'weekly', 'hourly'] as const
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -169,12 +169,12 @@ function ValidationEnginePage() {
         {stats.map((s) => (
           <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
               {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-              <div className="mt-1 text-[11px] text-ink-subtle">{s.sub}</div>
+              <div className="mt-1 text-xs text-ink-subtle">{s.sub}</div>
             </div>
           </div>
         ))}
@@ -208,9 +208,9 @@ function ValidationEnginePage() {
                     짓눌린다 — 한 글자 세로줄(실기기 실증). 좁으면 액션이 다음 줄로 간다 */}
                 <button type="button" onClick={() => setExpanded(open ? null : e.id)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-[15px] font-semibold text-ink">{e.name}</span>
+                    <span className="text-base font-semibold text-ink">{e.name}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         e.active ? 'bg-deployed-bg text-deployed-ink' : 'bg-chip text-ink-subtle'
                       }`}
                     >
@@ -222,7 +222,7 @@ function ValidationEnginePage() {
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
                     <span>
                       {t('engine.label.target', '대상')}:{' '}
-                      <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-[11px]">{e.targetTable}</code>
+                      <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs">{e.targetTable}</code>
                     </span>
                     <span className="tabular-nums">{tf('engine.totalRuns', { n: e.runs }, '총 실행: {n}회')}</span>
                     <span className="tabular-nums">
@@ -333,7 +333,7 @@ function ValidationEnginePage() {
                             key={s3.id}
                             className="flex flex-wrap items-center gap-3 rounded-xl border border-hairline px-4 py-3 text-[13px]"
                           >
-                            <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                            <span className="rounded-full bg-primary/12 px-2 py-0.5 text-xs font-semibold text-primary">
                               {s3.freq}
                             </span>
                             <span className="font-medium text-ink">{s3.time}</span>

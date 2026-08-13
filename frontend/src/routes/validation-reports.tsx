@@ -15,7 +15,7 @@ export const Route = createFileRoute('/validation-reports')({ component: Validat
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -104,12 +104,12 @@ function ValidationReportsPage() {
         {stats.map((s) => (
           <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
               {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`truncate text-xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-              <div className="mt-1 text-[11px] text-ink-subtle">{s.sub}</div>
+              <div className="mt-1 text-xs text-ink-subtle">{s.sub}</div>
             </div>
           </div>
         ))}
@@ -123,7 +123,7 @@ function ValidationReportsPage() {
           <h2 className="text-sm font-semibold text-ink">
             {tf('reports.listTitle', { n: validationReports.length }, '리포트 {n}건')}
           </h2>
-          <span className="text-[11px] text-ink-subtle">
+          <span className="text-xs text-ink-subtle">
             {t('reports.listHint', '카드를 누르면 상세가 열립니다')}
           </span>
         </div>
@@ -138,9 +138,9 @@ function ValidationReportsPage() {
                 {/* basis — flex-wrap 줄에서 제목 블록이 짓눌리는 대신 액션이 다음 줄로 */}
                 <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-[15px] font-semibold text-ink hover:text-primary">{r.title}</span>
+                    <span className="text-base font-semibold text-ink hover:text-primary">{r.title}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         status === '발행' ? 'bg-deployed-bg text-deployed-ink' : 'bg-review-bg text-review-ink'
                       }`}
                     >
@@ -276,7 +276,7 @@ function ValidationReportsPage() {
                           {Math.round((ty.count / total) * 100)}%
                         </td>
                         <td className="px-3 py-2.5">
-                          <span className="rounded-full bg-review-bg px-2 py-0.5 text-[11px] font-semibold text-review-ink">
+                          <span className="rounded-full bg-review-bg px-2 py-0.5 text-xs font-semibold text-review-ink">
                             {t('reports.actionNeeded', '조치 필요')}
                           </span>
                         </td>

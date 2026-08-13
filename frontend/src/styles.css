@@ -48,6 +48,14 @@
   --color-accent2: #82aee0;
   --color-sidebar: #090b11;
   --color-sidebar-ink: #a7adc0;
+  /* 사이드바 안쪽 면·선·강한 글자.
+     ⚠⚠ 예전에는 이 셋을 `white/5` · `white/8` · `text-white` 유틸로 마크업에 박아 뒀다.
+     "사이드바는 두 테마 모두 어두우니 흰색을 섞어도 된다"는 전제였는데, **라이트에서
+     사이드바를 밝게 바꾸는 순간 전부 안 보이게 된다**(흰 면 위 흰색 6%). 전제가 바뀔 수
+     있는 값은 토큰으로 둔다 — 그래야 테마가 늘어도 마크업을 안 고친다(2026-08-13). */
+  --color-sidebar-strong: #ffffff;
+  --color-sidebar-hover: rgb(255 255 255 / 6%);
+  --color-sidebar-line: rgb(255 255 255 / 8%);
   --color-chip: rgb(255 255 255 / 6%);
   --color-chip-strong: rgb(255 255 255 / 11%);
   --color-glow: rgb(90 144 210 / 25%);
@@ -219,8 +227,17 @@
      "검색창이나 버튼이 전부 하얀색이라 밋밋하다") */
   --color-field: #eef3fa;
 
-  /* 어두운 사이드바 위에서 읽히도록 밝힌 강조색 — 포인트 색을 바꿔도 따라온다 */
-  --color-sidebar-accent: color-mix(in oklab, var(--color-primary) 45%, white);
+  /* ⚠⚠ **라이트에서는 사이드바도 밝다** (2026-08-13 사용자 지시: "LNB 영역도 라이트 모드
+     색상 별도 필요할 듯"). 예전 방침은 "사이드바는 두 테마 모두 어둡게 — 브랜드 아이덴티티"
+     였는데, 밝은 캔버스 옆에 검은 기둥이 서면 그 기둥만 딴 앱처럼 남는다. 라이트에서는
+     **흰 기둥이 옅은 남색 캔버스 위에 종이처럼 뜨는** 쪽이 한 벌로 읽힌다(헤더와 같은 논리).
+     흰 기둥이므로 강조색을 밝힐 이유도 사라진다 — 원색을 그대로 쓴다. */
+  --color-sidebar: #ffffff;
+  --color-sidebar-ink: #5b667e; /* 캔버스·흰 면 둘 다에서 읽히는 보조 글자 */
+  --color-sidebar-strong: #0f1b2e; /* 활성·호버의 강한 글자 */
+  --color-sidebar-hover: #eef3fa; /* 호버 면 — 조작은 면보다 한 단계 눌린다(field 와 같은 계열) */
+  --color-sidebar-line: #dde5f1; /* 경계선 */
+  --color-sidebar-accent: var(--color-primary);
 
   /* 머리 면 — **아주 옅게**(D안, 2026-08-06 사용자 채택).
      이 자리는 세 번 고쳤다: 너무 비슷하다 → 진하게 → 선까지 있어 촌스럽다 → 선을 빼고

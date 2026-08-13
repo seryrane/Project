@@ -87,7 +87,7 @@ function PrivacyPage() {
                 ? tf(`privacy.tile.${tile.id}.value`, { n: tile.value }, `${tile.value}건`)
                 : tile.value}
             </div>
-            <div className="mt-0.5 text-[11px] text-ink-subtle">{t(`privacy.tile.${tile.id}.sub`, tile.sub)}</div>
+            <div className="mt-0.5 text-xs text-ink-subtle">{t(`privacy.tile.${tile.id}.sub`, tile.sub)}</div>
           </div>
         ))}
       </div>
@@ -97,7 +97,7 @@ function PrivacyPage() {
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
           <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '접속·반출 감사 로그')}</h2>
-            <span className="text-[11px] text-ink-subtle">
+            <span className="text-xs text-ink-subtle">
               {t('privacy.auditLogHint', '다운로드·마스킹 해제는 사유가 필수로 남습니다')}
             </span>
           </div>
@@ -124,7 +124,7 @@ function PrivacyPage() {
                     <span className="ml-auto font-mono text-[10px] tabular-nums text-ink-subtle">{l.at}</span>
                   </div>
                   <div className="mt-1.5 text-xs text-ink-muted">{l.target}</div>
-                  <div className="mt-0.5 text-[11px] text-ink-subtle">
+                  <div className="mt-0.5 text-xs text-ink-subtle">
                     {t('privacy.label.reason', '사유')}: {l.reason}
                   </div>
                 </li>
@@ -154,7 +154,7 @@ function PrivacyPage() {
                         danger ? 'bg-pending-bg/20' : ''
                       }`}
                     >
-                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-[11px] tabular-nums text-ink-subtle">
+                      <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs tabular-nums text-ink-subtle">
                         {l.at}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-ink">{l.user}</td>
@@ -176,7 +176,7 @@ function PrivacyPage() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-hairline px-5 py-2.5 text-[11px] text-ink-subtle">
+          <div className="border-t border-hairline px-5 py-2.5 text-xs text-ink-subtle">
             {tf(
               'privacy.retentionNote',
               { retention: retentionLabel(retention) },
@@ -194,7 +194,7 @@ function PrivacyPage() {
             <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
               <span className="text-[13px]">
                 <b className="font-medium text-ink">{t('privacy.label.maskPhone', '연락처 마스킹')}</b>
-                <span className="block text-[11px] text-ink-subtle">
+                <span className="block text-xs text-ink-subtle">
                   {t('privacy.maskPhoneDesc', '010-****-5678 로 표시')}
                 </span>
               </span>
@@ -220,7 +220,7 @@ function PrivacyPage() {
             <div className="flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
               <span className="text-[13px]">
                 <b className="font-medium text-ink">{t('privacy.label.maskEmail', '이메일 마스킹')}</b>
-                <span className="block text-[11px] text-ink-subtle">
+                <span className="block text-xs text-ink-subtle">
                   {t('privacy.maskEmailDesc', 'hy****@hmg.com 로 표시')}
                 </span>
               </span>
@@ -264,14 +264,14 @@ function PrivacyPage() {
                   }}
                 />
               </div>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-ink-subtle">
+              <p className="mt-1.5 text-xs leading-relaxed text-ink-subtle">
                 {t(
                   'privacy.retentionPolicyNote',
                   '처리방침 v3.2 는 365일을 기준으로 합니다 — 줄이면 방침 개정이 함께 필요합니다.',
                 )}
               </p>
             </div>
-            <p className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+            <p className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
               {t(
                 'privacy.auditFootnote',
                 '마스킹을 해제한 화면 조회는 전 건 감사 로그에 남습니다. 정책 변경 이력도 감사 대상입니다.',

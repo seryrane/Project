@@ -118,7 +118,7 @@ function FaqPage() {
                 <div>
                   <div className="reveal-inner border-t border-hairline/60 px-5 py-4">
                     <p className="text-[13px] leading-relaxed text-ink-muted">{f.a}</p>
-                    <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-subtle">
+                    <div className="mt-3 flex items-center gap-2 text-xs text-ink-subtle">
                       {t('faq.helpfulQuestion', '도움이 되었나요?')}
                       <button
                         type="button"

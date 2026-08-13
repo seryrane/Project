@@ -100,13 +100,13 @@ function AskAnswerCard({
         <div className="section-label">{t('ask.understood')}</div>
         <div className="mt-0.5 text-[13px] text-ink">{understood}</div>
         {/* 0 을 평온함으로 읽지 않는다 — 값이 없어도 총계는 그대로 보여 준다(정본 §4) */}
-        <div className="mt-1 text-[12px] font-semibold text-primary">
+        <div className="mt-1 text-xs font-semibold text-primary">
           {tf('ask.totalLine', { total: total.toLocaleString(), unit })}
         </div>
       </div>
 
       {notes.length > 0 && (
-        <ul className="space-y-1 rounded-lg bg-pending-bg px-3 py-2 text-[11px] text-pending-ink">
+        <ul className="space-y-1 rounded-lg bg-pending-bg px-3 py-2 text-xs text-pending-ink">
           {notes.map((note) => (
             <li key={note}>※ {note}</li>
           ))}
@@ -116,7 +116,7 @@ function AskAnswerCard({
       {points.length > 0 && (
         <div className="space-y-1.5">
           {points.map((p) => (
-            <div key={p.label} className="flex items-center gap-2 text-[12px]">
+            <div key={p.label} className="flex items-center gap-2 text-xs">
               <span className="w-20 min-w-0 shrink-0 truncate text-ink-subtle" title={p.label}>
                 {p.label}
               </span>
@@ -140,8 +140,8 @@ function AskAnswerCard({
           {items.map((it, i) => (
             <div key={`${it.title}-${i}`} className="rounded-lg border border-hairline/70 px-3 py-2">
               <div className="min-w-0 truncate text-[13px] font-medium text-ink">{it.title}</div>
-              {it.context && <div className="mt-0.5 text-[11px] text-ink-subtle">{it.context}</div>}
-              {it.hint && <div className="mt-0.5 text-[11px] text-ink-muted">{it.hint}</div>}
+              {it.context && <div className="mt-0.5 text-xs text-ink-subtle">{it.context}</div>}
+              {it.hint && <div className="mt-0.5 text-xs text-ink-muted">{it.hint}</div>}
             </div>
           ))}
         </div>
@@ -152,7 +152,7 @@ function AskAnswerCard({
       {evidence.length > 0 && (
         <div>
           <div className="section-label">{t('ask.evidence')}</div>
-          <ul className="mt-1 space-y-0.5 text-[12px] text-ink-muted">
+          <ul className="mt-1 space-y-0.5 text-xs text-ink-muted">
             {evidence.map((e) => (
               <li key={e}>· {e}</li>
             ))}
@@ -165,7 +165,7 @@ function AskAnswerCard({
         <div className="rounded-lg bg-danger-bg px-3 py-2">
           {/* 같은 머리표인데 색만 경고색 — 형태를 바꾸지 않는다(형태가 바뀌면 다른 물건이 된다) */}
           <div className="section-label !text-danger-ink">{t('ask.anomalies')}</div>
-          <ul className="mt-1 space-y-0.5 text-[12px] text-danger-ink">
+          <ul className="mt-1 space-y-0.5 text-xs text-danger-ink">
             {anomalies.map((a) => (
               <li key={a}>· {a}</li>
             ))}
@@ -175,12 +175,12 @@ function AskAnswerCard({
 
       {nextStep && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-2.5">
-          <p className="min-w-0 flex-1 text-[12px] text-ink-muted">{nextStep}</p>
+          <p className="min-w-0 flex-1 text-xs text-ink-muted">{nextStep}</p>
           {nextMenuKey && (
             <button
               type="button"
               onClick={() => onOpenMenu(nextMenuKey)}
-              className="shrink-0 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              className="shrink-0 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
             >
               {t('ask.openScreen')}
             </button>
@@ -196,7 +196,7 @@ function AskAnswerCard({
               key={q}
               type="button"
               onClick={() => onFollowUp(q)}
-              className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-canvas/40 px-2.5 py-1 text-[12px] text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+              className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-canvas/40 px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
             >
               {q}
             </button>
@@ -235,7 +235,7 @@ function AskTurnView({
       )}
 
       {turn.status === 'error' && (
-        <div className="rounded-xl border border-hairline bg-danger-bg px-3 py-2 text-[12px] text-danger-ink">
+        <div className="rounded-xl border border-hairline bg-danger-bg px-3 py-2 text-xs text-danger-ink">
           {turn.errorDetail || t('ask.askError')}
         </div>
       )}
@@ -331,9 +331,9 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
             ))}
           </div>
         )}
-        {catalogStatus === 'error' && <p className="mt-2 text-[12px] text-ink-subtle">{t('ask.catalogError')}</p>}
+        {catalogStatus === 'error' && <p className="mt-2 text-xs text-ink-subtle">{t('ask.catalogError')}</p>}
         {catalogStatus === 'ok' && catalog && catalog.categories.length === 0 && (
-          <p className="mt-2 text-[12px] text-ink-subtle">{t('ask.catalogEmpty')}</p>
+          <p className="mt-2 text-xs text-ink-subtle">{t('ask.catalogEmpty')}</p>
         )}
         {catalogStatus === 'ok' && catalog && catalog.categories.length > 0 && (
           <div className="mt-2 space-y-2.5">
@@ -350,7 +350,7 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
                       /* ⚠ 칩이 **누를 수 있는 것으로 안 읽혔다** — `bg-canvas/40` 은 덮개
                          면보다 옅어 글자만 떠 있는 것처럼 보였다(규약 §5: 조작은 면보다
                          한 단계 눌린다). 조작 면 토큰(chip)으로 바꾸고 최소 높이를 준다 */
-                      className="min-h-8 min-w-0 max-w-full truncate rounded-full border border-hairline bg-chip px-3 py-1.5 text-[12px] text-ink-muted transition-colors hover:border-primary/40 hover:bg-chip-strong hover:text-ink"
+                      className="min-h-8 min-w-0 max-w-full truncate rounded-full border border-hairline bg-chip px-3 py-1.5 text-xs text-ink-muted transition-colors hover:border-primary/40 hover:bg-chip-strong hover:text-ink"
                     >
                       {q}
                     </button>

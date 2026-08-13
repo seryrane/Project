@@ -67,7 +67,7 @@ function AttainmentBars() {
             <span className="flex items-center gap-2">
               <span className="w-11 text-right text-xs font-semibold tabular-nums text-ink">{o.value}%</span>
               <span
-                className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+                className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
                   delta >= 0 ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
                 }`}
               >
@@ -78,7 +78,7 @@ function AttainmentBars() {
           </div>
         )
       })}
-      <p className="pt-1 text-[11px] text-ink-subtle">
+      <p className="pt-1 text-xs text-ink-subtle">
         {t('analytics.attainment.caption', '세로선 = 목표(100%) · 증감은 전월 대비')}
       </p>
     </div>
@@ -168,7 +168,7 @@ function AnalyticsPage() {
                   </span>
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
                     k.attainment < 85 ? 'bg-danger-bg text-danger-ink' : 'bg-review-bg text-review-ink'
                   }`}
                 >
@@ -226,7 +226,7 @@ function AnalyticsPage() {
                 <span className="w-8 text-right text-xs font-semibold tabular-nums text-ink">{q.value}</span>
               </div>
             ))}
-            <p className="pt-1 text-[11px] text-ink-subtle">
+            <p className="pt-1 text-xs text-ink-subtle">
               {t('analytics.chart.specQuality.caption', '초록 = 85점 이상 · 보라 = 개선 여지')}
             </p>
           </div>

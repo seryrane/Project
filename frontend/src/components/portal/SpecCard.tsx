@@ -49,7 +49,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
         {spec.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-chip px-2 py-0.5 text-[11px] font-medium text-ink-muted"
+            className="rounded-full bg-chip px-2 py-0.5 text-xs font-medium text-ink-muted"
           >
             #{tag}
           </span>
@@ -59,7 +59,7 @@ export function SpecCard({ spec, index, onDetail, onCompare }: Props) {
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border border-hairline bg-canvas/70 px-4 py-3.5">
         {cur.fields.slice(0, 4).map((f) => (
           <div key={f.label}>
-            <dt className="text-[11px] text-ink-subtle">{f.label}</dt>
+            <dt className="text-xs text-ink-subtle">{f.label}</dt>
             <dd className="mt-0.5 text-[13px] font-medium tabular-nums text-ink">{f.value}</dd>
           </div>
         ))}

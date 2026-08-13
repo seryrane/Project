@@ -86,7 +86,7 @@ function Meter({ label, pct }: { label: string; pct: number }) {
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -130,7 +130,7 @@ function AlertServerCard({
       <div className="flex items-center justify-between gap-2">
         <span className="min-w-0">
           <span className="block truncate font-mono text-[13px] font-semibold text-ink">{server.name}</span>
-          <span className="block truncate text-[11px] text-ink-subtle">{server.role}</span>
+          <span className="block truncate text-xs text-ink-subtle">{server.role}</span>
         </span>
         {/* 규약 §16 — 선택·상태는 색만으로 말하지 않는다. 배지에 글자를 함께 */}
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${HEALTH_CLS[server.health]}`}>
@@ -145,7 +145,7 @@ function AlertServerCard({
       <button
         type="button"
         onClick={onSelect}
-        className={`mt-3 w-full rounded-lg py-1.5 text-[11px] font-medium transition-colors ${
+        className={`mt-3 w-full rounded-lg py-1.5 text-xs font-medium transition-colors ${
           selected ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-muted hover:text-ink'
         }`}
       >
@@ -171,7 +171,7 @@ function AlertChannelRow({
       <div className="flex items-center justify-between gap-2.5">
         <span className="text-[13px]">
           <b className="font-medium text-ink">{t(`alerts.rules.channel.${channel.key}`)}</b>
-          <span className={`ml-2 text-[11px] ${channel.enabled ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
+          <span className={`ml-2 text-xs ${channel.enabled ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
             {channel.enabled ? t('alerts.rules.channel.enabled', '사용 중') : t('alerts.rules.channel.disabled', '미사용')}
           </span>
         </span>
@@ -190,7 +190,7 @@ function AlertChannelRow({
             className="h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
           />
           {channel.key === 'webhook' && channel.target === '' && (
-            <p className="mt-1 text-[11px] text-review-ink">
+            <p className="mt-1 text-xs text-review-ink">
               {t('alerts.rules.channel.webhookEmptyNote', '엔드포인트가 없으면 켜 두어도 이 방법으로 알림이 오지 않습니다')}
             </p>
           )}
@@ -350,12 +350,12 @@ function AlertsPage() {
             className="card-spotlight card-hover anim-fade-up overflow-hidden rounded-2xl border border-hairline bg-surface"
           >
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{tile.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{tile.label}</span>
               {tile.delta && <DeltaChip delta={tile.delta} good={tile.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`text-xl font-bold tabular-nums ${tile.cls}`}>{tile.value}</div>
-              <div className="mt-1 text-[11px] leading-snug text-ink-subtle">{tile.caption}</div>
+              <div className="mt-1 text-xs leading-snug text-ink-subtle">{tile.caption}</div>
             </div>
           </div>
         ))}
@@ -365,7 +365,7 @@ function AlertsPage() {
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:100ms]">
         <div className="surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{t('alerts.section.servers.title', '서버 자원 리포팅')}</h2>
-          <p className="mt-0.5 text-[11px] text-ink-subtle">{t('alerts.section.servers.subtitle')}</p>
+          <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.servers.subtitle')}</p>
         </div>
         <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 xl:grid-cols-3">
           {alertServers.map((s) => (
@@ -404,7 +404,7 @@ function AlertsPage() {
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]">
         <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{t('alerts.section.history.title', '알림 이력')}</h2>
-          <span className="text-[11px] text-ink-subtle">{t('alerts.section.history.hint', '행을 누르면 상세가 열립니다')}</span>
+          <span className="text-xs text-ink-subtle">{t('alerts.section.history.hint', '행을 누르면 상세가 열립니다')}</span>
         </div>
         <div className="flex flex-wrap items-center gap-3 border-b border-hairline px-5 py-3">
           <ChipSelect
@@ -473,7 +473,7 @@ function AlertsPage() {
                   >
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-subtle">{e.at}</td>
                     <td className="whitespace-nowrap px-3 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[e.severity]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[e.severity]}`}>
                         {severityLabel(e.severity)}
                       </span>
                     </td>
@@ -482,7 +482,7 @@ function AlertsPage() {
                       <span className="block max-w-[360px] truncate text-ink">{e.message}</span>
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[e.status]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[e.status]}`}>
                         {statusLabel(e.status)}
                       </span>
                     </td>
@@ -509,7 +509,7 @@ function AlertsPage() {
         <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
           <div>
             <h2 className="text-sm font-semibold text-ink">{t('alerts.section.rules.title', '알림 규칙')}</h2>
-            <p className="mt-0.5 text-[11px] text-ink-subtle">{t('alerts.section.rules.subtitle')}</p>
+            <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.rules.subtitle')}</p>
           </div>
           <button
             type="button"
@@ -558,7 +558,7 @@ function AlertsPage() {
              그 다음 행동이 스크롤 아래로 사라진다. 알림을 연 뜻이 같이 사라진다 (규약 §7) */
           footer={(close) => (
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <span className="mr-auto text-[11px] text-ink-subtle">
+              <span className="mr-auto text-xs text-ink-subtle">
                 {t('alerts.detail.nextActions', '다음 행동')}
               </span>
               <button
@@ -592,10 +592,10 @@ function AlertsPage() {
                 <div className="space-y-4">
                   <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[detail.severity]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[detail.severity]}`}>
                         {severityLabel(detail.severity)}
                       </span>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[detail.status]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[detail.status]}`}>
                         {statusLabel(detail.status)}
                       </span>
                       <span className="text-xs text-ink-subtle">

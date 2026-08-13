@@ -186,7 +186,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <span className="min-w-0">{t.message}</span>
             {/* 같은 말이 연달아 오면 줄을 늘리지 않고 여기서 센다 (규약 §2 겹침·모임) */}
             {t.count > 1 && (
-              <span className="ml-auto shrink-0 rounded-full bg-chip-strong px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-muted">
+              <span className="ml-auto shrink-0 rounded-full bg-chip-strong px-2 py-0.5 text-xs font-semibold tabular-nums text-ink-muted">
                 {tf('toast.more', { n: t.count - 1 }, '외 {n}건')}
               </span>
             )}
@@ -199,7 +199,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   t.onUndo?.()
                   dismiss(t.id)
                 }}
-                className="ml-auto shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1 text-[12px] font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-chip-strong"
+                className="ml-auto shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1 text-xs font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-chip-strong"
               >
                 {t.undoLabel ?? tt('common.undo', '되돌리기')}
               </button>

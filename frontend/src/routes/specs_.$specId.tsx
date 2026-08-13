@@ -26,7 +26,7 @@ export const Route = createFileRoute('/specs_/$specId')({ component: SpecDetailP
 function WorkflowStepper({ current }: { current: number }) {
   return (
     <div className="overflow-x-auto">
-      <ol className="flex min-w-max items-center gap-1 text-[11px]">
+      <ol className="flex min-w-max items-center gap-1 text-xs">
         {WORKFLOW_STEPS.map((s, i) => (
           <li key={s} className="flex items-center gap-1">
             {i > 0 && <span className="text-ink-subtle">→</span>}
@@ -289,7 +289,7 @@ function SpecDetailPage() {
               )}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {STATUS_OPTIONS.map((s) => (
               <span key={s} className={`rounded-full px-2 py-0.5 font-semibold tabular-nums ${FIELD_STATUS_CLS[s]}`}>
                 {s} {counts[s]}
@@ -403,7 +403,7 @@ function SpecDetailPage() {
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{f.owner}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${FIELD_STATUS_CLS[f.status]}`}>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${FIELD_STATUS_CLS[f.status]}`}>
                       {f.status}
                     </span>
                   </td>
@@ -456,12 +456,12 @@ function SpecDetailPage() {
                   <span className="font-mono text-sm font-semibold text-ink">{v.version}</span>
                   <StatusBadge status={v.status} />
                   {i === 0 && (
-                    <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                    <span className="rounded-full bg-primary/12 px-2 py-0.5 text-xs font-semibold text-primary">
                       {t('specDetail.currentBadge', '현재')}
                     </span>
                   )}
                   <span className="w-full text-xs text-ink-muted">{v.summary}</span>
-                  <span className="w-full text-[11px] text-ink-subtle">
+                  <span className="w-full text-xs text-ink-subtle">
                     {tf('specDetail.authoredBy', { author: v.author, date: v.date }, '작성 {author} · {date}')}
                   </span>
                 </span>

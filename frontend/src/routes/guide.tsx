@@ -91,7 +91,7 @@ function GuidePage() {
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 1, title: t('guide.toc.whatsnew', '새 기능') })}
               </h2>
-              <span className="text-[11px] text-ink-subtle">
+              <span className="text-xs text-ink-subtle">
                 {t('guide.newBadgeHint', '최근 배포 순 — 여기를 열면 배지가 내려갑니다')}
               </span>
             </div>
@@ -104,7 +104,7 @@ function GuidePage() {
                   transition={{ duration: 0.3, delay: i * 0.06 }}
                   className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline/50 py-3 first:pt-0 last:border-0 last:pb-0"
                 >
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{e.date}</span>
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{e.date}</span>
                   <span className="min-w-0 flex-1 basis-64">
                     <span className="block text-[13px] font-semibold text-ink">{e.title}</span>
                     <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">{e.desc}</span>
@@ -112,7 +112,7 @@ function GuidePage() {
                   {/* 칸마다 갈 곳을 준다 — "생겼대요"만으로는 안내가 아니다 */}
                   <Link
                     to={e.to}
-                    className="shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1.5 text-[11px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                    className="shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                   >
                     {e.toLabel} →
                   </Link>
@@ -311,7 +311,7 @@ function GuidePage() {
               <button
                 type="button"
                 onClick={() => toast(t('guide.toast.feedback', '가이드 개선 의견을 접수했습니다 — 감사합니다'))}
-                className="mt-3 text-[11px] text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:text-ink"
+                className="mt-3 text-xs text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:text-ink"
               >
                 {t('guide.feedback', '이 가이드에서 부족한 부분 알려 주기')}
               </button>

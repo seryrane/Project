@@ -159,20 +159,20 @@ function RolesPage() {
                     {r.holders.map((h) => (
                       <span
                         key={h.name}
-                        className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-[11px]"
+                        className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-xs"
                       >
                         <b className="font-medium text-ink">{h.name}</b>
                         <span className="text-ink-subtle">· {h.scopeLabel}</span>
                       </span>
                     ))}
                     {r.assigned > r.holders.length && (
-                      <span className="text-[11px] text-ink-subtle">
+                      <span className="text-xs text-ink-subtle">
                         {tf('roles.moreHolders', { n: r.assigned - r.holders.length })}
                       </span>
                     )}
                     <Link
                       to="/members"
-                      className="ml-auto text-[11px] font-medium text-primary hover:underline"
+                      className="ml-auto text-xs font-medium text-primary hover:underline"
                     >
                       {t('roles.viewMembers')}
                     </Link>
@@ -399,7 +399,7 @@ function RolesPage() {
                             title={ACTION_SPECS[a].hint}
                             aria-pressed={on}
                             onClick={() => setDraft((d) => ({ ...d, [`${m}.${a}`]: !on }))}
-                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] leading-none transition-all active:scale-90 ${
+                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs leading-none transition-all active:scale-90 ${
                               on
                                 ? 'border-primary/50 bg-primary/15 text-primary'
                                 : 'border-hairline/70 text-ink-subtle/50 hover:border-primary/30 hover:text-ink-muted'
@@ -444,7 +444,7 @@ function RolesPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+          <p className="mt-2 text-xs leading-relaxed text-ink-subtle">
             {t(
               'roles.footnote.scopeHelp',
               '⚠ 표시는 되돌리기 어렵거나 밖으로 나가는 액션입니다 — 머리글에 마우스를 올리면 설명이 보입니다. 조회 범위는 내 것만 ⊂ 우리 팀 ⊂ 전체 — 넓은 범위가 좁은 범위를 포함하므로 하나만 고릅니다.',
@@ -485,7 +485,7 @@ function RolesPage() {
               />
             </div>
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-ink-subtle">
+          <p className="mt-3 text-xs leading-relaxed text-ink-subtle">
             {tf(
               'roles.newRoleHint',
               { editLabel: t('roles.editPerms') },

@@ -119,7 +119,7 @@ function KpiIviPage() {
             ) : (
               /* 빈 자리에 이유를 적는다 (규약 17절) — 아직 없음 ≠ 고장 */
               <div className="flex min-h-[320px] flex-col items-center justify-center gap-2 text-center">
-                <p className="text-[15px] font-semibold text-ink">{t('kpi-ivi.empty.title', '등록된 워크북이 없습니다')}</p>
+                <p className="text-base font-semibold text-ink">{t('kpi-ivi.empty.title', '등록된 워크북이 없습니다')}</p>
                 <p className="max-w-md text-[13px] leading-relaxed text-ink-subtle">
                   {tf(
                     'kpi-ivi.empty.desc',
@@ -141,7 +141,7 @@ function KpiIviPage() {
                   setCurrent(0)
                   toast(tf('kpi-ivi.toast.removed', { title: active.title }))
                 }}
-                className="shrink-0 text-[11px] text-ink-subtle transition-colors hover:text-danger-ink"
+                className="shrink-0 text-xs text-ink-subtle transition-colors hover:text-danger-ink"
               >
                 {t('kpi-ivi.removeWorkbook')}
               </button>
@@ -230,7 +230,7 @@ function KpiIviPage() {
                 urlHint ? 'border-danger-ink/50' : 'border-hairline'
               }`}
             />
-            {urlHint && <span className="mt-1 block text-[11px] text-danger-ink">{urlHint}</span>}
+            {urlHint && <span className="mt-1 block text-xs text-danger-ink">{urlHint}</span>}
           </label>
           <div className="mt-5 flex justify-end gap-2">
             <button

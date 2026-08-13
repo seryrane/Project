@@ -24,7 +24,7 @@ const STATUS_FILTERS = ['전체', '오류', '재처리 중', '해결', '통과']
 function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
         good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
       }`}
     >
@@ -138,12 +138,12 @@ function ValidationResultsPage() {
         {stats.map((s) => (
           <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
             <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
-              <span className="truncate text-[11px] text-ink-subtle">{s.label}</span>
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
               {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
             </div>
             <div className="px-4 py-3.5">
               <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-              {s.caption && <div className="mt-1 text-[11px] text-ink-subtle">{s.caption}</div>}
+              {s.caption && <div className="mt-1 text-xs text-ink-subtle">{s.caption}</div>}
             </div>
           </div>
         ))}
@@ -240,7 +240,7 @@ function ValidationResultsPage() {
                   <td className="whitespace-nowrap px-4 py-3 text-xs text-ink-muted">{r.rule}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs text-ink-muted">{r.errorType}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[r.severity]}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[r.severity]}`}>
                       {r.severity}
                     </span>
                   </td>
@@ -253,7 +253,7 @@ function ValidationResultsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${RUN_STATUS_CLS[st]}`}>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
                       {st}
                     </span>
                   </td>
@@ -318,10 +318,10 @@ function ValidationResultsPage() {
                 <div className="space-y-4">
                   <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RUN_STATUS_CLS[st]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
                         {st}
                       </span>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[detail.severity]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[detail.severity]}`}>
                         {detail.severity}
                       </span>
                       <span className="text-xs text-ink-subtle">{detail.at} · {detail.mode}</span>
@@ -364,7 +364,7 @@ function ValidationResultsPage() {
                                 {tf('results.rowLabel', { n: s2.row.toLocaleString() }, '행 {n}')}
                               </span>
                               <span className="rounded-md bg-chip px-1.5 py-0.5 font-medium text-ink-muted">{s2.field}</span>
-                              <span className="rounded bg-danger-bg px-1.5 py-0.5 font-mono text-[11px] text-danger-ink">
+                              <span className="rounded bg-danger-bg px-1.5 py-0.5 font-mono text-xs text-danger-ink">
                                 {s2.value}
                               </span>
                             </div>

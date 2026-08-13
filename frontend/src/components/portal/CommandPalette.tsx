@@ -253,7 +253,7 @@ export function CommandPalette({
                   <span className="min-w-0 flex-1 truncate">{c.label}</span>
                   <span className="flex shrink-0 items-center gap-2">
                     {c.hint && (
-                      <span className="font-mono text-[11px] text-ink-subtle">{c.hint}</span>
+                      <span className="font-mono text-xs text-ink-subtle">{c.hint}</span>
                     )}
                     {i === active && (
                       <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px] text-ink-subtle">
@@ -269,7 +269,7 @@ export function CommandPalette({
         {/* 발 — 3단 해부를 완성한다(규약 §7). ESC 하나가 머리 오른쪽에 떠 있던 것을 여기로
             내렸다: 머리는 **일하는 칸**(검색)이고, 키 안내는 마무리 줄에 모이는 게 맞다.
             ⚠ 좁은 화면에는 물리 키가 없다 — 안내를 지우고 발도 세우지 않는다 */}
-        <div className="hidden items-center gap-3 border-t border-hairline px-4 py-2 text-[11px] text-ink-subtle pc:flex">
+        <div className="hidden items-center gap-3 border-t border-hairline px-4 py-2 text-xs text-ink-subtle pc:flex">
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-hairline bg-chip px-1 py-px">↑</kbd>
             <kbd className="rounded border border-hairline bg-chip px-1 py-px">↓</kbd>

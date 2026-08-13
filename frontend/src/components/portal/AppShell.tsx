@@ -40,19 +40,21 @@ function NavRow({
   const className = `relative mb-0.5 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
     active
       ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
-      : 'text-sidebar-ink hover:bg-white/5 hover:text-white'
+      : 'text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-strong'
   }`
   const inner = (
     <>
       <span className="flex min-w-0 items-center gap-2.5">
-        <span className={active ? 'text-white' : 'text-sidebar-ink/70'}>
+        <span className={active ? 'text-white' : 'text-sidebar-ink'}>
           <Icon name={item.icon} />
         </span>
         <span className="truncate whitespace-nowrap">{item.label}</span>
       </span>
       {item.badge != null && (
         <span
-          className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold tabular-nums ${
+          /* ⚠ 활성 항목의 바탕은 **두 테마 모두 보라 그라디언트**라, 그 위에서는 white 가
+             맞다(사이드바에서 white/* 를 남긴 유일한 자리). 비활성은 사이드바 면을 타므로 토큰 */
+          className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-semibold tabular-nums ${
             active ? 'bg-white/25 text-white' : 'bg-sidebar-accent/15 text-sidebar-accent'
           }`}
         >
@@ -264,7 +266,7 @@ function Shell({
           늘 z-nav 면 서랍이 가림막 아래로 들어가고, 늘 z-modal 이면 넓은 화면에서
           사이드바가 덮개 위에 남는다 (규약 §8 사다리) */}
       <aside
-        className={`group/rail fixed inset-y-0 left-0 z-modal flex w-60 flex-col overflow-x-hidden border-r border-white/5 bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:z-nav pc:translate-x-0 ${
+        className={`group/rail fixed inset-y-0 left-0 z-modal flex w-60 flex-col overflow-x-hidden border-r border-sidebar-line bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:z-nav pc:translate-x-0 ${
           navOpen ? 'translate-x-0' : '-translate-x-full'
         } ${rail ? 'pc:w-16 pc:hover:w-60 pc:hover:shadow-[12px_0_40px_rgb(0_0_0/40%)]' : 'pc:w-60'}`}
       >
@@ -275,21 +277,25 @@ function Shell({
           </span>
           <div className={`min-w-0 flex-1 leading-tight ${railHide}`}>
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-sm font-semibold text-white">HMG Admin</span>
-              {/* 사이드바 안이라 primary 가 아니라 sidebar-accent 다 — 라이트에서 primary 는
-                  아주 어두운 남색이라 어두운 사이드바에서 안 보인다(styles.css 주석 참고) */}
+              {/* ⚠ 제품 이름이 `text-white` 로 박혀 있었다 — 라이트에서 기둥을 밝히자
+                  **흰 기둥 위 흰 글자**가 되어 제품 이름이 통째로 사라졌다(2026-08-13 실측).
+                  사이드바 안의 강한 글자는 토큰(`sidebar-strong`)이 정한다 */}
+              <span className="truncate text-sm font-semibold text-sidebar-strong">HMG Admin</span>
+              {/* 사이드바 안이라 primary 가 아니라 sidebar-accent 다 — 기둥이 어두울 때
+                  라이트의 primary(원색 남색)를 그대로 쓰면 안 보인다. 밝은 기둥에서는
+                  이 토큰이 곧 primary 다(styles.css 사이드바 절) */}
               <span className="rounded-full bg-sidebar-accent/15 px-1.5 py-px text-[10px] font-semibold text-sidebar-accent">
                 PoC
               </span>
             </div>
-            <div className="text-[11px] text-sidebar-ink/75">{t('brand.tagline')}</div>
+            <div className="text-xs text-sidebar-ink">{t('brand.tagline')}</div>
           </div>
           <button
             type="button"
             onClick={togglePin}
             aria-label={pinned ? '메뉴 접기' : '메뉴 고정'}
             title={pinned ? '메뉴 접기' : '메뉴 고정'}
-            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink/70 transition-colors hover:bg-white/5 hover:text-white pc:flex ${railHide}`}
+            className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink transition-colors hover:bg-sidebar-hover hover:text-sidebar-strong pc:flex ${railHide}`}
           >
             <span className={pinned ? '' : 'rotate-45'}>
               <Icon name="pin" size={15} />
@@ -310,7 +316,7 @@ function Shell({
                     /* ⚠ LNB 에서 가장 흐린 글자였다 — 2.96:1(2026-08-06 전수 감사).
                        "덜 중요하다"는 굵기·크기가 이미 말하고 있으니 밝기까지 낮출 필요가
                        없다. 45% → 70% (4.74:1) */
-                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold tracking-wide text-sidebar-ink/70 transition-colors hover:text-sidebar-ink ${railHide}`}
+                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:text-sidebar-ink ${railHide}`}
                   >
                     {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
                     <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
@@ -337,8 +343,8 @@ function Shell({
                 >
                   <div
                     className={`min-h-0 overflow-hidden ${
-                      section.title && !rail ? 'ml-2 border-l border-white/8 pl-2' : ''
-                    } ${section.title && rail ? 'pc:group-hover/rail:ml-2 pc:group-hover/rail:border-l pc:group-hover/rail:border-white/8 pc:group-hover/rail:pl-2' : ''}`}
+                      section.title && !rail ? 'ml-2 border-l border-sidebar-line pl-2' : ''
+                    } ${section.title && rail ? 'pc:group-hover/rail:ml-2 pc:group-hover/rail:border-l pc:group-hover/rail:border-sidebar-line pc:group-hover/rail:pl-2' : ''}`}
                   >
                     {section.items.map((item) => (
                       <NavRow
@@ -355,7 +361,7 @@ function Shell({
             )
           })}
         </nav>
-        <div className={`whitespace-nowrap border-t border-white/5 px-5 py-4 text-[11px] text-sidebar-ink/75 ${railHide}`}>
+        <div className={`whitespace-nowrap border-t border-sidebar-line px-5 py-4 text-xs text-sidebar-ink ${railHide}`}>
           {t('brand.footer')}
         </div>
       </aside>
@@ -376,7 +382,9 @@ function Shell({
               type="button"
               aria-label="메뉴 열기"
               onClick={() => setNavOpen(true)}
-              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-white/5 pc:hidden"
+              /* ⚠ 이 버튼은 **헤더**에 있다(사이드바가 아니다) — `white/5` 를 쓰면 라이트의
+                 흰 헤더 위에서 호버가 아예 안 보인다. 본문 쪽 조작 면 토큰을 쓴다 */
+              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-chip pc:hidden"
             >
               <Icon name="menu" size={20} />
             </button>
@@ -429,7 +437,7 @@ function Shell({
               type="button"
               onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
               aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-xs font-bold text-ink-muted transition-colors hover:text-ink"
             >
               {locale === 'ko' ? '한' : 'EN'}
             </button>
@@ -483,7 +491,7 @@ function Shell({
               <Avatar name={meInfo.name} size={30} />
               <span className="hidden text-left leading-tight pc:block">
                 <span className="block text-[13px] font-semibold">{meInfo.name}</span>
-                <span className="block text-[11px] text-ink-subtle">{meInfo.title}</span>
+                <span className="block text-xs text-ink-subtle">{meInfo.title}</span>
               </span>
             </button>
           </div>
@@ -574,7 +582,7 @@ function Shell({
                   </li>
                 ))}
               </ol>
-              <div className="border-t border-hairline px-4 py-2.5 text-[11px] text-ink-subtle">
+              <div className="border-t border-hairline px-4 py-2.5 text-xs text-ink-subtle">
                 {t('gnb.bell.footer')}
               </div>
           </div>
