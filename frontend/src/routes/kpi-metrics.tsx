@@ -3,6 +3,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
@@ -88,54 +89,69 @@ function KpiMetricsPage() {
             {t('kpi-metrics.sectionHint', '행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출')}
           </span>
         </div>
-        <div className="table-scroll">
-          <table className="w-full min-w-[760px] border-collapse text-[13px]">
-            <thead>
-              <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                <th className="px-4 py-2.5 font-medium">{t('kpi-metrics.th.metric', '지표')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.area', '영역')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.formula', '산식')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.sourceTable', '원천 테이블')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.cycle', '주기')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.owner', '담당')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.approval', '승인')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((m) => (
-                <tr
-                  key={m.id}
-                  onClick={() => setDetail(m)}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
-                >
-                  <td className="px-4 py-2.5">
+        {/* ⚠ 이 표에는 **빈 상태 행이 없었다** — 영역 칩으로 걸러 0건이 되면 머리줄만
+            남고 아무 말이 없었다(2026-08-13 실측). 관문으로 옮기면 그런 빠짐이 화면마다
+            생기지 않는다 (규약 §9). */}
+        <div className="p-4 pc:px-5">
+          <DataTable
+            rows={rows}
+            rowKey={(m) => m.id}
+            onRowClick={setDetail}
+            minWidth={760}
+            empty={{
+              title: t('kpi-metrics.empty', '이 영역에 등록된 지표가 없습니다'),
+              hint: t('kpi-metrics.emptyHint', '영역 칩을 [전체]로 바꾸면 모든 지표를 봅니다'),
+            }}
+            columns={[
+              {
+                header: t('kpi-metrics.th.metric', '지표'),
+                cell: (m) => (
+                  <>
                     <span className="block font-medium text-ink">{m.name}</span>
                     <span className="block font-mono text-[10px] text-ink-subtle">{m.id}</span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5">
-                    <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted">
-                      {m.area}
-                    </span>
-                  </td>
-                  <td className="max-w-56 truncate px-3 py-2.5 font-mono text-xs text-ink-muted">
-                    {m.formula}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-ink-subtle">
-                    {m.sourceTable}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.cycle}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.owner}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
-                      {m.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="px-4 pb-4 pc:px-5">
+                  </>
+                ),
+              },
+              {
+                header: t('kpi-metrics.th.area', '영역'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (m) => (
+                  <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted">
+                    {m.area}
+                  </span>
+                ),
+              },
+              {
+                header: t('kpi-metrics.th.formula', '산식'),
+                cellClassName: 'max-w-56 truncate font-mono text-xs text-ink-muted',
+                cell: (m) => m.formula,
+              },
+              {
+                header: t('kpi-metrics.th.sourceTable', '원천 테이블'),
+                cellClassName: 'whitespace-nowrap font-mono text-xs text-ink-subtle',
+                cell: (m) => m.sourceTable,
+              },
+              {
+                header: t('kpi-metrics.th.cycle', '주기'),
+                cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+                cell: (m) => m.cycle,
+              },
+              {
+                header: t('kpi-metrics.th.owner', '담당'),
+                cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+                cell: (m) => m.owner,
+              },
+              {
+                header: t('kpi-metrics.th.approval', '승인'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (m) => (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
+                    {m.status}
+                  </span>
+                ),
+              },
+            ]}
+          />
           <ListFoot total={kpiMetrics.length} shown={rows.length} />
         </div>
       </section>

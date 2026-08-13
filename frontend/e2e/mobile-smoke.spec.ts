@@ -541,6 +541,55 @@ test.describe('설계서 폭(1920)', () => {
   })
 })
 
+/* 규약 §9 "표는 한 곳에서만 그린다" — 관문(`DataTable`)이 세운 약속을 못 박는다.
+   관문이 없던 동안 이것들이 표마다 제각각이었다: 숫자 열 우측 정렬(열셋 중 넷),
+   가장자리 그림자(다섯), 빈 상태 행(넷), 머리줄 고정(**0**). */
+test.describe('표 관문', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
+
+  for (const route of ['/alerts', '/kpi-metrics', '/members', '/validation-results']) {
+    test(`${route} — 표가 관문의 약속을 지킨다 (규약 §9)`, async ({ page }) => {
+      await ready(page, route)
+      const table = page.locator('table').first()
+      await expect(table).toBeVisible()
+
+      const facts = await table.evaluate((t: HTMLTableElement) => {
+        const thead = t.tHead!
+        const box = t.closest('.table-scroll')
+        const foot = [...document.querySelectorAll<HTMLElement>('div')].find(
+          (d) => /^전체 \d+/.test(d.innerText ?? '') && d.className.includes('border-t'),
+        )
+        return {
+          stickyHead: getComputedStyle(thead).position,
+          hasEdgeShadow: !!box,
+          // 숫자 열은 머리글도 그 열을 따른다 (§9)
+          numericHeadersRight: [...t.querySelectorAll('tbody tr:first-child td')].every((td, i) => {
+            const th = t.querySelectorAll('thead th')[i]
+            const cellRight = getComputedStyle(td).textAlign === 'right'
+            const headRight = getComputedStyle(th).textAlign === 'right'
+            return cellRight === headRight
+          }),
+          footOutsideScrollBox: foot ? !foot.closest('.table-scroll') : null,
+        }
+      })
+
+      expect(facts.stickyHead, '머리줄은 고정된다').toBe('sticky')
+      expect(facts.hasEdgeShadow, '오른쪽에 열이 더 있다고 가장자리가 말한다 (§8)').toBe(true)
+      expect(facts.numericHeadersRight, '숫자 열은 셀과 머리글의 정렬이 같다').toBe(true)
+      expect(facts.footOutsideScrollBox, '발은 스크롤 상자 밖 — 가로로 굴려도 안 밀려난다').toBe(true)
+    })
+  }
+
+  test('빈 상태 — 걸러서 0건이면 "없다"고 말하고 다음 손을 알려 준다 (규약 §3·§9)', async ({ page }) => {
+    // ⚠ 지표 관리에는 빈 상태 행이 아예 없었다 — 걸러서 0건이면 머리줄만 남았다
+    await ready(page, '/validation-results')
+    await page.getByPlaceholder(/검색|Search/).first().fill('존재하지않는검색어zzz')
+    const empty = page.getByText('조건에 맞는 실행이 없습니다.')
+    await expect(empty, '없다고 말한다').toBeVisible()
+    await expect(page.getByText(/전체.*로 두거나|지워 보세요/), '다음 손을 알려 준다').toBeVisible()
+  })
+})
+
 /* 규약 §9 "목록은 몇 건인지 말하고 끝난다" — 발이 없던 시절 표 열셋이 전부, 필터를 걸어
    줄이 절반이 되어도 아무 말이 없었다. 보는 사람은 그게 전부인지 걸러진 것인지 모른다. */
 test('목록 발 — 거르면 "전체 N건 중 M건"으로 바뀐다 (규약 §9)', async ({ page }) => {

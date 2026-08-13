@@ -4,7 +4,9 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
+import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { StatusBadge } from '#/components/portal/StatusBadge'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
@@ -355,70 +357,78 @@ function SpecDetailPage() {
         </div>
 
         {/* 시트성 표 — 카드로 펴면 열 비교가 죽는다. 자기 상자 스크롤 + 가장자리 그림자 */}
-        <div className="table-scroll mt-4 rounded-xl border border-hairline">
-          <table className="w-full min-w-[880px] border-collapse text-[13px]">
-            <thead>
-              <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                <th className="px-3 py-2.5 font-medium">#</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.category', '카테고리')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.name', '필드명')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.type', '타입')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.required', '필수')}</th>
-                <th className="px-3 py-2.5 text-right font-medium">{t('specDetail.th.maxLen', '최대길이')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.desc', '설명')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.rule', '유효성')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.owner', '담당자')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('specDetail.th.status', '상태')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((f) => (
-                <tr
-                  key={f.no}
-                  onClick={() => setEditing(f)}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
+        <DataTable
+          className="mt-4"
+          rows={visible}
+          rowKey={(f) => String(f.no)}
+          onRowClick={setEditing}
+          minWidth={880}
+          empty={{
+            title: t('specDetail.fieldsEmpty', '조건에 맞는 필드가 없습니다.'),
+            hint: t('specDetail.fieldsEmptyHint', '카테고리 칩을 [전체]로 두거나 검색어를 지워 보세요'),
+          }}
+          columns={[
+            { header: '#', cellClassName: 'font-mono text-xs text-ink-subtle', cell: (f) => f.no },
+            {
+              header: t('specDetail.th.category', '카테고리'),
+              cell: (f) => (
+                <span className="whitespace-nowrap text-xs text-ink-muted">
+                  {f.category}
+                  <span className="text-ink-subtle"> · {f.sub}</span>
+                </span>
+              ),
+            },
+            {
+              header: t('specDetail.th.name', '필드명'),
+              cellClassName: 'whitespace-nowrap font-medium text-ink',
+              cell: (f) => f.name,
+            },
+            {
+              header: t('specDetail.th.type', '타입'),
+              cell: (f) => (
+                <span className="rounded-md bg-chip px-1.5 py-0.5 font-mono text-xs text-ink-muted">{f.type}</span>
+              ),
+            },
+            {
+              header: t('specDetail.th.required', '필수'),
+              cellClassName: 'text-xs',
+              cell: (f) => (f.required ? <b className="text-primary">Y</b> : <span className="text-ink-subtle">N</span>),
+            },
+            {
+              header: t('specDetail.th.maxLen', '최대길이'),
+              numeric: true,
+              cellClassName: 'font-mono text-xs text-ink-muted',
+              /* 빈 값은 `—` (규약 §9) */
+              cell: (f) => f.maxLen ?? '—',
+            },
+            {
+              header: t('specDetail.th.desc', '설명'),
+              cellClassName: 'max-w-[260px] truncate text-ink-muted',
+              cell: (f) => f.desc,
+            },
+            {
+              header: t('specDetail.th.rule', '유효성'),
+              cellClassName: 'max-w-[150px] truncate font-mono text-xs text-primary/80',
+              cell: (f) => f.rule ?? '—',
+            },
+            {
+              header: t('specDetail.th.owner', '담당자'),
+              cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+              cell: (f) => f.owner,
+            },
+            {
+              header: t('specDetail.th.status', '상태'),
+              cell: (f) => (
+                <span
+                  className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${FIELD_STATUS_CLS[f.status]}`}
                 >
-                  <td className="px-3 py-2.5 font-mono text-xs text-ink-subtle">{f.no}</td>
-                  <td className="px-3 py-2.5">
-                    <span className="whitespace-nowrap text-xs text-ink-muted">
-                      {f.category}
-                      <span className="text-ink-subtle"> · {f.sub}</span>
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 font-medium text-ink">{f.name}</td>
-                  <td className="px-3 py-2.5">
-                    <span className="rounded-md bg-chip px-1.5 py-0.5 font-mono text-xs text-ink-muted">
-                      {f.type}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-xs">
-                    {f.required ? <b className="text-primary">Y</b> : <span className="text-ink-subtle">N</span>}
-                  </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums text-ink-muted">
-                    {f.maxLen ?? '—'}
-                  </td>
-                  <td className="max-w-[260px] truncate px-3 py-2.5 text-ink-muted">{f.desc}</td>
-                  <td className="max-w-[150px] truncate px-3 py-2.5 font-mono text-xs text-primary/80">
-                    {f.rule ?? '—'}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{f.owner}</td>
-                  <td className="px-3 py-2.5">
-                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${FIELD_STATUS_CLS[f.status]}`}>
-                      {f.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {visible.length === 0 && (
-                <tr>
-                  <td colSpan={10} className="px-3 py-8 text-center text-sm text-ink-subtle">
-                    {t('specDetail.fieldsEmpty', '조건에 맞는 필드가 없습니다.')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  {f.status}
+                </span>
+              ),
+            },
+          ]}
+        />
+        <ListFoot total={fields.length} shown={visible.length} unit="개" />
       </section>
 
       {/* 행 편집 — 목록을 훑다가 한 필드에 집중한다 (규약 §1 목록→상세 짝) */}

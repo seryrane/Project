@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { DataTable } from '#/components/portal/DataTable'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { ChartCard, StatusStackBar, TrendLineChart } from '#/components/portal/charts'
@@ -204,75 +205,85 @@ function ValidationResultsPage() {
         />
       </div>
 
-      <div className="anim-fade-up mt-4 overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface">
-        <table className="w-full min-w-[900px] border-collapse text-[13px]">
-          <thead>
-            <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-              <th className="px-4 py-2.5 font-medium">{t('results.th.run', '실행')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('results.th.datetime', '일시')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('results.th.spec', '사양서')}</th>
-              <th className="px-4 py-2.5 font-medium">Rule</th>
-              <th className="px-4 py-2.5 font-medium">{t('results.th.errorType', '오류 유형')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('results.th.severity', '심각도')}</th>
-              <th className="px-4 py-2.5 text-right font-medium">{t('results.th.target', '대상')}</th>
-              <th className="px-4 py-2.5 text-right font-medium">{t('results.th.errors', '오류')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('results.th.status', '상태')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const st = requeued[r.id] ? '재처리 중' : r.status
-              return (
-                <tr
-                  key={r.id}
-                  onClick={() => setDetail(r)}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
+      {/* ⚠ 예전에는 맨 `overflow-x-auto` 라 가장자리 그림자가 없었고(오른쪽에 열이 더
+          있다는 신호가 없었다), 발까지 그 스크롤 상자 안에 들어 있어 가로로 굴리면
+          세는 말이 함께 밀려 나갔다. 둘 다 관문이 진다 (규약 §8·§9). */}
+      <div className="anim-fade-up card-spotlight mt-4 rounded-2xl border border-hairline bg-surface p-4">
+        <DataTable
+          rows={rows}
+          rowKey={(r) => r.id}
+          onRowClick={setDetail}
+          minWidth={900}
+          empty={{
+            title: t('results.empty', '조건에 맞는 실행이 없습니다.'),
+            hint: t('results.emptyHint', '상태 칩을 [전체]로 두거나 검색어를 지워 보세요'),
+          }}
+          columns={[
+            {
+              header: t('results.th.run', '실행'),
+              cellClassName: 'whitespace-nowrap',
+              cell: (r) => (
+                <>
+                  <span className="font-mono text-xs text-ink-muted">{r.id}</span>
+                  <span className="ml-1.5 rounded-full bg-chip px-1.5 py-0.5 text-[10px] text-ink-subtle">{r.mode}</span>
+                </>
+              ),
+            },
+            {
+              header: t('results.th.datetime', '일시'),
+              cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+              cell: (r) => r.at,
+            },
+            {
+              header: t('results.th.spec', '사양서'),
+              cellClassName: 'whitespace-nowrap font-medium text-ink',
+              cell: (r) => r.specName,
+            },
+            { header: 'Rule', cellClassName: 'whitespace-nowrap text-xs text-ink-muted', cell: (r) => r.rule },
+            {
+              header: t('results.th.errorType', '오류 유형'),
+              cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+              cell: (r) => r.errorType,
+            },
+            {
+              header: t('results.th.severity', '심각도'),
+              cell: (r) => (
+                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[r.severity]}`}>
+                  {r.severity}
+                </span>
+              ),
+            },
+            {
+              header: t('results.th.target', '대상'),
+              numeric: true,
+              cellClassName: 'font-mono text-xs text-ink-muted',
+              cell: (r) => r.total.toLocaleString(),
+            },
+            {
+              header: t('results.th.errors', '오류'),
+              numeric: true,
+              cell: (r) => (
+                <span
+                  className={`font-mono text-xs font-semibold ${r.errors > 0 ? 'text-danger-ink' : 'text-ink-subtle'}`}
                 >
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <span className="font-mono text-xs text-ink-muted">{r.id}</span>
-                    <span className="ml-1.5 rounded-full bg-chip px-1.5 py-0.5 text-[10px] text-ink-subtle">
-                      {r.mode}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-subtle">
-                    {r.at}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-ink">{r.specName}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs text-ink-muted">{r.rule}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs text-ink-muted">{r.errorType}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[r.severity]}`}>
-                      {r.severity}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-xs tabular-nums text-ink-muted">
-                    {r.total.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={`font-mono text-xs font-semibold tabular-nums ${r.errors > 0 ? 'text-danger-ink' : 'text-ink-subtle'}`}>
-                      {r.errors.toLocaleString()}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
-                      {st}
-                    </span>
-                  </td>
-                </tr>
-              )
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                  {t('results.empty', '조건에 맞는 실행이 없습니다.')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        <div className="px-4 pb-4">
-          <ListFoot total={validationRuns.length} shown={rows.length} />
-        </div>
+                  {r.errors.toLocaleString()}
+                </span>
+              ),
+            },
+            {
+              header: t('results.th.status', '상태'),
+              cell: (r) => {
+                const st = requeued[r.id] ? '재처리 중' : r.status
+                return (
+                  <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
+                    {st}
+                  </span>
+                )
+              },
+            },
+          ]}
+        />
+        <ListFoot total={validationRuns.length} shown={rows.length} />
       </div>
 
       {/* 오류 상세 — 어느 행·어느 필드가 왜 걸렸는지 + 다음 행동(재검증·사양서) */}

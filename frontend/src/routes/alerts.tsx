@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChartCard, MultiLineChart } from '#/components/portal/charts'
+import { DataTable } from '#/components/portal/DataTable'
 import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Drawer } from '#/components/portal/Drawer'
@@ -458,57 +459,62 @@ function AlertsPage() {
           )}
         </ol>
 
-        {/* 넓은 화면: 표 — 가장자리 그림자로 더 있는 열을 말한다(규약 §8) */}
-        <div className="hidden pc:block">
-          <div className="table-scroll">
-            <table className="w-full min-w-[820px] border-collapse text-[13px]">
-              <thead>
-                <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                  <th className="px-4 py-2.5 font-medium">{t('alerts.th.at', '발생 시각')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('alerts.th.severity', '등급')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('alerts.th.server', '대상 서버')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('alerts.th.message', '내용')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('alerts.th.status', '상태')}</th>
-                  <th className="px-3 py-2.5 font-medium">{t('alerts.th.resolvedAt', '해소 시각')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((e) => (
-                  <tr
-                    key={e.id}
-                    onClick={() => setDetail(e)}
-                    className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-subtle">{e.at}</td>
-                    <td className="whitespace-nowrap px-3 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[e.severity]}`}>
-                        {severityLabel(e.severity)}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-ink-muted">{e.serverName}</td>
-                    <td className="min-w-0 px-3 py-3">
-                      <span className="block max-w-[360px] truncate text-ink">{e.message}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[e.status]}`}>
-                        {statusLabel(e.status)}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 font-mono text-xs tabular-nums text-ink-subtle">
-                      {e.resolvedAt ?? '—'}
-                    </td>
-                  </tr>
-                ))}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                      {t('alerts.empty', '조건에 맞는 알림이 없습니다.')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* 넓은 화면: 표 — 가장자리 그림자로 더 있는 열을 말한다(규약 §8).
+            ⚠ 이 화면은 **목록 하나에 그림이 둘**이다(좁은 화면 카드 · 넓은 화면 표).
+            그래서 발은 관문 밖에서 둘이 함께 쓴다 — 표 관문이 발을 품으면 여기서만
+            예외가 생긴다(DataTable.tsx 아래 주석). */}
+        <div className="hidden px-4 pc:block pc:px-5">
+          <DataTable
+            rows={pageRows}
+            rowKey={(e) => e.id}
+            onRowClick={setDetail}
+            minWidth={820}
+            empty={{
+              title: t('alerts.empty', '조건에 맞는 알림이 없습니다.'),
+              hint: t('alerts.emptyHint', '등급을 [전체]로 두거나 [미해결만 보기]를 꺼 보세요'),
+            }}
+            columns={[
+              {
+                header: t('alerts.th.at', '발생 시각'),
+                cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+                cell: (e) => e.at,
+              },
+              {
+                header: t('alerts.th.severity', '등급'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (e) => (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[e.severity]}`}>
+                    {severityLabel(e.severity)}
+                  </span>
+                ),
+              },
+              {
+                header: t('alerts.th.server', '대상 서버'),
+                cellClassName: 'whitespace-nowrap font-mono text-xs text-ink-muted',
+                cell: (e) => e.serverName,
+              },
+              {
+                header: t('alerts.th.message', '내용'),
+                cellClassName: 'min-w-0',
+                cell: (e) => <span className="block max-w-[360px] truncate text-ink">{e.message}</span>,
+              },
+              {
+                header: t('alerts.th.status', '상태'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (e) => (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[e.status]}`}>
+                    {statusLabel(e.status)}
+                  </span>
+                ),
+              },
+              {
+                header: t('alerts.th.resolvedAt', '해소 시각'),
+                cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+                /* 빈 값은 `—` 로 적는다 (규약 §9) — 빈 칸이 이어지면 표가 깨진 것처럼 보인다 */
+                cell: (e) => e.resolvedAt ?? '—',
+              },
+            ]}
+          />
         </div>
         <div className="px-4 pb-4 pc:px-5 pc:pb-4">
           <ListFoot

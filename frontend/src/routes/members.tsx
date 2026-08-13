@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
@@ -324,96 +325,104 @@ function MembersPage() {
         )}
       </ol>
 
-      <div className="anim-fade-up mt-4 hidden overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface pc:block">
-        <table className="w-full min-w-[860px] border-collapse text-[13px]">
-          <thead>
-            <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-              <th className="px-4 py-2.5 font-medium">{t('members.th.member', '회원')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.dept', '부서')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.gradeRole', '등급 · Role')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.status', '상태')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.fido', 'FIDO')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.lastLogin', '최종 로그인')}</th>
-              <th className="px-4 py-2.5 text-right font-medium">{t('members.th.lock', '잠금')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((m) => {
-              const st = effStatus(m)
-              return (
-                <tr
-                  key={m.id}
-                  onClick={() => {
-                    setDetail(m)
-                    setTab('info')
-                  }}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
-                >
-                  <td className="px-4 py-3">
-                    <span className="flex items-center gap-2.5">
-                      <Avatar name={m.name} size={30} />
-                      <span className="min-w-0">
-                        <span className="block font-medium text-ink">{m.name}</span>
-                        <span className="block truncate text-xs text-ink-subtle">{m.email}</span>
-                      </span>
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-ink-muted">{m.dept}</td>
-                  <td className="px-4 py-3">
-                    <span className="flex flex-wrap items-center gap-1">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
-                        {m.grade}
-                      </span>
-                      {m.roles.map((r) => (
-                        <span key={r} className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
-                          {r}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-mono text-xs font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
-                      {m.fido ? 'ON' : 'OFF'}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-subtle">
-                    {m.lastLogin}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleLock(m)
-                      }}
-                      className={`rounded-lg px-2.5 py-1 text-xs transition-colors ${
-                        st === '잠금'
-                          ? 'bg-review-bg text-review-ink hover:opacity-80'
-                          : 'text-ink-subtle hover:bg-chip hover:text-ink'
-                      }`}
+      <div className="anim-fade-up card-spotlight mt-4 hidden rounded-2xl border border-hairline bg-surface p-4 pc:block">
+        <DataTable
+          rows={rows}
+          rowKey={(m) => m.id}
+          onRowClick={(m) => {
+            setDetail(m)
+            setTab('info')
+          }}
+          minWidth={860}
+          empty={{
+            title: t('members.empty', '조건에 맞는 회원이 없습니다.'),
+            hint: t('members.emptyHint', '검색어를 지우거나 상태·등급 칩을 [전체]로 바꿔 보세요'),
+          }}
+          columns={[
+            {
+              header: t('members.th.member', '회원'),
+              cell: (m) => (
+                <span className="flex items-center gap-2.5">
+                  <Avatar name={m.name} size={30} />
+                  <span className="min-w-0">
+                    <span className="block font-medium text-ink">{m.name}</span>
+                    <span className="block truncate text-xs text-ink-subtle">{m.email}</span>
+                  </span>
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.dept', '부서'),
+              cellClassName: 'whitespace-nowrap text-ink-muted',
+              cell: (m) => m.dept,
+            },
+            {
+              header: t('members.th.gradeRole', '등급 · Role'),
+              cell: (m) => (
+                <span className="flex flex-wrap items-center gap-1">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
+                    {m.grade}
+                  </span>
+                  {m.roles.map((r) => (
+                    <span
+                      key={r}
+                      className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted"
                     >
-                      {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                  {t('members.empty', '조건에 맞는 회원이 없습니다.')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        <div className="px-4 pb-4">
-          <ListFoot total={memberList.length} shown={rows.length} unit="명" />
-        </div>
+                      {r}
+                    </span>
+                  ))}
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.status', '상태'),
+              cell: (m) => {
+                const st = effStatus(m)
+                return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+              },
+            },
+            {
+              header: t('members.th.fido', 'FIDO'),
+              cell: (m) => (
+                <span className={`font-mono text-xs font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
+                  {m.fido ? 'ON' : 'OFF'}
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.lastLogin', '최종 로그인'),
+              cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+              cell: (m) => m.lastLogin,
+            },
+            {
+              header: t('members.th.lock', '잠금'),
+              numeric: true,
+              cell: (m) => {
+                const st = effStatus(m)
+                return (
+                  <button
+                    type="button"
+                    aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
+                    /* ⚠ 줄 전체가 서랍을 여는 자리라 이 버튼은 **전파를 끊는다** —
+                       안 끊으면 잠그면서 서랍이 함께 열린다 */
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLock(m)
+                    }}
+                    className={`rounded-lg px-2.5 py-1 text-xs transition-colors ${
+                      st === '잠금'
+                        ? 'bg-review-bg text-review-ink hover:opacity-80'
+                        : 'text-ink-subtle hover:bg-chip hover:text-ink'
+                    }`}
+                  >
+                    {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
+                  </button>
+                )
+              },
+            },
+          ]}
+        />
+        <ListFoot total={memberList.length} shown={rows.length} unit="명" />
       </div>
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}
