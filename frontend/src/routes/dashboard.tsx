@@ -229,7 +229,6 @@ function DashboardPage() {
           delta="+6"
           deltaGood
           spark={kpiSparks.specs}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
           label={t('dash.stat.pending', '승인 대기')}
@@ -237,7 +236,6 @@ function DashboardPage() {
           delta="+2"
           deltaGood={false}
           spark={kpiSparks.pending}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
           label={t('dash.stat.successRate', '검증 성공률')}
@@ -245,7 +243,6 @@ function DashboardPage() {
           delta="+1.2%p"
           deltaGood
           spark={kpiSparks.successRate}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
           label={t('dash.stat.periodProcessed', '기간 검증 처리')}
@@ -306,13 +303,22 @@ function DashboardPage() {
                   <span className="block truncate text-[13px] text-ink">{q.name}</span>
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-subtle">
                     <span className="font-mono">{q.id}</span>
-                    <span className="rounded-full bg-primary/12 px-1.5 font-mono text-primary">{q.version}</span>
+                    {/* ⚠ 버전은 **상태가 아니라 식별자**다 — 포인트 색을 주면 목록마다
+                        v2.3·v1.5·v3.1 이 전부 튀어 정작 봐야 할 것(이름·경과일)을 덮는다.
+                        DESIGN.md Rules 1: 퍼플 액센트는 화면당 1~2곳(주요 CTA·활성 메뉴).
+                        이름표 태그는 **테두리만, 무색**이 정본이다(규약 §5 상태 칩 vs 이름표) */}
+                    <span className="rounded-full border border-hairline px-1.5 font-mono">{q.version}</span>
                     {q.owner}
                   </span>
                 </span>
+                {/* ⚠ **하나의 양에 두 색조를 쓰지 않는다** (DESIGN.md 차트 규칙과 같은 이유).
+                    경과일은 1일이든 3일이든 같은 양인데 보라↔빨강으로 갈려 있어서, 화면에
+                    색이 두 갈래로 늘고 "무엇이 급한가"는 오히려 흐려졌다.
+                    **기준(3일)을 넘긴 것만 색을 얻고 나머지는 중립으로 물러선다** —
+                    급한 것 하나가 진짜로 튀어 보인다. 판단은 숫자가 이미 하고 있다. */}
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                    q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-pending-bg text-pending-ink'
+                    q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-chip text-ink-muted'
                   }`}
                 >
                   {tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}

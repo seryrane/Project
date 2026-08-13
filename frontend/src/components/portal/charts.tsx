@@ -113,17 +113,29 @@ export function StatTile({
   spark?: Array<number>
 }) {
   return (
-    <div className="card-spotlight rounded-2xl border border-hairline bg-surface p-5 transition-colors hover:border-primary/30">
+    /* ⚠⚠ **요약 타일에서는 선을 걷었다** (2026-08-13). 카드마다 1px 선이 있으면 화면이
+       격자로 읽힌다 — 실측으로 본문에 테두리를 가진 요소가 16개였다. 맨 위 네 칸은
+       "담는 상자"가 아니라 **떠 있는 요약**이라, 면과 그림자만으로 띄우면 아래 카드들과
+       위계가 생긴다(표식에서 테두리 조건을 뺀 이유 — styles.css '유리와 깊이' 절).
+       호버는 선 대신 한 단계 더 뜨는 것으로 답한다. */
+    <div className="card-spotlight card-hover rounded-2xl bg-surface p-5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-ink-subtle">{label}</span>
         {delta && <DeltaChip delta={delta} good={deltaGood ?? true} />}
       </div>
-      <div className="mt-1.5 text-[26px] font-semibold leading-none tabular-nums text-ink">{value}</div>
+      {/* ⚠ 숫자가 이 타일의 **주인공**이다. 예전 26px 은 페이지 제목(24px)과 2px 차이라
+          주인공이 없었다 — 무엇을 먼저 봐야 할지 화면이 말해 주지 않았다(참고로 잰
+          shadcn 대시보드는 30 대 24 로 6px 를 벌린다). 표준 단(text-3xl=30px)을 쓴다. */}
+      <div className="mt-1.5 text-3xl font-semibold leading-none tabular-nums text-ink">{value}</div>
       {spark && (
         <div className="mt-3">
           <Sparkline points={spark} />
         </div>
       )}
+      {/* ⚠ 캡션은 **스파크라인이 못 하는 말**만 담는다 — "최근 14일 추이"처럼 그림이 이미
+          하고 있는 말을 글로 또 적으면 한 칸에 같은 이야기가 두 번 선다. 다만 그 판단은
+          **부르는 쪽**이 한다: 관문이 내용을 조용히 감추면 왜 안 나오는지 아무도 모른다
+          (대시보드에서 중복 캡션 셋을 걷었다. "vs 이전 동일 기간"은 다른 말이라 남겼다). */}
       {caption && <div className="mt-2 text-xs text-ink-subtle">{caption}</div>}
     </div>
   )
