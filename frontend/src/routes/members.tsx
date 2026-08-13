@@ -714,7 +714,33 @@ function MembersPage() {
 
       {/* 회원 등록 — HMG-SSO 가 원장이라 초대 개념이다 */}
       {creating && (
-        <Modal title={t('members.add')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('members.add')}
+          onClose={() => setCreating(false)}
+          /* 발은 관문 슬롯으로 (규약 §7 "발은 붙박이") — 입력 칸이 다섯이라 좁은 화면에서
+             몸이 넘친다. 몸 안에 두면 다 채워 놓고 [등록]을 찾으러 다시 내려가야 한다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(false)
+                  toast(t('members.toast.registered', '회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다'))
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('members.register')}
+              </button>
+            </div>
+          }
+        >
           <p className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
             {t(
               'members.create.hint',
@@ -744,25 +770,6 @@ function MembersPage() {
                 <ChipSelect options={GRADES} value={newGrade} onChange={setNewGrade} />
               </div>
             </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreating(false)
-                toast(t('members.toast.registered', '회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다'))
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('members.register')}
-            </button>
           </div>
         </Modal>
       )}

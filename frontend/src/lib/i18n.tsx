@@ -97,6 +97,15 @@ const CORE_DICT: Record<string, Entry> = {
   'palette.specs': { ko: '사양서', en: 'Specs' },
   'palette.actions': { ko: '기능', en: 'Actions' },
   'palette.open': { ko: '열기', en: 'Open' },
+  // ⚠ 이 두 줄은 팔레트 안에 **한국어로 박혀 있었다** — 화면 대부분이 사전을 타는데
+  //   여기만 안 타서, EN 으로 돌리면 검색창과 빈 결과 안내만 한국어로 남았다
+  //   (2026-08-13 §4 다국어 위반으로 잡음). 사전에 없는 낱말은 화면에서 티가 안 난다.
+  'palette.placeholder': { ko: '페이지, 사양서 검색...', en: 'Search pages and specs...' },
+  'palette.empty': { ko: '검색 결과가 없습니다.', en: 'No results.' },
+  // 발의 키 안내 — 넓은 화면에만 나온다(좁은 화면엔 물리 키가 없다)
+  'palette.hint.move': { ko: '이동', en: 'Move' },
+  'palette.hint.run': { ko: '열기', en: 'Open' },
+  'palette.hint.close': { ko: '닫기', en: 'Close' },
 
   // ── 대화형 챗봇 (정본: docs/챗봇_표준질의_설계.md) ───────────────────
   // ⚠ 답 본문(understood·headline·evidence 등)은 서버가 언어별로 만든다(정본 §5) —

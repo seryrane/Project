@@ -146,6 +146,28 @@
   --color-fill-deployed: oklch(0.63 0.11 158);
   --color-fill-pending: oklch(0.72 0.15 295);
   --color-fill-review: oklch(0.84 0.12 82);
+
+  /* ═══ 층 사다리 (규약 §8) — 정본은 **여기 한 곳**이다 ═══
+     `z-nav` `z-modal` 처럼 이름으로만 고른다. `z-50` 같은 숫자를 마크업에 적지 않는다.
+
+     ⚠⚠ **떠 있는 버튼은 서랍 가림막보다 아래다.** 예전에는 둘 다 `z-30` 이라 DOM 순서로
+     버튼이 가림막 위에 있었다 — 좁은 화면에서 **서랍이 열려 있는데 [물어보기]가 눌리고**,
+     누르면 서랍 위에 우측패널이 쌓였다(규약 §8 "덮개는 쌓지 않는다"를 스스로 깨고 있었다).
+     규약이 "하단 시트가 떠 있는 버튼 뒤로 들어가는 날이 온다"고 예고한 사고가, 실제로는
+     이 조합으로 이미 나 있었다(2026-08-13 발견).
+
+     ⚠ 배경막을 **자기 안에** 갖는 덮개(모달·우측패널·팔레트)는 바깥 상자에 `z-modal`
+     하나만 준다. `z-backdrop` 은 가림막이 **형제로 떨어져 있을 때만**(좁은 화면 서랍).
+     ⚠ 사다리에 없는 층이 필요해 보이면 여기에 칸을 먼저 만든다 — 마크업에서 즉석으로
+     정하는 순간 그 화면만 아는 규칙이 하나 생긴다. */
+  --z-index-nav: 10; /* 붙박이 내비 — GNB 헤더 · 넓은 화면 LNB */
+  --z-index-panel: 20; /* 본문에 붙는 패널 — BOTTOM 콘솔(아직 없다. 자리를 비워 둔다) */
+  --z-index-fab: 30; /* 떠 있는 버튼(물어보기) */
+  --z-index-popover: 40; /* 팝오버 — 투명막과 몸통이 같은 층(DOM 순서로 몸통이 위) */
+  --z-index-backdrop: 50; /* 덮개 배경막 — 몸통과 떨어져 있는 것 */
+  --z-index-modal: 60; /* 덮개 몸통 — 모달 · 우측패널 · 팔레트 · 좁은 화면 서랍 */
+  --z-index-dialog: 70; /* 덮개 위에 서는 확인창 — 덮개를 쌓는 유일한 예외 */
+  --z-index-toast: 80; /* 토스트 — 무엇에도 가리지 않는다 */
 }
 
 /* Light theme — overrides the same tokens; the sidebar stays dark in both themes */
@@ -400,6 +422,19 @@ aside :focus-visible {
 [data-cover]:focus-visible {
   outline: none;
 }
+/* ⚠⚠ **상자를 꽉 채운 입력칸에는 링을 그리지 않는다** (2026-08-13 사용자 지적 두 번:
+   "인풋창 활성화 표현이 어색하다" → "라인도 벗어나고 어색함").
+   커맨드 팔레트 검색칸은 `overflow-hidden` 인 덮개의 가장자리까지 꽉 차 있어서,
+   `outline-offset: 2px` 짜리 링이 **둥근 모서리를 넘어 각지게 삐져나온다** — 화면에는
+   네모 상자 하나가 덧그려진 것처럼 보인다. 대신 **머리 줄 전체가 focus-within 으로**
+   반응한다(면이 밝아지고 아래 선·아이콘이 포인트 색). 그래야 잘릴 여지가 없다.
+
+   ⚠ 이 예외는 **여기(레이어 밖)에 적어야 한다.** 마크업에 `focus-visible:outline-none`
+   유틸을 붙여도 소용없다 — 위 전역 규칙이 레이어 밖이라 `@layer utilities` 를 이긴다.
+   실제로 유틸로 먼저 고쳤다가 링이 그대로 남아 사용자가 다시 지적했다. */
+[data-ring-none]:focus-visible {
+  outline: none;
+}
 
 
 /* 스크롤바도 앱의 물건이다 (DESIGN.md Rules 8) — 브라우저 기본 회색 스크롤바가
@@ -409,6 +444,30 @@ aside :focus-visible {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-chip-strong) transparent;
+}
+
+/* ⚠⚠ **스크롤바 자리를 늘 비워 둔다** (2026-08-13 사용자 지적: "메뉴 이동할 때마다 화면이
+   미세하게 좁아졌다가 다시 펴지는 느낌"). 화면마다 내용 높이가 달라 세로 스크롤바가
+   생겼다 없어졌다 하는데, 그때마다 뷰포트 폭이 **스크롤바 폭(여기선 10px)만큼** 달라져
+   본문·헤더·차트가 통째로 움찔한다. 페이지 전환 애니메이션이 있으면 그 움찔이 전환에
+   섞여 "꿈틀댄다"로 보인다 — 전환을 아무리 다듬어도 안 없어지는 부류다.
+
+   덮개도 같은 원인을 만든다: 열릴 때 `overflow: hidden` 으로 뒤를 잠그면(useCover)
+   스크롤바가 사라지면서 뒤 화면이 그 폭만큼 넓어진다. gutter 를 잡아 두면 둘 다 멎는다.
+
+   ⚠⚠ **`scrollbar-gutter: stable` 만으로는 안 멎는다** (2026-08-13 실측). 루트의 overflow 가
+   `visible`/`auto` 일 때 크롬은 자리를 안 잡아 준다 — `overflow-y: scroll` 로 **스크롤바를
+   늘 세워야** 폭이 고정된다. 재 본 값:
+     gutter + overflow auto   → /faq 1920 · /dashboard 1910 · /login 1920  (흔들림)
+     gutter + overflow scroll → 1910 · 1910 · 1910                        (멎음)
+   gutter 는 안쪽 스크롤 상자를 위해 함께 남긴다.
+
+   ⚠ `html` 에만 준다 — `*` 에 주면 안쪽 스크롤 상자마다 빈 띠가 생겨 표·목록이 어긋난다.
+   ⚠ 덮개가 열릴 때의 밀림은 여기서 못 막는다(`overflow: hidden` 이 자리를 도로 가져간다) —
+   그쪽은 useCover 가 잠글 때 스크롤바 폭만큼 여백을 채워 막는다. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 ::-webkit-scrollbar {
   width: 8px;
@@ -472,6 +531,12 @@ select option {
    자리는 위인데 아래에서 올라오면 어디서 온 물건인지 눈이 못 따라간다 (toast.tsx) */
 @keyframes toast-in-top {
   from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+}
+/* 좁은 화면에서 팝오버는 **아래에서 올라오는 시트**다(규약 §1 팝오버 절) — 그러면
+   등장도 아래에서 와야 한다. scale-in(위에서 눌러앉기)을 그대로 쓰면 시트가 제자리에서
+   뿅 나타나 "어디서 온 물건인지"를 눈이 못 따라간다 (Popover.tsx) */
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
 }
 
 /* 부드러운 펼침 — height:auto 를 그리드 행 전환으로 푼다 (최신 CSS 관용구).
@@ -771,17 +836,36 @@ h1, h2, h3 {
 .anim-slide-out { animation: slide-out-right 200ms ease both; }
 .anim-fade-up { animation: fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-toast-in { animation: toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-sheet-in { animation: sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 /* 45rem = --breakpoint-pc. @theme 토큰은 미디어 쿼리 안에서 못 쓰므로 값을 적는다 */
 @media (min-width: 45rem) {
   .anim-toast-in { animation-name: toast-in-top; }
 }
 
-/* Cross-page View Transitions (TanStack Router defaultViewTransition) */
+/* Cross-page View Transitions (TanStack Router defaultViewTransition)
+
+   ⚠⚠ **페이지 전환은 크로스페이드만 한다. 확대·이동을 얹지 않는다** (2026-08-13 사용자
+   지적: "메뉴 이동할 때마다 미세하게 좁아졌다가 다시 펴지는 느낌", "계속 꿈틀거려").
+
+   원인은 여기였다 — `::view-transition-new(root)` 에 `scale-in` 을 걸어 뒀는데 그 keyframe 은
+   `transform: translateY(10px) scale(0.97)` 에서 시작한다. 카드 하나에 걸면 "눌러앉는" 느낌이지만
+   **root 는 화면 전체의 스냅샷**이라, 사이드바·헤더·본문·차트가 통째로 97% 로 줄었다 펴진다.
+   가운데에서 멀수록 더 많이 움직여서, 화면 가장자리가 매번 출렁이는 것으로 보인다.
+   전환마다 그러니 "자연스럽게 넘어가는" 대신 "꿈틀대는" 인상이 된다.
+
+   ⚠ 이 자리는 **크기·위치를 건드리면 안 되는 자리**다. 층·리듬을 주는 모션은 카드·덮개처럼
+   *경계가 있는 물건*에만 건다 — 화면 전체에는 밝기(투명도)만 쓴다.
+   ⚠ 세로 스크롤바가 생겼다 없어지며 폭이 널뛰던 문제는 **별개**였고, 루트에
+   `overflow-y: scroll` 로 따로 잡았다(위 스크롤바 절). 둘이 겹쳐 있어서 하나만 고쳤을 때
+   "아직도 꿈틀거린다"가 됐다. */
+@keyframes page-in {
+  from { opacity: 0; }
+}
 ::view-transition-old(root) {
   animation: fade-out 110ms ease both;
 }
 ::view-transition-new(root) {
-  animation: scale-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: page-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

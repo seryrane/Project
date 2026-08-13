@@ -328,7 +328,9 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
   return (
     <div className="space-y-4">
       <section>
-        <h3 className="text-[11px] font-semibold text-ink-subtle">{t('ask.suggested')}</h3>
+        <h3 className="text-[11px] font-semibold tracking-[0.06em] text-ink-subtle">
+          {t('ask.suggested')}
+        </h3>
         {catalogStatus === 'loading' && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[0, 1, 2, 3].map((i) => (
@@ -344,14 +346,21 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
           <div className="mt-2 space-y-2.5">
             {catalog.categories.map((cat) => (
               <div key={cat.key}>
-                <div className="text-[10px] text-ink-subtle">{cat.label}</div>
-                <div className="mt-1 flex flex-wrap gap-1.5">
+                {/* 갈래 이름은 자간을 벌려 "머리표"로 읽히게 한다 — 커맨드 팔레트의 갈래와
+                    같은 수법이다. 덮개마다 다른 손대중을 쓰면 한 벌로 안 읽힌다 */}
+                <div className="text-[10px] font-semibold tracking-[0.06em] text-ink-subtle">
+                  {cat.label}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {cat.questions.map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => void submitQuestion(q)}
-                      className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-canvas/40 px-2.5 py-1 text-[12px] text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                      /* ⚠ 칩이 **누를 수 있는 것으로 안 읽혔다** — `bg-canvas/40` 은 덮개
+                         면보다 옅어 글자만 떠 있는 것처럼 보였다(규약 §5: 조작은 면보다
+                         한 단계 눌린다). 조작 면 토큰(chip)으로 바꾸고 최소 높이를 준다 */
+                      className="min-h-8 min-w-0 max-w-full truncate rounded-full border border-hairline bg-chip px-3 py-1.5 text-[12px] text-ink-muted transition-colors hover:border-primary/40 hover:bg-chip-strong hover:text-ink"
                     >
                       {q}
                     </button>
@@ -376,7 +385,15 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
         </section>
       )}
 
-      <div className="flex items-center gap-2 border-t border-hairline pt-3">
+      {/* 묻는 칸 = 이 패널의 **발**이다 (규약 §7 "발은 붙박이. 몸에 두면 밀려서 사라진다").
+          ⚠ 예전에는 그냥 마지막 요소라, 표준 질의를 몇 번 주고받아 대화가 길어지면
+          **묻는 칸이 스크롤 위로 밀려 올라갔다** — 다시 물으려면 맨 아래로 내려가야 했다.
+          덮개(Modal)의 발 슬롯에 넣지 않고 여기서 sticky 로 붙드는 이유: 입력값·전송
+          상태가 이 컴포넌트 안에 있어서, 밖으로 빼면 상태를 위로 올려야 한다.
+          ⚠ 배경을 깔아야 한다 — 투명하면 밑에서 올라오는 글자가 입력칸을 통과해 보인다. */}
+      {/* ⚠ 음수 여백은 **감싼 덮개의 좌우 여백과 같은 값**이어야 한다(Modal 몸: px-5 / pc:px-6).
+          어긋나면 발 줄만 4px 씩 삐져나오거나 안쪽으로 들어가 앉는다 */}
+      <div className="sticky bottom-0 -mx-5 flex items-center gap-2 border-t border-hairline bg-cover-glass px-5 pb-1 pt-3 backdrop-blur-xl pc:-mx-6 pc:px-6">
         <input
           aria-label={t('ask.inputLabel')}
           value={input}

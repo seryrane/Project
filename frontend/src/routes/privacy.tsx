@@ -46,8 +46,8 @@ function PrivacyPage() {
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
 
   return (
-    // 방침 전문·안내가 본체인 화면 — 읽기 폭 (AppShell width)
-    <AppShell active="privacy" title={t('nav.privacy', '개인정보보호')} width="doc">
+    // 커뮤니티 5개는 폭을 통일한다 (사용자 결정 2026-08-13 — guide.tsx 주석 참고)
+    <AppShell active="privacy" title={t('nav.privacy', '개인정보보호')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.privacy', '개인정보보호')}</h1>
@@ -283,10 +283,26 @@ function PrivacyPage() {
 
       {/* 처리방침 전문 — 읽고 닫는 것이라 우측 서랍 */}
       {policyOpen && (
-        <Drawer title={t('privacy.policyDrawerTitle', '개인정보 처리방침 v3.2')} onClose={() => setPolicyOpen(false)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1">
+        <Drawer
+          title={t('privacy.policyDrawerTitle', '개인정보 처리방침 v3.2')}
+          onClose={() => setPolicyOpen(false)}
+          /* 발은 관문 슬롯으로 (규약 §7). 방침 전문은 특히 길어서, 몸 안에 두면
+             닫기 버튼을 보려고 전문을 끝까지 내려야 했다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div>
                 <p className="text-xs text-ink-subtle">
                   {tf(
                     'privacy.policyMeta',
@@ -301,15 +317,6 @@ function PrivacyPage() {
                     </p>
                   ))}
                 </div>
-              </div>
-              <div className="mt-4 flex justify-end gap-2 border-t border-hairline pt-3.5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  {t('common.close')}
-                </button>
               </div>
             </div>
           )}

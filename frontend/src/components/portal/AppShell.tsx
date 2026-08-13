@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
@@ -11,10 +11,11 @@ import { useTheme } from '#/lib/useTheme'
 import { AskPanel } from './AskPanel'
 import { Avatar } from './Avatar'
 import { CommandPalette } from './CommandPalette'
-import { Drawer } from './Drawer'
 import { Icon } from './Icon'
+import { Modal } from './Modal'
 import { MotionRoot } from './motion'
 import { MyAbilities } from './MyAbilities'
+import { Popover } from './Popover'
 import { Preferences } from './Preferences'
 import { useToast } from './toast'
 
@@ -31,6 +32,11 @@ function NavRow({
   // 잎(메뉴 항목)을 고르면 좁은 화면 서랍을 닫는다 — 규약 §8. 가지(섹션)는 그대로 둔다.
   onSelect: () => void
 }) {
+  /* ⚠ 레일(접힘)에서는 **이름표를 붙인다.** 아이콘만 남는데 이름을 알 길이 "호버해서
+     사이드바를 통째로 펼치기"뿐이었다 — 어느 아이콘인지 확인하려고 매번 레일을 펴야 하면
+     접어 둔 뜻이 없다. 펼친 상태에서는 글자가 이미 있으므로 붙이지 않는다(중복 툴팁은
+     마우스만 성가시게 한다). 다만 **말줄임된 긴 이름**은 펼친 상태에서도 붙여 준다. */
+  const tip = rail ? item.label : undefined
   const className = `relative mb-0.5 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors ${
     active
       ? 'bg-gradient-to-r from-primary to-accent2 font-semibold text-white shadow-[0_2px_10px_var(--color-glow)]'
@@ -60,11 +66,11 @@ function NavRow({
     </>
   )
   return item.to ? (
-    <Link to={item.to} className={className} onClick={onSelect}>
+    <Link to={item.to} className={className} onClick={onSelect} title={tip}>
       {inner}
     </Link>
   ) : (
-    <button type="button" className={className} onClick={onSelect}>
+    <button type="button" className={className} onClick={onSelect} title={tip}>
       {inner}
     </button>
   )
@@ -114,6 +120,10 @@ function Shell({
   // LNB 핀 — 해제하면 아이콘 레일로 접히고, 올리면 다시 펴진다 (데스크톱 전용)
   const [pinned, setPinned] = useState(true)
   const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
+  // 팝오버는 **연 조작에 매달린다** — 자리를 화면 끝에서 손으로 재던 것(`right-24`)을
+  // 걷고 이 두 ref 에서 잰다. GNB 에 버튼이 하나 늘어도 따라온다 (규약 §1 팝오버 절)
+  const bellRef = useRef<HTMLButtonElement>(null)
+  const userRef = useRef<HTMLButtonElement>(null)
   // 내가 할 수 있는 것 — 권한은 말없이 붙고 회수는 더 조용하다. 받은 본인이 확인할 자리
   const [abilitiesOpen, setAbilitiesOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
@@ -152,11 +162,27 @@ function Shell({
 
   useEffect(() => {
     if (localStorage.getItem('lnb-pinned') === '0') setPinned(false)
+    // ⚠ 접어 둔 섹션도 기억한다 — 핀은 남는데 접힘만 안 남아서, 새로고침할 때마다
+    //   메뉴가 통째로 펴졌다. 안 쓰는 섹션을 접어 두는 사람에게는 접는 일이 매번이 된다.
+    //   ⚠ 수화 뒤에 읽는다 — 서버에는 localStorage 가 없어 첫 그림은 늘 '펼침'이다
+    try {
+      const saved = localStorage.getItem('lnb-collapsed')
+      if (saved) setCollapsed(JSON.parse(saved) as Record<string, boolean>)
+    } catch {
+      // 옛 판이 남긴 깨진 값 — 무시하고 기본(전부 펼침)으로 간다. 메뉴가 안 보이는 것보다 낫다
+    }
   }, [])
   const togglePin = () => {
     setPinned((p) => {
       localStorage.setItem('lnb-pinned', p ? '0' : '1')
       return !p
+    })
+  }
+  const toggleSection = (id: string) => {
+    setCollapsed((c) => {
+      const next = { ...c, [id]: !c[id] }
+      localStorage.setItem('lnb-collapsed', JSON.stringify(next))
+      return next
     })
   }
 
@@ -166,7 +192,8 @@ function Shell({
         e.preventDefault()
         setPaletteOpen((v) => !v)
       }
-      if (e.key === 'Escape') setMenu(null)
+      // ⚠ Esc 는 여기서 처리하지 않는다 — 팝오버 관문(Popover)이 자기 Esc 를 갖는다.
+      //   두 곳에서 같은 키를 잡으면 나중에 한쪽만 고치게 된다 (작업 규율 1)
     }
     // 스포트라이트 좌표 위임 — .card-spotlight 위에서만 --mx/--my 를 채운다
     const onMove = (e: PointerEvent) => {
@@ -201,12 +228,16 @@ function Shell({
           type="button"
           aria-label="메뉴 닫기"
           onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-30 bg-black/65 pc:hidden"
+          className="fixed inset-0 z-backdrop bg-black/65 pc:hidden"
         />
       )}
 
+      {/* 한 요소가 두 역할을 한다 — 넓은 화면에서는 **붙박이 내비**(z-nav), 좁은 화면에서는
+          본문을 덮는 **서랍**(z-modal). 층을 하나로 박으면 한쪽이 반드시 틀린다:
+          늘 z-nav 면 서랍이 가림막 아래로 들어가고, 늘 z-modal 이면 넓은 화면에서
+          사이드바가 덮개 위에 남는다 (규약 §8 사다리) */}
       <aside
-        className={`group/rail fixed inset-y-0 left-0 z-40 flex w-60 flex-col overflow-x-hidden border-r border-white/5 bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:translate-x-0 ${
+        className={`group/rail fixed inset-y-0 left-0 z-modal flex w-60 flex-col overflow-x-hidden border-r border-white/5 bg-sidebar text-sidebar-ink transition-[transform,width] duration-200 pc:z-nav pc:translate-x-0 ${
           navOpen ? 'translate-x-0' : '-translate-x-full'
         } ${rail ? 'pc:w-16 pc:hover:w-60 pc:hover:shadow-[12px_0_40px_rgb(0_0_0/40%)]' : 'pc:w-60'}`}
       >
@@ -248,7 +279,7 @@ function Shell({
                 {section.title ? (
                   <button
                     type="button"
-                    onClick={() => setCollapsed((c) => ({ ...c, [section.id]: !c[section.id] }))}
+                    onClick={() => toggleSection(section.id)}
                     /* ⚠ LNB 에서 가장 흐린 글자였다 — 2.96:1(2026-08-06 전수 감사).
                        "덜 중요하다"는 굵기·크기가 이미 말하고 있으니 밝기까지 낮출 필요가
                        없다. 45% → 70% (4.74:1) */
@@ -312,7 +343,7 @@ function Shell({
         {/* 글라스 헤더 — blur 에 saturate 를 얹으면 비쳐 보이는 색이 탁해지지 않는다.
             ⚠ 면은 `topbar` 토큰이다(styles.css). 캔버스와 같은 색(`bg-canvas/75`)이면
             라이트에서 헤더와 본문이 붙어 버린다 — 2026-08-11 사용자 지적으로 갈랐다 */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-topbar-line bg-topbar px-4 shadow-[var(--shadow-topbar)] backdrop-blur-md backdrop-saturate-150 pc:px-8">
+        <header className="sticky top-0 z-nav flex h-14 items-center justify-between gap-3 border-b border-topbar-line bg-topbar px-4 shadow-[var(--shadow-topbar)] backdrop-blur-md backdrop-saturate-150 pc:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
@@ -360,17 +391,12 @@ function Shell({
               </span>
               <kbd className="rounded-md border border-hairline bg-chip px-1.5 py-0.5 text-[10px] text-ink-muted">⌘K</kbd>
             </button>
-            {/* 대화형 챗봇 — 어느 화면에서나 같은 패널 하나(정본 §1). 특정 화면 안에
-                두면 그 화면 권한이 없는 사람은 챗봇 자체를 못 쓰게 된다 */}
-            <button
-              type="button"
-              onClick={() => setAskOpen(true)}
-              aria-label={t('ask.title')}
-              title={t('ask.title')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-[15px] text-ink-muted transition-colors hover:text-ink"
-            >
-              💬
-            </button>
+            {/* ⚠ 여기 있던 챗봇 💬 는 **걷었다** (2026-08-13). 진입점이 셋이었다 —
+                헤더 💬 · 떠 있는 버튼 · ⌘K. 아래 FAB 주석에는 "헤더는 좁은 화면에서
+                접히는 줄이라" 헤더에서 옮겼다고 적혀 있는데 **헤더 쪽이 안 걷혀서**,
+                옮긴 게 아니라 늘어난 상태였다. 게다가 여기만 아이콘이 아니라 **이모지
+                문자**라 같은 기능이 화면에서 두 모양이었다(글꼴 따라 모양이 변한다).
+                어디서나 같은 것을 여는 물건은 어디서나 **한 자리**에 있어야 한다. */}
             {/* 언어는 사람마다 (규약 §4-1) — 현재 언어를 표시하고 누르면 전환 */}
             <button
               type="button"
@@ -398,8 +424,11 @@ function Shell({
               )}
             </button>
             <button
+              ref={bellRef}
               type="button"
               aria-label={`알림 ${unread}건`}
+              aria-expanded={menu === 'bell'}
+              aria-haspopup="dialog"
               onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
               className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
@@ -416,8 +445,11 @@ function Shell({
               )}
             </button>
             <button
+              ref={userRef}
               type="button"
               aria-label="계정 메뉴"
+              aria-expanded={menu === 'user'}
+              aria-haspopup="dialog"
               onClick={() => setMenu(menu === 'user' ? null : 'user')}
               className="flex items-center gap-2.5 rounded-lg px-1 py-0.5 transition-colors hover:bg-chip"
             >
@@ -445,17 +477,17 @@ function Shell({
         </main>
       </div>
 
-      {/* GNB 팝오버 — 배경을 누르면 닫힌다. Esc 도 닫는다 */}
-      {menu && (
-        <>
-          <button
-            type="button"
-            aria-label="메뉴 닫기"
-            onClick={() => setMenu(null)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-          {menu === 'bell' && (
-            <div className="anim-scale-in fixed right-3 top-16 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-xl pc:right-24">
+      {/* GNB 팝오버 — 자리·투명막·Esc·포커스 복귀는 전부 관문(Popover)이 지킨다.
+          예전에는 여기서 `right-3 top-16 pc:right-24` 로 **화면 끝에서 손으로 재고** 있었고,
+          배경막이 `<button class="fixed inset-0">` 이라 탭 순서에 유령 버튼이 끼었다 */}
+      {menu === 'bell' && (
+        <Popover
+          anchor={bellRef}
+          onClose={() => setMenu(null)}
+          label={t('gnb.notifications')}
+          width={340}
+        >
+          <div>
               <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
                 <span className="text-sm font-semibold">{t('gnb.notifications')}</span>
                 <button
@@ -518,10 +550,12 @@ function Shell({
               <div className="border-t border-hairline px-4 py-2.5 text-[11px] text-ink-subtle">
                 {t('gnb.bell.footer')}
               </div>
-            </div>
-          )}
-          {menu === 'user' && (
-            <div className="anim-scale-in fixed right-3 top-16 z-50 w-56 rounded-xl border border-hairline bg-cover-glass py-1.5 shadow-[var(--shadow-cover)] backdrop-blur-xl pc:right-8">
+          </div>
+        </Popover>
+      )}
+      {menu === 'user' && (
+        <Popover anchor={userRef} onClose={() => setMenu(null)} label="계정 메뉴" width={224}>
+          <div className="py-1.5">
               <div className="border-b border-hairline px-4 pb-2.5 pt-1.5">
                 <div className="text-[13px] font-semibold">{meInfo.name}</div>
                 <div className="text-xs text-ink-subtle">{meInfo.email} · {meInfo.gradeName}</div>
@@ -574,9 +608,8 @@ function Shell({
                 <Icon name="logout" size={15} />
                 {t('gnb.logout')}
               </button>
-            </div>
-          )}
-        </>
+          </div>
+        </Popover>
       )}
 
       {/*
@@ -587,28 +620,50 @@ function Shell({
 
         자리 다툼은 미리 갈라 뒀다 — 좁은 화면에서 토스트는 이 버튼 **위로** 쌓고,
         넓은 화면에서는 토스트가 아예 우측 상단으로 비켜서 겹치지 않는다(toast.tsx).
-        z 는 서랍·모달(50 이상)보다 낮다: 덮개를 쓰는 중에 이 버튼이 그 위에 떠 있으면
-        "끝내고 닫는" 흐름을 방해한다.
+        층은 `z-fab` — 서랍 가림막(`z-backdrop`)·덮개(`z-modal`)보다 **아래**다. 예전에는
+        가림막과 똑같이 `z-30` 이라 DOM 순서로 이 버튼이 가림막 위에 있었다: 좁은 화면에서
+        **서랍이 열려 있는데 이게 눌리고**, 누르면 서랍 위에 우측패널이 쌓였다
+        (규약 §8 "덮개는 쌓지 않는다"를 스스로 깨고 있었다. 2026-08-13 사다리 도입으로 해소).
       */}
       <button
         type="button"
         onClick={() => setAskOpen(true)}
         aria-label={t('ask.title')}
         title={t('ask.title')}
-        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-30 flex h-[var(--fab-size)] w-[var(--fab-size)] items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent2 text-white shadow-[0_10px_30px_var(--color-glow)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-fab flex h-[var(--fab-size)] w-[var(--fab-size)] items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent2 text-white shadow-[0_10px_30px_var(--color-glow)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
       >
         <Icon name="chat" size={22} />
       </button>
 
+      {/* ⚠ 팔레트에 **서버가 걸러 준 메뉴**를 내려 준다 — 예전에는 팔레트가 정적
+          `data/nav` 를 직접 읽어, 권한이 없어 LNB 에 안 뜨는 화면이 ⌘K 검색에는
+          그대로 나왔다(2026-08-13). 정본은 하나여야 한다 */}
       {paletteOpen && (
-        <CommandPalette onClose={() => setPaletteOpen(false)} onAsk={() => setAskOpen(true)} />
+        <CommandPalette
+          nav={serverNav}
+          onClose={() => setPaletteOpen(false)}
+          onAsk={() => setAskOpen(true)}
+        />
       )}
 
-      {/* 대화형 챗봇 — [그 화면 열기] 는 Drawer 의 close 렌더-프롭으로 닫는다(퇴장
-          애니메이션이 끝난 뒤 언마운트). 부모의 onClose 를 바로 부르면 애니메이션이
-          안 돈다(Drawer.tsx 주석 참고). 메뉴 키 → 경로는 서버 nav(serverNav) 에서 찾는다 */}
+      {/*
+        ⚠⚠ 아래 셋은 **2026-08-13 에 우측패널에서 모달로 옮겼다.** 규약 §1 로 재면 셋 다
+        "본문과 **대조**하는 것"이 아니라 **"끝내고 닫는 것"**이다 — 물어보기는 묻고 답을
+        보고 닫고, 설정은 고르고 닫고, 내 권한은 읽고 닫는다. 뒤 목록을 훑으며 볼 일이 없다.
+
+        자리를 잘못 잡아 둔 대가를 관문이 치르고 있었다: 모달감을 RIGHT 에 두니 우측패널이
+        까만 배경막을 깔고 뒤 화면을 잠그게 됐고(모달의 몸가짐), 그 바람에 **정말로 대조가
+        필요한 사양서 상세까지** 뒤를 못 보게 됐다. 셋을 제자리로 보내고 나서야 우측패널이
+        가리개를 걷을 수 있었다(Drawer.tsx 머리 주석).
+
+        좁은 화면에서 모달은 아래에서 올라오는 시트라 닫기가 엄지 자리에 온다 — 우측패널로
+        열 때보다 한 손으로 쓰기 낫다(§1 "모바일에서는 이름은 같고 모양만 바뀐다").
+      */}
+      {/* 대화형 챗봇 — [그 화면 열기] 는 close 렌더-프롭으로 닫는다(퇴장 애니메이션이
+          끝난 뒤 언마운트). 부모의 onClose 를 바로 부르면 애니메이션이 안 돈다.
+          메뉴 키 → 경로는 서버 nav(serverNav) 에서 찾는다 */}
       {askOpen && (
-        <Drawer title={t('ask.title')} onClose={() => setAskOpen(false)}>
+        <Modal title={t('ask.title')} onClose={() => setAskOpen(false)} wide>
           {(close) => (
             <AskPanel
               onOpenMenu={(key) => {
@@ -619,21 +674,21 @@ function Shell({
               }}
             />
           )}
-        </Drawer>
+        </Modal>
       )}
 
       {/* 내가 할 수 있는 것 — 권한 이름이 아니라 사람 말로. 정본은 권한 관리(roleDefs) 파생 */}
       {abilitiesOpen && (
-        <Drawer title={t('gnb.myAbilities')} onClose={() => setAbilitiesOpen(false)}>
-          {() => <MyAbilities />}
-        </Drawer>
+        <Modal title={t('gnb.myAbilities')} onClose={() => setAbilitiesOpen(false)}>
+          <MyAbilities />
+        </Modal>
       )}
 
       {/* 개인 설정 — 언어·테마·포인트 색상. 전부 즉시 적용이라 저장 버튼이 없다 */}
       {prefsOpen && (
-        <Drawer title={t('gnb.settings')} onClose={() => setPrefsOpen(false)}>
-          {() => <Preferences theme={theme} onToggleTheme={toggle} />}
-        </Drawer>
+        <Modal title={t('gnb.settings')} onClose={() => setPrefsOpen(false)}>
+          <Preferences theme={theme} onToggleTheme={toggle} />
+        </Modal>
       )}
     </div>
   )

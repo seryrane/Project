@@ -287,7 +287,51 @@ function RolesPage() {
 
       {/* 권한 편집 — 메뉴 × 액션 7종 풀 매트릭스 (저장은 상신으로 끝난다) */}
       {editing && (
-        <Modal title={tf('roles.editTitle', { name: editing.name })} onClose={() => setEditing(null)} wide>
+        <Modal
+          title={tf('roles.editTitle', { name: editing.name })}
+          onClose={() => setEditing(null)}
+          wide
+          /* ⚠ 발이 가장 절실한 자리다 — 메뉴 × 액션 7종 **풀 매트릭스**라 몸이 늘 넘친다.
+             예전에는 [상신]이 매트릭스 아래에 있어서, 권한을 다 만지고 나서 **한참 내려가야**
+             저장할 수 있었다. 게다가 바꾼 개수(dirtyCount)가 버튼에 붙어 있는데 그 숫자가
+             안 보이니 "몇 개 바꿨더라"를 확인할 길도 같이 사라졌다 (규약 §7) */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
+              <CtaButton
+                disabled={dirtyCount === 0 || selfLock}
+                busyLabel={t('roles.submitting')}
+                onAction={async () => {
+                  // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
+                  // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
+                  const matrix: Record<string, Array<string>> = {}
+                  for (const menu of MENUS) {
+                    matrix[menu] = ACTIONS.filter((a) => draft[`${menu}.${a}`])
+                  }
+                  const ok = await apiSend('POST', '/submissions', {
+                    kind: 'role-change',
+                    payload: { roleKey: editing.key, matrix, scope: draftScope },
+                  })
+                  if (!ok) await simulate() // 서버 없는 시연 모드
+                  setEditing(null)
+                  toast(
+                    tf('roles.toast.submitted', { name: editing.name, n: dirtyCount, assigned: editing.assigned }),
+                  )
+                }}
+              >
+                {t('roles.submit')}
+                {dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
+              </CtaButton>
+            </div>
+          }
+        >
           {/* 권한명·설명도 여기서 고친다 — 이름 변경 역시 상신 대상이다 */}
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[220px_1fr]">
             <label className="block">
@@ -415,40 +459,6 @@ function RolesPage() {
               )}
             </p>
           )}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
-            <CtaButton
-              disabled={dirtyCount === 0 || selfLock}
-              busyLabel={t('roles.submitting')}
-              onAction={async () => {
-                // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
-                // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
-                const matrix: Record<string, Array<string>> = {}
-                for (const menu of MENUS) {
-                  matrix[menu] = ACTIONS.filter((a) => draft[`${menu}.${a}`])
-                }
-                const ok = await apiSend('POST', '/submissions', {
-                  kind: 'role-change',
-                  payload: { roleKey: editing.key, matrix, scope: draftScope },
-                })
-                if (!ok) await simulate() // 서버 없는 시연 모드
-                setEditing(null)
-                toast(
-                  tf('roles.toast.submitted', { name: editing.name, n: dirtyCount, assigned: editing.assigned }),
-                )
-              }}
-            >
-              {t('roles.submit')}
-              {dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
-            </CtaButton>
-          </div>
         </Modal>
       )}
 

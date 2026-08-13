@@ -23,7 +23,17 @@ function focusables(root: HTMLElement): Array<HTMLElement> {
   )
 }
 
-export function useCover(close: () => void) {
+export function useCover(
+  close: () => void,
+  /**
+   * 뒤 화면을 잠글까. 기본은 잠근다(모달·좁은 화면 시트).
+   *
+   * ⚠ **넓은 화면의 RIGHT 패널은 잠그지 않는다**(규약 §7) — 본문과 **대조**하려고 연
+   * 패널인데 뒤가 안 굴러가면 대조가 안 된다. 예전에는 관문이 무조건 잠가서, 사양서
+   * 상세를 열면 뒤 목록을 못 훑었다(2026-08-13 정정).
+   */
+  lockScroll = true,
+) {
   /** 덮개 몸통 — 여기에 ref 를 걸고 `tabIndex={-1}` 을 준다 */
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -71,19 +81,29 @@ export function useCover(close: () => void) {
     // 못 미친다(모바일 스모크가 실측으로 잡음) — html 까지 함께 잠근다
     const prevBody = document.body.style.overflow
     const prevHtml = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
+    if (lockScroll) {
+      // ⚠ **여기서 스크롤바 폭을 보정하지 않는다.** 잠그면 스크롤바가 사라져 뒤 화면이
+      //   그 폭만큼 넓어지는 게 보통이지만, 이 앱은 `styles.css` 에서 루트에
+      //   `overflow-y: scroll` + `scrollbar-gutter: stable` 을 걸어 **자리를 늘 잡아 둔다** —
+      //   잠근 동안에도 gutter 가 유지되어 폭이 안 변한다(2026-08-13 실측: 밀림 0).
+      //   여기에 padding 보정을 얹었더니 오히려 **10px 을 두 번 빼서 -10 으로 밀렸다.**
+      //   보정을 되살리고 싶어지면 먼저 재 볼 것.
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    }
 
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevBody
-      document.documentElement.style.overflow = prevHtml
+      if (lockScroll) {
+        document.body.style.overflow = prevBody
+        document.documentElement.style.overflow = prevHtml
+      }
       // 언마운트는 퇴장 애니메이션이 끝난 뒤라(관문의 onAnimationComplete) 여기서 돌려보내면
       // 사람 눈에는 "덮개가 사라지자 원래 자리로"로 보인다.
       // ⚠ 연 버튼이 덮개 안의 일로 사라졌을 수 있다(삭제·이동) — 그때는 그냥 둔다
       if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
-  }, [close])
+  }, [close, lockScroll])
 
   return panelRef
 }

@@ -14,11 +14,26 @@ export function Modal({
   title,
   onClose,
   children,
+  footer,
   wide,
 }: {
   title: React.ReactNode
   onClose: () => void
-  children: React.ReactNode
+  /**
+   * 내용. **함수를 주면 `close` 를 받는다** — 안쪽에서 "저장하고 닫기"처럼 스스로 닫아야
+   * 할 때 쓴다. 부모의 `onClose` 를 바로 부르면 퇴장 애니메이션이 안 돌고 즉시 사라진다
+   * (Drawer 와 같은 규칙 — 관문 둘이 다르게 굴면 옮겨 붙일 때마다 사고가 난다).
+   */
+  children: React.ReactNode | ((close: () => void) => React.ReactNode)
+  /**
+   * 발 — 저장·취소 같은 마무리 조작 (규약 §7 "발은 붙박이. 몸에 두면 밀려서 사라진다").
+   *
+   * ⚠⚠ 이 슬롯은 **없었다.** 그래서 액션 줄을 `children` 안에 넣을 수밖에 없었고, 내용이
+   * 긴 모달에서는 **[저장]·[취소]가 스크롤에 밀려 화면 밖으로 나갔다** — 사람은 다 채워
+   * 놓고 저장 버튼을 찾으러 다시 내려가야 한다(2026-08-13 슬롯 신설).
+   * 주 동작은 오른쪽 끝(엄지 자리), 취소는 그 왼쪽 — 자리는 부르는 쪽이 정한다.
+   */
+  footer?: React.ReactNode | ((close: () => void) => React.ReactNode)
   wide?: boolean
 }) {
   const [closing, setClosing] = useState(false)
@@ -32,7 +47,7 @@ export function Modal({
     <m.div
       // 덮개는 뒤가 실제로 겹치는 몇 안 되는 자리라 **여기서는 진짜로 흐린다**
       // (카드에는 안 건다 — styles.css 의 '유리와 깊이' 절 참고)
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md pc:items-center pc:p-6"
+      className="fixed inset-0 z-modal flex items-end justify-center bg-black/70 backdrop-blur-md pc:items-center pc:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.16 : 0.2 }}
@@ -57,8 +72,12 @@ export function Modal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 머리는 면(배경)+선으로 가른다 — 선 하나면 스크롤 중 내용 첫 줄처럼 읽힌다 (규약 §7) */}
-        <div className="flex items-center justify-between rounded-t-2xl surface-head px-5 py-3.5 pc:px-6 pc:py-4">
+        {/* 머리는 **면 + 아래 선** 둘 다다 (규약 §7 해부 그림). 면만 있으면 스크롤 중에
+            내용 첫 줄처럼 읽히고, 선만 있으면 옛날 관리자 화면의 패널 머리가 된다.
+            ⚠ "머리에 선을 긋지 않는다"는 §7 의 **카드** 절 규칙이다 — 카드는 여럿 늘어서서
+            선이 쌓이면 화면이 줄무늬가 되지만, 덮개는 한 번에 하나라 그 문제가 없다.
+            덮개 머리는 **스크롤되는 몸을 이고 있어서** 경계가 더 또렷해야 한다. */}
+        <div className="flex shrink-0 items-center justify-between rounded-t-2xl border-b border-hairline surface-head px-5 py-3.5 pc:px-6 pc:py-4">
           <h2 id={titleId} className="min-w-0 truncate text-lg font-semibold">
             {title}
           </h2>
@@ -78,9 +97,21 @@ export function Modal({
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pc:px-6">
-          {children}
+        {/* 몸 — **여기만 스크롤된다.** 발이 있으면 아래 여백은 발이 갖는다 */}
+        <div
+          className={`overflow-y-auto overscroll-contain px-5 py-5 pc:px-6 ${
+            footer ? '' : 'pb-[max(1.25rem,env(safe-area-inset-bottom))]'
+          }`}
+        >
+          {typeof children === 'function' ? children(close) : children}
         </div>
+        {/* 발 — 몸 **밖**에 있어서 스크롤에 안 밀린다. 위 선으로 가른다(규약 §7 3단 해부).
+            좁은 화면에서는 홈 인디케이터만큼 더 띄운다 — 안 그러면 주 동작이 그 밑에 깔린다 */}
+        {footer != null && (
+          <div className="shrink-0 border-t border-hairline px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] pc:px-6">
+            {typeof footer === 'function' ? footer(close) : footer}
+          </div>
+        )}
       </m.div>
     </m.div>
   )

@@ -228,7 +228,11 @@ LazyMotion(domAnimation)+`m` 조합(~15kb gz)에 `MotionConfig reducedMotion="us
 ⚠ `layout` 을 쓰는 요소에 `anim-fade-up` 을 같이 얹지 않는다 — fill:both 가 transform 을
 고정해 layout 이동(transform 기반)이 조용히 죽는다(.card-hover 때 실증한 함정).
 
-- **페이지 전환**: TanStack Router `defaultViewTransition` — View Transitions API로 크로스페이드 + 미세 상승
+- **페이지 전환**: TanStack Router `defaultViewTransition` — View Transitions API로 **크로스페이드만**.
+  ⚠⚠ 예전에는 `scale-in`(0.97 + 10px 상승)을 얹었는데, `root` 는 **화면 전체의 스냅샷**이라
+  사이드바·헤더·차트가 통째로 줄었다 폈다 했다 — 사용자에게는 "메뉴 이동할 때마다 미세하게
+  좁아졌다가 다시 펴진다 · 계속 꿈틀거린다"로 보였다(2026-08-13). **화면 전체에는 밝기만
+  건다.** 크기·위치를 움직이는 모션은 카드·덮개처럼 *경계가 있는 물건*에만.
 - **슬라이드 오버(Drawer)**: 사양서 상세는 모달이 아닌 우측 슬라이드 오버 패널(max 520px). 등장 280ms 슬라이드, 퇴장 200ms 후 언마운트(닫힘 애니메이션 보장). ESC/백드롭 클릭 닫기
 - **모달**: scale-in(0.97→1 + 10px 상승) 200ms / scale-out 140ms, ESC 닫기
 - **커맨드 팔레트(⌘K)**: 상단바 검색 버튼 또는 Cmd/Ctrl+K. 페이지·사양서 통합 검색, ↑↓/Enter/ESC 키보드 내비게이션, 그룹 헤더, kbd 힌트 표시

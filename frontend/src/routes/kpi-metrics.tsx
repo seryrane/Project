@@ -138,10 +138,42 @@ function KpiMetricsPage() {
 
       {/* 정의 상세 — 목록을 훑으며 보는 상세라 서랍 (규약 §1) */}
       {detail && (
-        <Drawer title={tf('kpi-metrics.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1 space-y-3">
+        <Drawer
+          title={tf('kpi-metrics.detailTitle', { name: detail.name })}
+          onClose={() => setDetail(null)}
+          /* 발은 관문 슬롯으로 (규약 §7) — 몸 안에서 `flex h-full flex-col` 로 바닥에
+             붙이던 것은 내용이 길어지면 같이 밀려 올라갔다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+              {detail.status === '검토 중' && (
+                <CtaButton
+                  busyLabel={t('kpi-metrics.submitting')}
+                  onAction={async () => {
+                    const ok = await apiSend('POST', '/submissions', {
+                      kind: 'kpi-metric-approval',
+                      payload: { metricId: detail.id, name: detail.name },
+                    })
+                    if (!ok) await simulate()
+                    close()
+                    toast(tf('kpi-metrics.toast.submitted', { name: detail.name }))
+                  }}
+                >
+                  {t('kpi-metrics.submitApproval')}
+                </CtaButton>
+              )}
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] text-ink-muted">
                     {detail.area}
@@ -192,31 +224,6 @@ function KpiMetricsPage() {
                       '미승인 지표는 대시보드에 표출되지 않습니다 — 산식 확정 후 현업 승인 절차를 거칩니다 (FR-070 AC②).',
                     )}
                   </p>
-                )}
-              </div>
-              <div className="mt-4 flex justify-end gap-2 border-t border-hairline pt-3.5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  {t('common.close')}
-                </button>
-                {detail.status === '검토 중' && (
-                  <CtaButton
-                    busyLabel={t('kpi-metrics.submitting')}
-                    onAction={async () => {
-                      const ok = await apiSend('POST', '/submissions', {
-                        kind: 'kpi-metric-approval',
-                        payload: { metricId: detail.id, name: detail.name },
-                      })
-                      if (!ok) await simulate()
-                      close()
-                      toast(tf('kpi-metrics.toast.submitted', { name: detail.name }))
-                    }}
-                  >
-                    {t('kpi-metrics.submitApproval')}
-                  </CtaButton>
                 )}
               </div>
             </div>

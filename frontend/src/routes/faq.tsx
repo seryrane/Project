@@ -41,8 +41,8 @@ function FaqPage() {
   )
 
   return (
-    // 묻고 답하는 글이 본체 — 읽기 폭 (AppShell width)
-    <AppShell active="faq" title="FAQ" width="doc">
+    // 커뮤니티 5개는 폭을 통일한다 (사용자 결정 2026-08-13 — guide.tsx 주석 참고)
+    <AppShell active="faq" title="FAQ">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.faq', 'FAQ')}</h1>

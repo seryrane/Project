@@ -276,12 +276,46 @@ function ValidationResultsPage() {
         <Drawer
           title={tf('results.detailDrawerTitle', { id: detail.id }, '검증 상세 — {id}')}
           onClose={() => setDetail(null)}
+          /* 발은 관문 슬롯으로 (규약 §7) — 오류 샘플이 여러 줄이면 [재검증 실행]이
+             스크롤 아래로 사라졌다. 다음 행동을 주는 버튼이 안 보이면 상세를 연 뜻이 없다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  navigate({ to: '/validation-engine' })
+                }}
+                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('results.viewRule', 'Rule 보기 →')}
+              </button>
+              <button
+                type="button"
+                disabled={(requeued[detail.id] ? '재처리 중' : detail.status) !== '오류'}
+                onClick={() => {
+                  setRequeued((m) => ({ ...m, [detail.id]: true }))
+                  close()
+                  toast(
+                    tf(
+                      'results.toast.requeued',
+                      { id: detail.id },
+                      '{id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {t('results.revalidate', '재검증 실행')}
+              </button>
+            </div>
+          )}
         >
-          {(close) => {
+          {() => {
             const st = requeued[detail.id] ? '재처리 중' : detail.status
             return (
-              <div className="flex h-full flex-col">
-                <div className="flex-1 space-y-4">
+              <div>
+                <div className="space-y-4">
                   <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RUN_STATUS_CLS[st]}`}>
@@ -347,36 +381,6 @@ function ValidationResultsPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 flex justify-end gap-2 border-t border-hairline pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      close()
-                      navigate({ to: '/validation-engine' })
-                    }}
-                    className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    {t('results.viewRule', 'Rule 보기 →')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={st !== '오류'}
-                    onClick={() => {
-                      setRequeued((m) => ({ ...m, [detail.id]: true }))
-                      close()
-                      toast(
-                        tf(
-                          'results.toast.requeued',
-                          { id: detail.id },
-                          '{id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다',
-                        ),
-                      )
-                    }}
-                    className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
-                  >
-                    {t('results.revalidate', '재검증 실행')}
-                  </button>
-                </div>
               </div>
             )
           }}

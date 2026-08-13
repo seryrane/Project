@@ -156,10 +156,27 @@ function NoticePage() {
 
       {/* 상세 — 읽고 닫는 것이라 우측 서랍 (본문 목록을 유지한 채) */}
       {reading && (
-        <Drawer title={tf('notice.drawerTitle', { id: reading.id })} onClose={() => setReading(null)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1">
+        <Drawer
+          title={tf('notice.drawerTitle', { id: reading.id })}
+          onClose={() => setReading(null)}
+          /* 발은 관문 슬롯으로 (규약 §7). 예전에는 몸 안에서 `flex h-full flex-col` 로
+             바닥에 붙이려 했는데, 그러면 **본문이 길 때 같이 밀려 올라간다** — 붙박이가
+             아니라 "내용이 짧을 때만 바닥에 있는 것"이었다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${CAT_CLS[reading.category]}`}>
                     {reading.category}
@@ -180,15 +197,6 @@ function NoticePage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4 flex justify-end gap-2 border-t border-hairline pt-3.5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  {t('common.close')}
-                </button>
-              </div>
             </div>
           )}
         </Drawer>
@@ -196,7 +204,46 @@ function NoticePage() {
 
       {/* 작성 — 짧게 적고 닫는 일이라 모달 */}
       {writing && (
-        <Modal title={t('notice.write', '공지 작성')} onClose={() => setWriting(false)}>
+        <Modal
+          title={t('notice.write', '공지 작성')}
+          onClose={() => setWriting(false)}
+          /* 발은 **몸 밖**에 붙박이로 둔다 (규약 §7). 예전에는 이 줄이 내용 맨 끝에
+             있어서, 본문을 길게 쓰면 [등록]이 스크롤에 밀려 화면 밖으로 나갔다 —
+             다 채워 놓고 저장 버튼을 찾으러 다시 내려가야 했다.
+             주 동작은 오른쪽 끝(엄지 자리), 취소는 그 왼쪽 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setWriting(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
+              <CtaButton
+                disabled={newTitle.trim() === ''}
+                busyLabel={t('notice.submitting', '등록 중…')}
+                onAction={async () => {
+                  const ok = await apiSend('POST', '/notices', {
+                    title: newTitle,
+                    category: newCat,
+                    body: newBody,
+                    pinned: newPinned,
+                  })
+                  if (!ok) await simulate() // 서버 없는 시연 모드 — 버튼 로딩 감각만 유지
+                  setWriting(false)
+                  setNewTitle('')
+                  setNewBody('')
+                  reload()
+                  toast(t('notice.toast.posted', '공지를 등록했습니다 — 전체 알림으로도 발송됩니다'))
+                }}
+              >
+                {t('notice.submit', '등록')}
+              </CtaButton>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('notice.label.title', '제목')} <b className="text-danger-ink">*</b>
@@ -234,36 +281,6 @@ function NoticePage() {
               </span>
             </span>
             <Switch checked={newPinned} onChange={setNewPinned} label={t('notice.label.pinToTop', '상단 고정')} />
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setWriting(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
-            <CtaButton
-              disabled={newTitle.trim() === ''}
-              busyLabel={t('notice.submitting', '등록 중…')}
-              onAction={async () => {
-                const ok = await apiSend('POST', '/notices', {
-                  title: newTitle,
-                  category: newCat,
-                  body: newBody,
-                  pinned: newPinned,
-                })
-                if (!ok) await simulate() // 서버 없는 시연 모드 — 버튼 로딩 감각만 유지
-                setWriting(false)
-                setNewTitle('')
-                setNewBody('')
-                reload()
-                toast(t('notice.toast.posted', '공지를 등록했습니다 — 전체 알림으로도 발송됩니다'))
-              }}
-            >
-              {t('notice.submit', '등록')}
-            </CtaButton>
           </div>
         </Modal>
       )}

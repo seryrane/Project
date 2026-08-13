@@ -87,12 +87,42 @@ test('서랍 — 가림막을 누르면 닫힌다', async ({ page }) => {
   await expect(page.locator('aside')).not.toBeInViewport()
 })
 
+test('층 — 서랍이 열리면 떠 있는 버튼이 그 아래로 들어간다 (규약 §8 사다리)', async ({ page }) => {
+  // ⚠⚠ 이건 **눈으로는 안 보이던 사고**다. 서랍 가림막과 [물어보기]가 둘 다 `z-30` 이라
+  //    DOM 순서로 버튼이 가림막 **위**에 있었다 — 서랍이 열려 있는데 버튼이 눌리고,
+  //    누르면 서랍 위에 우측패널이 쌓였다(§8 "덮개는 쌓지 않는다"를 스스로 깨는 상태).
+  //    화면만 보면 멀쩡해서 2026-08-13 에 층을 재고서야 드러났다.
+  await ready(page, '/specs')
+  const fab = page.getByRole('button', { name: '물어보기' })
+  await expect(fab).toBeVisible()
+
+  await page.getByRole('button', { name: '메뉴 열기' }).click()
+  await expect(page.locator('aside')).toBeInViewport()
+
+  // 불변식은 z 값이 아니라 **그 자리를 누르면 무엇이 받는가**이다(값은 또 바뀔 수 있다).
+  // 가림막이 받아야 한다 — 버튼이 받으면 서랍 위에 패널이 쌓이는 그 상태다.
+  const box = (await fab.boundingBox())!
+  const 받는것 = await page.evaluate(
+    ([x, y]) => {
+      const el = document.elementFromPoint(x, y)
+      return el?.getAttribute('aria-label') ?? el?.tagName ?? '(없음)'
+    },
+    [box.x + box.width / 2, box.y + box.height / 2],
+  )
+  expect(받는것).toBe('메뉴 닫기')
+})
+
 test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) => {
   // 상세는 이제 본문 페이지라(규약 §1 결정) 모달 검증은 버전 비교로 한다
   await ready(page, '/specs')
   await page.getByRole('button', { name: '버전 비교' }).first().click()
 
-  const sheet = page.locator('.fixed.inset-0.z-50 > div')
+  // ⚠ **층 이름·클래스로 덮개를 집지 않는다** (2026-08-13). 예전에는 `.fixed.inset-0.z-50`
+  //   이었는데, 층 사다리를 이름 토큰(`z-modal`)으로 바꾸자 이 줄만 남아 실패했다 —
+  //   화면은 멀쩡한데 테스트가 "모달이 없다"고 말하는 상태다. 덮개의 불변식은 숫자가 아니라
+  //   **역할**이다(`role="dialog"`, 관문이 coverProps 로 붙인다). 역할로 집으면 층을 또
+  //   바꿔도 안 깨진다.
+  const sheet = page.getByRole('dialog')
   await expect(sheet).toBeVisible()
 
   // 바닥에 붙는다 (닫기가 엄지 자리) + 가로 100%.
@@ -101,7 +131,8 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   // ⚠ 열림 애니메이션이 끝난 뒤에 잰다 — 도중에 재면 3~12px 작게 나온다.
   //   getAnimations() 는 WAAPI 만 잡아서 motion(rAF 구동) 전환에는 헛대기다 —
   //   구현에 매이지 않게 "치수가 맞을 때까지" 폴링한다
-  const cont = (await page.locator('.fixed.inset-0.z-50').first().boundingBox())!
+  // 컨테이너(배경막)는 덮개의 부모다 — 여기도 층 클래스 대신 관계로 집는다
+  const cont = (await page.locator('[role="dialog"]').locator('xpath=..').boundingBox())!
   await expect
     .poll(async () => {
       const b = await sheet.boundingBox()
@@ -115,14 +146,67 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   await expect(sheet).not.toBeVisible()
 })
 
+test('우측패널 — 좁은 화면에서 앱 헤더를 덮지 않는다 (규약 §8)', async ({ page }) => {
+  // ⚠ 헤더까지 덮으면 **지금 어디인지와 나가는 길이 동시에 사라져** 사람이 브라우저
+  //   뒤로가기를 누른다 — 앱을 벗어난다. 패널은 헤더 아래(3.5rem)에서 시작해야 한다.
+  await ready(page, '/notice')
+  const header = (await page.locator('header').boundingBox())!
+  await page.locator('ol li button').first().click()
+  const panel = page.getByRole('dialog')
+  await expect(panel).toBeVisible()
+
+  const p = (await panel.boundingBox())!
+  expect(p.y, '패널은 헤더 아래에서 시작한다').toBeGreaterThanOrEqual(header.y + header.height - 1)
+  // 헤더가 실제로 눌리는지까지 본다 — 위에 투명한 것이 덮여 있으면 좌표만 맞고 못 누른다
+  await expect(page.getByRole('button', { name: '메뉴 열기' })).toBeVisible()
+})
+
+test('모달 발 — 내용이 길어도 저장·취소가 스크롤에 안 밀린다 (규약 §7)', async ({ page }) => {
+  // ⚠ 관문에 **발 슬롯이 없었다.** 액션 줄을 내용 안에 넣을 수밖에 없어서, 본문을 길게
+  //   쓰면 [등록]이 화면 밖으로 나갔다 — 다 채워 놓고 저장 버튼을 찾으러 다시 내려가야 했다.
+  await ready(page, '/notice')
+  await page.getByRole('button', { name: /공지 작성/ }).click()
+  const modal = page.getByRole('dialog')
+  await expect(modal).toBeVisible()
+
+  const submit = modal.getByRole('button', { name: '등록' })
+  await expect(submit).toBeInViewport()
+
+  // 본문을 길게 채워 몸이 넘치게 만든다.
+  // ⚠ 기준값은 **채운 뒤에** 잰다 — 내용이 늘면 모달 자체가 최대 높이까지 자라므로
+  //   발도 그만큼 내려간다(정상). 여기서 보려는 것은 "몸을 굴려도 안 움직인다" 하나다
+  await modal.locator('textarea').fill('긴 본문\n'.repeat(40))
+  // ⚠ 채운 직후에 재면 **모달이 최대 높이까지 자라는 도중**을 잡는다 — 단독 실행에서는
+  //   통과하고 전체 실행에서만 2px 차이로 깨지는 경합이 됐다(2026-08-13). 자리가 멎을
+  //   때까지 기다린 뒤 기준값을 잡는다.
+  let prevY = Number.NaN
+  await expect
+    .poll(async () => {
+      const y = (await submit.boundingBox())!.y
+      const settled = Math.abs(y - prevY) < 0.5
+      prevY = y
+      return settled
+    }, { message: '발의 자리가 멎을 때까지' })
+    .toBe(true)
+  const before = (await submit.boundingBox())!
+
+  // 몸을 끝까지 굴린다 — 발이 몸 안에 있으면 여기서 밀려 나간다
+  await modal.locator('div.overflow-y-auto').evaluate((el) => el.scrollTo(0, el.scrollHeight))
+
+  await expect(submit, '발은 붙박이라 굴려도 그대로 보인다').toBeInViewport()
+  const after = (await submit.boundingBox())!
+  expect(Math.abs(after.y - before.y), '발은 몸이 굴러도 자리를 안 옮긴다').toBeLessThan(2)
+})
+
 test('물어보기 — 떠 있는 버튼으로 열리고 Esc 로 닫힌다', async ({ page }) => {
   // 자리는 어느 화면에서나 같은 패널 하나(정본: 챗봇_표준질의_설계.md §1) — /specs 로 확인
   await ready(page, '/specs')
   const entries = page.getByRole('button', { name: '물어보기' })
-  // ⚠ 진입점이 둘이다(헤더 · 떠 있는 버튼) — 이름만으로 집으면 셀렉터가 모호해져 깨진다.
-  // 좁은 화면에서 **늘 같은 자리에 있는 쪽**(떠 있는 버튼, DOM 상 뒤)이 이 판의 대상이다.
-  await expect(entries).toHaveCount(2)
-  await entries.last().click()
+  // ⚠ 진입점은 **하나**여야 한다 — 예전에는 헤더 💬 와 떠 있는 버튼 둘이었다(그리고 헤더
+  //   쪽만 이모지 문자라 같은 기능이 두 모양이었다). 2026-08-13 에 헤더 쪽을 걷었다.
+  //   이 숫자가 다시 2가 되면 "옮겼다"고 적어 놓고 안 걷은 그 상태로 돌아간 것이다.
+  await expect(entries, '챗봇 진입점은 떠 있는 버튼 하나').toHaveCount(1)
+  await entries.click()
   await expect(page.getByRole('heading', { name: '물어보기' })).toBeVisible()
 
   await page.keyboard.press('Escape')
@@ -254,6 +338,90 @@ test('필터 — 주소에 남아 새로고침을 견디고, 뒤로가기로 되
 test.describe('넓은 화면', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false })
 
+  test('검색(⌘K) — 덮개 관문을 지난다 (역할·포커스·Esc·복귀)', async ({ page }) => {
+    // ⚠ 팔레트만 관문(useCover)을 안 지나고 있었다 — role="dialog" 도 aria-modal 도 없었고
+    //   포커스는 뒤 화면에 남아 Tab 이 덮개 뒤를 돌아다녔다(2026-08-13 실측).
+    //   관문을 하나 두는 이유가 이것이다: 안 지나는 물건이 하나 생기면 그것만 다르게 군다.
+    await ready(page, '/dashboard')
+    const opener = page.getByRole('button', { name: '검색' })
+    await opener.click()
+
+    const palette = page.getByRole('dialog')
+    await expect(palette).toBeVisible()
+    // 열자마자 타는 물건이라 포커스는 검색칸에 온다 (몸통에 머무르면 한 번 더 눌러야 한다)
+    await expect(palette.locator('input')).toBeFocused()
+
+    // 뒤 화면을 잠근다 — 팔레트는 "끝내고 닫는 것"이라 모달의 몸가짐이 맞다
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
+
+    await page.keyboard.press('Escape')
+    await expect(palette).not.toBeVisible()
+    // 닫으면 연 버튼으로 돌아온다 — 안 그러면 포커스가 문서 맨 앞으로 튕긴다
+    await expect(opener).toBeFocused()
+    expect(await page.evaluate(() => document.body.style.overflow), '잠금이 풀린다').toBe('')
+  })
+
+  test('우측패널 — 가리개가 없고 뒤 화면이 굴러간다 (규약 §1 RIGHT)', async ({ page }) => {
+    // ⚠⚠ 이 관문은 **모달처럼 굴고 있었다**: 까만 배경막(black/60+blur)을 깔고 뒤 화면을
+    //    잠갔다. 규약은 정반대다 — "가리개는 두지 않는다. 뒤가 읽혀야 대조다"(§1),
+    //    "넓은 화면의 RIGHT 패널만 예외로 안 잠근다"(§7). 목록을 훑으며 상세를 보라고
+    //    만든 패널이 정작 목록을 가리고 굴리지도 못하게 하고 있었다(2026-08-13 실측).
+    await ready(page, '/notice')
+    await page.locator('ol li button').first().click()
+    const panel = page.getByRole('dialog')
+    await expect(panel).toBeVisible()
+
+    // ① 뒤 화면이 굴러간다 — 대조하려면 목록을 훑을 수 있어야 한다
+    expect(await page.evaluate(() => document.body.style.overflow), '뒤 화면을 안 잠근다').toBe('')
+
+    // ② 가리개가 없다 — 패널 **바깥** 지점이 뒤 화면을 그대로 보여 주고, 그 자리를 누르면
+    //    본문이 받는다(까만 판이나 투명 판이 가로채면 대조가 아니라 모달이다)
+    const p = (await panel.boundingBox())!
+    const 바깥이_받는것 = await page.evaluate(
+      ([x, y]) => {
+        const el = document.elementFromPoint(x, y)
+        return el?.closest('[role="dialog"]') ? '패널이 가로챈다' : (el?.tagName ?? '(없음)')
+      },
+      [p.x / 2, p.y + p.height / 2],
+    )
+    expect(바깥이_받는것, '패널 바깥은 본문이 받는다').not.toBe('패널이 가로챈다')
+
+    // ③ 그래서 **바깥을 눌러도 안 닫힌다** — 뒤를 만지는 것이 목적이라 실수로 닫히면 안 된다
+    await page.mouse.click(p.x / 2, p.y + p.height / 2)
+    await expect(panel, '바깥 클릭으로는 안 닫힌다').toBeVisible()
+
+    // ④ 닫는 길은 Esc (그리고 ✕)
+    await page.keyboard.press('Escape')
+    await expect(panel).not.toBeVisible()
+  })
+
+  test('팝오버 — 연 버튼에 매달리고, 뒤 화면을 잠그지 않는다 (규약 §1 팝오버)', async ({ page }) => {
+    await ready(page, '/dashboard')
+    const bell = page.getByRole('button', { name: /^알림/ })
+    await bell.click()
+    const pop = page.getByRole('dialog', { name: '알림' })
+    await expect(pop).toBeVisible()
+
+    // ① 자리는 **연 조작에서 잰다.** 예전에는 화면 끝에서 손으로 잰 `right-24` 라
+    //    GNB 에 버튼이 하나 늘면 어긋났다(그 어긋남은 버튼을 늘린 사람 눈에 안 보인다).
+    // ⚠ 등장 애니메이션이 끝난 뒤에 잰다 — 도중이면 scale(0.97) 만큼 작게 나온다
+    await expect
+      .poll(async () => {
+        const b = (await bell.boundingBox())!
+        const p = (await pop.boundingBox())!
+        return Math.abs(p.x + p.width - (b.x + b.width))
+      }, { message: '팝오버 오른쪽 끝이 연 버튼의 오른쪽 끝에 맞는다' })
+      .toBeLessThan(2)
+
+    // ② 팝오버는 덮개가 아니다 — 잠깐 훑어보는 것에 뒤 화면을 잠그지 않는다
+    expect(await page.evaluate(() => document.body.style.overflow), '뒤 화면을 잠그지 않는다').toBe('')
+
+    // ③ Esc 로 닫히고 포커스는 연 버튼으로 돌아온다
+    await page.keyboard.press('Escape')
+    await expect(pop).not.toBeVisible()
+    await expect(bell).toBeFocused()
+  })
+
   test('토스트 — 헤더 바로 아래 우측 상단에 서고, 헤더를 가리지 않는다', async ({ page }) => {
     await ready(page, '/kpi-metrics')
     await page.getByRole('button', { name: '+ 지표 추가' }).click()
@@ -275,15 +443,22 @@ test.describe('넓은 화면', () => {
 test.describe('설계서 폭(1920)', () => {
   test.use({ viewport: { width: 1920, height: 900 }, isMobile: false })
 
-  test('본문 폭 — 데이터 화면은 1680 까지 펴고, 글 화면은 960 에서 멈춘다', async ({ page }) => {
+  test('본문 폭 — 설계서 폭으로 통일하고, 읽기 폭은 글 칸이 잡는다', async ({ page }) => {
     await ready(page, '/members')
     const data = (await page.locator('main').boundingBox())!
     // 세로 스크롤바(≈15px)만큼 줄 수 있어 폭 자체가 아니라 "설계서 폭에 닿았는지"를 본다
     expect(data.width, '표 화면은 설계서 폭 1680').toBeGreaterThan(1640)
 
+    // ⚠ 2026-08-13 사용자 결정: **커뮤니티 5개는 폭을 통일한다.** 예전에는 가이드·FAQ·
+    //   개인정보만 960 이라 메뉴를 오갈 때 폭이 널뛰었다("QNA 는 꽉 차는데 FAQ 는 좁다").
+    //   페이지는 넓히되 **글줄은 안쪽 칸이 잡는다** — 둘을 같이 봐야 결정이 지켜진다.
     await ready(page, '/guide')
-    const doc = (await page.locator('main').boundingBox())!
-    expect(doc.width, '글 화면은 읽기 폭 960').toBeLessThanOrEqual(960)
+    const guide = (await page.locator('main').boundingBox())!
+    expect(guide.width, '가이드도 다른 커뮤니티 화면과 같은 폭').toBeGreaterThan(1640)
+
+    // 글 칸은 여전히 읽기 폭에서 멈춘다 — 안 그러면 한 줄이 1400px 를 넘는다
+    const prose = (await page.locator('main section').first().boundingBox())!
+    expect(prose.width, '글 칸은 읽기 폭 960 에서 멈춘다').toBeLessThanOrEqual(960)
   })
 
   /** ⚠ 이 판의 요점은 **뷰포트를 1920 으로 고정한 채** 칸 폭만 바꾼다는 것이다 —

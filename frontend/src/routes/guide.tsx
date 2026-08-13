@@ -36,9 +36,12 @@ function GuidePage() {
   }
 
   return (
-    // 글을 읽는 화면이라 본문 폭을 읽기 폭으로 — 표·대시보드와 같은 1680 로 펴면
-    // 한 줄이 너무 길어져 눈이 다음 줄을 못 찾는다 (AppShell width)
-    <AppShell active="guide" title={t('nav.guide', '사용자 가이드')} width="doc">
+    /* 커뮤니티 5개(공지·Q&A·FAQ·가이드·개인정보)는 **폭을 통일한다** — 사용자 결정
+       2026-08-13. 규칙상은 글 화면이라 960(doc)이 맞지만, 메뉴를 오갈 때 폭이 960↔1680 로
+       널뛰는 것이 한 섹션 안에서 더 거슬린다("본문 넓이가 QNA 는 꽉 차는데 FAQ·가이드는 좁다").
+       ⚠ 글줄이 길어지는 문제는 **페이지 폭이 아니라 안쪽 글 칸**으로 잡는다 — 본문 블록에
+       읽기 폭을 물린다. 페이지를 좁히면 목차·표 같은 옆 것들까지 같이 좁아진다. */
+    <AppShell active="guide" title={t('nav.guide', '사용자 가이드')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.guide', '사용자 가이드')}</h1>
@@ -74,8 +77,11 @@ function GuidePage() {
           </ol>
         </nav>
 
-        {/* 본문 */}
-        <div className="min-w-0 space-y-5">
+        {/* 본문 — ⚠ **글 칸에 읽기 폭을 물린다.** 페이지를 1680 으로 통일했으므로(위 주석)
+            이 칸이 그대로 펴지면 한 줄이 1400px 를 넘어 눈이 다음 줄을 못 찾는다.
+            좁히는 자리는 **페이지가 아니라 여기**다 — 페이지를 좁히면 목차·표까지 같이 좁아진다.
+            `max-w-doc`(960)은 `--container-doc` 토큰과 같은 값이라 예전 읽기 폭이 그대로 산다. */}
+        <div className="min-w-0 max-w-doc space-y-5">
           {/* 새 기능 — 정본은 data/whatsnew.ts. 기능을 배포하면 거기에 같이 적는다 */}
           <section
             id="guide-whatsnew"

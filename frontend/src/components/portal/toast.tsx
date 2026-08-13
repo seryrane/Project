@@ -2,12 +2,22 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 
 import { useI18n } from '#/lib/i18n'
 
-/** 토스트에 붙일 수 있는 것 — 지금은 되돌리기 하나 (규약 §2: 성공은 토스트+되돌리기) */
+/**
+ * 토스트의 결 — **성공 하나뿐이었다.** 아이콘도 왼쪽 띠도 초록(배포 완료)으로 박혀 있어서
+ * 실패·경고를 담을 그릇이 아예 없었다(2026-08-13). 규약 §2 는 "오류를 토스트로만 끝내지
+ * 않는다"이지 "오류에 토스트를 쓰지 않는다"가 아니다 — 인라인·배너가 본체이고, 토스트는
+ * 그리로 데려가는 신호다. 그릇이 없으면 실패까지 초록 체크로 뜬다.
+ */
+export type ToastKind = 'success' | 'error' | 'warn'
+
+/** 토스트에 붙일 수 있는 것 (규약 §2: 성공은 토스트+되돌리기) */
 export interface ToastOptions {
   /** 누르면 방금 한 일을 무르고 토스트를 닫는다. 없으면 버튼이 안 붙는다 */
   onUndo?: () => void
   /** 버튼 이름 — 기본 "되돌리기". 무르는 일이 특수할 때만 바꾼다 */
   undoLabel?: string
+  /** 기본 성공. `error` 는 **저절로 안 사라진다**(아래 arm 참고) */
+  kind?: ToastKind
 }
 
 interface Toast {
@@ -17,6 +27,17 @@ interface Toast {
   count: number
   onUndo?: () => void
   undoLabel?: string
+  kind: ToastKind
+}
+
+/** 결마다 다른 것 — 색은 상태 토큰에서만 고른다(§6). 아이콘은 색맹에서도 갈리게 모양을 바꾼다 */
+const KIND: Record<ToastKind, { bar: string; chipBg: string; chipInk: string; path: string }> = {
+  // 체크
+  success: { bar: 'bg-deployed-ink', chipBg: 'bg-deployed-bg', chipInk: 'text-deployed-ink', path: 'M5 12.5l4.5 4.5L19 7' },
+  // 느낌표 — **색만으로 가르지 않는다**(§10 밝기 사다리와 같은 이유: 색이 빠져도 모양이 남는다).
+  // 실패는 여기에 더해 `role="alert"` 로 즉시 읽히고, 저절로 사라지지도 않는다
+  error: { bar: 'bg-danger-ink', chipBg: 'bg-danger-bg', chipInk: 'text-danger-ink', path: 'M12 6v8M12 17.5v.5' },
+  warn: { bar: 'bg-review-ink', chipBg: 'bg-review-bg', chipInk: 'text-review-ink', path: 'M12 6v8M12 17.5v.5' },
 }
 
 /** 규약 §2 겹침·모임 — 한 번에 최대 3개. 넘으면 **오래된 것부터** 밀어낸다
@@ -53,10 +74,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     timers.current.delete(id)
   }, [])
 
-  /** 시계를 (다시) 건다 — 같은 말이 또 오면 처음부터 3.2초 */
+  /**
+   * 시계를 (다시) 건다 — 같은 말이 또 오면 처음부터 3.2초.
+   *
+   * ⚠ **실패는 저절로 안 사라진다.** 규약 §2-1 "오류를 토스트로만 끝내지 않는다" —
+   * 3.2초 뒤에 사라지고 나면 무엇이 잘못됐는지 알 길이 없다. 사람이 닫아야 없어진다.
+   */
   const arm = useCallback(
-    (id: number) => {
+    (id: number, kind: ToastKind) => {
       clearTimer(id)
+      if (kind === 'error') return
       timers.current.set(
         id,
         setTimeout(() => {
@@ -88,19 +115,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       // 끼었으면 그것은 다른 일이 벌어진 것이라 따로 세운다.
       // ⚠ **되돌리기가 붙은 것은 접지 않는다** — 버튼 하나로 두 일을 무를 수는 없다.
       //   접어 버리면 마지막 하나만 물러 놓고 "다 물렀다"고 보이게 된다.
-      const foldable = last && last.message === message && !last.onUndo && !options?.onUndo
+      const kind: ToastKind = options?.kind ?? 'success'
+      // ⚠ **결이 다르면 안 접는다** — 같은 문구라도 이번엔 실패한 것일 수 있다.
+      //   초록 체크에 `외 2건`으로 접히면 그 안에 섞인 실패가 통째로 사라진다.
+      const foldable =
+        last && last.message === message && last.kind === kind && !last.onUndo && !options?.onUndo
       if (foldable) {
         sync(list.map((x) => (x.id === last.id ? { ...x, count: x.count + 1 } : x)))
-        arm(last.id)
+        arm(last.id, kind)
         return
       }
       const id = nextId.current++
-      const grown = [...list, { id, message, count: 1, ...options }]
+      const grown = [...list, { id, message, count: 1, ...options, kind }]
       const kept = grown.slice(Math.max(0, grown.length - MAX))
       // 밀려난 것의 시계는 같이 거둔다 — 안 그러면 남은 토스트를 나중에 지운다
       for (const gone of grown.slice(0, grown.length - kept.length)) clearTimer(gone.id)
       sync(kept)
-      arm(id)
+      arm(id, kind)
     },
     [arm, clearTimer, sync],
   )
@@ -129,18 +160,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed bottom-[calc(1.5rem+var(--fab-size)+0.5rem+env(safe-area-inset-bottom,0px))] right-6 z-[70] flex flex-col gap-2 pc:bottom-auto pc:top-[calc(3.5rem+0.75rem)]"
+        className="pointer-events-none fixed bottom-[calc(1.5rem+var(--fab-size)+0.5rem+env(safe-area-inset-bottom,0px))] right-6 z-toast flex flex-col gap-2 pc:bottom-auto pc:top-[calc(3.5rem+0.75rem)]"
       >
-        {toasts.map((t) => (
+        {toasts.map((t) => {
+          const k = KIND[t.kind]
+          return (
           <div
             key={t.id}
-            className="anim-toast-in relative flex max-w-[min(88vw,26rem)] items-center gap-2.5 overflow-hidden rounded-xl border border-hairline bg-cover-glass py-3 pl-5 pr-4 text-[13px] text-ink shadow-[var(--shadow-cover)] ring-1 ring-primary/15 backdrop-blur-xl"
+            role={t.kind === 'error' ? 'alert' : undefined}
+            /* ⚠ **읽는 중에 사라지지 않게 한다** — 마우스를 올리면 시계를 멈추고, 떼면
+               처음부터 다시 건다. 긴 문구(§2-5 "무엇이·왜·다음에 무엇을")를 담기 시작하면
+               3.2초는 읽다 마는 시간이다. 감싼 상자가 pointer-events-none 이라 여기서 켠다.
+               실패는 애초에 시계가 없다(arm 참고) — 멈출 것도 없으니 그대로 지나간다. */
+            onMouseEnter={() => clearTimer(t.id)}
+            onMouseLeave={() => arm(t.id, t.kind)}
+            className="anim-toast-in pointer-events-auto relative flex max-w-[min(88vw,26rem)] items-center gap-2.5 overflow-hidden rounded-xl border border-hairline bg-cover-glass py-3 pl-5 pr-4 text-[13px] text-ink shadow-[var(--shadow-cover)] ring-1 ring-primary/15 backdrop-blur-xl"
           >
             {/* 왼쪽 색 띠 — 흰 카드 위에 떠도 "무언가 떴다"가 먼저 읽힌다 */}
-            <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-deployed-ink" />
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-deployed-bg text-deployed-ink">
+            <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${k.bar}`} />
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${k.chipBg} ${k.chipInk}`}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M5 12.5l4.5 4.5L19 7" />
+                <path d={k.path} />
               </svg>
             </span>
             <span className="min-w-0">{t.message}</span>
@@ -159,13 +199,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   t.onUndo?.()
                   dismiss(t.id)
                 }}
-                className="pointer-events-auto ml-auto shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1 text-[12px] font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-chip-strong"
+                className="ml-auto shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1 text-[12px] font-semibold text-ink transition-colors hover:border-primary/40 hover:bg-chip-strong"
               >
                 {t.undoLabel ?? tt('common.undo', '되돌리기')}
               </button>
             )}
+            {/* 손으로 닫는 길 — **실패는 저절로 안 사라지므로 이게 유일한 출구다.**
+                되돌리기가 붙은 것에는 안 단다(무를지 말지가 먼저고, 조작이 둘이면 헷갈린다) */}
+            {t.kind === 'error' && !t.onUndo && (
+              <button
+                type="button"
+                onClick={() => dismiss(t.id)}
+                aria-label={tt('common.close', '닫기')}
+                className="-mr-1 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
           </div>
-        ))}
+          )
+        })}
       </div>
     </ToastContext.Provider>
   )
