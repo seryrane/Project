@@ -548,7 +548,59 @@ function MenusPage() {
 
       {/* 새 메뉴 추가 — 상위 메뉴를 골라 계층으로 넣는다 */}
       {creating && (
-        <Modal title={t('menus.newTitle', '새 메뉴 추가')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('menus.newTitle', '새 메뉴 추가')}
+          onClose={() => setCreating(false)}
+          /* 발은 관문 슬롯으로 (규약 §7). 템플릿 카드 다섯 장(와이어프레임 미리보기)에
+             역할 칩까지 있어 몸이 확실히 넘친다 — [추가]는 비활성 조건이 셋이라
+             **왜 못 누르는지 보이는 자리**에 늘 있어야 한다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={newName.trim() === '' || !newPath.trim().startsWith('/') || (!newMinimal && newRoles.length === 0)}
+                onClick={() => {
+                  // 실제로 만들어진다 — 만든 뒤 우측 설정에서 화면 구성을 이어간다
+                  const item: MenuItem = {
+                    id: `m-custom-${items.length + 1}`,
+                    order: tops.length + 1,
+                    name: newName.trim(),
+                    path: newPath.trim(),
+                    icon: 'doc',
+                    active: true,
+                    roles: newMinimal ? [] : newRoles,
+                    minimal: newMinimal,
+                    template: newTemplate,
+                    custom: true,
+                    config: {},
+                  }
+                  setItems((list) => [...list, item])
+                  setCreating(false)
+                  setNewName('')
+                  setNewPath('')
+                  select(item)
+                  toast(
+                    tf(
+                      'menus.toast.added',
+                      { layoutLabel: t('menus.label.layout', '화면 구성') },
+                      '메뉴를 추가했습니다 — 우측 [{layoutLabel}]에서 이 화면에 들어갈 요소를 정하세요',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {t('common.add')}
+              </button>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('menus.label.name', '메뉴 이름')} <b className="text-danger-ink">*</b>
@@ -634,50 +686,6 @@ function MenusPage() {
               </div>
             </div>
           )}
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              disabled={newName.trim() === '' || !newPath.trim().startsWith('/') || (!newMinimal && newRoles.length === 0)}
-              onClick={() => {
-                // 실제로 만들어진다 — 만든 뒤 우측 설정에서 화면 구성을 이어간다
-                const item: MenuItem = {
-                  id: `m-custom-${items.length + 1}`,
-                  order: tops.length + 1,
-                  name: newName.trim(),
-                  path: newPath.trim(),
-                  icon: 'doc',
-                  active: true,
-                  roles: newMinimal ? [] : newRoles,
-                  minimal: newMinimal,
-                  template: newTemplate,
-                  custom: true,
-                  config: {},
-                }
-                setItems((list) => [...list, item])
-                setCreating(false)
-                setNewName('')
-                setNewPath('')
-                select(item)
-                toast(
-                  tf(
-                    'menus.toast.added',
-                    { layoutLabel: t('menus.label.layout', '화면 구성') },
-                    '메뉴를 추가했습니다 — 우측 [{layoutLabel}]에서 이 화면에 들어갈 요소를 정하세요',
-                  ),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {t('common.add')}
-            </button>
-          </div>
         </Modal>
       )}
     </AppShell>

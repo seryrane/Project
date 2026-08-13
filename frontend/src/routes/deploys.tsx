@@ -306,7 +306,39 @@ function DeploysPage() {
 
       {/* 새 배포 요청 — 승인 없이는 시작되지 않는다 */}
       {creating && (
-        <Modal title={t('deploys.requestModalTitle', '배포 요청')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('deploys.requestModalTitle', '배포 요청')}
+          onClose={() => setCreating(false)}
+          /* 발은 관문 슬롯으로 (규약 §7). 포함 사양서를 여러 건 고르면 칩이 줄줄이 늘어나
+             몸이 넘친다 — 몸 안에 두면 다 고르고 나서 [승인 요청]을 찾으러 내려가야 한다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
+              <CtaButton
+                busyLabel={t('deploys.submitting', '요청 보내는 중…')}
+                onAction={async () => {
+                  await simulate()
+                  setCreating(false)
+                  toast(
+                    t(
+                      'deploys.toast.requested',
+                      '배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요',
+                    ),
+                  )
+                }}
+              >
+                {t('deploys.submitRequest', '배포 승인 요청')}
+              </CtaButton>
+            </div>
+          }
+        >
           <div className="rounded-xl border border-review-ink/30 bg-review-bg px-4 py-3 text-[13px] leading-relaxed text-review-ink">
             {t(
               'deploys.requestHint',
@@ -342,31 +374,6 @@ function DeploysPage() {
                 }
               />
             </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
-            <CtaButton
-              busyLabel={t('deploys.submitting', '요청 보내는 중…')}
-              onAction={async () => {
-                await simulate()
-                setCreating(false)
-                toast(
-                  t(
-                    'deploys.toast.requested',
-                    '배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요',
-                  ),
-                )
-              }}
-            >
-              {t('deploys.submitRequest', '배포 승인 요청')}
-            </CtaButton>
           </div>
         </Modal>
       )}

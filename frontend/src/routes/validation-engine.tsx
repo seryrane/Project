@@ -402,6 +402,34 @@ function ValidationEnginePage() {
           }
           onClose={() => setEditing(null)}
           wide
+          /* ⚠ 발이 특히 절실한 자리 — 안에 **12줄짜리 코드 편집기**가 있다. Python 함수를
+             다 쓰고 나면 [등록]이 화면 밖으로 나가 있어서, 저장하려고 코드를 지나 한참
+             내려가야 했다(규약 §7 "발은 붙박이. 몸에 두면 밀려서 사라진다") */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(null)
+                  toast(
+                    editing === 'new'
+                      ? t('engine.toast.registered', '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요')
+                      : t('engine.toast.editSaved', '엔진 수정을 저장했습니다'),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {editing === 'new' ? t('engine.submitNew', '엔진 등록') : t('engine.submitEdit', '수정 저장')}
+              </button>
+            </div>
+          }
         >
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[1fr_180px]">
             <label className="block">
@@ -479,29 +507,6 @@ function ValidationEnginePage() {
               '⚠ 함수는 반드시 def validate_*(records) 형태이고 list를 반환해야 합니다.',
             )}
           </p>
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(null)
-                toast(
-                  editing === 'new'
-                    ? t('engine.toast.registered', '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요')
-                    : t('engine.toast.editSaved', '엔진 수정을 저장했습니다'),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {editing === 'new' ? t('engine.submitNew', '엔진 등록') : t('engine.submitEdit', '수정 저장')}
-            </button>
-          </div>
         </Modal>
       )}
 

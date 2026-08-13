@@ -97,6 +97,22 @@ const NOTIFICATIONS: Array<{
 /** 본문 폭 — 표·대시보드는 설계서 폭(1680), 글을 읽는 화면은 읽기 폭(960) */
 export type ContentWidth = 'data' | 'doc'
 
+/**
+ * ⚠⚠ **라우트가 바뀌면 이 셸이 통째로 다시 마운트된다** — 화면마다 자기 `<AppShell>` 을
+ * 그리기 때문이다. 그래서 사이드바 상태를 `useState` 초기값 + `useEffect(localStorage)` 로
+ * 두면, 메뉴를 누를 때마다 **초기값이 한 프레임 보였다가 저장값으로 되돌아간다** —
+ * 접어 둔 카테고리가 순간 전부 펴졌다 다시 접히는 깜빡임이 그것이다(2026-08-13 사용자 지적).
+ *
+ * 모듈 스코프에 담아 두면 마운트를 넘어 살아남아 **첫 렌더부터 제 값**으로 그린다.
+ * ⚠ 그런데도 초기값을 여기서 `localStorage` 로 채우지는 않는다 — 서버에는 localStorage 가
+ * 없어서 SSR 결과와 어긋나고, 그러면 수화 때 화면이 통째로 다시 그려진다.
+ * 첫 방문에서만 효과가 한 번 읽어 이 상자를 채우고, 그다음부터는 상자가 답한다.
+ */
+const lnbCache: { collapsed: Record<string, boolean> | null; pinned: boolean | null } = {
+  collapsed: null,
+  pinned: null,
+}
+
 function Shell({
   active,
   title,
@@ -113,12 +129,14 @@ function Shell({
   const { locale, setLocale, t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  // 화면을 옮겨도 사이드바 모양이 그대로여야 한다 — 첫 렌더부터 상자(lnbCache)의 값으로
+  // 그린다. 상자가 비어 있는 첫 방문에만 기본값으로 그리고, 아래 효과가 한 번 채운다
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => lnbCache.collapsed ?? {})
   // 좁은 화면(<720px)에서 사이드바는 본문을 덮는 서랍이다 — 규약 §8.
   const [navOpen, setNavOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   // LNB 핀 — 해제하면 아이콘 레일로 접히고, 올리면 다시 펴진다 (데스크톱 전용)
-  const [pinned, setPinned] = useState(true)
+  const [pinned, setPinned] = useState(() => lnbCache.pinned ?? true)
   const [menu, setMenu] = useState<null | 'bell' | 'user'>(null)
   // 팝오버는 **연 조작에 매달린다** — 자리를 화면 끝에서 손으로 재던 것(`right-24`)을
   // 걷고 이 두 ref 에서 잰다. GNB 에 버튼이 하나 늘어도 따라온다 (규약 §1 팝오버 절)
@@ -160,27 +178,36 @@ function Shell({
   const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
   const [unread, setUnread] = useState(3)
 
+  // ⚠ **첫 방문에서 한 번만 읽는다.** 상자가 이미 차 있으면 건드리지 않는다 —
+  //   화면을 옮길 때마다 다시 읽으면 그때마다 한 프레임 기본값이 보인다(깜빡임의 원인).
+  //   수화 뒤에 읽는 것은 그대로다: 서버에는 localStorage 가 없다.
   useEffect(() => {
-    if (localStorage.getItem('lnb-pinned') === '0') setPinned(false)
-    // ⚠ 접어 둔 섹션도 기억한다 — 핀은 남는데 접힘만 안 남아서, 새로고침할 때마다
-    //   메뉴가 통째로 펴졌다. 안 쓰는 섹션을 접어 두는 사람에게는 접는 일이 매번이 된다.
-    //   ⚠ 수화 뒤에 읽는다 — 서버에는 localStorage 가 없어 첫 그림은 늘 '펼침'이다
+    if (lnbCache.collapsed !== null) return
+    let saved: Record<string, boolean> = {}
     try {
-      const saved = localStorage.getItem('lnb-collapsed')
-      if (saved) setCollapsed(JSON.parse(saved) as Record<string, boolean>)
+      const raw = localStorage.getItem('lnb-collapsed')
+      if (raw) saved = JSON.parse(raw) as Record<string, boolean>
     } catch {
       // 옛 판이 남긴 깨진 값 — 무시하고 기본(전부 펼침)으로 간다. 메뉴가 안 보이는 것보다 낫다
     }
+    const savedPin = localStorage.getItem('lnb-pinned') !== '0'
+    lnbCache.collapsed = saved
+    lnbCache.pinned = savedPin
+    setCollapsed(saved)
+    setPinned(savedPin)
   }, [])
   const togglePin = () => {
     setPinned((p) => {
-      localStorage.setItem('lnb-pinned', p ? '0' : '1')
-      return !p
+      const next = !p
+      lnbCache.pinned = next
+      localStorage.setItem('lnb-pinned', next ? '1' : '0')
+      return next
     })
   }
   const toggleSection = (id: string) => {
     setCollapsed((c) => {
       const next = { ...c, [id]: !c[id] }
+      lnbCache.collapsed = next
       localStorage.setItem('lnb-collapsed', JSON.stringify(next))
       return next
     })
