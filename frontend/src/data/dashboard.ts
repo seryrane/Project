@@ -52,11 +52,13 @@ export const errorTypes = [
 ]
 
 // Fill colors are theme tokens validated (CVD + contrast) against each theme's surface.
+// prev 는 이전 동일 기간 값 — 증감은 화면이 계산해 ▲▼ 로 적는다(errorTypes 와 같은 규칙).
+// 숫자 하나만 서 있으면 판단이 안 된다: 62% 는 전과 견줘야 좋은지 나쁜지가 생긴다 (규약 §10).
 export const statusDistribution = [
-  { label: '초안', value: 18, fill: 'var(--color-fill-draft)' },
-  { label: '검토 중', value: 24, fill: 'var(--color-fill-review)' },
-  { label: '승인 대기', value: 7, fill: 'var(--color-fill-pending)' },
-  { label: '배포 완료', value: 79, fill: 'var(--color-fill-deployed)' },
+  { label: '초안', value: 18, prev: 21, fill: 'var(--color-fill-draft)' },
+  { label: '검토 중', value: 24, prev: 22, fill: 'var(--color-fill-review)' },
+  { label: '승인 대기', value: 7, prev: 5, fill: 'var(--color-fill-pending)' },
+  { label: '배포 완료', value: 79, prev: 70, fill: 'var(--color-fill-deployed)' },
 ]
 
 // 승인 대기 큐 — 대시보드는 "다음 행동"으로 끝난다 (규약 §10).

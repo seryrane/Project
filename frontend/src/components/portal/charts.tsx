@@ -236,6 +236,15 @@ function axisRange(lo: number, hi: number): [number, number] {
  * - 가운데는 비우고 **합계**를 넣는다(도넛의 구멍이 곧 숫자 자리다)
  * - 조각 사이 2px 면 색 틈 — 테두리를 그리지 않는다
  * - 범례에 값과 비율을 함께 — 각도로 못 읽는 것을 글이 말한다(툴팁만으로 가두지 않는다)
+ *
+ * ⚠⚠ **그림은 제 칸을 다 쓴다** (2026-08-14 사용자 지적 "도넛 차트 공백 문제" 2차).
+ * 128px 로 못 박아 두면, 격자가 옆 카드에 키를 맞춘 만큼이 그대로 빈 면으로 남는다
+ * (hero 를 얹어 위아래로 갈랐어도 총량은 그대로였다 — 142px 이 가운데로 옮겼을 뿐).
+ * 그래서 세로는 **남는 자리가 정한다**: `flex-1` 로 자리를 받고 `h-full` 로 채운다.
+ * - 바닥 `min-h-32`(128) — 안 늘어난 카드에서도 예전 크기는 지킨다
+ * - 천장 `max-h-56`(224) — 1칸 카드에서 도넛만 커져 범례를 밀어내지 않게
+ * - 폭은 `w-auto` — viewBox 가 1:1 이라 높이를 따라간다(직접 재지 않는다)
+ * ⚠ 좁은 화면(줄바꿈)에서는 부모 키가 내용에서 오므로 h-full 이 접힌다 — min-h 가 바닥이다.
  */
 export function DonutChart({
   data,
@@ -253,8 +262,13 @@ export function DonutChart({
   const GAP = 3
   let acc = 0
   return (
-    <div className="flex flex-wrap items-center gap-5">
-      <svg viewBox="0 0 128 128" className="block h-32 w-32 shrink-0" role="img" aria-label="구성비">
+    <div className="flex min-h-0 flex-1 flex-wrap items-center gap-5">
+      <svg
+        viewBox="0 0 128 128"
+        className="block h-full max-h-56 min-h-32 w-auto shrink-0"
+        role="img"
+        aria-label="구성비"
+      >
         <g transform="rotate(-90 64 64)">
           {data.map((d, i) => {
             const len = (d.value / total) * C

@@ -477,7 +477,12 @@ export const ADMIN_DICT: Record<string, Entry> = {
     ko: '{range} · 단위: 천 건 · 점선은 이전 동일 기간',
     en: '{range} · Unit: thousands · dashed = same period before',
   },
-  'dash.status.subtitle': { ko: '전체 128건 기준', en: 'Based on all 128 records' },
+  // ⚠ 128 을 문구에 박아 두면 mock 이 바뀔 때 사전만 옛말을 한다 — 숫자는 파라미터로 (규약 §4-3)
+  'dash.status.subtitle': { ko: '전체 {total}건 기준', en: 'Based on all {total} records' },
+  'dash.status.hero': {
+    ko: '배포 완료 {n}건 · 이전 동일 기간 대비',
+    en: '{n} deployed · vs. same period before',
+  },
   'dash.heatmap.subtitle': {
     ko: '최근 25주 · 일별 처리량 (짙을수록 많음)',
     en: 'Last 25 weeks · daily volume (darker = more)',

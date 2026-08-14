@@ -2,6 +2,16 @@
 import type { Entry } from './i18n'
 
 export const WORK_DICT: Record<string, Entry> = {
+  /* ── 사양서 상태 ───────────────────────────────────────────────────
+     ⚠ 이 키들은 **한국어 낱말 자체가 키**다 — 정본(data/dashboard.ts·specs.ts)이 상태를
+     코드가 아니라 한국어 문자열로 들고 있고, 화면이 그 값으로 맞춰 보기 때문이다
+     (i18n.tsx 의 `perm.<한국어>` 와 같은 임시 규칙. 규약 §4-2 "서버는 재료를 준다" 를
+     아직 못 지킨 자리 — 본개발에서 code+label 로 가른다). 값은 그대로, **표시만** 옮긴다. */
+  'specStatus.초안': { ko: '초안', en: 'Draft' },
+  'specStatus.검토 중': { ko: '검토 중', en: 'In review' },
+  'specStatus.승인 대기': { ko: '승인 대기', en: 'Pending approval' },
+  'specStatus.배포 완료': { ko: '배포 완료', en: 'Deployed' },
+
   // ── 사양서 목록 (/specs) ──────────────────────────────────────────
   'specs.register': { ko: '+ 사양서 등록', en: '+ New spec' },
   'specs.searchPlaceholder': { ko: '사양서 명, ID, 태그 검색...', en: 'Search name, ID, tag...' },

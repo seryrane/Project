@@ -137,6 +137,26 @@ const SPAN: Record<WidgetSize, string> = {
 }
 const SIZE_LABEL: Record<WidgetSize, string> = { 1: '1칸', 2: '2칸', 3: '전체' }
 
+/**
+ * 사양서 상태 카드의 **한마디** (dataviz hero number — ChartCard 주석의 처방).
+ *
+ * ⚠⚠ 이 카드는 몸통이 도넛 하나뿐이라 `justify-between` 이 가를 자식이 없었다 —
+ * 격자가 옆 카드(2칸 선 그래프)에 키를 맞추는 동안 **밑이 270px 빈 흰 면**으로 남았다
+ * (2026-08-14 사용자 지적 "도넛 차트 공백 문제"). 2026-08-13 에 /analytics 에만
+ * 들어간 처방을 여기에도 들인다: 결론은 위, 그림은 바닥, 남는 자리는 그 사이가 먹는다.
+ *
+ * ⚠ 숫자는 코드가 센다 — 62·79·128 을 손으로 적으면 mock 이 바뀔 때 카드가 거짓말을 한다.
+ * 라벨('배포 완료')은 데이터의 정본 키다(사전은 표시만 옮긴다).
+ */
+const DEPLOYED = '배포 완료'
+const statusTotal = statusDistribution.reduce((s, d) => s + d.value, 0)
+const statusPrevTotal = statusDistribution.reduce((s, d) => s + d.prev, 0)
+const deployedNow = statusDistribution.find((d) => d.label === DEPLOYED)?.value ?? 0
+const deployedPrev = statusDistribution.find((d) => d.label === DEPLOYED)?.prev ?? 0
+const deployedPct = statusTotal ? Math.round((deployedNow / statusTotal) * 100) : 0
+const deployedPctPrev = statusPrevTotal ? Math.round((deployedPrev / statusPrevTotal) * 100) : 0
+const deployedDelta = deployedPct - deployedPctPrev
+
 function DashboardPage() {
   const { t, tf } = useI18n()
   const [range, setRange] = useState(30)
@@ -272,15 +292,31 @@ function DashboardPage() {
     status: (
       <ChartCard
         title={t('widget.status', '사양서 상태 분포')}
-        subtitle={t('dash.status.subtitle', '전체 128건 기준')}
+        subtitle={tf('dash.status.subtitle', { total: statusTotal }, '전체 {total}건 기준')}
         action={{ label: t('nav.specs'), onClick: goSpecs }}
+        hero={{
+          value: String(deployedPct),
+          unit: '%',
+          delta: `${deployedDelta > 0 ? '+' : ''}${deployedDelta}%p`,
+          deltaGood: deployedDelta >= 0,
+          note: tf('dash.status.hero', { n: deployedNow }, '배포 완료 {n}건 · 이전 동일 기간 대비'),
+        }}
       >
         {/* ⚠ 누적 막대 → **도넛** (2026-08-13). 79/24/18/7 은 한 조각이 확실히 커서
             "대부분 배포 완료"가 한눈에 읽힌다 — dataviz 가 도넛을 허용하는 조건
             ("part-to-whole at a glance only, ≤6 segments")에 맞는 자리다.
             ⚠ 값이 비슷한 데이터에는 쓰지 않는다 — 각도는 길이보다 견주기 어렵다.
             그래서 범례가 값과 비율을 함께 말한다(각도로 못 읽는 것을 글이 맡는다). */}
-        <DonutChart data={statusDistribution} centerLabel={t('dash.status.center', '전체 사양서')} />
+        {/* ⚠ 범례 라벨은 **표시만** 옮긴다 — 값(정본 키)은 그대로 둔다(i18n-dict-work 의
+            specStatus 절). EN 으로 바꿔도 범례만 한국어로 남던 자리였다. */}
+        <DonutChart
+          data={statusDistribution.map(({ label, value, fill }) => ({
+            label: t(`specStatus.${label}`, label),
+            value,
+            fill,
+          }))}
+          centerLabel={t('dash.status.center', '전체 사양서')}
+        />
       </ChartCard>
     ),
     heatmap: (
