@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
@@ -239,6 +239,19 @@ function AlertsPage() {
      좁은 화면 카드와 넓은 화면 표가 **같은 쪽**을 본다 — 둘이 갈리면 폭을 줄였을 때
      보던 줄이 사라진다. */
   const { page, pageCount, pageRows, setPage } = usePaged(rows)
+  /**
+   * ⚠⚠ **접어 두고 [더 보기]** (2026-08-14 사용자 지시). 이력 19줄을 다 펴 놓아 이 카드만
+   * 743px 이었고, 화면이 3판까지 길어진 원인의 절반이었다. 규약 §9 의 쪽(21줄부터)은
+   * 그대로 둔다 — 쪽은 **너무 많을 때** 나누는 것이고, 이건 **첫눈에 얼마나 보일지**의
+   * 문제라 다른 물건이다. 그래서 둘은 같이 선다(발이 둘 다 그린다).
+   * ⚠ 거르는 조건이 바뀌면 다시 접는다 — 좁혀 놓고 펴 둔 채로 두면, 조건을 되돌렸을 때
+   *   갑자기 19줄이 쏟아진다(펼침이 어디서 왔는지 설명되지 않는다).
+   */
+  const COLLAPSED_ROWS = 8
+  const [historyOpen, setHistoryOpen] = useState(false)
+  useEffect(() => setHistoryOpen(false), [rows.length])
+  const shownRows = historyOpen ? pageRows : pageRows.slice(0, COLLAPSED_ROWS)
+  const canToggle = pageRows.length > COLLAPSED_ROWS
 
   /* ── 요약 타일 — 0 을 평온함으로 읽지 않는다(규약 §10): 각 0 은 이유가 다르다 ── */
   const last24h = alertEvents.filter((e) => ALERTS_NOW - parseAlertAt(e.at) <= 86_400_000)
@@ -491,7 +504,7 @@ function AlertsPage() {
 
         {/* 좁은 화면: 카드 — 행 하나가 독립 개체라 열 비교가 필요 없다 */}
         <ol className="space-y-2 p-4 pc:hidden">
-          {pageRows.map((e) => (
+          {shownRows.map((e) => (
             <li key={e.id}>
               <button
                 type="button"
@@ -525,7 +538,7 @@ function AlertsPage() {
             예외가 생긴다(DataTable.tsx 아래 주석). */}
         <div className="hidden px-4 pc:block pc:px-5">
           <DataTable
-            rows={pageRows}
+            rows={shownRows}
             rowKey={(e) => e.id}
             onRowClick={setDetail}
             minWidth={820}
@@ -577,12 +590,32 @@ function AlertsPage() {
           />
         </div>
         <div className="px-4 pb-4 pc:px-5 pc:pb-4">
+          {/* ⚠⚠ `shown` 은 **거른 수**(rows.length)지 보이는 줄 수가 아니다.
+              접힌 수를 여기 적으면 "전체 19건 중 8건"이 되어, 보는 사람이 **걸러서 8건인지
+              접어서 8건인지** 못 가른다 — 규약 §9 의 발은 "거르기"를 말하는 자리다.
+              접힌 것은 바로 옆 [11건 더 보기]가 제 입으로 말한다. 둘은 다른 셈이다.
+              (e2e '목록 발' 가 이 어긋남을 잡았다 — 처음엔 보이는 줄 수를 적었었다) */}
           <ListFoot
             total={sortedEvents.length}
             shown={rows.length}
             page={page}
             pageCount={pageCount}
             onPage={setPage}
+            toggle={
+              canToggle
+                ? {
+                    label: historyOpen
+                      ? t('alerts.history.collapse', '접기')
+                      : tf(
+                          'alerts.history.more',
+                          { n: pageRows.length - COLLAPSED_ROWS },
+                          '{n}건 더 보기',
+                        ),
+                    expanded: historyOpen,
+                    onClick: () => setHistoryOpen((v) => !v),
+                  }
+                : undefined
+            }
           />
         </div>
       </section>

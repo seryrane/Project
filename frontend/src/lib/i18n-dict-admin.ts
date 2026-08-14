@@ -565,6 +565,8 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'alerts.severity.danger': { ko: '위험', en: 'Danger' },
   'alerts.severity.warn': { ko: '주의', en: 'Warning' },
   'alerts.severity.info': { ko: '정보', en: 'Info' },
+  'alerts.history.more': { ko: '{n}건 더 보기', en: 'Show {n} more' },
+  'alerts.history.collapse': { ko: '접기', en: 'Collapse' },
   'alerts.status.open': { ko: '미해결', en: 'Unresolved' },
   'alerts.status.resolved': { ko: '해결', en: 'Resolved' },
 

@@ -602,6 +602,32 @@ test('목록 발 — 거르면 "전체 N건 중 M건"으로 바뀐다 (규약 §
   await expect(foot, '거른 뒤에는 전체와 거른 수를 함께 말한다').toHaveText(/^전체 \d+건 중 \d+건$/)
 })
 
+/* 접어 두기 — 이력 19줄을 다 펴 놓아 /alerts 만 3화면이었다 (2026-08-14).
+   ⚠ 여기서 지키는 것은 **두 셈이 안 섞이는 것**이다: 발은 "거르기"를, 단추는 "접기"를
+   말한다. 접힌 수를 발에 적었다가 "걸러서 8건인지 접어서 8건인지" 못 가르게 됐었다. */
+test('접어 두기 — [더 보기]로 펴고 접어도 발은 거른 수만 말한다 (규약 §9)', async ({ page }) => {
+  await ready(page, '/alerts')
+  const history = page.locator('section').filter({ hasText: '알림 이력' }).first()
+  const rows = history.locator('tbody tr')
+  const more = history.getByRole('button', { name: /더 보기|접기/ })
+  const foot = history.getByText(/^전체 \d+건/).first()
+
+  const total = Number((await foot.textContent())?.match(/\d+/)?.[0])
+  const folded = await rows.count()
+  expect(folded, '접힌 채로 열리고, 가진 것보다 적게 보인다').toBeLessThan(total)
+  await expect(more, '접혀 있으면 아래 화살표').toHaveAttribute('aria-expanded', 'false')
+  await expect(foot, '접었다고 발이 "중 N건"으로 바뀌면 안 된다 — 그건 거르기의 말이다').toHaveText(
+    /^전체 \d+건$/,
+  )
+
+  await more.click()
+  await expect(rows, '펴면 가진 줄이 다 선다').toHaveCount(total)
+  await expect(more).toHaveAttribute('aria-expanded', 'true')
+
+  await more.click()
+  await expect(rows, '다시 접힌다').toHaveCount(folded)
+})
+
 test('위젯 발 — 잘라 보여 주면 몇 건인지 말하고 전체로 가는 길을 준다 (규약 §9)', async ({ page }) => {
   await ready(page, '/dashboard')
   const card = page.locator('section').filter({ hasText: '최근 공지' }).first()

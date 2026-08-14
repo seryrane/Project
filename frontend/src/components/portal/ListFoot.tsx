@@ -21,8 +21,15 @@ export function ListFoot({
   page,
   pageCount,
   onPage,
-  /** 잘라서 보여 주는 위젯이 전체로 보내는 길 (위젯은 쪽을 나누지 않는다) */
+  /** 잘라서 보여 주는 위젯이 **전체로 보내는 길** (위젯은 쪽을 나누지 않는다) */
   more,
+  /**
+   * **그 자리에서** 접었다 펴는 발 — `more` 와 다른 물건이다.
+   * `more` 는 다른 화면으로 보내고, 이건 같은 목록을 늘렸다 줄인다.
+   * ⚠ 쪽과 **함께** 설 수 있다: 긴 목록은 "8줄만 보이기 + 21줄부터 쪽"이 같이 온다.
+   *   (`more` 는 쪽이 서면 숨는다 — 위젯이 쪽을 안 나누기 때문이고, 이건 그 부류가 아니다)
+   */
+  toggle,
   className = '',
 }: {
   total: number
@@ -32,6 +39,7 @@ export function ListFoot({
   pageCount?: number
   onPage?: (p: number) => void
   more?: { label: string; onClick?: () => void }
+  toggle?: { label: string; expanded: boolean; onClick: () => void }
   className?: string
 }) {
   const paged = page != null && pageCount != null && pageCount > 1 && onPage
@@ -60,6 +68,18 @@ export function ListFoot({
           className="rounded-md px-2 py-1 font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
         >
           {more.label} →
+        </button>
+      )}
+      {toggle && (
+        /* ⚠ 화살표는 **상태를 말한다** — 펴면 위, 접으면 아래. 글자만으로도 읽히지만
+           방향이 함께 서야 누르기 전에 무슨 일이 날지 안다 (규약 §21 자기 상태). */
+        <button
+          type="button"
+          aria-expanded={toggle.expanded}
+          onClick={toggle.onClick}
+          className="rounded-md px-2 py-1 font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+        >
+          {toggle.label} {toggle.expanded ? '↑' : '↓'}
         </button>
       )}
     </div>
