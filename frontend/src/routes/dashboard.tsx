@@ -392,7 +392,9 @@ function DashboardPage() {
         action={{ label: t('nav.alerts') }}
       >
         {/* 서버 한 줄에 게이지 3개 + 배지가 들어간다 — 칸이 넉넉할 때만 2열 (위 @container) */}
-        <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 @3xl:grid-cols-2">
+        {/* ⚠ 남는 세로는 줄 사이가 먹는다 (charts.tsx StatusStackBar 주석) — `content-between`
+            이 격자의 행들을 벌린다(flex 의 justify-between 에 해당하는 격자 쪽 낱말이다) */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 content-between gap-x-6 gap-y-2.5 @3xl:grid-cols-2">
           {serverResources.map((s) => (
             <div key={s.name} className="flex items-center gap-3">
               <span className="w-16 shrink-0 font-mono text-xs font-semibold text-ink">{s.name}</span>

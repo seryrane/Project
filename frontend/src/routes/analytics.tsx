@@ -181,7 +181,8 @@ function AnalyticsPage() {
           action={{ label: t('analytics.action.kpiDetail') }}
           className="anim-fade-up [animation-delay:140ms]"
         >
-          <ol className="space-y-1.5">
+          {/* ⚠ 남는 세로는 줄 사이가 먹는다 (charts.tsx StatusStackBar 주석) */}
+          <ol className="flex min-h-0 flex-1 flex-col justify-between gap-1.5">
             {underperforming.map((k) => (
               <li
                 key={k.name}
@@ -249,7 +250,8 @@ function AnalyticsPage() {
           }}
           className="anim-fade-up [animation-delay:320ms]"
         >
-          <div className="space-y-2">
+          {/* ⚠ 남는 세로는 줄 사이가 먹는다 (charts.tsx StatusStackBar 주석) */}
+          <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
             {qualityMetrics.map((q) => (
               <div key={q.label} className="grid grid-cols-[110px_1fr_auto] items-center gap-3">
                 <span className="truncate text-xs text-ink-muted">{q.label}</span>

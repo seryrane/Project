@@ -334,6 +334,53 @@ function AlertsPage() {
     toast(t('alerts.toast.rulesSaved', '알림 규칙을 저장했습니다 — 값은 언제든 [규칙 편집]에서 다시 바꿀 수 있습니다'))
   }
 
+  /* 알림 규칙 카드 — 편집은 모달, 저장은 즉시(되돌릴 수 있으니 확인 모달 없음).
+     ⚠ 자리는 오른쪽 열(추이 아래)이다 — 아래에 따로 쌓아 두면 화면만 한 판 더 길어졌다. */
+  const rulesCard = (
+    <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:220ms]">
+      <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
+        <div>
+          <h2 className="text-sm font-semibold text-ink">{t('alerts.section.rules.title', '알림 규칙')}</h2>
+          <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.rules.subtitle')}</p>
+        </div>
+        <button
+          type="button"
+          onClick={openRulesModal}
+          className="h-8 shrink-0 rounded-lg border border-hairline bg-surface px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+        >
+          {t('alerts.rules.edit', '규칙 편집')}
+        </button>
+      </div>
+      <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+        <div className="space-y-2">
+          {rules.map((r) => (
+            <div key={r.metric} className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5 text-[13px]">
+              <span className="font-medium text-ink">{t(`alerts.metric.${r.metric}`)}</span>
+              <span className="flex items-center gap-2 text-xs tabular-nums">
+                <span className="rounded-full bg-review-bg px-2 py-0.5 font-semibold text-review-ink">
+                  {t('alerts.rules.threshold.warn', '주의')} {r.warn}%
+                </span>
+                <span className="rounded-full bg-danger-bg px-2 py-0.5 font-semibold text-danger-ink">
+                  {t('alerts.rules.threshold.danger', '위험')} {r.danger}%
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {channels.map((c) => (
+            <div key={c.key} className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5 text-[13px]">
+              <span className="font-medium text-ink">{t(`alerts.rules.channel.${c.key}`)}</span>
+              <span className={`text-xs font-semibold ${c.enabled ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
+                {c.enabled ? t('alerts.rules.channel.enabled', '사용 중') : t('alerts.rules.channel.disabled', '미사용')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+
   return (
     <AppShell active="alerts" title={t('nav.alerts', '시스템 알림')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -370,43 +417,56 @@ function AlertsPage() {
         ))}
       </div>
 
-      {/* 서버 자원 리포팅 */}
-      <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:100ms]">
-        <div className="surface-head px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink">{t('alerts.section.servers.title', '서버 자원 리포팅')}</h2>
-          <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.servers.subtitle')}</p>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 xl:grid-cols-3">
-          {alertServers.map((s) => (
-            <AlertServerCard
-              key={s.name}
-              server={s}
-              selected={s.name === selectedServer}
-              onSelect={() => setSelectedServer(s.name)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* 최근 추이 — 관문 차트(MultiLineChart), 선택한 서버의 CPU·메모리·디스크 */}
-      <div className="mt-5">
-        <ChartCard
-          title={t('alerts.trend.title', '선택 서버 최근 추이')}
-          subtitle={t('alerts.trend.subtitle', '최근 14일 · 단위: %')}
-          className="anim-fade-up [animation-delay:140ms]"
-        >
-          <div className="mb-3">
-            <ChipSelect options={alertServers.map((s) => s.name)} value={selectedServer} onChange={setSelectedServer} mono />
+      {/* ⚠⚠ **고르는 곳과 바뀌는 곳은 붙여 둔다** (2026-08-14 사용자 지적 "너무 아래로
+          스크롤이 내려가"). 서버 카드·추이·규칙을 세로로 쌓아 이 화면만 3화면(2,519px)
+          이었다 — 다른 운영 화면은 1.0~1.5화면이다. 게다가 서버를 고르는 카드가 위에,
+          그래서 바뀌는 그래프가 아래에 있어 **고르면 화면 밖에서 바뀌었다**.
+          ⚠ 추이 그래프가 467px 이었던 것도 폭 때문이다 — svg 는 `w-full` + viewBox
+          640×232 라 폭이 넓을수록 키가 자란다. 반 칸으로 옮기면 저절로 잦아든다.
+          오른쪽 열에 [규칙]까지 쌓아 두 열의 키를 맞춘다(빈 면을 새로 만들지 않는다). */}
+      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
+        {/* 서버 자원 리포팅 */}
+        <section className="anim-fade-up card-spotlight @container flex flex-col rounded-2xl border border-hairline bg-surface [animation-delay:100ms]">
+          <div className="surface-head px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-ink">{t('alerts.section.servers.title', '서버 자원 리포팅')}</h2>
+            <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.servers.subtitle')}</p>
           </div>
-          <MultiLineChart
-            series={[
-              { name: t('alerts.metric.cpu', 'CPU'), color: METRIC_FILL.cpu, data: selected.cpuTrend },
-              { name: t('alerts.metric.mem', '메모리'), color: METRIC_FILL.mem, data: selected.memTrend },
-              { name: t('alerts.metric.disk', '디스크'), color: METRIC_FILL.disk, data: selected.diskTrend },
-            ]}
-            unit="%"
-          />
-        </ChartCard>
+          {/* ⚠ 칸이 정한다 (위 @container) — 뷰포트 `sm:`/`xl:` 로 접으면 반 칸으로 옮겨 놓고도
+              "넓은 화면"인 줄 알고 3열을 고집한다(대시보드 위젯에서 겪은 것과 같은 함정).
+              `flex-1 auto-rows-fr` 는 옆 열이 더 길 때 남는 세로를 줄들이 나눠 갖게 한다. */}
+          <div className="grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-5 @lg:grid-cols-2">
+            {alertServers.map((s) => (
+              <AlertServerCard
+                key={s.name}
+                server={s}
+                selected={s.name === selectedServer}
+                onSelect={() => setSelectedServer(s.name)}
+              />
+            ))}
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-5">
+          {/* 최근 추이 — 관문 차트(MultiLineChart), 선택한 서버의 CPU·메모리·디스크 */}
+          <ChartCard
+            title={t('alerts.trend.title', '선택 서버 최근 추이')}
+            subtitle={t('alerts.trend.subtitle', '최근 14일 · 단위: %')}
+            className="anim-fade-up [animation-delay:140ms]"
+          >
+            <div className="mb-3">
+              <ChipSelect options={alertServers.map((s) => s.name)} value={selectedServer} onChange={setSelectedServer} mono />
+            </div>
+            <MultiLineChart
+              series={[
+                { name: t('alerts.metric.cpu', 'CPU'), color: METRIC_FILL.cpu, data: selected.cpuTrend },
+                { name: t('alerts.metric.mem', '메모리'), color: METRIC_FILL.mem, data: selected.memTrend },
+                { name: t('alerts.metric.disk', '디스크'), color: METRIC_FILL.disk, data: selected.diskTrend },
+              ]}
+              unit="%"
+            />
+          </ChartCard>
+          {rulesCard}
+        </div>
       </div>
 
       {/* 알림 이력 */}
@@ -524,50 +584,6 @@ function AlertsPage() {
             pageCount={pageCount}
             onPage={setPage}
           />
-        </div>
-      </section>
-
-      {/* 알림 규칙 카드 — 편집은 모달, 저장은 즉시(되돌릴 수 있으니 확인 모달 없음) */}
-      <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:220ms]">
-        <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
-          <div>
-            <h2 className="text-sm font-semibold text-ink">{t('alerts.section.rules.title', '알림 규칙')}</h2>
-            <p className="mt-0.5 text-xs text-ink-subtle">{t('alerts.section.rules.subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={openRulesModal}
-            className="h-8 shrink-0 rounded-lg border border-hairline bg-surface px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
-          >
-            {t('alerts.rules.edit', '규칙 편집')}
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
-          <div className="space-y-2">
-            {rules.map((r) => (
-              <div key={r.metric} className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5 text-[13px]">
-                <span className="font-medium text-ink">{t(`alerts.metric.${r.metric}`)}</span>
-                <span className="flex items-center gap-2 text-xs tabular-nums">
-                  <span className="rounded-full bg-review-bg px-2 py-0.5 font-semibold text-review-ink">
-                    {t('alerts.rules.threshold.warn', '주의')} {r.warn}%
-                  </span>
-                  <span className="rounded-full bg-danger-bg px-2 py-0.5 font-semibold text-danger-ink">
-                    {t('alerts.rules.threshold.danger', '위험')} {r.danger}%
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-2">
-            {channels.map((c) => (
-              <div key={c.key} className="flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5 text-[13px]">
-                <span className="font-medium text-ink">{t(`alerts.rules.channel.${c.key}`)}</span>
-                <span className={`text-xs font-semibold ${c.enabled ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
-                  {c.enabled ? t('alerts.rules.channel.enabled', '사용 중') : t('alerts.rules.channel.disabled', '미사용')}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

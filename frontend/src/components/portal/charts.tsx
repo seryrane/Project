@@ -1071,7 +1071,8 @@ export function ErrorBarChart({ data }: { data: Array<BarDatum> }) {
   const [hover, setHover] = useState<number | null>(null)
   const max = Math.max(...data.map((d) => d.value))
   return (
-    <div className="space-y-1">
+    /* ⚠ 줄 목록 — 남는 세로는 줄 사이가 먹는다 (StatusStackBar 주석과 같은 규칙) */
+    <div className="flex min-h-0 flex-1 flex-col justify-between gap-1">
       {data.map((d, i) => {
         const deltaPct = d.prev != null && d.prev > 0 ? ((d.value - d.prev) / d.prev) * 100 : null
         return (
@@ -1116,8 +1117,11 @@ export function StatusStackBar({ data }: { data: Array<StackDatum> }) {
   const [hover, setHover] = useState<number | null>(null)
   const total = data.reduce((a, d) => a + d.value, 0)
   return (
-    <div>
-      <div className="flex h-5 w-full gap-[2px]">
+    /* ⚠ 줄 목록은 **남는 세로를 줄들이 나눠 갖는다** (2026-08-14 빈 면 쓸기).
+       그림처럼 커질 수 없는 물건이라, 카드가 옆 카드에 키를 맞춘 만큼을 줄 사이가 먹는다 —
+       아래에 흰 면으로 남기는 것보다 낫다. 안 늘어난 카드에서는 gap 이 바닥이라 그대로다. */
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-5 w-full shrink-0 gap-[2px]">
         {data.map((d, i) => (
           <div
             key={d.label}
@@ -1134,7 +1138,7 @@ export function StatusStackBar({ data }: { data: Array<StackDatum> }) {
           />
         ))}
       </div>
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col justify-between gap-2">
         {data.map((d, i) => (
           <div
             key={d.label}
