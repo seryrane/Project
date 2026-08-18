@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Avatar } from '#/components/portal/Avatar'
+import { Icon } from '#/components/portal/Icon'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
@@ -159,6 +160,10 @@ function DeploysPage() {
                 >
                   {d.env}
                 </span>
+                {/* ⚠ 식별자는 **왼쪽**, 사람·시각은 **오른쪽** — 승인 관리·검증 리포트가 그렇게
+                    선다. 여기만 ID 를 오른쪽에 두어 같은 부류의 카드 셋이 서로 다른 순서로
+                    읽혔다(2026-08-18 사용자 지적: "검증 리포트만 결이 다르다"를 따라가다 찾음). */}
+                <span className="font-mono text-xs text-ink-subtle">{d.id}</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[d.status]}`}>
                   {d.status}
                 </span>
@@ -167,7 +172,14 @@ function DeploysPage() {
                     {tf('deploys.rollbackTo', { version: d.rollbackTo }, '← {version}으로 롤백')}
                   </span>
                 )}
-                <span className="ml-auto font-mono text-xs text-ink-subtle">{d.id}</span>
+                <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-subtle">
+                  <Avatar name={d.owner} size={16} />
+                  {d.owner}
+                  <span className="tabular-nums">
+                    · {d.at}
+                    {d.scheduled ? ` ${t('deploys.scheduledSuffix', '(예정)')}` : ''}
+                  </span>
+                </span>
               </span>
               {/* 몸 */}
               <span className="flex items-start gap-4 p-5">
@@ -192,21 +204,13 @@ function DeploysPage() {
                     ))}
                   </span>
                 )}
-                <span className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
-                  <span className="flex items-center gap-1.5">
-                    <Avatar name={d.owner} size={16} />
-                    {d.owner}
+                {/* 담당자·시각은 머리로 올라갔다 — 몸에는 **머리가 말하지 않는 것**만 남긴다 */}
+                {d.durationMin != null && (
+                  <span className="mt-2.5 flex items-center gap-1.5 text-xs tabular-nums text-ink-subtle">
+                    <Icon name="calendar" />
+                    {tf('deploys.minutes', { n: d.durationMin }, '{n}분')}
                   </span>
-                  <span className="tabular-nums">
-                    {d.at}
-                    {d.scheduled ? ` ${t('deploys.scheduledSuffix', '(예정)')}` : ''}
-                  </span>
-                  {d.durationMin != null && (
-                    <span className="tabular-nums">
-                      ⏱ {tf('deploys.minutes', { n: d.durationMin }, '{n}분')}
-                    </span>
-                  )}
-                </span>
+                )}
               </span>
               </span>
             </button>

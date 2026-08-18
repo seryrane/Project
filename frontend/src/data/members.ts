@@ -206,6 +206,19 @@ export const SERVICE_ROLE_LABEL: Record<ServiceRole, string> = {
   VALIDATION_MANAGER: '검증 담당자',
 }
 
+/**
+ * 이 Role 을 가진 회원들 — **결재선이 사람 이름을 손으로 받지 않게** 하는 정본 파생.
+ *
+ * ⚠ 결재선 설정이 이름을 자유 입력으로 받던 동안, 오타 하나로 **존재하지 않는 결재자**에게
+ * 결재가 올라갈 수 있었다(그 건은 영영 내 차례가 되지 않는다 — 2026-08-18).
+ * 역할을 먼저 고르고 그 보유자 중에서 고르면 그 길이 막힌다.
+ *
+ * 본개발에서는 서버가 `GET /api/members?role=` 로 준다 — 이 함수의 안쪽만 바뀐다.
+ */
+export function membersWithRole(role: string, list: Array<Member> = members): Array<Member> {
+  return list.filter((m) => m.roles.includes(role))
+}
+
 export const GRADE_CLS: Record<Grade, string> = {
   'Super Admin': 'bg-danger-bg text-danger-ink',
   Admin: 'bg-pending-bg text-pending-ink',

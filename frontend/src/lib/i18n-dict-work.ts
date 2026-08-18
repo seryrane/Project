@@ -71,6 +71,7 @@ export const WORK_DICT: Record<string, Entry> = {
      (위 specStatus.* 와 같은 임시 규칙 · 본개발에서 code+label 로 가른다). 값은 그대로, 표시만. */
   'approvalStep.검토': { ko: '검토', en: 'Review' },
   'approvalStep.최종 승인': { ko: '최종 승인', en: 'Final approval' },
+  'approvalStep.중간 승인': { ko: '중간 승인', en: 'Interim approval' },
   /* 배포 워크플로우 단계·필드 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다(같은 임시 규칙).
      ⚠ EN 화면에서 이 두 줄만 한국어로 남아 있었다(2026-08-18) — 값은 그대로, 표시만 옮긴다. */
   'workflow.초안': { ko: '초안', en: 'Draft' },
@@ -120,8 +121,10 @@ export const WORK_DICT: Record<string, Entry> = {
   'approvals.lineSettings': { ko: '결재선 설정', en: 'Approval line' },
   'approvals.lineModalTitle': { ko: '결재선 설정', en: 'Approval line settings' },
   'approvals.lineStepNo': { ko: '{n}차', en: 'Step {n}' },
-  'approvals.lineNamePlaceholder': { ko: '결재자 이름', en: 'Approver name' },
-  'approvals.lineLabelPlaceholder': { ko: '단계 이름 (검토·최종 승인)', en: 'Step name (Review, Final approval)' },
+  'approvals.lineNoHolder': {
+    ko: '이 역할을 가진 회원이 없습니다',
+    en: 'No member holds this role',
+  },
   'approvals.lineAdd': { ko: '+ 단계 추가', en: '+ Add step' },
   'approvals.lineRemove': { ko: '단계 삭제', en: 'Remove step' },
   'approvals.lineMaxHint': {
@@ -149,7 +152,10 @@ export const WORK_DICT: Record<string, Entry> = {
     ko: '결재선을 {n}단계로 저장했습니다 — 다음 상신부터 적용됩니다',
     en: 'Approval line saved with {n} steps — applies to new submissions',
   },
-  'approvals.toast.lineInvalid': { ko: '결재자 이름이 빈 단계가 있습니다', en: 'A step has no approver name' },
+  'approvals.toast.lineInvalid': {
+    ko: '결재자가 비었거나 그 역할의 회원이 아닌 단계가 있습니다',
+    en: 'A step has no approver, or the approver does not hold that role',
+  },
   'approvals.toast.needOpinion': {
     ko: '반려 사유를 입력해 주세요 — 요청자는 이 글을 보고 고칩니다',
     en: 'Enter a rejection reason — the requester works from this text',
@@ -223,8 +229,6 @@ export const WORK_DICT: Record<string, Entry> = {
 
   // ── 검증 리포트 (/validation-reports) ────────────────────────────
   'reports.create': { ko: '+ 리포트 생성', en: '+ New report' },
-  'reports.listTitle': { ko: '리포트 {n}건', en: '{n} reports' },
-  'reports.listHint': { ko: '카드를 누르면 상세가 열립니다', en: 'Select a card to open details' },
   'reports.view': { ko: '보기', en: 'View' },
   'reports.publish': { ko: '발행', en: 'Publish' },
   'reports.goResults': { ko: '실행 상세는 검증 결과 조회 →', en: 'Run details in Validation Results →' },

@@ -4,6 +4,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Icon } from '#/components/portal/Icon'
 import { ChipSelect } from '#/components/portal/Chips'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { useToast } from '#/components/portal/toast'
@@ -156,6 +157,8 @@ function FaqPage() {
             .
           </p>
         )}
+        {/* 접혀 있어도 목록은 목록이다 — 거르면 몇 건 중 몇 건인지 말한다 (규약 §9) */}
+        {filtered.length > 0 && <ListFoot total={faqList.length} shown={filtered.length} />}
       </div>
 
       {/* FAQ 추가 — 운영진용. 짧게 적고 닫는 일이라 모달 */}

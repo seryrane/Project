@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { NOTICE_CATEGORIES, notices } from '#/data/community'
@@ -152,6 +153,11 @@ function NoticePage() {
             </li>
           )}
         </ol>
+        {/* ⚠ 고정/나머지로 나뉘어 그려지지만 **셈은 하나다** — 화면 사정으로 목록을 갈랐다고
+            발이 둘이 되면 "6건 중 2건 · 6건 중 3건"처럼 읽는 사람이 더해야 한다 (규약 §9) */}
+        {filtered.length > 0 && (
+          <ListFoot className="px-5 pb-4" total={noticeList.length} shown={filtered.length} />
+        )}
       </section>
 
       {/* 상세 — 읽고 닫는 것이라 우측 서랍 (본문 목록을 유지한 채) */}

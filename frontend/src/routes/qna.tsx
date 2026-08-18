@@ -6,6 +6,7 @@ import { Avatar } from '#/components/portal/Avatar'
 import { ChipSelect } from '#/components/portal/Chips'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { QNA_CATEGORIES, questions } from '#/data/community'
@@ -127,6 +128,10 @@ function QnaPage() {
             </li>
           )}
         </ol>
+        {/* 거르면 몇 건 중 몇 건인지 말하고 끝난다 (규약 §9) */}
+        {filtered.length > 0 && (
+          <ListFoot className="px-5 pb-4" total={questionList.length} shown={filtered.length} />
+        )}
       </section>
 
       {/* 상세 — 질문 + 답변 스레드. 답변 입력은 커뮤니티 생성 권한(운영진) */}

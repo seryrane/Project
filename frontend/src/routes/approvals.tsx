@@ -4,6 +4,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { Icon } from '#/components/portal/Icon'
+import { Select } from '#/components/portal/Select'
+import { SERVICE_ROLES, SERVICE_ROLE_LABEL, membersWithRole } from '#/data/members'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
@@ -357,6 +360,15 @@ function ApprovalsPage() {
                 : t('approvals.emptyAll', '대기 중인 결재가 없습니다.')}
             </li>
           )}
+          {/* 거르면 몇 건 중 몇 건인지 말한다 (규약 §9) — 탭마다 세는 모수가 다르다:
+              [내 차례]는 내 차례 전체를, [전체 대기]는 대기 전체를 모수로 삼는다.
+              모수를 하나로 두면 "내 차례 2건 중 2건"인데 발이 "전체 5건"이라고 말한다. */}
+          {rows.length > 0 && (
+            <ListFoot
+              total={tab === 'mine' ? pending.filter((r) => r.myTurn).length : pending.length}
+              shown={rows.length}
+            />
+          )}
         </ol>
       ) : tab === 'requested' ? (
         <ol className="mt-5 space-y-2.5">
@@ -654,8 +666,14 @@ function ApprovalsPage() {
  * ⚠ 이미 올라간 건의 결재선은 **안 바뀐다**(approvalStore.ApprovalRecord.line 주석) —
  *   결재 중에 선이 움직이면 이력이 못 믿을 것이 된다. 그 말을 화면에도 적는다.
  */
+/** 결재 단계 이름 — 자유 입력이 아니라 **정해진 낱말**에서 고른다(사전이 EN 을 입힌다) */
+const STEP_LABELS = ['검토', '중간 승인', '최종 승인'] as const
+
 function ApprovalLineModal({ onClose }: { onClose: () => void }) {
   const { t, tf } = useI18n()
+  const roleLabel = (code: string) =>
+    t(`role.${code}`, (SERVICE_ROLE_LABEL as Record<string, string | undefined>)[code] ?? code)
+  const holdersOf = (role: string) => membersWithRole(role)
   const toast = useToast()
   const current = useApprovalLine()
   const [draft, setDraft] = useState(current.map((a) => ({ name: a.name, role: a.role, label: a.label })))
@@ -706,18 +724,54 @@ function ApprovalLineModal({ onClose }: { onClose: () => void }) {
               <span className="rounded-full bg-chip px-2 py-0.5 text-xs font-semibold text-ink-muted">
                 {tf('approvals.lineStepNo', { n: i + 1 }, '{n}차')}
               </span>
-              <input
-                value={row.name}
-                onChange={(e) => set(i, { name: e.target.value })}
-                placeholder={t('approvals.lineNamePlaceholder', '결재자 이름')}
-                className="h-9 min-w-0 flex-1 basis-40 rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
-              />
-              <input
+              {/* ⚠⚠ 결재자를 **이름으로 받지 않는다**(2026-08-18): 자유 입력이라 오타 하나로
+                  존재하지 않는 사람에게 결재가 올라갈 수 있었고, 그 건은 영영 누구의 차례도
+                  되지 않았다. 역할을 고르면 **그 역할 보유자**로 후보가 좁혀진다(회원 정본). */}
+              <Select
+                className="min-w-0 flex-1 basis-40"
+                value={row.role}
+                onChange={(e) => {
+                  const role = e.target.value
+                  // 역할을 바꾸면 결재자도 그 역할의 첫 사람으로 따라간다 — 안 그러면
+                  // "역할은 배포 담당자인데 결재자는 법무팀"인 줄이 남는다
+                  set(i, { role, name: membersWithRole(role)[0]?.name ?? '' })
+                }}
+              >
+                {SERVICE_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {roleLabel(r)}
+                  </option>
+                ))}
+              </Select>
+              {holdersOf(row.role).length === 0 ? (
+                // 못 고르는 이유를 적는다 (규약 §17) — 빈 셀렉트만 두면 고장으로 읽힌다
+                <span className="min-w-0 flex-1 basis-40 rounded-lg bg-danger-bg px-3 py-2 text-xs text-danger-ink">
+                  {t('approvals.lineNoHolder', '이 역할을 가진 회원이 없습니다')}
+                </span>
+              ) : (
+                <Select
+                  className="min-w-0 flex-1 basis-32"
+                  value={row.name}
+                  onChange={(e) => set(i, { name: e.target.value })}
+                >
+                  {holdersOf(row.role).map((m) => (
+                    <option key={m.id} value={m.name}>
+                      {m.name} · {m.dept}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              <Select
+                className="basis-32"
                 value={row.label}
                 onChange={(e) => set(i, { label: e.target.value })}
-                placeholder={t('approvals.lineLabelPlaceholder', '단계 이름 (검토·최종 승인)')}
-                className="h-9 min-w-0 flex-1 basis-40 rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
-              />
+              >
+                {STEP_LABELS.map((l) => (
+                  <option key={l} value={l}>
+                    {t(`approvalStep.${l}`, l)}
+                  </option>
+                ))}
+              </Select>
               {/* 마지막 한 단계는 못 지운다 — 결재선이 비면 상신이 갈 곳을 잃는다 */}
               {draft.length > 1 && (
                 <button
@@ -737,7 +791,12 @@ function ApprovalLineModal({ onClose }: { onClose: () => void }) {
       {draft.length < MAX_APPROVAL_STEPS ? (
         <button
           type="button"
-          onClick={() => setDraft((d) => [...d, { name: '', role: 'IBD_APPROVER', label: '검토' }])}
+          onClick={() =>
+            setDraft((d) => [
+              ...d,
+              { name: membersWithRole('IBD_APPROVER')[0]?.name ?? '', role: 'IBD_APPROVER', label: '검토' },
+            ])
+          }
           className="mt-3 h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
           {t('approvals.lineAdd', '+ 단계 추가')}

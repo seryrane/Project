@@ -19,6 +19,7 @@
 import { useSyncExternalStore } from 'react'
 
 import { SPEC_APPROVAL_LINE, approvalRequests } from './approvals'
+import { membersWithRole } from './members'
 import type { ApprovalRequest, ApprovalStep } from './approvals'
 
 /* ── 결재선 (설정으로 바뀐다 — FR-114 ②) ────────────────────────── */
@@ -28,10 +29,17 @@ export const MAX_APPROVAL_STEPS = 3
 
 let line: Array<ApprovalStep> = SPEC_APPROVAL_LINE
 
-/** 결재선을 바꾼다 — 빈 결재선과 3단계 초과는 받지 않는다(받으면 상신이 갈 곳을 잃는다) */
+/**
+ * 결재선을 바꾼다 — 빈 결재선과 3단계 초과는 받지 않는다(받으면 상신이 갈 곳을 잃는다).
+ *
+ * ⚠ **존재하지 않는 결재자도 받지 않는다**(2026-08-18): 화면이 회원 목록에서 고르게
+ * 바뀌었지만, 관문은 화면을 믿지 않는다 — 이름이 회원 정본에 없으면 그 건은 영영
+ * 누구의 차례도 되지 않는다. 그 역할을 가진 사람인지까지 본다.
+ */
 export function setApprovalLine(next: Array<Omit<ApprovalStep, 'seq'>>): boolean {
   if (next.length === 0 || next.length > MAX_APPROVAL_STEPS) return false
   if (next.some((s) => s.name.trim() === '')) return false
+  if (next.some((s) => !membersWithRole(s.role).some((m) => m.name === s.name.trim()))) return false
   line = next.map((s, i) => ({ ...s, seq: i + 1, name: s.name.trim() }))
   notify()
   return true

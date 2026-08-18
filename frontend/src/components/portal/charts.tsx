@@ -133,8 +133,16 @@ function Sparkline({ points, width = 260, height = 40 }: { points: Array<number>
         </linearGradient>
       </defs>
       <path d={area} fill={`url(#${gid})`} />
-      <path d={line} fill="none" stroke="var(--color-primary)" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={x(points.length - 1)} cy={y(points[points.length - 1])} r="3" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="1.5" />
+      <path
+        d={line}
+        fill="none"
+        stroke="var(--color-primary)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <circle cx={x(points.length - 1)} cy={y(points[points.length - 1])} r="3" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }
@@ -409,7 +417,7 @@ export function TrendLineChart({
               {/* ⚠ 격자는 **나누는 선**(divider)이지 감싸는 선(hairline)이 아니다.
                   둘을 같은 값으로 쓰면 카드 테두리와 격자가 같은 무게로 보여 화면이 시끄럽다
                   (DESIGN.md "선은 두 단계다"를 차트에도 적용). */}
-              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
                 {Math.round(t * 10) / 10}
                 {t > 0 ? unit : ''}
@@ -428,18 +436,33 @@ export function TrendLineChart({
               d={path(cmp)}
               fill="none"
               stroke="var(--color-ink-subtle)"
-              strokeWidth="1.5"
+              strokeWidth="1.25"
+              vectorEffect="non-scaling-stroke"
               strokeDasharray="4 4"
               strokeLinejoin="round"
             />
           )}
           <path d={area} fill={`url(#${gid})`} />
-          <path d={line} pathLength="1" className="chart-line" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          {/* ⚠⚠ **획은 viewBox 단위다.** 640 짜리 도화지가 카드 폭 1300 으로 늘면 굵기도 두 배가
+              되어 화면에서는 4px 선이 그어진다 — 아이콘에서 이미 겪은 함정과 같은 병이다
+              (Icon.tsx 주석). `non-scaling-stroke` 로 획을 화면 픽셀에 고정하고, 굵기는
+              **화면에서 보이는 값**으로 다시 잡는다(2026-08-18 사용자 지적: "선이 너무 굵다"). */}
+          <path
+            d={line}
+            pathLength="1"
+            className="chart-line"
+            fill="none"
+            stroke="var(--color-primary)"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
           {hover != null && (
-            <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />
+            <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           )}
           {(hover != null ? [hover, data.length - 1] : [data.length - 1]).map((i) => (
-            <circle key={i} cx={x(i)} cy={y(data[i].value)} r="4" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="2" />
+            <circle key={i} cx={x(i)} cy={y(data[i].value)} r="4" fill="var(--color-primary)" stroke="var(--color-surface)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
           ))}
           {/* ⚠ 끝값은 선 위에 놓이므로 **면 색 테두리**를 둘러 글자가 선을 이긴다
               (paint-order: stroke → 획을 먼저 칠하고 글자를 덮는다). 실측에서 비교
@@ -543,7 +566,7 @@ export function GroupedBarChart({
         <svg viewBox={`0 0 ${BW} ${BH}`} className="block w-full" role="img" aria-label="계열 비교">
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={PADB.l} x2={BW - PADB.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
+              <line x1={PADB.l} x2={BW - PADB.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <text x={PADB.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
                 {Math.round(t)}
                 {t > 0 ? unit : ''}
@@ -692,7 +715,7 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
               {/* ⚠ 격자는 **나누는 선**(divider)이지 감싸는 선(hairline)이 아니다.
                   둘을 같은 값으로 쓰면 카드 테두리와 격자가 같은 무게로 보여 화면이 시끄럽다
                   (DESIGN.md "선은 두 단계다"를 차트에도 적용). */}
-              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" />
+              <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <text x={PAD.l - 8} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="var(--color-ink-subtle)">
                 {Math.round(t)}
                 {t > 0 ? unit : ''}
@@ -719,7 +742,8 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
                   className="chart-line transition-[stroke,stroke-width,opacity] duration-200"
                   fill="none"
                   stroke={dim ? 'var(--color-ink-subtle)' : s.color}
-                  strokeWidth={s.name === focus ? 2.75 : 2}
+                  strokeWidth={s.name === focus ? 2.25 : 1.5}
+                  vectorEffect="non-scaling-stroke"
                   strokeOpacity={dim ? 0.4 : 1}
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -727,13 +751,13 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
               )
             })}
           {hover != null && (
-            <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" />
+            <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-ink-subtle)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           )}
           {hover != null &&
             series
               .filter((s) => focus == null || s.name === focus)
               .map((s) => (
-                <circle key={s.name} cx={x(hover)} cy={y(s.data[hover].value)} r="4" fill={s.color} stroke="var(--color-surface)" strokeWidth="2" />
+                <circle key={s.name} cx={x(hover)} cy={y(s.data[hover].value)} r="4" fill={s.color} stroke="var(--color-surface)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
               ))}
         </svg>
         {hover != null && (

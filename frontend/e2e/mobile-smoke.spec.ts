@@ -767,6 +767,30 @@ test('초안 — 결재 전에는 잠기지 않는다 (잠금이 상태를 안 �
   await expect(page.getByRole('dialog'), '초안은 행을 누르면 편집이 열린다').toBeVisible()
 })
 
+/* 카드 목록의 발 — 규약 §9 "목록은 몇 건인지 말하고 끝난다".
+   ⚠ 발을 **표에만** 달아 두어서, 카드로 그리는 목록 다섯(사양서·승인·공지·Q&A·FAQ)은
+   거르면 카드가 줄어드는데 화면이 아무 말도 안 했다 — 보는 사람은 그게 전부인지 걸러진
+   것인지 모른다(2026-08-18 감사). 표냐 카드냐는 그리는 방식이지 셈의 사정이 아니다. */
+test('카드 목록의 발 — 거르면 "전체 N건 중 M건"으로 바뀐다 (표만의 규칙이 아니다)', async ({
+  page,
+}) => {
+  await ready(page, '/specs')
+  const foot = page.getByText(/^전체 \d+개/).first()
+  await expect(foot, '거르기 전에는 전체 수만 말한다').toHaveText(/^전체 \d+개$/)
+
+  await page.getByRole('button', { name: /^초안\s*\d+$/ }).click()
+  await expect(foot, '거른 뒤에는 전체와 거른 수를 함께 말한다').toHaveText(/^전체 \d+개 중 \d+개$/)
+})
+
+test('공지·Q&A·FAQ 도 몇 건인지 말한다 (거르는 목록에 발이 없으면 §9 가 반쪽이다)', async ({
+  page,
+}) => {
+  for (const path of ['/notice', '/qna', '/faq']) {
+    await ready(page, path)
+    await expect(page.getByText(/^전체 \d+건/).first(), `${path} 에 발이 선다`).toBeVisible()
+  }
+})
+
 /* 쪽 나누기 — 규약 §9 "21줄부터 쪽을 나눈다".
    ⚠ 감사 로그만은 **서버가 계속 적는** 목록이라 시드 열댓 줄로 시작해 잠금 한 번마다
    자란다. 다른 화면 mock 은 스무 줄을 안 넘어 안 걸렸지만 이 화면은 이미 24건이었고,
@@ -895,8 +919,13 @@ test.describe('결재 수명주기 (FR-114)', () => {
     const dialog = page.getByRole('dialog')
 
     await dialog.getByRole('button', { name: '+ 단계 추가' }).click()
-    await dialog.getByPlaceholder('결재자 이름').last().fill('최수진')
-    await dialog.getByPlaceholder(/단계 이름/).last().fill('최종 승인')
+    /* ⚠ 결재자는 **고르는 것**이지 적는 것이 아니다(6판) — 역할을 고르면 그 역할 보유자로
+       후보가 좁혀진다. 회원 정본에 없는 사람은 애초에 목록에 없다. */
+    const rows = dialog.locator('li')
+    await rows.last().getByRole('combobox').first().selectOption('IBD_EDITOR')
+    await rows.last().getByRole('combobox').nth(1).selectOption({ index: 0 })
+    await rows.last().getByRole('combobox').last().selectOption('최종 승인')
+    const picked = await rows.last().getByRole('combobox').nth(1).inputValue()
     await expect(
       dialog.getByRole('button', { name: '+ 단계 추가' }),
       '3단계가 차면 더 넣을 수 없다 (ASM-011)',
@@ -913,7 +942,10 @@ test.describe('결재 수명주기 (FR-114)', () => {
       .getByRole('button', { name: /상세 보기/ })
       .click()
     await page.getByRole('button', { name: '승인 요청', exact: true }).click()
-    await expect(page.getByRole('dialog').getByText('최수진'), '바꾼 결재선이 상신 모달에 선다').toBeVisible()
+    await expect(
+      page.getByRole('dialog').getByText(picked),
+      '바꾼 결재선이 상신 모달에 선다',
+    ).toBeVisible()
   })
 
   test('승인 완료 — 다음 행동은 배포 요청이다 (죽은 [승인 요청]을 다시 내밀지 않는다)', async ({

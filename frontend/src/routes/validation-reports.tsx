@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Icon } from '#/components/portal/Icon'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
@@ -119,44 +120,40 @@ function ValidationReportsPage() {
       {/* 목록을 **머리 있는 패널**로 감싼다 — 리포트 카드는 한 줄짜리라 그 자체를 머리·몸으로
           가를 것이 없다(가르면 카드가 통째로 회색이 된다). 대신 목록 전체가 하나의 물건이
           되게 머리를 세운다: 알림 이력·검증 결과와 같은 모양이다 (규약 §7·§9) */}
-      <section className="mt-5 overflow-hidden rounded-2xl border border-hairline bg-surface">
-        <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink">
-            {tf('reports.listTitle', { n: validationReports.length }, '리포트 {n}건')}
-          </h2>
-          <span className="text-xs text-ink-subtle">
-            {t('reports.listHint', '카드를 누르면 상세가 열립니다')}
-          </span>
-        </div>
-        <ol className="space-y-3 p-5">
+      {/* ⚠ **결이 옆 화면과 달랐다**(2026-08-18 사용자 지적): 승인 관리·배포 관리는 건마다
+          자기 카드(머리 면 + 몸)인데 여기만 한 상자 안에 줄을 나열해서, 같은 부류의 목록
+          셋이 서로 다른 물건처럼 보였다. 같은 일을 하는 화면은 같은 해부를 쓴다 (규약 §7). */}
+      <ol className="mt-5 space-y-3">
         {validationReports.map((r, i) => {
           const status = published[r.id] ? '발행' : r.status
           return (
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
-              {/* 패널 안의 줄이라 **또 카드가 되지 않는다** — 흰 면 위에 흰 카드를 얹고
-                  그림자까지 주면 카드 안의 카드가 되어 무거워진다 (라이트 그림자 규칙 참고) */}
-              <div className="card-hover flex flex-wrap items-center gap-3 rounded-xl border border-hairline bg-canvas/40 p-4">
+              <div className="card-hover card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+                {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다. 승인/배포 카드와 같은 해부 */}
+                <div className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
+                  <span className="rounded-full bg-chip px-2 py-0.5 text-xs font-semibold text-ink-muted">
+                    {r.engine}
+                  </span>
+                  <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      status === '발행' ? 'bg-deployed-bg text-deployed-ink' : 'bg-review-bg text-review-ink'
+                    }`}
+                  >
+                    {status}
+                  </span>
+                  <span className="ml-auto text-xs text-ink-subtle">
+                    {t('reports.label.created', '생성')}: {r.createdAt} · {r.createdBy}
+                  </span>
+                </div>
+                {/* 몸 */}
+                <div className="flex flex-wrap items-center gap-3 px-5 pb-5 pt-4">
                 {/* basis — flex-wrap 줄에서 제목 블록이 짓눌리는 대신 액션이 다음 줄로 */}
                 <button type="button" onClick={() => setDetail(r)} className="min-w-0 flex-1 basis-64 text-left">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-semibold text-ink hover:text-primary">{r.title}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        status === '발행' ? 'bg-deployed-bg text-deployed-ink' : 'bg-review-bg text-review-ink'
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  </span>
+                  <span className="block text-base font-semibold text-ink hover:text-primary">{r.title}</span>
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
                     <span>
-                      {t('reports.label.engine', '엔진')}: <b className="text-ink-muted">{r.engine}</b>
-                    </span>
-                    <span>
                       {t('reports.label.period', '기간')}: {r.period}
-                    </span>
-                    <span>
-                      {t('reports.label.created', '생성')}: {r.createdAt} · {r.createdBy}
                     </span>
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -206,12 +203,15 @@ function ValidationReportsPage() {
                     </button>
                   )}
                 </span>
+                </div>
               </div>
             </li>
           )
         })}
-        </ol>
-      </section>
+      </ol>
+      {/* 목록은 몇 건인지 말하고 끝난다 (규약 §9) — 상자 머리에 있던 "리포트 N건"이
+          카드로 흩어지면서 셈이 사라졌다: 발이 그 말을 이어받는다 */}
+      <ListFoot total={validationReports.length} shown={validationReports.length} />
 
       {detail && (
         <Modal

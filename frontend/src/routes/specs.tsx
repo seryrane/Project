@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { SavedFilters } from '#/components/portal/SavedFilters'
 import { SpecCard } from '#/components/portal/SpecCard'
@@ -219,6 +220,10 @@ function SpecsPage() {
           {t('specs.empty', '조건에 맞는 사양서가 없습니다.')}
         </div>
       )}
+      {/* ⚠ 목록은 몇 건인지 말하고 끝난다(규약 §9). **카드 목록에도 발이 필요하다** —
+          표에만 달아 두어서, 거르면 카드가 줄어드는데 화면은 아무 말이 없었다: 보는 사람은
+          그게 전부인지 걸러진 것인지 모른다(2026-08-18 감사에서 거르는 목록 다섯이 그랬다). */}
+      {filtered.length > 0 && <ListFoot total={specList.length} shown={filtered.length} unit="개" />}
 
       {compare && (
         <VersionCompareModal
