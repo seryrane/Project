@@ -133,6 +133,18 @@ export const WORK_DICT: Record<string, Entry> = {
     en: 'Requests already in flight keep the approval line they were submitted with.',
   },
   'approvals.withdraw': { ko: '회수', en: 'Withdraw' },
+  'approvals.queueRemaining': {
+    ko: '처리하면 다음 내 차례 건으로 이어집니다 (남은 {n}건)',
+    en: 'Deciding opens the next item in your queue ({n} left)',
+  },
+  'specDetail.approvalHistoryTitle': { ko: '결재 이력', en: 'Approval history' },
+  'specDetail.approvalHistoryEmpty': {
+    ko: '아직 결재에 올라간 적이 없습니다.',
+    en: 'This spec has not been submitted for approval yet.',
+  },
+  'specDetail.trailEmpty': { ko: '아직 처리된 단계가 없습니다.', en: 'No step has been decided yet.' },
+  'specDetail.trailStep': { ko: '{n}차', en: 'Step {n}' },
+  'specDetail.requestedOn': { ko: '{by} 상신 · {at}', en: 'Submitted by {by} · {at}' },
   'approvals.toast.lineSaved': {
     ko: '결재선을 {n}단계로 저장했습니다 — 다음 상신부터 적용됩니다',
     en: 'Approval line saved with {n} steps — applies to new submissions',

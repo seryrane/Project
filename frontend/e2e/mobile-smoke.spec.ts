@@ -249,7 +249,17 @@ test('토스트 — 화면에서 부른 것이 실제로 뜨고, 좁은 화면�
   const toast = page.locator('[role="status"] > div')
   await expect(toast, '화면발 토스트가 실제로 떠야 한다 — Provider 자리 회귀 감시').toBeVisible()
 
-  const box = (await toast.boundingBox())!
+  /* ⚠ 토스트는 **스스로 사라진다**(성공 결은 몇 초 뒤 자동 닫힘) — 앞선 판들이 느린 날에는
+     자리를 재려는 순간 이미 없어서 boundingBox 가 null 이 된다(전판 연속 실행에서 실측
+     플레이크, 2026-08-18). 사라졌으면 **다시 띄워서** 잰다: 재려는 것은 "언제까지 떠 있나"가
+     아니라 "어디에 서나"이다. */
+  let measured = await toast.boundingBox()
+  if (!measured) {
+    await trigger.click()
+    await expect(toast).toBeVisible()
+    measured = await toast.boundingBox()
+  }
+  const box = measured!
   const vp = page.viewportSize()!
   expect(box.y, '좁은 화면에서 토스트는 아래쪽(주소창·엄지 규칙)').toBeGreaterThan(vp.height / 2)
   // 떠 있는 [물어보기] 버튼을 먹으면 그 버튼을 못 누른다 — 자리를 미리 갈라 뒀다
@@ -824,6 +834,10 @@ test.describe('결재 수명주기 (FR-114)', () => {
     // 시드 중 마지막 단계(2/2)인 건 — 승인하면 그 자리에서 끝난다
     await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+    /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
+       가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 
     await goto(page, '사양서 관리')
     await expect(
@@ -845,6 +859,10 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await dialog.getByPlaceholder(/의견/).fill('안전 시험 근거가 빠졌습니다 — 시험성적서를 붙여 주세요.')
     await expect(reject).toBeEnabled()
     await reject.click()
+    /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
+       가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 
     // ⚠ 새로고침하면 스토어가 초기화된다 — 앱 안에서 사양서로 건너간다
     await goto(page, '사양서 관리')
@@ -904,6 +922,10 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await ready(page, '/approvals')
     await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+    /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
+       가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 
     await goto(page, '사양서 관리')
     await page
@@ -917,6 +939,75 @@ test.describe('결재 수명주기 (FR-114)', () => {
       page.getByRole('button', { name: '승인 요청', exact: true }),
       '스토어가 안 받는 조작은 화면에도 없다',
     ).toHaveCount(0)
+  })
+
+  test('연속 처리 — 한 건을 끝내면 다음 내 차례 건이 그 자리에 선다 (오가는 걸음을 줄인다)', async ({
+    page,
+  }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText(/다음 내 차례 건으로 이어집니다/), '처리 전에 알려 준다').toBeVisible()
+
+    await dialog.getByRole('button', { name: /^✓?\s*승인$/ }).click()
+    await expect(dialog, '덮개가 닫히지 않고 다음 건이 선다').toBeVisible()
+    /* ⚠ **제목으로 재면 안 된다** — 다음 건(배포)의 변경 항목 표에 방금 처리한 사양서가
+       실려 있어서 "VN7"이 그대로 걸린다(2026-08-18에 이 테스트가 먼저 걸렸다).
+       건을 가르는 것은 **요청 ID** 다. */
+    await expect(dialog.getByText('APR-2026-0115'), '방금 처리한 건은 물러난다').toHaveCount(0)
+    await expect(dialog.getByText(/Release v3\.1\.1/), '다음 내 차례 건이 선다').toBeVisible()
+  })
+
+  test('결재 이력 — 누가·언제·무슨 의견으로 처리했는지 사후에 조회된다 (FR-114 ④)', async ({
+    page,
+  }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /전기차 배터리 규격서 v1.5/ }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByPlaceholder(/의견/).fill('시험성적서 첨부 후 재요청 바랍니다.')
+    await dialog.getByRole('button', { name: /반려/ }).click()
+    // ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리) — 덮개를 닫고 나간다
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    await goto(page, '사양서 관리')
+    await page
+      .locator('article')
+      .filter({ hasText: '전기차 배터리 규격서' })
+      .first()
+      .getByRole('button', { name: /상세 보기/ })
+      .click()
+    await page.getByRole('button', { name: '이력', exact: true }).click()
+
+    const history = page.getByRole('dialog')
+    await expect(history.getByText('결재 이력'), '버전 이력 옆에 결재 이력이 선다').toBeVisible()
+    await expect(history.getByText(/시험성적서 첨부 후 재요청/), '의견이 그대로 남는다').toBeVisible()
+    await expect(history.getByText('김현대').first(), '누가 처리했는지 남는다').toBeVisible()
+  })
+
+  test('저장 필터 — 이름 붙인 조건이 그대로 되살아난다 (주소 값을 담고 주소로 되돌린다)', async ({
+    page,
+  }) => {
+    await ready(page, '/specs')
+    await expect(
+      page.getByRole('button', { name: /지금 조건 저장/ }),
+      '거른 것이 없으면 저장할 것도 없다',
+    ).toHaveCount(0)
+
+    await page.getByRole('button', { name: /^초안\s*\d+$/ }).click()
+    await page.getByRole('button', { name: /지금 조건 저장/ }).click()
+    await page.getByPlaceholder(/조건 이름/).fill('초안만')
+    await page.getByRole('button', { name: '저장', exact: true }).click()
+
+    // 조건을 풀었다가 저장한 칩으로 되돌린다
+    await page.getByRole('button', { name: /^전체\s*\d+$/ }).click()
+    // ⚠ 칩과 그 옆 [삭제]가 같은 이름으로 걸린다(삭제는 aria-label 이 '…저장 조건 삭제') — exact 로 가른다
+    await page.getByRole('button', { name: '초안만', exact: true }).click()
+    await expect(page).toHaveURL(/status=/)
+    await expect(page.getByRole('button', { name: /^초안\s*\d+$/ })).toHaveAttribute(
+      'class',
+      /bg-primary\/15/,
+    )
   })
 
   test('배포 요청 — 배포 목록과 결재함에 **함께** 남는다 (토스트만 쏘고 끝나지 않는다)', async ({

@@ -14,7 +14,7 @@ import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { currentVersion } from '#/data/specs'
 import { isSeededSpec, useSpecList } from '#/data/specStore'
-import { activeRequestOfSpec, useApprovalLine, useApprovalList } from '#/data/approvalStore'
+import { activeRequestOfSpec, requestsOfSpec, useApprovalLine, useApprovalList } from '#/data/approvalStore'
 import { submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { ApprovalStep } from '#/data/approvals'
 import { SERVICE_ROLE_LABEL } from '#/data/members'
@@ -157,6 +157,7 @@ function SpecDetailPage() {
      ⚠ `useApprovalList()` 의 결과를 안 쓰더라도 **구독은 해야** 다시 그린다. */
   useApprovalList()
   const approval = activeRequestOfSpec(specId)
+  const approvalHistory = requestsOfSpec(specId)
   const line = useApprovalLine()
   /** 결재자의 Role 코드를 사람 말로 — 회원 화면과 같은 사전을 쓴다 (규약 §4-7) */
   const roleLabel = (code: string) =>
@@ -696,6 +697,73 @@ function SpecDetailPage() {
               </li>
             ))}
           </ol>
+
+          {/* 결재 이력 — FR-114 ④ "승인 이력이 사후 조회된다".
+              ⚠ 4판에서 단계별 처리 자국(trail)을 쌓아 두고 **보여 줄 자리가 없었다**:
+              누가 언제 무슨 의견으로 승인/반려했는지 화면 어디에서도 못 봤다.
+              버전 이력 옆이 제자리다 — 사람은 "이 버전이 왜 이렇게 됐나"를 함께 묻는다. */}
+          <h3 className="mt-6 text-sm font-semibold text-ink">
+            {t('specDetail.approvalHistoryTitle', '결재 이력')}
+          </h3>
+          {approvalHistory.length === 0 ? (
+            <p className="mt-2 rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs text-ink-subtle">
+              {t('specDetail.approvalHistoryEmpty', '아직 결재에 올라간 적이 없습니다.')}
+            </p>
+          ) : (
+            <ol className="mt-2 space-y-2.5">
+              {approvalHistory.map((r) => (
+                <li key={r.id} className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        r.state === '승인 완료'
+                          ? 'bg-deployed-bg text-deployed-ink'
+                          : r.state === '반려'
+                            ? 'bg-danger-bg text-danger-ink'
+                            : r.state === '회수'
+                              ? 'bg-chip text-ink-subtle'
+                              : 'bg-review-bg text-review-ink'
+                      }`}
+                    >
+                      {r.state}
+                    </span>
+                    <span className="text-xs text-ink-subtle">
+                      {tf(
+                        'specDetail.requestedOn',
+                        { by: r.requester, at: r.requestedAt },
+                        '{by} 상신 · {at}',
+                      )}
+                    </span>
+                  </div>
+                  {/* 단계별 자국 — 아무도 판단하기 전이면 "아직 아무도 처리하지 않았다"고 적는다 */}
+                  {r.trail.length === 0 ? (
+                    <p className="mt-1.5 text-xs text-ink-subtle">
+                      {t('specDetail.trailEmpty', '아직 처리된 단계가 없습니다.')}
+                    </p>
+                  ) : (
+                    <ol className="mt-2 space-y-1.5">
+                      {r.trail.map((e, i) => (
+                        <li key={`${r.id}.${i}`} className="flex flex-wrap items-baseline gap-x-2 text-xs">
+                          <span className="text-ink-subtle">
+                            {tf('specDetail.trailStep', { n: e.seq }, '{n}차')}
+                          </span>
+                          <span className="font-medium text-ink">{e.approver}</span>
+                          <span
+                            className={e.action === '승인' ? 'text-deployed-ink' : 'text-danger-ink'}
+                          >
+                            {e.action}
+                          </span>
+                          <span className="tabular-nums text-ink-subtle">{e.at}</span>
+                          {e.opinion && <span className="w-full text-ink-muted">— {e.opinion}</span>}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
         </Modal>
       )}
 

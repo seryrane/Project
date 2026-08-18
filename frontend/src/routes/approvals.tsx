@@ -119,6 +119,15 @@ function ApprovalsPage() {
     return base.filter((r) => matches(`${r.title} ${r.id} ${r.requester}`))
   }, [tab, requests, query])
 
+  /** 방금 처리한 건 **다음**의 내 차례 건. 없으면 null(덮개를 닫는다). */
+  const queueAfter = (doneId: string): ApprovalRecord | null => {
+    const mine = pending.filter((r) => r.myTurn && r.id !== doneId)
+    if (mine.length === 0) return null
+    // 보고 있던 자리 뒤부터 — 목록 순서를 그대로 따라간다(위에서 아래로 훑는 손을 안 끊는다)
+    const at = pending.findIndex((r) => r.id === doneId)
+    return mine.find((r) => pending.indexOf(r) > at) ?? mine[0]
+  }
+
   const decide = (req: ApprovalRecord, action: '승인' | '반려') => {
     // 반려는 사유가 필수 — 스토어가 막지만, 화면이 먼저 말해 준다(누르고 나서 알면 늦다)
     if (action === '반려' && opinion.trim() === '') {
@@ -130,8 +139,14 @@ function ApprovalsPage() {
       toast(t('approvals.toast.decideFailed', '이미 처리된 요청입니다'))
       return
     }
-    setDetail(null)
     setOpinion('')
+    /* ── 연속 처리 ─────────────────────────────────────────────────────
+       ⚠ 결재는 **한 건씩 오지 않는다**: 내 차례가 넷이면 [상세]→[승인]→닫기→[상세]…
+       를 네 번 반복해야 했다(2026-08-18). 처리하고 나면 **다음 내 차례 건을 그 자리에
+       바로 세운다** — 판단은 여전히 한 건씩 하되(승인/반려 버튼은 그대로), 오가는 걸음만
+       줄인다. 마지막 건을 처리하면 덮개가 닫힌다(더 세울 것이 없으면 자리를 비운다). */
+    const next = queueAfter(req.id)
+    setDetail(next)
     // 마지막 단계가 아니면 **아직 끝난 게 아니다** — 다음 결재자에게 넘어갔다고 말한다
     if (action === '승인' && !res.finished) {
       toast(
@@ -460,7 +475,18 @@ function ApprovalsPage() {
              해야 하나"로 읽힌다 (규약 §7). 내 차례가 아니면 몸이 그 사실을 말한다. */
           footer={
             detail.myTurn ? (
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {/* 연속 처리 중이라는 것을 **처리 전에** 알려 준다 — 처리하고 나서 다음 건이
+                    불쑥 서면 "안 닫혔나?"로 읽힌다 (규약 §0 예측 가능성) */}
+                {queueAfter(detail.id) && (
+                  <span className="mr-auto text-xs text-ink-subtle">
+                    {tf(
+                      'approvals.queueRemaining',
+                      { n: pending.filter((r) => r.myTurn && r.id !== detail.id).length },
+                      '처리하면 다음 내 차례 건으로 이어집니다 (남은 {n}건)',
+                    )}
+                  </span>
+                )}
                 <button
                   type="button"
                   disabled={opinion.trim() === ''}

@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
+import { SavedFilters } from '#/components/portal/SavedFilters'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
@@ -180,6 +181,23 @@ function SpecsPage() {
           )
         })}
       </div>
+
+      {/* 저장 필터 — 자주 쓰는 조합에 이름을 붙여 둔다(관문 SavedFilters).
+          ⚠ 거르는 조건은 이미 주소에 있으므로 **주소 값을 그대로** 담고 그대로 되돌린다:
+          따로 든 상태를 저장하면 저장한 것과 화면이 어긋난다. */}
+      <SavedFilters
+        className="mt-3"
+        scope="specs"
+        current={{ q: query, cat: category, status }}
+        canSave={query.trim() !== '' || category !== ALL_CATEGORY || status !== ALL_STATUS}
+        onApply={(v) =>
+          setSearch({
+            q: pickText(v.q),
+            cat: orNone(v.cat, ALL_CATEGORY),
+            status: orNone(v.status as SpecStatus, ALL_STATUS as SpecStatus),
+          })
+        }
+      />
 
       <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         {filtered.map((spec, i) => (

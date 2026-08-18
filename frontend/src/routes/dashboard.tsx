@@ -27,7 +27,7 @@ import {
   validationSeries,
 } from '#/data/dashboard'
 import type { ActivityKind, ServerHealth } from '#/data/dashboard'
-import { approvalRequests } from '#/data/approvals'
+import { useApprovalList } from '#/data/approvalStore'
 import { gradeDistribution, members } from '#/data/members'
 import type { Member } from '#/data/members'
 import { specStatusDistribution, useSpecList } from '#/data/specStore'
@@ -167,7 +167,14 @@ function DashboardPage() {
      (서버 있으면 서버, 없으면 mock — 다르게 읽으면 두 화면이 갈라진다). */
   const specList = useSpecList()
   const statusDistribution = specStatusDistribution(specList)
-  const pendingApprovals = approvalRequests.length
+  /* 결재함이 정본 — 승인/반려/회수가 일어나면 대시보드 숫자도 함께 움직인다.
+     ⚠ 예전엔 고정 mock 배열을 세어서, 결재를 다 처리해도 대시보드는 그대로였다. */
+  const approvals = useApprovalList().filter((r) => r.state === '진행 중')
+  const pendingApprovals = approvals.length
+  /* 내 차례를 **맨 위로**. 위젯을 하나 더 만들지 않는 이유: 같은 목록을 두 카드가 말하면
+     "둘이 왜 다르지"를 먼저 묻게 된다(규약 §18 과적). 한 카드가 순서와 칩으로 가른다. */
+  const myTurnCount = approvals.filter((r) => r.myTurn).length
+  const queueRows = [...approvals].sort((a, b) => Number(b.myTurn) - Number(a.myTurn))
   const { data: memberList } = useApi<Array<Member>>('/members', members)
   const memberRoles = gradeDistribution(memberList)
 
@@ -348,7 +355,11 @@ function DashboardPage() {
     queue: (
       <ChartCard
         title={t('widget.queue', '결재 대기 큐')}
-        subtitle={tf('dash.queue.subtitle', { n: pendingApprovals }, '{n}건이 결재를 기다립니다')}
+        subtitle={tf(
+          'dash.queue.subtitleMine',
+          { mine: myTurnCount, n: pendingApprovals },
+          '내 차례 {mine}건 · 전체 {n}건이 결재를 기다립니다',
+        )}
         action={{ label: t('nav.approvals'), onClick: goApprovals }}
       >
         {/* ⚠⚠ 이 큐의 정본은 **결재함**(approvals.ts)이다. 예전 mock 은 사양서 네 장을
@@ -356,7 +367,7 @@ function DashboardPage() {
             승인 관리로 넘어가면 다른 목록이 나오는 카드였다(2026-08-18).
             누르면 사양서 결재는 그 사양서로, 배포·권한 결재는 결재함으로 간다. */}
         <ol className="space-y-1.5">
-          {approvalRequests.map((q) => (
+          {queueRows.map((q) => (
             <li key={q.id}>
               <button
                 type="button"
@@ -366,6 +377,12 @@ function DashboardPage() {
                 <span className="min-w-0">
                   <span className="block truncate text-[13px] text-ink">{q.title}</span>
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-subtle">
+                    {/* 내 차례는 **색만으로 말하지 않는다**(규약 §16) — 낱말로 적고 맨 위에 둔다 */}
+                    {q.myTurn && (
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 font-semibold text-primary">
+                        {t('approvals.tab.mine', '내 차례')}
+                      </span>
+                    )}
                     <span className="font-mono">{q.id}</span>
                     {q.requester}
                   </span>

@@ -494,6 +494,10 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'dash.queue.waitingDays': { ko: '{n}일 경과', en: '{n} days waiting' },
   'dash.queue.waitingDay': { ko: '{n}일 경과', en: '{n} day waiting' },
   'dash.status.center': { ko: '전체 사양서', en: 'All specs' },
+  'dash.queue.subtitleMine': {
+    ko: '내 차례 {mine}건 · 전체 {n}건이 결재를 기다립니다',
+    en: '{mine} awaiting you · {n} in the queue',
+  },
   /* 오류 유형·공지 분류·파이프라인 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다
      (i18n-dict-work 의 specStatus 절과 같은 임시 규칙). 값은 그대로, 표시만 옮긴다. */
   'errorType.필수값 누락': { ko: '필수값 누락', en: 'Missing required' },

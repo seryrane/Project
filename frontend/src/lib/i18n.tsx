@@ -45,6 +45,12 @@ const CORE_DICT: Record<string, Entry> = {
   'listFoot.filtered': { ko: '전체 {n}{unit} 중 {m}{unit}', en: '{m} of {n}' },
   'common.prevPage': { ko: '이전', en: 'Previous' },
   'common.nextPage': { ko: '다음', en: 'Next' },
+  /* 저장 필터 (관문 SavedFilters) — 화면마다 상자를 가르되 말은 하나다 */
+  'savedFilters.save': { ko: '+ 지금 조건 저장', en: '+ Save current filters' },
+  'savedFilters.namePlaceholder': { ko: '조건 이름 (예: 내 팀 승인 대기)', en: 'Name (e.g. My team, pending)' },
+  'savedFilters.remove': { ko: '{name} 저장 조건 삭제', en: 'Delete saved filter {name}' },
+  'savedFilters.toast.saved': { ko: '[{name}] 조건을 저장했습니다', en: 'Saved filters as [{name}]' },
+  'savedFilters.toast.removed': { ko: '[{name}] 을 지웠습니다', en: 'Deleted [{name}]' },
   /* 차트 관문이 스스로 쓰는 말 (components/portal/charts.tsx) — 부르는 쪽이 주는
      말(열 이름·도넛 캡션)은 이미 번역돼 온다. EN 대시보드에서 차트 글자만 통째로
      한국어로 남아 있던 자리다(2026-08-18 EN 실검수). */
