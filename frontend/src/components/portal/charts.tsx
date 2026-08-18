@@ -282,7 +282,7 @@ export function DonutChart({
         viewBox="0 0 128 128"
         className="block h-full max-h-56 min-h-32 w-auto shrink-0"
         role="img"
-        aria-label="구성비"
+        aria-label={t('chart.aria.donut', '구성비')}
       >
         <g transform="rotate(-90 64 64)">
           {data.map((d, i) => {
@@ -405,7 +405,7 @@ export function TrendLineChart({
         </div>
       )}
       <div ref={ref} className="relative" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
-        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="검증 처리량 추이">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label={i18n.t('chart.aria.trend', '검증 처리량 추이')}>
           <defs>
             <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.22" />
@@ -537,6 +537,8 @@ export function GroupedBarChart({
   unit?: string
   height?: number
 }) {
+  // ⚠ 눈금 좌표가 `t` 를 쓰는 자리라 사전은 통째로 받는다(위 TrendLineChart 와 같은 이유)
+  const i18nBars = useI18n()
   const [hover, setHover] = useState<[number, number] | null>(null)
   const n = series[0].data.length
   const peak = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)))
@@ -563,7 +565,7 @@ export function GroupedBarChart({
         ))}
       </div>
       <div className="relative">
-        <svg viewBox={`0 0 ${BW} ${BH}`} className="block w-full" role="img" aria-label="계열 비교">
+        <svg viewBox={`0 0 ${BW} ${BH}`} className="block w-full" role="img" aria-label={i18nBars.t('chart.aria.bars', '계열 비교')}>
           {ticks.map((t) => (
             <g key={t}>
               <line x1={PADB.l} x2={BW - PADB.r} y1={y(t)} y2={y(t)} stroke="var(--color-divider)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
@@ -655,6 +657,8 @@ export function GroupedBarChart({
 }
 
 export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries>; unit?: string }) {
+  // ⚠ 이 안에서도 눈금 좌표가 `t` 라는 이름을 쓴다(TrendLineChart 와 같은 이유)
+  const i18nMulti = useI18n()
   const ref = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<number | null>(null)
   /* ⚠⚠ **강조**(dataviz: "One series is the point, rest are context").
@@ -709,7 +713,7 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
         })}
       </div>
       <div ref={ref} className="relative" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
-        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="다계열 추이">
+        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label={i18nMulti.t('chart.aria.multiTrend', '다계열 추이')}>
           {ticks.map((t) => (
             <g key={t}>
               {/* ⚠ 격자는 **나누는 선**(divider)이지 감싸는 선(hairline)이 아니다.
@@ -947,7 +951,7 @@ export function TimeHeatmap({
         className="grid gap-[3px]"
         style={{ gridTemplateColumns: `auto repeat(${cols.length}, minmax(0, 1fr))` }}
         role="img"
-        aria-label="요일·시간 분포"
+        aria-label={t('chart.aria.timeHeatmap', '요일·시간 분포')}
       >
         {rows.map((r, ri) => (
           <Fragment key={r}>
@@ -1041,7 +1045,7 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" role="img" aria-label="일별 검증 실행 히트맵">
+      <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" role="img" aria-label={t('chart.aria.dayHeatmap', '일별 검증 실행 히트맵')}>
         {weekdayLabels.map((w) => (
           <text
             key={w.label}

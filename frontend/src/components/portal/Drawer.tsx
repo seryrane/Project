@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useState } from 'react'
 
 import { m } from './motion'
+import { useI18n } from '#/lib/i18n'
 import { Icon } from './Icon'
 import { coverProps, useCover } from './useCover'
 
@@ -40,6 +41,7 @@ export function Drawer({
    */
   footer?: React.ReactNode | ((close: () => void) => React.ReactNode)
 }) {
+  const { t } = useI18n()
   const [closing, setClosing] = useState(false)
   const titleId = useId()
   // 첫 렌더부터 제대로 잡는다 — useState(false) 로 시작하면 넓은 화면에서도 한 순간
@@ -97,7 +99,7 @@ export function Drawer({
           <button
             type="button"
             onClick={close}
-            aria-label="닫기"
+            aria-label={t('common.close', '닫기')}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
           >
             <Icon name="close" />

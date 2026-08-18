@@ -59,8 +59,12 @@ function StepDots({ step }: { step: [number, number] }) {
 }
 
 function KindChip({ kind }: { kind: keyof typeof KIND_CLS }) {
+  // 값은 정본(한국어), 표시만 사전이 옮긴다 — EN 화면에서 종류 칩만 한국어로 남아 있었다
+  const { t } = useI18n()
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${KIND_CLS[kind]}`}>{kind}</span>
+    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${KIND_CLS[kind]}`}>
+      {t(`requestKind.${kind}`, kind)}
+    </span>
   )
 }
 

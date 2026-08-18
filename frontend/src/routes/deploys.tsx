@@ -81,7 +81,7 @@ function Pipeline() {
                   )}
                 </svg>
               </span>
-              <span className="text-xs font-semibold text-ink">{p.label}</span>
+              <span className="text-xs font-semibold text-ink">{t(`pipeline.${p.key}`, p.label)}</span>
               <span className="text-[10px] text-ink-subtle">{p.sub}</span>
             </span>
           </li>
@@ -153,7 +153,7 @@ function DeploysPage() {
                     읽혔다(2026-08-18 사용자 지적: "검증 리포트만 결이 다르다"를 따라가다 찾음). */}
                 <span className="font-mono text-xs text-ink-subtle">{d.id}</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[d.status]}`}>
-                  {d.status}
+                  {t(`deployStatus.${d.status}`, d.status)}
                 </span>
                 {d.rollbackTo && (
                   <span className="text-xs text-danger-ink">

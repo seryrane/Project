@@ -276,7 +276,7 @@ function ValidationResultsPage() {
                 const st = requeued[r.id] ? '재처리 중' : r.status
                 return (
                   <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
-                    {st}
+                    {t(`validationStatus.${st}`, st)}
                   </span>
                 )
               },
@@ -334,7 +334,7 @@ function ValidationResultsPage() {
                   <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${RUN_STATUS_CLS[st]}`}>
-                        {st}
+                        {t(`validationStatus.${st}`, st)}
                       </span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${SEVERITY_CLS[detail.severity]}`}>
                         {detail.severity}

@@ -13,6 +13,33 @@ export const WORK_DICT: Record<string, Entry> = {
   'specStatus.승인 완료': { ko: '승인 완료', en: 'Approved' },
   'specStatus.배포 완료': { ko: '배포 완료', en: 'Deployed' },
 
+  /* 결재 종류 · 배포 상태 · 파이프라인 단계 · 검증 결과 상태 — 전부 같은 규칙이다:
+     **값은 한국어 정본, 표시만 사전이 옮긴다**(위 specStatus 절). 2026-08-18 EN 실검수에서
+     이 넷만 한국어로 남아 있었다 — 승인 화면의 종류 칩, 배포 카드의 상태 배지,
+     배포 파이프라인의 단계 이름, 검증 결과의 상태 칩. */
+  'requestKind.사양서': { ko: '사양서', en: 'Spec' },
+  'requestKind.배포': { ko: '배포', en: 'Deploy' },
+  'requestKind.메뉴': { ko: '메뉴', en: 'Menu' },
+  'requestKind.권한': { ko: '권한', en: 'Permission' },
+
+  'deployStatus.대기': { ko: '대기', en: 'Waiting' },
+  'deployStatus.진행중': { ko: '진행중', en: 'In progress' },
+  'deployStatus.완료': { ko: '완료', en: 'Done' },
+  'deployStatus.롤백': { ko: '롤백', en: 'Rolled back' },
+
+  /* ⚠ 파이프라인은 한국어 제목 + 영문 부제(개발/Development)로 서 있다 — EN 에서는 제목이
+     영문이 되면 부제와 같은 말이 두 번 선다. 그래서 EN 제목은 **부제와 다른 낱말**을 쓴다. */
+  'pipeline.dev': { ko: '개발', en: 'Build' },
+  'pipeline.staging': { ko: '검증', en: 'Verify' },
+  'pipeline.approval': { ko: '승인', en: 'Sign-off' },
+  'pipeline.prod': { ko: '운영', en: 'Release' },
+
+  'validationStatus.전체': { ko: '전체', en: 'All' },
+  'validationStatus.오류': { ko: '오류', en: 'Error' },
+  'validationStatus.재처리 중': { ko: '재처리 중', en: 'Reprocessing' },
+  'validationStatus.해결': { ko: '해결', en: 'Resolved' },
+  'validationStatus.통과': { ko: '통과', en: 'Passed' },
+
   // ── 사양서 목록 (/specs) ──────────────────────────────────────────
   'specs.register': { ko: '+ 사양서 등록', en: '+ New spec' },
   'specs.searchPlaceholder': { ko: '사양서 명, ID, 태그 검색...', en: 'Search name, ID, tag...' },

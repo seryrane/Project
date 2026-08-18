@@ -1,6 +1,7 @@
 import { useCallback, useId, useState } from 'react'
 
 import { m } from './motion'
+import { useI18n } from '#/lib/i18n'
 import { Icon } from './Icon'
 import { coverProps, useCover } from './useCover'
 
@@ -37,6 +38,7 @@ export function Modal({
   footer?: React.ReactNode | ((close: () => void) => React.ReactNode)
   wide?: boolean
 }) {
+  const { t } = useI18n()
   const [closing, setClosing] = useState(false)
   const titleId = useId()
 
@@ -89,7 +91,7 @@ export function Modal({
           <button
             type="button"
             onClick={close}
-            aria-label="닫기"
+            aria-label={t('common.close', '닫기')}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
           >
             {/* ⚠ 손으로 그리던 ✕ 였다 — 덮개마다 굵기가 1.8·2.2 로 갈렸다.

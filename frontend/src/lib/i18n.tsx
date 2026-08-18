@@ -64,6 +64,20 @@ const CORE_DICT: Record<string, Entry> = {
   'chart.weekday.mon': { ko: '월', en: 'Mon' },
   'chart.weekday.wed': { ko: '수', en: 'Wed' },
   'chart.weekday.fri': { ko: '금', en: 'Fri' },
+
+  /* 그림·조작의 **읽어 주는 이름**(aria-label) — 화면 글자가 아니라서 눈에 안 띄지만,
+     화면 낭독기에는 이것이 전부다. EN 로 바꿔도 한국어로 남아 있었다(2026-08-18 감사).
+     ⚠ 차트는 "무엇을 그린 그림인지"를 말한다 — 값은 아래 범례·표가 이미 말한다. */
+  'chart.aria.donut': { ko: '구성비', en: 'Composition' },
+  'chart.aria.trend': { ko: '검증 처리량 추이', en: 'Validation volume trend' },
+  'chart.aria.bars': { ko: '계열 비교', en: 'Series comparison' },
+  'chart.aria.multiTrend': { ko: '다계열 추이', en: 'Multi-series trend' },
+  'chart.aria.timeHeatmap': { ko: '요일·시간 분포', en: 'Weekday and hour distribution' },
+  'chart.aria.dayHeatmap': { ko: '일별 검증 실행 히트맵', en: 'Daily validation run heatmap' },
+  'gnb.openMenu': { ko: '메뉴 열기', en: 'Open menu' },
+  'gnb.closeMenu': { ko: '메뉴 닫기', en: 'Close menu' },
+  'gnb.accountMenu': { ko: '계정 메뉴', en: 'Account menu' },
+  'gnb.toggleTheme': { ko: '테마 전환', en: 'Toggle theme' },
   'common.approve': { ko: '승인', en: 'Approve' },
   'common.reject': { ko: '반려', en: 'Reject' },
   'common.reset': { ko: '초기화', en: 'Reset' },

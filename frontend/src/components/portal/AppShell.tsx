@@ -290,7 +290,7 @@ function Shell({
       {navOpen && (
         <button
           type="button"
-          aria-label="메뉴 닫기"
+          aria-label={t('gnb.closeMenu', '메뉴 닫기')}
           onClick={() => setNavOpen(false)}
           className="fixed inset-0 z-backdrop bg-black/65 pc:hidden"
         />
@@ -438,7 +438,7 @@ function Shell({
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
-              aria-label="메뉴 열기"
+              aria-label={t('gnb.openMenu', '메뉴 열기')}
               onClick={() => setNavOpen(true)}
               /* ⚠ 이 버튼은 **헤더**에 있다(사이드바가 아니다) — `white/5` 를 쓰면 라이트의
                  흰 헤더 위에서 호버가 아예 안 보인다. 본문 쪽 조작 면 토큰을 쓴다 */
@@ -505,7 +505,7 @@ function Shell({
             <button
               type="button"
               onClick={toggle}
-              aria-label="테마 전환"
+              aria-label={t('gnb.toggleTheme', '테마 전환')}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
               {/* 손으로 그리던 해·달이었다 — 관문의 같은 펜으로 그린다 (규약 §22) */}
@@ -535,7 +535,7 @@ function Shell({
             <button
               ref={userRef}
               type="button"
-              aria-label="계정 메뉴"
+              aria-label={t('gnb.accountMenu', '계정 메뉴')}
               aria-expanded={menu === 'user'}
               aria-haspopup="dialog"
               onClick={() => setMenu(menu === 'user' ? null : 'user')}
