@@ -385,20 +385,12 @@ function Shell({
                     >
                       {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
                       <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <span
                         className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
                         aria-hidden
                       >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
+                        <Icon name="chevronDown" size="sm" />
+                      </span>
                     </button>
                   )
                 ) : null}
@@ -516,16 +508,8 @@ function Shell({
               aria-label="테마 전환"
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >
-              {theme === 'dark' ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <circle cx="12" cy="12" r="4.5" />
-                  <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M20 13.5A8.5 8.5 0 0 1 10.5 4a8.5 8.5 0 1 0 9.5 9.5Z" />
-                </svg>
-              )}
+              {/* 손으로 그리던 해·달이었다 — 관문의 같은 펜으로 그린다 (규약 §22) */}
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
             </button>
             <button
               ref={bellRef}

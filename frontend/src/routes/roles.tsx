@@ -225,9 +225,9 @@ function RolesPage() {
                 className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-hairline py-2 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
               >
                 {open ? t('roles.matrixHide') : t('roles.matrixShow')}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} aria-hidden>
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
+                <span className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} aria-hidden>
+                  <Icon name="chevronDown" size="sm" />
+                </span>
               </button>
 
               {/* 펼침 — grid-rows 0fr→1fr 전환, 내용은 살짝 떠오른다 */}

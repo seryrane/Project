@@ -36,6 +36,13 @@ export type IconName =
   | 'download'
   | 'thumbsUp'
   | 'info'
+  // 관문 밖에서 손으로 그려지던 모양들 — 화면마다 굵기가 1.5~2.2 로 갈렸다(2026-08-18)
+  | 'close'
+  | 'chevronDown'
+  | 'eye'
+  | 'eyeOff'
+  | 'sun'
+  | 'moon'
 
 export interface NavItem {
   key: string

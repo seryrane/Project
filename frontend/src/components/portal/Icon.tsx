@@ -142,6 +142,29 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M7 10.5H4.5v10H7z" />
     </>
   ),
+  close: <path d="m6 6 12 12M18 6 6 18" />,
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <path d="M4 4.5 20 20.5" />
+      <path d="M9.6 6.1A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.3 4" />
+      <path d="M6.3 8.1A17.6 17.6 0 0 0 2.5 12S6 18.5 12 18.5c1.2 0 2.2-.2 3.2-.6" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+    </>
+  ),
+  moon: <path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5Z" />,
   info: (
     <>
       <circle cx="12" cy="12" r="8.5" />
@@ -187,10 +210,12 @@ const iconPaths: Record<IconName, React.ReactNode> = {
  * 크기는 **둘뿐이다** (2026-08-13 정리).
  * 예전에는 부르는 곳마다 14·15·16·17·20·22 를 손으로 적었다 — 글자 사다리와 똑같은 병이다.
  * 15 와 16 은 눈으로 못 가르는데 화면마다 다른 값이 섞이면 리듬만 깨진다.
+ *   `sm`(12) — 글자 옆에 붙는 표식(체브론·닫기)
  *   `md`(16) — 메뉴·버튼·목록 등 거의 전부
  *   `lg`(20) — 떠 있는 버튼처럼 혼자 서는 자리
+ *   `xl`(28) — 빈 자리 안내처럼 그림이 말을 대신하는 자리
  */
-const SIZES = { md: 16, lg: 20 } as const
+const SIZES = { sm: 12, md: 16, lg: 20, xl: 28 } as const
 
 export function Icon({ name, size = 'md' }: { name: IconName; size?: keyof typeof SIZES }) {
   const px = SIZES[size]

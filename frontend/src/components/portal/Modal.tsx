@@ -1,6 +1,7 @@
 import { useCallback, useId, useState } from 'react'
 
 import { m } from './motion'
+import { Icon } from './Icon'
 import { coverProps, useCover } from './useCover'
 
 /**
@@ -91,14 +92,9 @@ export function Modal({
             aria-label="닫기"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="m6 6 12 12M18 6 6 18"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
+            {/* ⚠ 손으로 그리던 ✕ 였다 — 덮개마다 굵기가 1.8·2.2 로 갈렸다.
+                모양은 뜻마다 하나, 정본은 관문 한 곳(규약 §22, 2026-08-18) */}
+            <Icon name="close" />
           </button>
         </div>
         {/* 몸 — **여기만 스크롤된다.** 발이 있으면 아래 여백은 발이 갖는다 */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { Modal } from '#/components/portal/Modal'
+import { Icon } from '#/components/portal/Icon'
 import { MotionRoot, m } from '#/components/portal/motion'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { ToastProvider, useToast } from '#/components/portal/toast'
@@ -209,18 +210,8 @@ function LoginPage() {
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-ink-subtle transition-colors hover:text-ink"
                   >
-                    {showPw ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
-                        <circle cx="12" cy="12" r="2.5" />
-                        <path d="m4 4 16 16" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
-                        <circle cx="12" cy="12" r="2.5" />
-                      </svg>
-                    )}
+                    {/* 눈·가린 눈도 관문에서 — 화면마다 다른 펜으로 그리지 않는다 */}
+                  <Icon name={showPw ? 'eyeOff' : 'eye'} />
                   </button>
                 </span>
                 {pwHint && <span className="mt-1 block text-xs text-danger-ink">{pwHint}</span>}

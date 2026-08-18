@@ -188,10 +188,7 @@ export function CommandPalette({
             거의 안 보이고(사용자가 그렇게 봤다), 선 하나는 원래 있던 hairline 과 헷갈린다. */}
         <div className="surface-head flex items-center gap-3 border-b border-hairline px-4 transition-colors focus-within:border-primary focus-within:bg-primary/[0.08] focus-within:[&>span:first-child]:text-primary">
           <span className="text-ink-subtle transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-              <circle cx="10.5" cy="10.5" r="6" />
-              <path d="M20 20l-5-5" />
-            </svg>
+            <Icon name="search" />
           </span>
           {/* 검색칸 자체가 이 덮개의 이름표다 — 보이는 제목이 없으므로 */}
           <input
@@ -219,9 +216,7 @@ export function CommandPalette({
               aria-label={t('common.close', '지우기')}
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+              <Icon name="close" size="sm" />
             </button>
           )}
         </div>
