@@ -38,21 +38,9 @@ function StatusIcon({ status }: { status: DeployStatus }) {
         : 'bg-review-bg text-review-ink'
   return (
     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cls}`}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        {status === '완료' ? (
-          <path d="M5 12.5l4.5 4.5L19 7" />
-        ) : status === '롤백' ? (
-          <>
-            <path d="M3.5 9a8.5 8.5 0 1 1-1 5.5" />
-            <path d="M3 4v5h5" />
-          </>
-        ) : (
-          <>
-            <circle cx="12" cy="12" r="8.5" />
-            <path d="M12 7.5V12l3 2" />
-          </>
-        )}
-      </svg>
+      {/* ⚠ 상태는 **모양으로 먼저** 가른다(규약 §16) — 색은 보조다. 뜻마다 이름이 있는
+          관문 아이콘을 쓰면 그 규칙이 이름에 남는다: 완료=check · 롤백=undo · 나머지=clock */}
+      <Icon name={status === '완료' ? 'check' : status === '롤백' ? 'undo' : 'clock'} />
     </span>
   )
 }

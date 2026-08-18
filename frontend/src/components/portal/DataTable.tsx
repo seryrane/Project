@@ -88,7 +88,7 @@ export function DataTable<T>({
                 /* 누를 수 있으면 커서와 호버로 말한다 (§9) — 못 누르는 표에는 안 건다.
                    ⚠ 감사 로그는 못 누르는데 호버가 걸려 있었다: 눌러 보고 아무 일도 안
                    일어나야 "아, 못 누르는구나"를 알게 되는 화면이었다. */
-                className={`border-b border-hairline/60 transition-colors last:border-0 ${
+                className={`border-b border-divider transition-colors last:border-0 ${
                   onRowClick ? 'cursor-pointer hover:bg-chip' : ''
                 } ${rowTone?.(row) ?? ''}`}
               >

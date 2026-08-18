@@ -103,7 +103,7 @@ function GuidePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: i * 0.06 }}
-                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline/50 py-3 first:pt-0 last:border-0 last:pb-0"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-divider py-3 first:pt-0 last:border-0 last:pb-0"
                 >
                   <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{e.date}</span>
                   <span className="min-w-0 flex-1 basis-64">
@@ -185,7 +185,7 @@ function GuidePage() {
                         ['Viewer', '사양서·지표 조회 전용'],
                       ] as const
                     ).map(([g, d]) => (
-                      <tr key={g} className="border-b border-hairline/50 last:border-0">
+                      <tr key={g} className="border-b border-divider last:border-0">
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{g}</td>
                         <td className="px-3 py-2">{d}</td>
                       </tr>

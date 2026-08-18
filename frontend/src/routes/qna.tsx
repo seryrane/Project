@@ -94,7 +94,7 @@ function QnaPage() {
           {filtered.map((q) => {
             const answered = q.answers.length > 0
             return (
-              <li key={q.id} className="border-b border-hairline/60 last:border-0">
+              <li key={q.id} className="border-b border-divider last:border-0">
                 <button
                   type="button"
                   onClick={() => setReading(q)}

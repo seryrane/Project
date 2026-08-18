@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipMulti, ChipSelect, Switch } from '#/components/portal/Chips'
 // 이 파일은 `m` 이 메뉴 항목 변수라 모션 관문을 fx 로 별칭한다
 import { layoutSpring, m as fx } from '#/components/portal/motion'
@@ -537,9 +538,7 @@ function MenusPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 px-5 py-16 text-center text-ink-subtle">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-                <path d="M4 6.5h16M4 12h16M4 17.5h9" />
-              </svg>
+              <Icon name="menu" size="xl" />
               <p className="text-[13px]">{t('menus.emptyHint', '메뉴를 클릭하여 설정을 변경하세요')}</p>
             </div>
           )}

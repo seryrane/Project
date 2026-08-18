@@ -571,7 +571,7 @@ function ApprovalsPage() {
                 </thead>
                 <tbody>
                   {detail.changes.map((c) => (
-                    <tr key={c.item} className="border-b border-hairline/60 last:border-0">
+                    <tr key={c.item} className="border-b border-divider last:border-0">
                       <td className="px-3 py-2.5 font-medium text-ink">{c.item}</td>
                       <td className="px-3 py-2.5">
                         {c.before ? (

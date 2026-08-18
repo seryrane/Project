@@ -4,6 +4,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ListFoot } from '#/components/portal/ListFoot'
+import { Icon } from '#/components/portal/Icon'
+import type { IconName } from '#/data/nav'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
 import { apiGet, apiSend, useApi } from '#/lib/api'
@@ -54,58 +56,21 @@ function compactSum(kValues: Array<number>): string {
 }
 
 /* 활동 종류별 아이콘 — 같은 뜻은 같은 그림 하나로 (규약 §12) */
-const ACTIVITY_ICON: Record<ActivityKind, { path: React.ReactNode; cls: string }> = {
-  approve: {
-    path: (
-      <>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M8.5 12.2l2.4 2.4 4.6-5.2" />
-      </>
-    ),
-    cls: 'bg-pending-bg text-pending-ink',
-  },
-  review: {
-    path: <path d="M4 5.5h16v10.5H9.5L4 20z" />,
-    cls: 'bg-review-bg text-review-ink',
-  },
-  validate: {
-    path: (
-      <>
-        <rect x="7" y="7" width="10" height="10" rx="2" />
-        <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
-      </>
-    ),
-    cls: 'bg-draft-bg text-draft-ink',
-  },
-  deploy: {
-    path: (
-      <>
-        <path d="M12 19V6" />
-        <path d="M6.5 11.5L12 6l5.5 5.5" />
-        <path d="M5 20.5h14" />
-      </>
-    ),
-    cls: 'bg-deployed-bg text-deployed-ink',
-  },
+/* 활동 종류 — ⚠ 여기서 네 모양을 **손으로 다시 그리고 있었다**: 승인·검토 의견·검증·배포는
+   LNB 가 이미 쓰는 뜻이라 관문에 같은 모양이 있었는데도(approve·message·engine·deploy)
+   화면이 자기 path 를 들고 굵기 1.7 로 그렸다(2026-08-18). 이름만 고르고 그림은 관문이 그린다. */
+const ACTIVITY_ICON: Record<ActivityKind, { icon: IconName; cls: string }> = {
+  approve: { icon: 'approve', cls: 'bg-pending-bg text-pending-ink' },
+  review: { icon: 'message', cls: 'bg-review-bg text-review-ink' },
+  validate: { icon: 'engine', cls: 'bg-draft-bg text-draft-ink' },
+  deploy: { icon: 'deploy', cls: 'bg-deployed-bg text-deployed-ink' },
 }
 
 function ActivityIcon({ kind }: { kind: ActivityKind }) {
   const icon = ACTIVITY_ICON[kind]
   return (
     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${icon.cls}`}>
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {icon.path}
-      </svg>
+      <Icon name={icon.icon} />
     </span>
   )
 }

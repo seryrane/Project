@@ -142,6 +142,25 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M7 10.5H4.5v10H7z" />
     </>
   ),
+  check: <path d="M5 12.5 9.5 17 19 7" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M3.5 9a8.5 8.5 0 1 1-1 5.5" />
+      <path d="M3 4v5h5" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M12 4.5 21 20H3z" />
+      <path d="M12 10v4M12 16.6v.4" />
+    </>
+  ),
   close: <path d="m6 6 12 12M18 6 6 18" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,
   eye: (

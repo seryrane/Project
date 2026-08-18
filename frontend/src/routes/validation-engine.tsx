@@ -200,10 +200,7 @@ function ValidationEnginePage() {
                   펼친 몸이 이미 border-t 로 갖고 있다 (규약 §7) */}
               <div className={`flex flex-wrap items-center gap-3 px-5 py-4 ${open ? 'bg-canvas/50' : ''}`}>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <rect x="7" y="7" width="10" height="10" rx="2" />
-                    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
-                  </svg>
+                  <Icon name="engine" size="lg" />
                 </span>
                 {/* basis 가 없으면 flex-wrap 줄에서 이 블록이 줄바꿈 대신 최소폭까지
                     짓눌린다 — 한 글자 세로줄(실기기 실증). 좁으면 액션이 다음 줄로 간다 */}

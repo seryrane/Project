@@ -263,9 +263,7 @@ function LoginPage() {
               className="rounded-2xl border border-primary/30 bg-surface p-5 text-center"
             >
               <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/12 text-primary">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                  <path d="M12 11v4M7 10.5V9a5 5 0 0 1 10 0v1.5M5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 18.5 12h-13A1.5 1.5 0 0 0 4 13.5v6A1.5 1.5 0 0 0 5.5 21Z" />
-                </svg>
+                <Icon name="check" size="lg" />
               </span>
               <h2 className="mt-3 text-base font-semibold">{t('login.fido.title')}</h2>
               <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-ink-subtle">

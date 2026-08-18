@@ -122,7 +122,7 @@ function NoticePage() {
         </div>
         <ol>
           {rest.map((n) => (
-            <li key={n.id} className="border-b border-hairline/60 last:border-0">
+            <li key={n.id} className="border-b border-divider last:border-0">
               <button
                 type="button"
                 onClick={() => setReading(n)}

@@ -43,6 +43,12 @@ export type IconName =
   | 'eyeOff'
   | 'sun'
   | 'moon'
+  /* 상태를 말하는 모양 — ⚠ **색만으로 가르지 않는다**(규약 §16): 완료·대기·되돌림은
+     색이 아니라 **모양**이 먼저 다르다. 그래서 뜻마다 이름이 따로 있다. */
+  | 'check'
+  | 'clock'
+  | 'undo'
+  | 'alert'
 
 export interface NavItem {
   key: string

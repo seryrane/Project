@@ -305,7 +305,7 @@ function ValidationReportsPage() {
                   {detail.types.map((ty, idx) => {
                     const total = detail.types.reduce((a, x) => a + x.count, 0)
                     return (
-                      <tr key={ty.label} className="border-b border-hairline/60 last:border-0">
+                      <tr key={ty.label} className="border-b border-divider last:border-0">
                         <td className="px-3 py-2.5 font-mono text-xs text-ink-subtle">{idx + 1}</td>
                         <td className="px-3 py-2.5">
                           <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs text-ink">{ty.label}</code>

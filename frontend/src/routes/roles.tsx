@@ -247,7 +247,7 @@ function RolesPage() {
                       </thead>
                       <tbody>
                         {MENUS.map((m) => (
-                          <tr key={m} className="border-b border-hairline/50 last:border-0">
+                          <tr key={m} className="border-b border-divider last:border-0">
                             <td className="whitespace-nowrap px-3 py-1.5 text-ink-muted">
                               {t(`perm.${m}`, m)}
                             </td>
@@ -385,7 +385,7 @@ function RolesPage() {
               </thead>
               <tbody>
                 {MENUS.map((m) => (
-                  <tr key={m} className="perm-row border-b border-hairline/60 transition-colors last:border-0">
+                  <tr key={m} className="perm-row border-b border-divider transition-colors last:border-0">
                     <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
                       {t(`perm.${m}`, m)}
                     </td>
