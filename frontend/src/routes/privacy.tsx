@@ -5,7 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
-import { ListFoot } from '#/components/portal/ListFoot'
+import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { useToast } from '#/components/portal/toast'
 import { useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
@@ -48,6 +48,13 @@ function PrivacyPage() {
 
   // 감사 로그 정본은 서버 — 잠금 처리 등 실제 행위가 쌓인다 (없으면 mock)
   const { data: auditList } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
+
+  /* ⚠ 감사 로그는 **서버가 계속 적는** 목록이다 — mock 시드는 열댓 줄이었지만 회원 잠금
+     한 번마다 줄이 늘어 이미 스무 줄을 넘었다(2026-08-18 실측 24건). 규약 §9 는 21줄부터
+     쪽을 나누라고 하는데 이 화면만 안 나누고 있었다: 목록이 자라는 화면일수록 발이
+     "몇 건인지"만 말하고 끝나면 화면이 한없이 길어진다. 카드(좁은 화면)와 표(넓은 화면)는
+     **같은 쪽**을 본다 — 갈리면 같은 자리에서 다른 줄이 보인다. */
+  const { page, pageCount, pageRows, setPage } = usePaged(auditList)
 
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
 
@@ -109,11 +116,11 @@ function PrivacyPage() {
           </div>
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
           <ol className="space-y-2 p-4 pc:hidden">
-            {auditList.map((l) => {
+            {pageRows.map((l, i) => {
               const danger = isDanger(l.action)
               return (
                 <li
-                  key={`${l.at}.${l.target}`}
+                  key={`${l.at}.${l.target}.${i}`}
                   className={`rounded-xl border border-hairline/70 p-3 ${danger ? 'bg-pending-bg/20' : ''}`}
                 >
                   <div className="flex items-center gap-2">
@@ -143,8 +150,12 @@ function PrivacyPage() {
               훑을 때의 보조다. */}
           <div className="hidden px-4 pb-4 pc:block">
             <DataTable
-              rows={auditList}
-              rowKey={(l) => `${l.at}.${l.target}`}
+              rows={pageRows}
+              /* ⚠⚠ 키에 **자리(index)를 함께** 넣는다 — 감사 로그에는 같은 시각·같은 대상
+                 줄이 여러 개 쌓인다(잠금/해제를 연달아 누르면 초 단위로 같다). 키가
+                 겹치면 React 가 줄을 못 가려서, 쪽을 넘겨도 첫 줄이 이전 쪽 것으로
+                 남았다(2026-08-18 e2e 가 잡음: 2쪽인데 1쪽의 맨 윗줄이 그대로). */
+              rowKey={(l, i) => `${l.at}.${l.target}.${i}`}
               rowTone={(l) => (isDanger(l.action) ? 'bg-pending-bg/20' : undefined)}
               minWidth={560}
               empty={{ title: t('privacy.auditEmpty', '기록된 접근이 없습니다.') }}
@@ -177,7 +188,20 @@ function PrivacyPage() {
                 { header: t('privacy.label.reason', '사유'), cellClassName: 'text-ink-subtle', cell: (l) => l.reason },
               ]}
             />
-            <ListFoot total={auditList.length} shown={auditList.length} unit="건" />
+          </div>
+          {/* ⚠ 발은 **표 상자 밖**에 둔다 — 넓은 화면 전용 상자(`hidden pc:block`) 안에
+              있어서 좁은 화면에서는 목록이 몇 건인지도, 쪽도 통째로 사라져 있었다
+              (2026-08-18 e2e 가 잡음: 카드 목록만 스무 줄 나오고 끝났다). 카드와 표는
+              같은 쪽을 보므로 발도 하나다. */}
+          <div className="px-4 pb-4 pc:px-4">
+            <ListFoot
+              total={auditList.length}
+              shown={pageRows.length}
+              unit="건"
+              page={page}
+              pageCount={pageCount}
+              onPage={setPage}
+            />
           </div>
           <div className="border-t border-hairline px-5 py-2.5 text-xs text-ink-subtle">
             {tf(

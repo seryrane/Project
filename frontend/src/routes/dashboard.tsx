@@ -248,6 +248,8 @@ function DashboardPage() {
   // 오류 유형도 기간을 따른다 — 30일 기준값을 기간 비율로 편 결정적 mock
   const scaledErrors = errorTypes.map((e) => ({
     ...e,
+    // 값(정본 키)은 그대로 두고 표시만 옮긴다 — specStatus 절과 같은 규칙
+    label: t(`errorType.${e.label}`, e.label),
     value: Math.round((e.value * range) / 30),
     prev: Math.round((e.prev * range) / 30),
   }))
@@ -378,7 +380,11 @@ function DashboardPage() {
                     q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-chip text-ink-muted'
                   }`}
                 >
-                  {tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}
+                  {/* ⚠ EN 에서 "1 days waiting" 이 나왔다 — 하나일 때는 낱말이 바뀐다.
+                      한국어는 갈리지 않으므로 사전에 단수 키를 따로 두고 수로 고른다. */}
+                  {q.waitingDays === 1
+                    ? tf('dash.queue.waitingDay', { n: q.waitingDays }, '{n}일 경과')
+                    : tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}
                 </span>
               </button>
             </li>
@@ -459,7 +465,7 @@ function DashboardPage() {
                       : 'bg-danger-bg text-danger-ink'
                 }`}
               >
-                {p.status}
+                {t(`pipelineStatus.${p.status}`, p.status)}
               </span>
             </li>
           ))}
@@ -491,7 +497,9 @@ function DashboardPage() {
                     n.pinned ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-subtle'
                   }`}
                 >
-                  {n.pinned ? t('dash.notice.pinnedBadge', '고정') : n.category}
+                  {n.pinned
+                    ? t('dash.notice.pinnedBadge', '고정')
+                    : t(`noticeCategory.${n.category}`, n.category)}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-ink">{n.title}</span>

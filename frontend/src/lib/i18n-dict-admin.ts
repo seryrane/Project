@@ -492,6 +492,22 @@ export const ADMIN_DICT: Record<string, Entry> = {
   },
   'dash.queue.subtitle': { ko: '{n}건이 결재를 기다립니다', en: '{n} awaiting approval' },
   'dash.queue.waitingDays': { ko: '{n}일 경과', en: '{n} days waiting' },
+  'dash.queue.waitingDay': { ko: '{n}일 경과', en: '{n} day waiting' },
+  'dash.status.center': { ko: '전체 사양서', en: 'All specs' },
+  /* 오류 유형·공지 분류·파이프라인 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다
+     (i18n-dict-work 의 specStatus 절과 같은 임시 규칙). 값은 그대로, 표시만 옮긴다. */
+  'errorType.필수값 누락': { ko: '필수값 누락', en: 'Missing required' },
+  'errorType.형식 오류': { ko: '형식 오류', en: 'Format error' },
+  'errorType.오탈자': { ko: '오탈자', en: 'Typo' },
+  'errorType.범위 초과': { ko: '범위 초과', en: 'Out of range' },
+  'errorType.중복': { ko: '중복', en: 'Duplicate' },
+  'noticeCategory.시스템': { ko: '시스템', en: 'System' },
+  'noticeCategory.정책': { ko: '정책', en: 'Policy' },
+  'noticeCategory.배포': { ko: '배포', en: 'Deployment' },
+  'noticeCategory.교육': { ko: '교육', en: 'Training' },
+  'pipelineStatus.성공': { ko: '성공', en: 'Success' },
+  'pipelineStatus.실행중': { ko: '실행중', en: 'Running' },
+  'pipelineStatus.실패': { ko: '실패', en: 'Failed' },
   'dash.errors.subtitle': {
     ko: '{range} 누적 · 증감은 이전 동일 기간 대비',
     en: '{range} cumulative · change vs. same period before',

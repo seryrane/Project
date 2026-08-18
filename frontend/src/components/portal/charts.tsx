@@ -1,5 +1,11 @@
 import { Fragment, useId, useRef, useState } from 'react'
 
+/* ⚠ 차트 관문은 **자기 말**(범례 '현재/이전 기간' · 요일 축 · "칸에 올리면…" · 적음/많음)을
+   스스로 갖는다 — 그러니 그 말은 관문이 사전을 타야 한다. 부르는 쪽이 주는 말(열 이름·
+   단위·도넛 가운데 캡션)은 이미 번역된 채로 온다(DataTable 과 같은 규칙).
+   EN 실검수에서 대시보드의 차트 글자만 통째로 한국어로 남아 있었다(2026-08-18). */
+import { useI18n } from '#/lib/i18n'
+
 /* Chart primitives following the dataviz mark specs:
    2px lines, ≥8px markers with 2px surface rings, ≤24px bars with 4px rounded
    data-ends (square at the baseline), 2px surface gaps between stacked segments,
@@ -253,6 +259,7 @@ export function DonutChart({
   data: Array<{ label: string; value: number; fill: string }>
   centerLabel?: string
 }) {
+  const { t } = useI18n()
   const [hover, setHover] = useState<number | null>(null)
   const total = data.reduce((s, d) => s + d.value, 0) || 1
   const R = 54
@@ -299,7 +306,7 @@ export function DonutChart({
           {hover != null ? data[hover].value : total}
         </text>
         <text x="64" y="78" textAnchor="middle" fontSize="9" fill="var(--color-ink-subtle)">
-          {hover != null ? data[hover].label : (centerLabel ?? '전체')}
+          {hover != null ? data[hover].label : (centerLabel ?? t('common.all', '전체'))}
         </text>
       </svg>
       {/* 범례가 값을 말한다 — 각도로 못 읽는 것을 툴팁에만 가두지 않는다 */}
@@ -330,13 +337,20 @@ export function TrendLineChart({
   data,
   compare,
   unit = 'K',
-  labels = { main: '현재 기간', compare: '이전 기간' },
+  labels,
 }: {
   data: Array<TrendPoint>
   compare?: Array<TrendPoint>
   unit?: string
+  /** 안 주면 관문이 사전에서 채운다 — 부르는 쪽이 다른 말을 쓰고 싶을 때만 준다 */
   labels?: { main: string; compare: string }
 }) {
+  // ⚠ 이 안에서는 눈금 좌표가 `t` 라는 이름을 이미 쓴다 — 사전은 통째로 받아 쓴다
+  const i18n = useI18n()
+  const lbl = labels ?? {
+    main: i18n.t('chart.legend.current', '현재 기간'),
+    compare: i18n.t('chart.legend.previous', '이전 기간'),
+  }
   const ref = useRef<HTMLDivElement>(null)
   const gid = useId()
   const [hover, setHover] = useState<number | null>(null)
@@ -372,13 +386,13 @@ export function TrendLineChart({
       {cmp && (
         <div className="mb-2 flex items-center gap-4 text-xs text-ink-muted">
           <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full bg-primary" /> {labels.main}
+            <span className="h-0.5 w-4 rounded-full bg-primary" /> {lbl.main}
           </span>
           <span className="flex items-center gap-1.5">
             <svg width="16" height="2" aria-hidden>
               <line x1="0" y1="1" x2="16" y2="1" stroke="var(--color-ink-subtle)" strokeWidth="2" strokeDasharray="3 3" />
             </svg>
-            {labels.compare}
+            {lbl.compare}
           </span>
         </div>
       )}
@@ -458,7 +472,7 @@ export function TrendLineChart({
               {unit}
             </span>
             {cmp && (
-              <span className="ml-1.5 tabular-nums text-ink-subtle">({labels.compare} {cmp[hover].value}{unit})</span>
+              <span className="ml-1.5 tabular-nums text-ink-subtle">({lbl.compare} {cmp[hover].value}{unit})</span>
             )}
             <span className="ml-1.5 text-ink-subtle">{data[hover].date}</span>
           </div>
@@ -882,13 +896,15 @@ export function TimeHeatmap({
   rows,
   cols,
   values,
-  unit = '건',
+  unit,
 }: {
   rows: Array<string>
   cols: Array<string>
   values: Array<Array<number>> // rows × cols
   unit?: string
 }) {
+  const { t } = useI18n()
+  const cellUnit = unit ?? t('chart.unit.count', '건')
   const [hover, setHover] = useState<[number, number] | null>(null)
   const flat = values.flat()
   const min = Math.min(...flat)
@@ -939,10 +955,10 @@ export function TimeHeatmap({
       <div className="mt-1.5 text-xs text-ink-subtle">
         {hover ? (
           <>
-            <b className="tabular-nums text-ink">{values[hover[0]][hover[1]]}{unit}</b> · {rows[hover[0]]} {cols[hover[1]]}
+            <b className="tabular-nums text-ink">{values[hover[0]][hover[1]]}{cellUnit}</b> · {rows[hover[0]]} {cols[hover[1]]}
           </>
         ) : (
-          '칸에 올리면 값이 보입니다 · 짙을수록 많음'
+          t('chart.heatmap.hint', '칸에 올리면 값이 보입니다 · 짙을수록 많음')
         )}
       </div>
     </div>
@@ -959,6 +975,7 @@ export interface HeatDay {
 const HEAT_STEPS = [0.1, 0.28, 0.5, 0.75, 1]
 
 export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
+  const { t } = useI18n()
   const [hover, setHover] = useState<HeatDay | null>(null)
   const min = Math.min(...days.map((d) => d.value))
   const max = Math.max(...days.map((d) => d.value))
@@ -979,15 +996,24 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
 
   const CELL = 15
   const GAP = 3
-  const LEFT = 26
   const TOP = 6
+  // 요일 축은 세 칸만 적는다(월·수·금) — 일곱을 다 적으면 격자보다 글자가 시끄럽다
+  const weekdayLabels = [
+    { row: 1, label: t('chart.weekday.mon', '월') },
+    { row: 3, label: t('chart.weekday.wed', '수') },
+    { row: 5, label: t('chart.weekday.fri', '금') },
+  ]
+  /* ⚠ 축 자리를 **26 으로 박아** 두었더니 EN 에서 'Mon' 앞이 잘려 나갔다 — 한글 한 자에
+     맞춘 폭이었다(규약 §4-5 "영문은 1.5~2배, 고정폭 금지", 2026-08-18 EN 실검수).
+     글자 폭을 재서 자리를 만든다: 10px 기준 ASCII ≈ 5.8px, 한글 ≈ 10px. */
+  const axisTextWidth = Math.max(
+    ...weekdayLabels.map((w) =>
+      [...w.label].reduce((sum, ch) => sum + (ch.charCodeAt(0) < 128 ? 5.8 : 10), 0),
+    ),
+  )
+  const LEFT = Math.ceil(axisTextWidth) + 10 // 글자 + 격자와의 틈
   const width = LEFT + weeks.length * (CELL + GAP)
   const height = TOP + 7 * (CELL + GAP)
-  const weekdayLabels = [
-    { row: 1, label: '월' },
-    { row: 3, label: '수' },
-    { row: 5, label: '금' },
-  ]
 
   return (
     <div className="relative">
@@ -995,7 +1021,7 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
         {weekdayLabels.map((w) => (
           <text
             key={w.label}
-            x={LEFT - 8}
+            x={LEFT - 6}
             y={TOP + w.row * (CELL + GAP) + CELL - 4}
             textAnchor="end"
             fontSize="10"
@@ -1039,14 +1065,17 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
         <span>
           {hover ? (
             <>
-              <span className="font-semibold tabular-nums text-ink">{hover.value}K건</span> · {hover.date}
+              <span className="font-semibold tabular-nums text-ink">
+                {hover.value}K{t('chart.unit.count', '건')}
+              </span>{' '}
+              · {hover.date}
             </>
           ) : (
-            '칸에 올리면 일자별 처리량이 보입니다'
+            t('chart.heatmap.dayHint', '칸에 올리면 일자별 처리량이 보입니다')
           )}
         </span>
         <span className="flex items-center gap-1">
-          적음
+          {t('chart.heatmap.less', '적음')}
           {HEAT_STEPS.map((o) => (
             <span
               key={o}
@@ -1054,7 +1083,7 @@ export function ActivityHeatmap({ days }: { days: Array<HeatDay> }) {
               style={{ backgroundColor: 'var(--color-primary)', opacity: o }}
             />
           ))}
-          많음
+          {t('chart.heatmap.more', '많음')}
         </span>
       </div>
     </div>

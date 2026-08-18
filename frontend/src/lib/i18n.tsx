@@ -39,6 +39,25 @@ const CORE_DICT: Record<string, Entry> = {
   'common.edit': { ko: '편집', en: 'Edit' },
   'common.search': { ko: '검색', en: 'Search' },
   'common.all': { ko: '전체', en: 'All' },
+  /* 목록의 발 (관문 ListFoot) — 세는 단위(건·명)는 한국어 문장에만 붙는다.
+     EN 은 "3 of 6" 이 자연스럽고 단위를 붙이면 오히려 어색하다. */
+  'listFoot.total': { ko: '전체 {n}{unit}', en: '{n} total' },
+  'listFoot.filtered': { ko: '전체 {n}{unit} 중 {m}{unit}', en: '{m} of {n}' },
+  'common.prevPage': { ko: '이전', en: 'Previous' },
+  'common.nextPage': { ko: '다음', en: 'Next' },
+  /* 차트 관문이 스스로 쓰는 말 (components/portal/charts.tsx) — 부르는 쪽이 주는
+     말(열 이름·도넛 캡션)은 이미 번역돼 온다. EN 대시보드에서 차트 글자만 통째로
+     한국어로 남아 있던 자리다(2026-08-18 EN 실검수). */
+  'chart.legend.current': { ko: '현재 기간', en: 'Current period' },
+  'chart.legend.previous': { ko: '이전 기간', en: 'Previous period' },
+  'chart.unit.count': { ko: '건', en: '' },
+  'chart.heatmap.hint': { ko: '칸에 올리면 값이 보입니다 · 짙을수록 많음', en: 'Hover a cell for its value · darker = more' },
+  'chart.heatmap.dayHint': { ko: '칸에 올리면 일자별 처리량이 보입니다', en: 'Hover a cell for that day’s volume' },
+  'chart.heatmap.less': { ko: '적음', en: 'Less' },
+  'chart.heatmap.more': { ko: '많음', en: 'More' },
+  'chart.weekday.mon': { ko: '월', en: 'Mon' },
+  'chart.weekday.wed': { ko: '수', en: 'Wed' },
+  'chart.weekday.fri': { ko: '금', en: 'Fri' },
   'common.approve': { ko: '승인', en: 'Approve' },
   'common.reject': { ko: '반려', en: 'Reject' },
   'common.reset': { ko: '초기화', en: 'Reset' },

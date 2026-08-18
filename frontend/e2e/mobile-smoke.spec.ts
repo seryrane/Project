@@ -756,3 +756,28 @@ test('초안 — 결재 전에는 잠기지 않는다 (잠금이 상태를 안 �
   await page.locator('tbody tr').first().click()
   await expect(page.getByRole('dialog'), '초안은 행을 누르면 편집이 열린다').toBeVisible()
 })
+
+/* 쪽 나누기 — 규약 §9 "21줄부터 쪽을 나눈다".
+   ⚠ 감사 로그만은 **서버가 계속 적는** 목록이라 시드 열댓 줄로 시작해 잠금 한 번마다
+   자란다. 다른 화면 mock 은 스무 줄을 안 넘어 안 걸렸지만 이 화면은 이미 24건이었고,
+   쪽이 없어 한 화면에 다 쏟아지고 있었다(2026-08-18).
+   ⚠ 줄 수가 서버 상태에 달렸으므로 **"스무 줄을 넘지 않는다"를 늘 재고**, 쪽 조작은
+   실제로 넘쳤을 때만 잰다 — 조건을 못 만든 채 통과시키는 skip 과는 다르다. */
+test('감사 로그 — 한 쪽은 스무 줄까지, 넘치면 쪽이 선다 (규약 §9)', async ({ page }) => {
+  await ready(page, '/privacy')
+  const foot = page.getByText(/^전체 \d+건/).first()
+  const total = Number((await foot.textContent())?.match(/전체 (\d+)건/)?.[1])
+  expect(total, '발이 전체 수를 말한다').toBeGreaterThan(0)
+
+  const rows = page.locator('tbody tr')
+  await expect(rows, '한 쪽은 스무 줄까지').toHaveCount(Math.min(20, total))
+
+  if (total > 20) {
+    const first = await rows.first().textContent()
+    await expect(page.getByText(/^\d+ \/ \d+$/), '몇 쪽 중 몇 쪽인지 말한다').toBeVisible()
+    await page.getByRole('button', { name: '다음' }).click()
+    await expect(page.getByText('2 / ' + Math.ceil(total / 20))).toBeVisible()
+    expect(await rows.first().textContent(), '쪽을 넘기면 다른 줄이 선다').not.toBe(first)
+    await expect(foot, '발은 전체 수를 계속 말한다').toHaveText(new RegExp('^전체 ' + total + '건'))
+  }
+})
