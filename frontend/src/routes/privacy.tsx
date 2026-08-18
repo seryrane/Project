@@ -7,6 +7,8 @@ import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
 import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { useToast } from '#/components/portal/toast'
+import { members } from '#/data/members'
+import type { Member } from '#/data/members'
 import { useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 
@@ -48,6 +50,8 @@ function PrivacyPage() {
 
   // 감사 로그 정본은 서버 — 잠금 처리 등 실제 행위가 쌓인다 (없으면 mock)
   const { data: auditList } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
+  // 회원 명단은 **회원 관리와 같은 소스**로 읽는다 — 다르게 읽으면 두 화면이 갈라진다
+  const { data: memberList } = useApi<Array<Member>>('/members', members)
 
   /* ⚠ 감사 로그는 **서버가 계속 적는** 목록이다 — mock 시드는 열댓 줄이었지만 회원 잠금
      한 번마다 줄이 늘어 이미 스무 줄을 넘었다(2026-08-18 실측 24건). 규약 §9 는 21줄부터
@@ -57,6 +61,12 @@ function PrivacyPage() {
   const { page, pageCount, pageRows, setPage } = usePaged(auditList)
 
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
+  /** 파기 대상 — 비활성이면서 마지막 접속이 90일을 넘긴 계정 (처리방침 제3조) */
+  const purgeScheduled = memberList.filter(
+    (m) =>
+      m.status === '비활성' &&
+      (Date.now() - new Date(m.lastLogin.slice(0, 10).replaceAll('.', '-')).getTime()) / 86400000 > 90,
+  ).length
 
   return (
     // 커뮤니티 5개는 폭을 통일한다 (사용자 결정 2026-08-13 — guide.tsx 주석 참고)
@@ -84,7 +94,10 @@ function PrivacyPage() {
             { id: 'policyVersion', label: '현행 처리방침', value: 'v3.2', sub: '2026.08.01 시행' },
             { id: 'exports30d', label: '반출(다운로드) · 30일', value: downloads30d, sub: '전 건 사유 기록됨' },
             { id: 'pendingAccess', label: '열람 요청 대기', value: 1, sub: '기한 10일 — 8/12 까지', warn: true },
-            { id: 'purgeScheduled', label: '파기 예정 계정', value: 3, sub: '비활성 90일 경과' },
+            /* ⚠⚠ 손으로 적은 **3** 이었다 — 회원 관리가 같은 잣대로 세면 0명인데 이 화면은
+               3건이라 말했다(2026-08-18, 회원 카드를 채우다 드러남). 방침 제3조가 "비활성
+               90일"이라고 못 박았으니 **명단에서 그 조건으로 센다**(규약 §10). */
+            { id: 'purgeScheduled', label: '파기 예정 계정', value: purgeScheduled, sub: '비활성 90일 경과' },
           ] as const
         ).map((tile, i) => (
           <div

@@ -11,7 +11,15 @@ import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { GRADE_CLS, SERVICE_ROLES, SERVICE_ROLE_LABEL, STATUS_CLS, members } from '#/data/members'
+import { MiniStackBar } from '#/components/portal/charts'
+import {
+  GRADE_CLS,
+  SERVICE_ROLES,
+  SERVICE_ROLE_LABEL,
+  STATUS_CLS,
+  gradeDistribution,
+  members,
+} from '#/data/members'
 import type { Grade, Member } from '#/data/members'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
@@ -138,21 +146,61 @@ function MembersPage() {
   const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
   const activeDelta = counts.active - PREV_WEEK.active
   const lockedDelta = counts.locked - PREV_WEEK.locked
-  const deltaCaption = t('members.delta.caption', '지난주 대비')
+
+  /* ── 타일이 말할 거리 ─────────────────────────────────────────────────
+     ⚠ 숫자 하나만 서 있으면 판단이 안 된다(규약 §10). 넷 다 "몇 명"만 크게 적고 아래가
+     비어 있어서 카드가 횡했다(2026-08-18 사용자 지적). 채우는 것은 장식이 아니라
+     **그 숫자가 무엇으로 이뤄졌는지**와 **다음에 할 일**이다 — 전부 명단에서 센다. */
+  const grades = gradeDistribution(memberList)
+  const activeRate = counts.all ? Math.round((counts.active / counts.all) * 100) : 0
+  /** 오래 안 들어온 계정 — 90일 기준(개인정보 화면의 '파기 예정 계정'과 같은 잣대) */
+  const staleCount = memberList.filter((m) => {
+    const d = new Date(m.lastLogin.slice(0, 10).replaceAll('.', '-'))
+    return (Date.now() - d.getTime()) / 86400000 > 90
+  }).length
+  const lockedNames = memberList.filter((m) => effStatus(m) === '잠금').map((m) => m.name)
+  const noFido = memberList.filter((m) => !m.fido).length
 
   const stats = [
     // 전체 회원은 계정 대장 헤드카운트라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
-    { label: t('members.stat.all', '전체 회원'), value: counts.all },
+    {
+      label: t('members.stat.all', '전체 회원'),
+      value: counts.all,
+      // 무엇으로 이뤄졌나 — 등급 넷의 구성(대시보드 '권한별 회원 분포'와 같은 소스)
+      extra: (
+        <>
+          <MiniStackBar data={grades} />
+          <span className="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-ink-subtle">
+            {grades.map((g) => (
+              <span key={g.label} className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: g.fill }} />
+                {g.label} <b className="tabular-nums text-ink-muted">{g.value}</b>
+              </span>
+            ))}
+          </span>
+        </>
+      ),
+    },
     {
       label: t('members.stat.active', '활성'),
       value: counts.active,
       cls: 'text-deployed-ink',
       delta: fmtDelta(activeDelta),
       deltaGood: activeDelta >= 0,
-      caption: deltaCaption,
+      caption: tf(
+        'members.stat.activeCaption',
+        { rate: activeRate, n: noFido },
+        '전체의 {rate}% · FIDO 미등록 {n}명',
+      ),
     },
     // 비활성은 자연 이탈·휴면 전환이 섞여 있어 늘고 주는 방향에 좋고 나쁨을 못 가른다 — 증감 없음
-    { label: t('members.stat.inactive', '비활성'), value: counts.inactive, cls: 'text-ink-subtle' },
+    {
+      label: t('members.stat.inactive', '비활성'),
+      value: counts.inactive,
+      cls: 'text-ink-subtle',
+      // 다음 행동이 있는 숫자다 — 90일 넘게 안 들어온 계정은 파기 대상 후보(개인정보 화면)
+      caption: tf('members.stat.inactiveCaption', { n: staleCount }, '90일 이상 미접속 {n}명'),
+    },
     {
       label: t('members.stat.locked', '잠금'),
       value: counts.locked,
@@ -160,7 +208,15 @@ function MembersPage() {
       // 잠금 계정이 늘면 나쁘다 — 보안 위협 대응 중이라는 뜻
       delta: fmtDelta(lockedDelta),
       deltaGood: lockedDelta <= 0,
-      caption: deltaCaption,
+      // 누가 잠겼는지까지 적는다 — 이름이 있어야 표에서 찾아 풀 수 있다
+      caption:
+        lockedNames.length > 0
+          ? tf(
+              'members.stat.lockedCaption',
+              { names: lockedNames.slice(0, 2).join(', '), rest: lockedNames.length - 2 },
+              '{names}',
+            ) + (lockedNames.length > 2 ? ` 외 ${lockedNames.length - 2}명` : '')
+          : t('members.stat.lockedNone', '잠긴 계정이 없습니다'),
     },
   ]
 
@@ -231,6 +287,7 @@ function MembersPage() {
             <div className="px-4 py-3.5">
               <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
               {s.caption && <div className="mt-1 text-xs text-ink-subtle">{s.caption}</div>}
+              {s.extra && <div className="mt-2.5">{s.extra}</div>}
             </div>
           </div>
         ))}

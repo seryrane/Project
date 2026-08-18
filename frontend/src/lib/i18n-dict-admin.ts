@@ -494,6 +494,14 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'dash.queue.waitingDays': { ko: '{n}일 경과', en: '{n} days waiting' },
   'dash.queue.waitingDay': { ko: '{n}일 경과', en: '{n} day waiting' },
   'dash.status.center': { ko: '전체 사양서', en: 'All specs' },
+  /* 회원 요약 타일의 부연 — 숫자 하나만 서 있으면 판단이 안 된다(규약 §10, 2026-08-18) */
+  'members.stat.activeCaption': {
+    ko: '전체의 {rate}% · FIDO 미등록 {n}명',
+    en: '{rate}% of all · {n} without FIDO',
+  },
+  'members.stat.inactiveCaption': { ko: '90일 이상 미접속 {n}명', en: '{n} idle over 90 days' },
+  'members.stat.lockedCaption': { ko: '{names}', en: '{names}' },
+  'members.stat.lockedNone': { ko: '잠긴 계정이 없습니다', en: 'No locked accounts' },
   'dash.queue.subtitleMine': {
     ko: '내 차례 {mine}건 · 전체 {n}건이 결재를 기다립니다',
     en: '{mine} awaiting you · {n} in the queue',

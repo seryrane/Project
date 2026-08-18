@@ -137,7 +137,7 @@ function Sparkline({ points, width = 260, height = 40 }: { points: Array<number>
         d={line}
         fill="none"
         stroke="var(--color-primary)"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinejoin="round"
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
@@ -453,7 +453,7 @@ export function TrendLineChart({
             className="chart-line"
             fill="none"
             stroke="var(--color-primary)"
-            strokeWidth="1.75"
+            strokeWidth="1.4"
             strokeLinejoin="round"
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
@@ -746,7 +746,7 @@ export function MultiLineChart({ series, unit = '' }: { series: Array<LineSeries
                   className="chart-line transition-[stroke,stroke-width,opacity] duration-200"
                   fill="none"
                   stroke={dim ? 'var(--color-ink-subtle)' : s.color}
-                  strokeWidth={s.name === focus ? 2.25 : 1.5}
+                  strokeWidth={s.name === focus ? 1.9 : 1.25}
                   vectorEffect="non-scaling-stroke"
                   strokeOpacity={dim ? 0.4 : 1}
                   strokeLinejoin="round"
@@ -1168,6 +1168,29 @@ export interface StackDatum {
   label: string
   value: number
   fill: string
+}
+
+/**
+ * 요약 타일 안에 들어가는 **얇은 구성 막대** — 범례 없이 비율만 말한다.
+ *
+ * ⚠ `StatusStackBar` 는 범례까지 갖춘 위젯이라 타일에 넣으면 카드가 통째로 차트가 된다.
+ * 타일에서 필요한 것은 "숫자 하나가 무엇으로 이뤄졌나"뿐이다(규약 §10: 숫자 하나만 서
+ * 있으면 판단이 안 된다). 값은 `title` 로 읽히게 두어 **색만으로 말하지 않는다**(§16).
+ */
+export function MiniStackBar({ data, height = 6 }: { data: Array<StackDatum>; height?: number }) {
+  const total = data.reduce((a, d) => a + d.value, 0) || 1
+  return (
+    <span className="flex w-full gap-[2px] overflow-hidden rounded-full" style={{ height }}>
+      {data.map((d, i) => (
+        <span
+          key={d.label}
+          title={`${d.label} ${d.value}`}
+          className={`${i === 0 ? 'rounded-l-full' : ''} ${i === data.length - 1 ? 'rounded-r-full' : ''}`}
+          style={{ width: `${(d.value / total) * 100}%`, backgroundColor: d.fill }}
+        />
+      ))}
+    </span>
+  )
 }
 
 export function StatusStackBar({ data }: { data: Array<StackDatum> }) {

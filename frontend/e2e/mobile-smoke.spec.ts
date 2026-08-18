@@ -494,23 +494,27 @@ test.describe('넓은 화면', () => {
   })
 })
 
-/** 본문 폭 — 한 값이 두 일을 하던 자리(예전 max-w-7xl 1280). 설계서 폭은 1680 이고,
- *  글 읽는 화면은 읽기 폭에서 멈춘다. 1920 을 실제로 켜고 잰다 */
-test.describe('설계서 폭(1920)', () => {
+/** 본문 폭 — 한 값이 두 일을 하던 자리(예전 max-w-7xl 1280).
+ *  ⚠ 2026-08-18 사용자 지적("본문이 꽉 찬다 · 좌우 폭을 축소")으로 **1680 → 1440**.
+ *  1920 에서 사이드바를 빼면 1680 이 남아, 설계서 폭을 그대로 쓰면 좌우가 패딩뿐이었다.
+ *  1920 을 실제로 켜고 잰다 — 폭을 줄인 판이므로 "너무 넓지도 않은지"를 함께 본다. */
+test.describe('본문 폭(1920)', () => {
   test.use({ viewport: { width: 1920, height: 900 }, isMobile: false })
 
   test('본문 폭 — 설계서 폭으로 통일하고, 읽기 폭은 글 칸이 잡는다', async ({ page }) => {
     await ready(page, '/members')
     const data = (await page.locator('main').boundingBox())!
-    // 세로 스크롤바(≈15px)만큼 줄 수 있어 폭 자체가 아니라 "설계서 폭에 닿았는지"를 본다
-    expect(data.width, '표 화면은 설계서 폭 1680').toBeGreaterThan(1640)
+    // 세로 스크롤바(≈15px)만큼 줄 수 있어 폭 자체가 아니라 **범위**로 본다:
+    // 좁아지면 표가 눌리고, 넓어지면 다시 화면 끝에 붙는다
+    expect(data.width, '표 화면은 본문 폭 1440 에 닿는다').toBeGreaterThan(1400)
+    expect(data.width, '1920 에서 좌우에 숨 쉴 자리가 남는다').toBeLessThan(1500)
 
     // ⚠ 2026-08-13 사용자 결정: **커뮤니티 5개는 폭을 통일한다.** 예전에는 가이드·FAQ·
     //   개인정보만 960 이라 메뉴를 오갈 때 폭이 널뛰었다("QNA 는 꽉 차는데 FAQ 는 좁다").
     //   페이지는 넓히되 **글줄은 안쪽 칸이 잡는다** — 둘을 같이 봐야 결정이 지켜진다.
     await ready(page, '/guide')
     const guide = (await page.locator('main').boundingBox())!
-    expect(guide.width, '가이드도 다른 커뮤니티 화면과 같은 폭').toBeGreaterThan(1640)
+    expect(guide.width, '가이드도 다른 커뮤니티 화면과 같은 폭').toBeGreaterThan(1400)
 
     // 글 칸은 여전히 읽기 폭에서 멈춘다 — 안 그러면 한 줄이 1400px 를 넘는다
     const prose = (await page.locator('main section').first().boundingBox())!
