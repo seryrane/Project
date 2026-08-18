@@ -705,27 +705,34 @@ select option {
   opacity: 0.35;
 }
 
-/* 클릭형 카드 공통 호버 — 살짝 떠오르고 테두리·글로우가 켜진다 (사양서 카드와 동일 감).
+/* 클릭형 카드 공통 호버 — **눌러도 되는 물건이라는 것만 말한다**.
    ⚠ transform 이 아니라 translate 속성이다 — 등장 애니메이션(fill: both)이 transform 을
-   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음). */
+   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음).
+
+   ⚠⚠ **리프트를 죽였다**(2026-08-18 사용자 지적: "카드 리프트 효과 좀 죽여줘").
+   예전에는 3px 를 스프링 곡선(linear(), 1.116 까지 넘었다 돌아옴)으로 띄웠다 — 카드 한 장
+   위에서는 손맛이지만, 목록이 카드로 그려지는 화면에서는 **커서가 지나가는 자리마다 줄이
+   출렁였다.** 호버는 "여기를 누를 수 있다"만 말하면 된다: 1px + 튕김 없는 감쇠. */
 .card-hover {
-  /* translate 만 CSS 스프링(linear() 곡선) — 살짝 넘었다 눌러앉는 손맛.
-     linear() 는 기계 곡선(cubic-bezier)로는 못 그리는 감쇠 진동을 표로 편 것 */
   transition:
-    translate 380ms
-      linear(
-        0, 0.322 5.2%, 0.646 10.6%, 0.876 15.9%, 1.021 21.3%, 1.098 27%, 1.116 33.2%,
-        1.098 39.9%, 1.062 47.5%, 1.024 56.2%, 1.001 66.4%, 0.994 78.4%, 1
-      ),
+    translate 160ms ease-out,
     border-color 200ms ease,
     box-shadow 200ms ease;
 }
 .card-hover:hover {
-  /* 3px — 유리판이 한 층 더 뜬다(2026-08-12 '유리와 깊이'). 2px 는 그림자가 두꺼워진
-     지금 눈에 안 띄고, 4px 이상은 표가 흔들리는 것처럼 보인다 */
-  translate: 0 -3px;
-  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
-  box-shadow: var(--shadow-2);
+  /* 1px — 뜬 것을 **알아채되 쳐다보지 않는** 정도. 깊이는 그림자와 테두리가 진다 */
+  translate: 0 -1px;
+  border-color: color-mix(in oklab, var(--color-primary) 28%, transparent);
+  box-shadow: var(--shadow-1);
+}
+
+/* 손이 덜 닿는 기기에서는 **아예 뜨지 않는다** — 터치는 호버가 없어서, 눌렀다 뗀 뒤
+   리프트가 남아 "선택된 것처럼" 보이는 자리가 생긴다 */
+@media (hover: none) {
+  .card-hover:hover {
+    translate: none;
+    box-shadow: none;
+  }
 }
 
 /* ── 유리와 깊이 (2026-08-12 사용자 채택 방향) ────────────────────────────
