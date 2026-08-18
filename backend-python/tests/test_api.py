@@ -72,6 +72,14 @@ def test_member_lock_toggle_and_audit() -> None:
     assert any(locked["name"] in a["target"] for a in audit)
 
 
+def test_audit_sorted_newest_first() -> None:
+    """⚠ 시드(최신순 INSERT)와 서버 기록분이 한 목록에 섞인다 — seq DESC 는 시드를
+    뒤집어 위는 최신순·꼬리는 오래된순인 목록을 내보냈다(2026-08-18 화면 실측)."""
+    audit = client.get("/api/audit").json()
+    ats = [a["at"] for a in audit]
+    assert ats == sorted(ats, reverse=True)
+
+
 def test_login_direct_and_me_switches() -> None:
     """FIDO 미등록 계정은 바로 토큰 — /me 가 로그인 사용자로 바뀐다(메뉴 파생도 따라간다)."""
     res = client.post("/api/auth/login", json={"id": "seoyeon.lee", "password": "hmg1234!"}).json()

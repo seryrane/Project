@@ -36,8 +36,10 @@ const sparkOf = (base: number, amp: number, slope: number) =>
   Array.from({ length: 14 }, (_, i) => base + Math.sin(i / 2.1) * amp + i * slope)
 
 export const kpiSparks = {
-  specs: sparkOf(120, 1.2, 0.55), // 총 사양서: 완만한 증가
-  pending: [4, 5, 4, 6, 5, 7, 6, 5, 8, 7, 6, 8, 7, 7], // 승인 대기: 출렁임
+  // ⚠ 타일 숫자가 정본(사양서 4건·결재 대기 4건)에서 오도록 바꾸며 추이도 그 크기로
+  //   맞췄다 — 120 언저리 추이 밑에 4가 서 있으면 스파크가 다른 숫자 이야기를 한다
+  specs: [3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4], // 총 사양서: 최근 1건 등록
+  pending: [2, 3, 3, 2, 4, 3, 3, 5, 4, 3, 4, 5, 4, 4], // 결재 대기: 출렁임
   successRate: sparkOf(95.4, 0.5, 0.1), // 성공률: 소폭 개선
   processed: validationSeries.slice(-14).map((d) => d.value),
 }
@@ -51,24 +53,13 @@ export const errorTypes = [
   { label: '중복', value: 41, prev: 38 },
 ]
 
-// Fill colors are theme tokens validated (CVD + contrast) against each theme's surface.
-// prev 는 이전 동일 기간 값 — 증감은 화면이 계산해 ▲▼ 로 적는다(errorTypes 와 같은 규칙).
-// 숫자 하나만 서 있으면 판단이 안 된다: 62% 는 전과 견줘야 좋은지 나쁜지가 생긴다 (규약 §10).
-export const statusDistribution = [
-  { label: '초안', value: 18, prev: 21, fill: 'var(--color-fill-draft)' },
-  { label: '검토 중', value: 24, prev: 22, fill: 'var(--color-fill-review)' },
-  { label: '승인 대기', value: 7, prev: 5, fill: 'var(--color-fill-pending)' },
-  { label: '배포 완료', value: 79, prev: 70, fill: 'var(--color-fill-deployed)' },
-]
-
-// 승인 대기 큐 — 대시보드는 "다음 행동"으로 끝난다 (규약 §10).
-// id 는 사양서 mock(specs.ts)과 맞춰 둔다 — 누르면 그 상세가 실제로 열린다.
-export const approvalQueue = [
-  { id: 'SP-001', name: 'VN7 엔진 사양서', version: 'v2.3', owner: '김민준', waitingDays: 3 },
-  { id: 'SP-002', name: '전기차 배터리 규격서', version: 'v1.5', owner: '이서연', waitingDays: 2 },
-  { id: 'SP-003', name: '자율주행 센서 통합 규격', version: 'v3.1', owner: '박준혁', waitingDays: 1 },
-  { id: 'SP-004', name: '차체 구조 안전 기준서', version: 'v4.0', owner: '최수진', waitingDays: 1 },
-]
+// ⚠⚠ 사양서 상태 분포는 여기 없다 — **specStore.specStatusDistribution(목록)** 이 센다.
+//   18/24/7/79(합 128)로 손으로 적혀 있던 동안 사양서 관리는 4건이었다 — 같은 이름의
+//   숫자가 화면마다 달랐다(규약 §10, 2026-08-18). 손 mock 을 되살리지 말 것.
+//
+// ⚠⚠ 승인 대기 큐도 여기 없다 — **approvals.ts 의 approvalRequests** 가 정본이다.
+//   예전 mock 은 SP-001~004 네 장을 상태와 무관하게 "결재 대기"로 세웠다 — 배포 완료인
+//   SP-003 까지 기다린다고 말하는 카드였다. 결재 대기는 결재함이 센다.
 
 /** 서버 리소스 현황 — 모니터링은 웹 내부 통합이 요구사항이다 (컨텍스트 §2) */
 export type ServerHealth = 'HEALTHY' | 'WARNING' | 'ERROR'
@@ -102,13 +93,8 @@ export const pipelines: Array<{
   { name: 'KPI 집계 배치', status: '실패', last: '오늘 05:10', duration: '2m 41s' },
 ]
 
-/** 권한별 회원 분포 — 구성비는 막대로 (fill 토큰 = CVD 검증 통과값) */
-export const memberRoles = [
-  { label: 'Super Admin', value: 2, fill: 'var(--color-fill-draft)' },
-  { label: 'Admin', value: 5, fill: 'var(--color-fill-review)' },
-  { label: 'Editor', value: 18, fill: 'var(--color-fill-pending)' },
-  { label: 'Viewer', value: 41, fill: 'var(--color-fill-deployed)' },
-]
+// ⚠ 권한별 회원 분포도 여기 없다 — **members.ts 의 gradeDistribution(명단)** 이 센다.
+//   2/5/18/41(합 66명) 손 mock 이 회원 관리(10명)와 다른 조직을 말하고 있었다.
 
 export type ActivityKind = 'approve' | 'review' | 'validate' | 'deploy'
 

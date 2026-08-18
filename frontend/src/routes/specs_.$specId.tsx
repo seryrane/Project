@@ -12,7 +12,8 @@ import { StatusBadge } from '#/components/portal/StatusBadge'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
-import { currentVersion, specs } from '#/data/specs'
+import { currentVersion } from '#/data/specs'
+import { isSeededSpec, submitSpecForApproval, useSpecList } from '#/data/specStore'
 import {
   FIELD_CATEGORIES,
   FIELD_STATUS_CLS,
@@ -22,7 +23,13 @@ import {
 } from '#/data/specFields'
 import type { FieldDef, FieldStatus, FieldType } from '#/data/specFields'
 
-export const Route = createFileRoute('/specs_/$specId')({ component: SpecDetailPage })
+export const Route = createFileRoute('/specs_/$specId')({
+  component: SpecDetailPage,
+  // 목록 카드 [승인 요청]이 이 문으로 들어온다 — 상신 판단(모달·결재선)은 상세 한 곳에만 산다
+  validateSearch: (search: Record<string, unknown>): { request?: string } => ({
+    request: search.request === '1' || search.request === 1 || search.request === true ? '1' : undefined,
+  }),
+})
 
 /* 배포 워크플로우 스테퍼 — 지금 어디까지 왔는지가 헤더에서 한눈에 보인다 */
 function WorkflowStepper({ current }: { current: number }) {
@@ -56,13 +63,19 @@ const STATUS_OPTIONS: Array<FieldStatus> = ['완료', '진행중', '검토중', 
 function SpecDetailPage() {
   const { t, tf } = useI18n()
   const { specId } = Route.useParams()
+  const { request } = Route.useSearch()
   const navigate = useNavigate()
   const toast = useToast()
-  const spec = specs.find((s) => s.id === specId)
+  const specList = useSpecList()
+  const spec = specList.find((s) => s.id === specId)
 
   // 필드 정의 편집 상태 — 프로토타입: 화면 상태 + 임시저장(localStorage)
   const draftKey = `spec-fields-draft.${specId}`
-  const [fields, setFields] = useState<Array<FieldDef>>(specFieldDefs)
+  // ⚠ 시드 4건만 mock 필드표를 갖는다 — 방금 등록한 사양서는 **빈 표**로 시작한다
+  //   (안 그러면 "필드 정의를 채워 주세요" 토스트 옆에 남의 필드 32개가 서 있다)
+  const [fields, setFields] = useState<Array<FieldDef>>(() =>
+    isSeededSpec(specId) ? specFieldDefs : [],
+  )
   const [dirty, setDirty] = useState(0)
   const [draftInfo, setDraftInfo] = useState<string | null>(null) // 임시저장본 안내 배너
   const [cat, setCat] = useState<string>('전체')
@@ -70,9 +83,23 @@ function SpecDetailPage() {
   const [editing, setEditing] = useState<FieldDef | null>(null)
   const [history, setHistory] = useState(false)
   const [compare, setCompare] = useState(false)
-  // 승인 요청 흐름 — 상신하면 워크플로우가 승인요청 단계로 이동한다 (화면 상태)
+  // 승인 요청 흐름 — 상신하면 **스토어 상태가 실제로 바뀐다** (specStore).
+  // 예전엔 이 화면의 useState 로만 움직여서, 목록으로 돌아가면 카드가 여전히
+  // '검토 중'이었다 — 상신했다는 화면과 안 했다는 화면이 공존했다(2026-08-18).
   const [requesting, setRequesting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+
+  // 목록 카드 [승인 요청]에서 ?request=1 로 들어오면 상신 모달을 열고 주소에서 지운다
+  // (새로고침이 모달을 또 열지 않게 — specs.tsx 의 ?new=1 과 같은 규칙)
+  useEffect(() => {
+    if (!request) return
+    setRequesting(true)
+    void navigate({
+      to: '/specs/$specId',
+      params: { specId },
+      search: { request: undefined },
+      replace: true,
+    })
+  }, [request, navigate, specId])
 
   // 임시저장본은 묻는다 — 자동으로 덮지 않는다 (규약 §2 초안 규칙)
   useEffect(() => {
@@ -178,7 +205,7 @@ function SpecDetailPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* 흐름 연결 — 이 문서가 결재 중이면 결재로, 아니면 승인 요청으로 가는 길 */}
-          {cur.status === '승인 대기' || submitted ? (
+          {cur.status === '승인 대기' ? (
             <button
               type="button"
               onClick={() => navigate({ to: '/approvals' })}
@@ -273,7 +300,7 @@ function SpecDetailPage() {
           <span className="text-xs font-medium text-ink-subtle">
             {t('specDetail.workflowLabel', '배포 워크플로우')}
           </span>
-          <WorkflowStepper current={submitted ? 4 : workflowIndex(cur.status)} />
+          <WorkflowStepper current={workflowIndex(cur.status)} />
         </div>
       </div>
 
@@ -291,13 +318,16 @@ function SpecDetailPage() {
               )}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            {STATUS_OPTIONS.map((s) => (
-              <span key={s} className={`rounded-full px-2 py-0.5 font-semibold tabular-nums ${FIELD_STATUS_CLS[s]}`}>
-                {s} {counts[s]}
-              </span>
-            ))}
-          </div>
+          {/* 필드가 하나도 없으면 0 네 개짜리 칩 줄은 자리만 먹는다 — 셀 것이 있을 때만 센다 */}
+          {fields.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              {STATUS_OPTIONS.map((s) => (
+                <span key={s} className={`rounded-full px-2 py-0.5 font-semibold tabular-nums ${FIELD_STATUS_CLS[s]}`}>
+                  {s} {counts[s]}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -327,8 +357,8 @@ function SpecDetailPage() {
           </div>
         </div>
 
-        {/* 카테고리 탭 = 엑셀 하단 시트 */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        {/* 카테고리 탭 = 엑셀 하단 시트 — 거를 것이 없으면 거르는 줄도 없다 */}
+        <div className={`mt-4 flex flex-wrap items-center gap-2 ${fields.length === 0 ? 'hidden' : ''}`}>
           {['전체', ...FIELD_CATEGORIES].map((c) => {
             const n = c === '전체' ? fields.length : fields.filter((f) => f.category === c).length
             const on = cat === c
@@ -363,10 +393,18 @@ function SpecDetailPage() {
           rowKey={(f) => String(f.no)}
           onRowClick={setEditing}
           minWidth={880}
-          empty={{
-            title: t('specDetail.fieldsEmpty', '조건에 맞는 필드가 없습니다.'),
-            hint: t('specDetail.fieldsEmptyHint', '카테고리 칩을 [전체]로 두거나 검색어를 지워 보세요'),
-          }}
+          empty={
+            // 빈 자리에는 **이유**를 적는다(규약 §17): 아직 안 만든 것과 걸러진 것은 다른 말이다
+            fields.length === 0
+              ? {
+                  title: t('specDetail.fieldsNone', '아직 필드가 없습니다.'),
+                  hint: t('specDetail.fieldsNoneHint', '[+ 필드 추가]로 첫 필드를 정의하세요'),
+                }
+              : {
+                  title: t('specDetail.fieldsEmpty', '조건에 맞는 필드가 없습니다.'),
+                  hint: t('specDetail.fieldsEmptyHint', '카테고리 칩을 [전체]로 두거나 검색어를 지워 보세요'),
+                }
+          }
           columns={[
             { header: '#', cellClassName: 'font-mono text-xs text-ink-subtle', cell: (f) => f.no },
             {
@@ -519,7 +557,8 @@ function SpecDetailPage() {
                 onAction={async () => {
                   await simulate()
                   setRequesting(false)
-                  setSubmitted(true)
+                  // 스토어가 상태를 바꾼다 — 목록 칩·대시보드 도넛·이 화면 스테퍼가 같이 움직인다
+                  submitSpecForApproval(spec.id)
                   toast(
                     t(
                       'specDetail.toast.submitted',

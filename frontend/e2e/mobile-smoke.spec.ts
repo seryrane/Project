@@ -655,3 +655,59 @@ test('터치 타깃 — 조작이 40px(표·칩 안 36px) 아래로 내려가지
   })
   expect(tooSmall, '35.5px 미만 조작 목록').toEqual([])
 })
+
+/* 등록 → 상신 수명주기 — 목록·상세가 같은 정본(specStore)을 본다.
+   ⚠ 이 가드가 없던 동안 셋이 각각 거짓말을 했다 (2026-08-18 실측):
+   ① [+ 사양서 등록]은 onClick 이 없어 눌러도 아무 일이 없었다
+   ② 카드 [승인 요청]은 토스트만 쏘고 상태는 그대로였다 — "보냈다는데 화면은 그대로"
+   ③ 갓 등록한 사양서 상세가 시드의 필드 32개(완료 17…)를 제 것인 양 그렸다.
+      "필드 정의를 채워 주세요" 토스트 **옆에서**. */
+test('등록·상신 — 셈과 상태가 함께 움직인다 (등록 → 빈 필드표 → 상신 → 승인 대기)', async ({
+  page,
+}) => {
+  await ready(page, '/specs')
+  const summary = page.getByText(/총 \d+개 사양서/)
+  const counts = async () => {
+    const text = (await summary.textContent()) ?? ''
+    return {
+      total: Number(text.match(/총 (\d+)개/)?.[1]),
+      pending: Number(text.match(/(\d+)개 승인 대기/)?.[1]),
+    }
+  }
+  const before = await counts()
+  expect(before.total, '시드가 있어야 셈이 늘어난 것을 잴 수 있다').toBeGreaterThan(0)
+
+  await page.getByRole('button', { name: '+ 사양서 등록' }).click()
+  const form = page.getByRole('dialog')
+  await form.getByPlaceholder(/VN9/).fill('E2E 가드 사양서')
+  await form.getByRole('button', { name: '등록', exact: true }).click()
+
+  // 등록의 다음 행동은 언제나 "필드를 채우는 것" — 상세로 보낸다 (규약 §10)
+  await expect(page, '등록하면 상세로 간다').toHaveURL(/\/specs\/SP-\d+$/)
+  await expect(page.getByRole('heading', { name: /E2E 가드 사양서/ })).toBeVisible()
+  await expect(page.getByText('필드 목록 (0개)'), '남의 필드표를 물려받지 않는다').toBeVisible()
+  await expect(
+    page.getByText('아직 필드가 없습니다.'),
+    '빈 자리에는 이유를 적는다 — "걸러서 0건"과는 다른 말이다 (규약 §17)',
+  ).toBeVisible()
+
+  // 상신은 확인을 지나야 하고, 지나면 상태가 **진짜로** 바뀐다
+  await page.getByRole('button', { name: '승인 요청', exact: true }).click()
+  const confirm = page.getByRole('dialog')
+  await expect(confirm.getByText(/승인자/), '무엇이 누구에게 올라가는지 보여 준다').toBeVisible()
+  await confirm.getByRole('button', { name: '상신', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: /결재 진행 보기/ }),
+    '상신한 것을 또 상신하지 못한다 — 길은 결재 쪽으로 바뀐다',
+  ).toBeVisible()
+
+  // 목록으로 — 총 수와 승인 대기 수가 함께 늘어야 한다
+  await page.getByRole('link', { name: /사양서 목록/ }).click()
+  await expect(summary).toBeVisible()
+  const after = await counts()
+  expect(after.total, '등록 하나가 총 수를 늘린다').toBe(before.total + 1)
+  expect(
+    after.pending,
+    '상신 하나가 승인 대기 수를 늘린다 — 토스트만 뜨고 셈이 그대로면 안 된다',
+  ).toBe(before.pending + 1)
+})

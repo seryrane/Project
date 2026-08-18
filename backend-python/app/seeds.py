@@ -17,7 +17,9 @@ ROLES = [
         "name": "Super Admin",
         "desc": "전체 시스템 관리 권한 — 회원·권한·메뉴 관리 포함",
         "system": True,
-        "assigned": 2,
+        # ⚠ assigned 는 회원 명단(MEMBERS)에서 센 값이다 — 2/5/18/41 로 손으로 적혀 있던
+        #   동안 회원 관리(10명)와 권한 카드(합 66명)가 서로 다른 조직을 말했다(2026-08-18).
+        "assigned": 1,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회", "다운로드"],
@@ -33,7 +35,6 @@ ROLES = [
         "scope": {},
         "holders": [
             {"name": "김현대", "scopeLabel": "전체"},
-            {"name": "박서준", "scopeLabel": "전체"},
         ],
         # 대시보드 프리셋 파생용 기능 키 (frontend dashboardLayout ROLE_DEFS 대응)
         "features": [
@@ -47,7 +48,7 @@ ROLES = [
         "name": "Admin",
         "desc": "서비스 운영 및 모니터링 권한 — 배포·검증 운영",
         "system": True,
-        "assigned": 5,
+        "assigned": 1,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회", "다운로드"],
@@ -62,9 +63,8 @@ ROLES = [
         },
         "scope": {},
         "holders": [
+            # 이수진·정민호는 회원 명단에 없는 이름이었다 — 명단 밖 보유자는 유령이다
             {"name": "박준혁", "scopeLabel": "플랫폼운영팀"},
-            {"name": "이수진", "scopeLabel": "전동화기술팀"},
-            {"name": "정민호", "scopeLabel": "IT 전략팀"},
         ],
         "features": [
             "dashboard.read", "approval.read", "spec.read", "activity.read",
@@ -76,7 +76,7 @@ ROLES = [
         "name": "Editor",
         "desc": "사양서 작성·수정 권한, 승인 요청 가능",
         "system": True,
-        "assigned": 18,
+        "assigned": 4,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회"],
@@ -107,7 +107,7 @@ ROLES = [
         "name": "Viewer",
         "desc": "사양서·지표 조회 전용 권한",
         "system": True,
-        "assigned": 41,
+        "assigned": 4,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회"],
@@ -293,12 +293,17 @@ MEMBERS = [
     {"id": "u-08", "name": "오지원", "email": "jiwon.oh@hmg.com", "dept": "디자인팀",
      "grade": "Viewer", "roles": [], "status": "잠금",
      "fido": False, "lastLogin": "2026.07.10 16:45"},
-    {"id": "u-09", "name": "윤성민", "email": "seongmin.yun@hmg.com", "dept": "플랫폼운영팀",
-     "grade": "Admin", "roles": ["DEPLOY_MANAGER"], "status": "활성",
-     "fido": True, "lastLogin": "2026.08.04 15:30"},
-    {"id": "u-10", "name": "박서준", "email": "seojun.park@hmg.com", "dept": "IT 전략팀",
-     "grade": "Super Admin", "roles": ["KPI_ADMIN"], "status": "활성",
-     "fido": True, "lastLogin": "2026.08.05 08:12"},
+    # ⚠ u-09·u-10 은 프런트 mock(data/members.ts U-009·U-010)과 **다른 사람**이었다
+    #   (윤성민 Admin/플랫폼운영팀 vs Editor/연구개발팀 · 박서준 vs 한지민) — 같은 화면이
+    #   서버 유무에 따라 다른 명단과 다른 권한 분포(SA 2 vs 1)를 보여 줬다(2026-08-18).
+    #   로스터 정본은 프런트 mock 쪽이다: 한지민은 지표 관리·검증엔진 화면이 담당자로
+    #   부르는 사람이라 명단에서 빠지면 유령 담당자가 된다.
+    {"id": "u-09", "name": "윤성민", "email": "sungmin.yoon@hmg.com", "dept": "연구개발팀",
+     "grade": "Editor", "roles": ["IBD_EDITOR"], "status": "활성",
+     "fido": True, "lastLogin": "2026.08.05 09:00"},
+    {"id": "u-10", "name": "한지민", "email": "jimin.han@hmg.com", "dept": "검증기술팀",
+     "grade": "Editor", "roles": ["VALIDATION_MANAGER"], "status": "활성",
+     "fido": True, "lastLogin": "2026.08.05 06:30"},
 ]
 
 AUDIT = [

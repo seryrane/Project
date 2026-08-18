@@ -434,7 +434,8 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'widget.trend': { ko: '일별 검증 처리량', en: 'Daily validation volume' },
   'widget.status': { ko: '사양서 상태 분포', en: 'Spec status distribution' },
   'widget.heatmap': { ko: '검증 실행 히트맵', en: 'Validation activity heatmap' },
-  'widget.queue': { ko: '승인 대기 큐', en: 'Approval queue' },
+  // '승인 대기 큐' → '결재 대기 큐' (2026-08-18) — 내용이 사양서 상태가 아니라 결재함이다
+  'widget.queue': { ko: '결재 대기 큐', en: 'Approval queue' },
   'widget.errors': { ko: '오류 유형별 검출 건수', en: 'Errors detected by type' },
   'widget.system': { ko: '시스템 현황', en: 'System status' },
   'widget.pipeline': { ko: '데이터 파이프라인', en: 'Data pipeline' },
@@ -468,7 +469,9 @@ export const ADMIN_DICT: Record<string, Entry> = {
   },
   'dash.hiddenWidgetsLabel': { ko: '숨긴 위젯:', en: 'Hidden widgets:' },
   'dash.stat.totalSpecs': { ko: '총 사양서', en: 'Total specs' },
-  'dash.stat.pending': { ko: '승인 대기', en: 'Pending approval' },
+  // ⚠ '승인 대기'에서 고쳐 적음(2026-08-18) — 사양서 **상태** '승인 대기'(도넛 범례)와
+  //   같은 이름이 다른 셈(결재함 건수)을 갖고 한 화면에 서 있었다 (규약 §10)
+  'dash.stat.pending': { ko: '결재 대기', en: 'Pending approvals' },
   'dash.stat.successRate': { ko: '검증 성공률', en: 'Validation success rate' },
   'dash.stat.periodProcessed': { ko: '기간 검증 처리', en: 'Validations processed (period)' },
   'dash.caption.trend14': { ko: '최근 14일 추이', en: 'Last 14-day trend' },
@@ -496,7 +499,8 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'dash.system.subtitle': { ko: '서버 리소스 · 30초마다 갱신 (Mock)', en: 'Server resources · refreshes every 30s (mock)' },
   'dash.pipeline.subtitle': { ko: 'CDO 수신 · 마트 적재 배치', en: 'CDO ingest · mart load batch' },
   'dash.pipeline.lastLabel': { ko: '마지막', en: 'Last run' },
-  'dash.members.subtitle': { ko: '전체 66명 기준', en: 'Based on all 66 members' },
+  // 66이 사전에 박혀 있었다 — 수는 명단에서 세고 사전은 틀만 준다 (규약 §4·§10)
+  'dash.members.subtitle': { ko: '전체 {n}명 기준', en: 'Based on all {n} members' },
   'dash.notice.subtitle': { ko: '고정 공지 우선', en: 'Pinned notices first' },
   'dash.notice.pinnedBadge': { ko: '고정', en: 'Pinned' },
 

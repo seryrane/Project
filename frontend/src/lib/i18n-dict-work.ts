@@ -16,6 +16,34 @@ export const WORK_DICT: Record<string, Entry> = {
   'specs.register': { ko: '+ 사양서 등록', en: '+ New spec' },
   'specs.searchPlaceholder': { ko: '사양서 명, ID, 태그 검색...', en: 'Search name, ID, tag...' },
   'specs.allCategories': { ko: '전체 카테고리', en: 'All categories' },
+  // 등록 모달 (2026-08-18 — 죽은 CTA 를 실제 등록으로 배선하며 신설)
+  'specs.registerTitle': { ko: '사양서 등록', en: 'Register spec' },
+  'specs.registerSubmit': { ko: '등록', en: 'Register' },
+  'specs.registeredToast': {
+    ko: '{id} 로 등록했습니다 — 필드 정의를 채워 주세요',
+    en: 'Registered as {id} — now fill in the field definitions',
+  },
+  'specs.form.name': { ko: '사양서 이름', en: 'Spec name' },
+  'specs.form.namePlaceholder': {
+    ko: '예: VN9 하이브리드 파워트레인 사양서',
+    en: 'e.g. VN9 hybrid powertrain spec',
+  },
+  'specs.form.nameRequired': {
+    ko: '이름을 입력해 주세요 — 목록과 검색이 이 이름으로 찾습니다.',
+    en: 'Enter a name — lists and search find the spec by it.',
+  },
+  'specs.form.category': { ko: '카테고리', en: 'Category' },
+  'specs.form.desc': { ko: '설명', en: 'Description' },
+  'specs.form.descPlaceholder': {
+    ko: '무엇을 정의하는 문서인지 한두 문장으로',
+    en: 'One or two sentences on what this document defines',
+  },
+  'specs.form.tags': { ko: '태그 (쉼표로 구분)', en: 'Tags (comma-separated)' },
+  'specs.form.tagsPlaceholder': { ko: '예: 엔진, 하이브리드', en: 'e.g. engine, hybrid' },
+  'specs.form.hint': {
+    ko: 'v0.1 초안으로 만들어집니다. 필드 정의는 등록 후 상세 화면에서 채우고, 다 채우면 승인 요청으로 결재를 시작합니다.',
+    en: 'Created as draft v0.1. Fill in field definitions on the detail screen, then request approval to start the workflow.',
+  },
 
   // ── 사양서 상세 (/specs/$specId) ─────────────────────────────────
   'specDetail.toList': { ko: '목록으로', en: 'Back to list' },
@@ -143,6 +171,11 @@ export const WORK_DICT: Record<string, Entry> = {
   'specDetail.th.owner': { ko: '담당자', en: 'Owner' },
   'specDetail.th.status': { ko: '상태', en: 'Status' },
   'specDetail.fieldsEmpty': { ko: '조건에 맞는 필드가 없습니다.', en: 'No fields match your filters.' },
+  'specDetail.fieldsNone': { ko: '아직 필드가 없습니다.', en: 'No fields defined yet.' },
+  'specDetail.fieldsNoneHint': {
+    ko: '[+ 필드 추가]로 첫 필드를 정의하세요',
+    en: 'Use [+ Add field] to define the first one',
+  },
   'specDetail.editFieldTitle': { ko: '필드 편집 — {name}', en: 'Edit field — {name}' },
   'specDetail.historyTitle': { ko: '버전 이력 — {name}', en: 'Version history — {name}' },
   'specDetail.currentBadge': { ko: '현재', en: 'Current' },

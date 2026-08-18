@@ -6,7 +6,7 @@ import { Avatar } from '#/components/portal/Avatar'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
-import { apiGet, apiSend } from '#/lib/api'
+import { apiGet, apiSend, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 import {
   ActivityHeatmap,
@@ -18,18 +18,19 @@ import {
   TrendLineChart,
 } from '#/components/portal/charts'
 import {
-  approvalQueue,
   errorTypes,
   heatmapDays,
   kpiSparks,
-  memberRoles,
   pipelines,
   recentActivity,
   serverResources,
-  statusDistribution,
   validationSeries,
 } from '#/data/dashboard'
 import type { ActivityKind, ServerHealth } from '#/data/dashboard'
+import { approvalRequests } from '#/data/approvals'
+import { gradeDistribution, members } from '#/data/members'
+import type { Member } from '#/data/members'
+import { specStatusDistribution, useSpecList } from '#/data/specStore'
 import { notices } from '#/data/community'
 import {
   ROLE_PRESETS,
@@ -149,13 +150,6 @@ const SIZE_LABEL: Record<WidgetSize, string> = { 1: '1칸', 2: '2칸', 3: '전�
  * 라벨('배포 완료')은 데이터의 정본 키다(사전은 표시만 옮긴다).
  */
 const DEPLOYED = '배포 완료'
-const statusTotal = statusDistribution.reduce((s, d) => s + d.value, 0)
-const statusPrevTotal = statusDistribution.reduce((s, d) => s + d.prev, 0)
-const deployedNow = statusDistribution.find((d) => d.label === DEPLOYED)?.value ?? 0
-const deployedPrev = statusDistribution.find((d) => d.label === DEPLOYED)?.prev ?? 0
-const deployedPct = statusTotal ? Math.round((deployedNow / statusTotal) * 100) : 0
-const deployedPctPrev = statusPrevTotal ? Math.round((deployedPrev / statusPrevTotal) * 100) : 0
-const deployedDelta = deployedPct - deployedPctPrev
 
 function DashboardPage() {
   const { t, tf } = useI18n()
@@ -166,6 +160,24 @@ function DashboardPage() {
   const goReports = () => navigate({ to: '/validation-reports' })
   const goApprovals = () => navigate({ to: '/approvals' })
   const openSpec = (id: string) => navigate({ to: '/specs', search: { open: id } })
+
+  /* ── 숫자는 정본에서 센다 (규약 §10 "같은 이름의 숫자는 한 곳에서") ──
+     사양서는 specStore(등록·상신이 일어나면 여기 숫자도 같이 움직인다),
+     결재 대기는 결재함(approvals), 회원 분포는 회원 화면과 **같은 소스**
+     (서버 있으면 서버, 없으면 mock — 다르게 읽으면 두 화면이 갈라진다). */
+  const specList = useSpecList()
+  const statusDistribution = specStatusDistribution(specList)
+  const pendingApprovals = approvalRequests.length
+  const { data: memberList } = useApi<Array<Member>>('/members', members)
+  const memberRoles = gradeDistribution(memberList)
+
+  const statusTotal = statusDistribution.reduce((s, d) => s + d.value, 0)
+  const statusPrevTotal = statusDistribution.reduce((s, d) => s + d.prev, 0)
+  const deployedNow = statusDistribution.find((d) => d.label === DEPLOYED)?.value ?? 0
+  const deployedPrev = statusDistribution.find((d) => d.label === DEPLOYED)?.prev ?? 0
+  const deployedPct = statusTotal ? Math.round((deployedNow / statusTotal) * 100) : 0
+  const deployedPctPrev = statusPrevTotal ? Math.round((deployedPrev / statusPrevTotal) * 100) : 0
+  const deployedDelta = deployedPct - deployedPctPrev
 
   // 위젯 배치 — 처음엔 관리자 프리셋, 이후엔 저장된 내 배치 (즉시 저장)
   const [layout, setLayout] = useState<Array<WidgetSlot>>(ROLE_PRESETS[0].layout)
@@ -245,17 +257,20 @@ function DashboardPage() {
       // 칸이 정한다 (위 @container): 1칸(≈530)이면 2열, 전체 칸(≈1600)이면 4열.
       // 예전 `sm:grid-cols-2 xl:grid-cols-4` 는 1칸으로 줄여 놔도 4열을 고집했다
       <div className="grid grid-cols-1 gap-5 @sm:grid-cols-2 @3xl:grid-cols-4">
+        {/* ⚠ value="128"·"7" 손글씨였다 — 바로 위 주석이 "숫자는 코드가 센다"라고
+            경고하면서도 이 두 칸은 그대로였다(사양서 관리는 4건·결재함은 4건이었다).
+            증감은 prev mock 과의 차 — 0이면 배지를 안 단다(±0 은 아무 말도 아니다). */}
         <StatTile
           label={t('dash.stat.totalSpecs', '총 사양서')}
-          value="128"
-          delta="+6"
-          deltaGood
+          value={String(specList.length)}
+          delta={specList.length === statusPrevTotal ? undefined : `${specList.length > statusPrevTotal ? '+' : ''}${specList.length - statusPrevTotal}`}
+          deltaGood={specList.length >= statusPrevTotal}
           spark={kpiSparks.specs}
         />
         <StatTile
-          label={t('dash.stat.pending', '승인 대기')}
-          value="7"
-          delta="+2"
+          label={t('dash.stat.pending', '결재 대기')}
+          value={String(pendingApprovals)}
+          delta="+1"
           deltaGood={false}
           spark={kpiSparks.pending}
         />
@@ -330,28 +345,27 @@ function DashboardPage() {
     ),
     queue: (
       <ChartCard
-        title={t('widget.queue', '승인 대기 큐')}
-        subtitle={tf('dash.queue.subtitle', { n: approvalQueue.length }, '{n}건이 결재를 기다립니다')}
+        title={t('widget.queue', '결재 대기 큐')}
+        subtitle={tf('dash.queue.subtitle', { n: pendingApprovals }, '{n}건이 결재를 기다립니다')}
         action={{ label: t('nav.approvals'), onClick: goApprovals }}
       >
+        {/* ⚠⚠ 이 큐의 정본은 **결재함**(approvals.ts)이다. 예전 mock 은 사양서 네 장을
+            상태와 무관하게 늘어놔서, 배포 완료인 SP-003 도 "결재를 기다린다"고 말했다 —
+            승인 관리로 넘어가면 다른 목록이 나오는 카드였다(2026-08-18).
+            누르면 사양서 결재는 그 사양서로, 배포·권한 결재는 결재함으로 간다. */}
         <ol className="space-y-1.5">
-          {approvalQueue.map((q) => (
+          {approvalRequests.map((q) => (
             <li key={q.id}>
               <button
                 type="button"
-                onClick={() => openSpec(q.id)}
+                onClick={() => (q.specId ? openSpec(q.specId) : goApprovals())}
                 className="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-chip"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] text-ink">{q.name}</span>
+                  <span className="block truncate text-[13px] text-ink">{q.title}</span>
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-subtle">
                     <span className="font-mono">{q.id}</span>
-                    {/* ⚠ 버전은 **상태가 아니라 식별자**다 — 포인트 색을 주면 목록마다
-                        v2.3·v1.5·v3.1 이 전부 튀어 정작 봐야 할 것(이름·경과일)을 덮는다.
-                        DESIGN.md Rules 1: 퍼플 액센트는 화면당 1~2곳(주요 CTA·활성 메뉴).
-                        이름표 태그는 **테두리만, 무색**이 정본이다(규약 §5 상태 칩 vs 이름표) */}
-                    <span className="rounded-full border border-hairline px-1.5 font-mono">{q.version}</span>
-                    {q.owner}
+                    {q.requester}
                   </span>
                 </span>
                 {/* ⚠ **하나의 양에 두 색조를 쓰지 않는다** (DESIGN.md 차트 규칙과 같은 이유).
@@ -455,7 +469,7 @@ function DashboardPage() {
     members: (
       <ChartCard
         title={t('widget.members', '권한별 회원 분포')}
-        subtitle={t('dash.members.subtitle', '전체 66명 기준')}
+        subtitle={tf('dash.members.subtitle', { n: memberList.length }, '전체 {n}명 기준')}
         action={{ label: t('nav.members'), onClick: () => navigate({ to: '/members' }) }}
       >
         <StatusStackBar data={memberRoles} />

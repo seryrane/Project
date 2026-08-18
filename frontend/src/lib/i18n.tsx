@@ -57,9 +57,9 @@ const CORE_DICT: Record<string, Entry> = {
   'specCard.compare': { ko: '버전 비교', en: 'Compare versions' },
   'specCard.request': { ko: '승인 요청', en: 'Request approval' },
   'specCard.updated': { ko: '{date} 수정', en: 'Updated {date}' },
-  'specCard.requestedToast': {
-    ko: '{name} 승인 요청이 전송되었습니다',
-    en: 'Approval request sent for {name}',
+  'specCard.noFields': {
+    ko: '아직 필드가 없습니다 — [상세 보기]에서 필드 정의를 채웁니다.',
+    en: 'No fields yet — fill in field definitions from [View detail].',
   },
 
   /* ── 권한 매트릭스의 메뉴·액션 이름 ────────────────────────────────

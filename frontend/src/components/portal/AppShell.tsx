@@ -450,8 +450,11 @@ function Shell({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2.5 pc:gap-3">
+            {/* ⚠ [+ 새 사양서]가 목록으로만 가는 링크였다 — 라벨은 "만든다"인데 행동은
+                "구경 간다"였다(2026-08-18, 규약 §0 예측 가능성). ?new=1 이 등록 모달을 연다 */}
             <Link
               to="/specs"
+              search={{ new: '1' }}
               className="hidden h-9 items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 pc:flex"
             >
               <Icon name="plus" size="md" />

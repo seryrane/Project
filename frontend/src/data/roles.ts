@@ -1,6 +1,8 @@
 /** 권한 관리 mock — 역할(등급) × 메뉴 × 액션 × 조회 범위 매트릭스.
  *  ⚠ 본개발에서 서버 RBAC 로 교체 — 화면은 이 구조만 그린다.
  *  설계 배경: docs/RBAC_설계노트.md (acrofuture 이식분) */
+import { members } from './members'
+import type { Grade } from './members'
 
 export const ACTIONS = ['조회', '생성', '수정', '삭제', '업로드', '다운로드', '승인'] as const
 export type Action = (typeof ACTIONS)[number]
@@ -65,13 +67,18 @@ export function scopeOf(role: RoleDef, menu: string): ScopeKey {
 
 const ALL: Array<Action> = ['조회', '생성', '수정', '삭제', '업로드', '다운로드', '승인']
 
+/** 배정 인원은 **회원 명단에서 센다** (규약 §10 "같은 이름의 숫자는 한 곳에서").
+ *  ⚠ 2/5/18/41(합 66명)로 손으로 적혀 있던 동안 회원 관리는 10명이었다 —
+ *    권한 카드와 회원 화면이 다른 조직을 말했다(2026-08-18). 본개발에서는 서버가 센다. */
+const assignedOf = (grade: Grade) => members.filter((m) => m.grade === grade).length
+
 export const roleDefs: Array<RoleDef> = [
   {
     key: 'super',
     name: 'Super Admin',
     desc: '전체 시스템 관리 권한 — 회원·권한·메뉴 관리 포함',
     system: true,
-    assigned: 2,
+    assigned: assignedOf('Super Admin'),
     matrix: {
       대시보드: ['조회'],
       '통계 & 분석': ['조회', '다운로드'],
@@ -84,17 +91,14 @@ export const roleDefs: Array<RoleDef> = [
       검증엔진: ['조회', '생성', '수정', '삭제'],
       커뮤니티: ['조회', '생성', '수정', '삭제'],
     },
-    holders: [
-      { name: '김현대', scopeLabel: '전체' },
-      { name: '박서준', scopeLabel: '전체' },
-    ],
+    holders: [{ name: '김현대', scopeLabel: '전체' }],
   },
   {
     key: 'admin',
     name: 'Admin',
     desc: '서비스 운영 및 모니터링 권한 — 배포·검증 운영',
     system: true,
-    assigned: 5,
+    assigned: assignedOf('Admin'),
     matrix: {
       대시보드: ['조회'],
       '통계 & 분석': ['조회', '다운로드'],
@@ -108,9 +112,8 @@ export const roleDefs: Array<RoleDef> = [
       커뮤니티: ['조회', '생성'],
     },
     holders: [
+      // 이수진·정민호는 회원 명단에 없는 이름이었다 — 명단 밖 보유자는 유령이다
       { name: '박준혁', scopeLabel: '플랫폼운영팀' },
-      { name: '이수진', scopeLabel: '전동화기술팀' },
-      { name: '정민호', scopeLabel: 'IT 전략팀' },
     ],
   },
   {
@@ -118,7 +121,7 @@ export const roleDefs: Array<RoleDef> = [
     name: 'Editor',
     desc: '사양서 작성·수정 권한, 승인 요청 가능',
     system: true,
-    assigned: 18,
+    assigned: assignedOf('Editor'),
     matrix: {
       대시보드: ['조회'],
       '통계 & 분석': ['조회'],
@@ -145,7 +148,7 @@ export const roleDefs: Array<RoleDef> = [
     name: 'Viewer',
     desc: '사양서·지표 조회 전용 권한',
     system: true,
-    assigned: 41,
+    assigned: assignedOf('Viewer'),
     matrix: {
       대시보드: ['조회'],
       '통계 & 분석': ['조회'],

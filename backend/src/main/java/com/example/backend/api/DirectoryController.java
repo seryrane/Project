@@ -71,10 +71,21 @@ public class DirectoryController {
 
     @GetMapping("/audit")
     public List<Map<String, Object>> audit() {
+        // ⚠ 정렬은 **시각**으로 한다 (규약 §9: 시간 축은 시간순) — backend-python 과 같은 수정.
+        //   시드는 화면 표시 순서(최신부터)로 INSERT 되어 seq DESC 가 그걸 뒤집었다:
+        //   서버 기록분(최신순) 뒤에 시드(오래된순)가 이어 붙어 나갔다(2026-08-18 실측).
+        //   `at`("2026.08.05 09:41")는 0 채움 고정 포맷이라 문자열 비교가 곧 시간 비교다.
+        //   같은 시각은 나중에 기록된 것(seq 큰 것)이 위 — 기록 순서가 두 번째 축이다.
+        record Row(long seq, Map<String, Object> rec) {}
         return store.jdbc()
-            .queryForList("SELECT json FROM audit_log ORDER BY seq DESC", String.class)
+            .query("SELECT seq, json FROM audit_log",
+                (rs, i) -> new Row(rs.getLong("seq"), store.read(rs.getString("json"), JsonStore.MAP)))
             .stream()
-            .map(j -> store.read(j, JsonStore.MAP))
+            .sorted(java.util.Comparator
+                .comparing((Row r) -> String.valueOf(r.rec().getOrDefault("at", "")))
+                .thenComparingLong(Row::seq)
+                .reversed())
+            .map(Row::rec)
             .toList();
     }
 

@@ -3,11 +3,15 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { Modal } from '#/components/portal/Modal'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
+import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { orNone, pickOne, pickText } from '#/lib/urlState'
 import { currentVersion, specs } from '#/data/specs'
+import { registerSpec, useSpecList } from '#/data/specStore'
+import type { NewSpecInput } from '#/data/specStore'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
 
 const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
@@ -16,6 +20,8 @@ const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기',
 const ALL_CATEGORY = '전체 카테고리'
 const ALL_STATUS = '전체 상태'
 
+// 카테고리 선택지는 초기 정본에서 — 등록으로 늘어난 목록에 따라 필터 허용값이
+// 흔들리면 옛 링크가 기본값으로 떨어진다(urlState 규칙 ②는 지키되 축은 고정)
 const specCategories = Array.from(new Set(specs.map((s) => s.category)))
 
 /** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
@@ -24,6 +30,8 @@ interface SpecsSearch {
   q?: string
   cat?: string
   status?: SpecStatus
+  /** 등록 모달을 열고 진입 — GNB [+ 새 사양서]가 이 문으로 들어온다 */
+  new?: string
 }
 
 export const Route = createFileRoute('/specs')({
@@ -34,14 +42,31 @@ export const Route = createFileRoute('/specs')({
     q: pickText(search.q),
     cat: pickOne(search.cat, specCategories),
     status: pickOne(search.status, allStatuses),
+    new: search.new === '1' || search.new === 1 || search.new === true ? '1' : undefined,
   }),
 })
 
 function SpecsPage() {
   const { t, tf } = useI18n()
-  const { open, q: query = '', cat: category = ALL_CATEGORY, status = ALL_STATUS } = Route.useSearch()
+  const {
+    open,
+    q: query = '',
+    cat: category = ALL_CATEGORY,
+    status = ALL_STATUS,
+    new: wantNew,
+  } = Route.useSearch()
   const navigate = useNavigate()
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
+  const [creating, setCreating] = useState(false)
+  // 정본은 스토어 — 등록·상신이 일어나면 목록·상태 칩이 같이 다시 센다
+  const specList = useSpecList()
+
+  // ?new=1 로 들어오면 등록 모달을 열고 주소에서 지운다 — 새로고침이 모달을 또 열지 않게
+  useEffect(() => {
+    if (!wantNew) return
+    setCreating(true)
+    void navigate({ to: '/specs', search: (prev) => ({ ...(prev as SpecsSearch), new: undefined }), replace: true })
+  }, [wantNew, navigate])
 
   /** 고르는 것(칩)은 뒤로가기로 되돌 수 있게 쌓고, 글자 입력은 replace 로 덮는다
    *  — 한 글자마다 히스토리가 쌓이면 뒤로가기가 못 쓰게 된다 (lib/urlState.ts) */
@@ -57,13 +82,13 @@ function SpecsPage() {
   // ?open=SP-001 은 상세 본문 페이지로 보낸다 (대시보드 승인 큐·알림 → 여기 → 상세)
   useEffect(() => {
     if (!open) return
-    const target = specs.find((s) => s.id === open)
+    const target = specList.find((s) => s.id === open)
     if (target) navigate({ to: '/specs/$specId', params: { specId: target.id }, replace: true })
-  }, [open, navigate])
+  }, [open, navigate, specList])
 
   const categories = specCategories
 
-  const filtered = specs.filter((s) => {
+  const filtered = specList.filter((s) => {
     const q = query.trim().toLowerCase()
     const matchesQuery =
       q === '' ||
@@ -75,7 +100,7 @@ function SpecsPage() {
     return matchesQuery && matchesCategory && matchesStatus
   })
 
-  const pendingCount = specs.filter((s) => currentVersion(s).status === '승인 대기').length
+  const pendingCount = specList.filter((s) => currentVersion(s).status === '승인 대기').length
 
   const openCompare = (spec: Spec) => {
     const prev = spec.history.find((v, i) => i > 0 && v.status === '배포 완료') ?? spec.history[1]
@@ -90,13 +115,16 @@ function SpecsPage() {
           <p className="mt-1 text-[13px] text-ink-subtle">
             {tf(
               'page.specs.subtitle',
-              { total: specs.length, pending: pendingCount },
+              { total: specList.length, pending: pendingCount },
               '총 {total}개 사양서 · {pending}개 승인 대기',
             )}
           </p>
         </div>
+        {/* ⚠ 이 버튼은 onClick 없이 노출돼 있었다 — 화면에서 가장 눈에 띄는 CTA 가
+            눌러도 아무 일 없는 죽은 조작이었다(2026-08-18 실측, 규약 §0 예측 가능성) */}
         <button
           type="button"
+          onClick={() => setCreating(true)}
           className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
         >
           {t('specs.register', '+ 사양서 등록')}
@@ -130,8 +158,8 @@ function SpecsPage() {
         {[ALL_STATUS, ...allStatuses].map((st) => {
           const count =
             st === ALL_STATUS
-              ? specs.length
-              : specs.filter((sp) => currentVersion(sp).status === st).length
+              ? specList.length
+              : specList.filter((sp) => currentVersion(sp).status === st).length
           const selected = status === st
           return (
             <button
@@ -159,6 +187,10 @@ function SpecsPage() {
             index={i}
             onDetail={() => navigate({ to: '/specs/$specId', params: { specId: spec.id } })}
             onCompare={() => openCompare(spec)}
+            /* 상신 판단은 상세 한 곳 — 카드는 상세의 상신 모달로 보내기만 한다 (SpecCard 주석) */
+            onRequest={() =>
+              navigate({ to: '/specs/$specId', params: { specId: spec.id }, search: { request: '1' } })
+            }
           />
         ))}
       </div>
@@ -175,6 +207,136 @@ function SpecsPage() {
           onClose={() => setCompare(null)}
         />
       )}
+
+      {/* 등록 — 끝내고 닫는 것이라 MODAL (규약 §1). 저장되면 상세로 보낸다:
+          등록의 다음 행동은 언제나 "필드를 채우는 것"이다 (규약 §10 카드는 다음 행동으로 끝난다) */}
+      {creating && (
+        <RegisterSpecModal
+          onClose={() => setCreating(false)}
+          onRegistered={(id) => {
+            setCreating(false)
+            navigate({ to: '/specs/$specId', params: { specId: id } })
+          }}
+        />
+      )}
     </AppShell>
+  )
+}
+
+/* 등록 폼 — 종류(카테고리)에 따라 칸이 달라지지 않는 짧은 폼이라 §11 카드 고르기 없이
+   한 장으로 간다. 이름만 필수 — 오류는 그 칸 아래 인라인 (규약 §2 규칙 2). */
+function RegisterSpecModal({
+  onClose,
+  onRegistered,
+}: {
+  onClose: () => void
+  onRegistered: (id: string) => void
+}) {
+  const { t, tf } = useI18n()
+  const toast = useToast()
+  const [name, setName] = useState('')
+  const [category, setCategory] = useState(specCategories[0])
+  const [description, setDescription] = useState('')
+  const [tags, setTags] = useState('')
+  const [nameError, setNameError] = useState(false)
+
+  const submit = () => {
+    if (name.trim() === '') {
+      setNameError(true)
+      return
+    }
+    const input: NewSpecInput = {
+      name,
+      category,
+      description,
+      tags: tags
+        .split(',')
+        .map((s) => s.trim().replace(/^#/, ''))
+        .filter(Boolean),
+      author: '김현대', // 프로토타입: 로그인 사용자 mock — 본개발에서 /me
+    }
+    const spec = registerSpec(input)
+    toast(tf('specs.registeredToast', { id: spec.id }, '{id} 로 등록했습니다 — 필드 정의를 채워 주세요'))
+    onRegistered(spec.id)
+  }
+
+  return (
+    <Modal
+      title={t('specs.registerTitle', '사양서 등록')}
+      onClose={onClose}
+      footer={
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+          >
+            {t('specs.registerSubmit', '등록')}
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <label className="block">
+          <span className="text-xs font-medium text-ink-subtle">{t('specs.form.name', '사양서 이름')}</span>
+          <input
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value)
+              if (nameError && e.target.value.trim() !== '') setNameError(false)
+            }}
+            placeholder={t('specs.form.namePlaceholder', '예: VN9 하이브리드 파워트레인 사양서')}
+            autoFocus
+            className={`mt-1 h-10 w-full rounded-lg border bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 ${
+              nameError ? 'border-danger-ink/50' : 'border-hairline'
+            }`}
+          />
+          {/* 입력 오류는 반드시 인라인 — 어느 칸이 문제인지 그 자리에서 (규약 §2) */}
+          {nameError && (
+            <span className="mt-1 block text-xs text-danger-ink">
+              {t('specs.form.nameRequired', '이름을 입력해 주세요 — 목록과 검색이 이 이름으로 찾습니다.')}
+            </span>
+          )}
+        </label>
+        <div>
+          <span className="text-xs font-medium text-ink-subtle">{t('specs.form.category', '카테고리')}</span>
+          <div className="mt-1.5">
+            <ChipSelect options={specCategories} value={category} onChange={setCategory} />
+          </div>
+        </div>
+        <label className="block">
+          <span className="text-xs font-medium text-ink-subtle">{t('specs.form.desc', '설명')}</span>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder={t('specs.form.descPlaceholder', '무엇을 정의하는 문서인지 한두 문장으로')}
+            className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-medium text-ink-subtle">{t('specs.form.tags', '태그 (쉼표로 구분)')}</span>
+          <input
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder={t('specs.form.tagsPlaceholder', '예: 엔진, 하이브리드')}
+            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+          />
+        </label>
+        <p className="rounded-xl bg-canvas/50 px-4 py-3 text-xs text-ink-subtle">
+          {t(
+            'specs.form.hint',
+            'v0.1 초안으로 만들어집니다. 필드 정의는 등록 후 상세 화면에서 채우고, 다 채우면 승인 요청으로 결재를 시작합니다.',
+          )}
+        </p>
+      </div>
+    </Modal>
   )
 }

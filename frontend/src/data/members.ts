@@ -198,3 +198,25 @@ export const STATUS_CLS: Record<MemberStatus, string> = {
   비활성: 'bg-chip text-ink-subtle',
   잠금: 'bg-review-bg text-review-ink',
 }
+
+/** 권한별 회원 분포 — **명단에서 센다** (규약 §10 "같은 이름의 숫자는 한 곳에서").
+ *  ⚠ 대시보드가 2/5/18/41(합 66명)을 손으로 들고 있던 동안 회원 관리는 10명을
+ *    보여 줬다 — 같은 앱이 다른 조직을 말했다(2026-08-18). 인자를 받는 이유:
+ *    회원 화면과 같은 소스(서버 있으면 서버, 없으면 이 mock)로 세야 한다.
+ *  fill 토큰은 CVD·대비 검증 통과값(dashboard.ts 의 기존 배정 그대로). */
+export const GRADES: Array<Grade> = ['Super Admin', 'Admin', 'Editor', 'Viewer']
+
+const GRADE_FILL: Record<Grade, string> = {
+  'Super Admin': 'var(--color-fill-draft)',
+  Admin: 'var(--color-fill-review)',
+  Editor: 'var(--color-fill-pending)',
+  Viewer: 'var(--color-fill-deployed)',
+}
+
+export function gradeDistribution(list: Array<Member>) {
+  return GRADES.map((label) => ({
+    label,
+    value: list.filter((m) => m.grade === label).length,
+    fill: GRADE_FILL[label],
+  }))
+}

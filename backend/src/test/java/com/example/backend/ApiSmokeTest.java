@@ -143,6 +143,19 @@ class ApiSmokeTest {
     }
 
     @Test
+    void auditSortedNewestFirst() throws Exception {
+        // ⚠ 시드(최신순 INSERT)와 서버 기록분이 한 목록에 섞인다 — seq DESC 는 시드를
+        // 뒤집어 위는 최신순·꼬리는 오래된순인 목록을 내보냈다(2026-08-18 화면 실측).
+        // pytest 의 test_audit_sorted_newest_first 와 같은 것을 검사한다(두 벌 정합).
+        String body = mvc.perform(get("/api/audit")).andReturn().getResponse().getContentAsString();
+        List<String> ats = store.read(body, JsonStore.LIST).stream()
+            .map(r -> String.valueOf(r.getOrDefault("at", "")))
+            .toList();
+        List<String> sorted = ats.stream().sorted(java.util.Comparator.reverseOrder()).toList();
+        org.junit.jupiter.api.Assertions.assertEquals(sorted, ats, "감사 로그는 최신부터 내려간다");
+    }
+
+    @Test
     void selfLockSubmissionRejected() throws Exception {
         // 자기 잠금 방지는 서버가 최종으로 막는다 — 화면 검사는 한 브라우저 안의 약속
         mvc.perform(post("/api/submissions")
