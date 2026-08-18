@@ -3,12 +3,18 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { Icon } from '#/components/portal/Icon'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { orNone, pickOne } from '#/lib/urlState'
-import { KIND_CLS, approvalRequests, myRequests, processedRequests } from '#/data/approvals'
-import type { ApprovalRequest } from '#/data/approvals'
+import { KIND_CLS, processedRequests } from '#/data/approvals'
+import { MAX_APPROVAL_STEPS, setApprovalLine, useApprovalLine, useApprovalList } from '#/data/approvalStore'
+import type { ApprovalRecord } from '#/data/approvalStore'
+import { decide as decideFlow, withdrawRequestById as withdrawFlow } from '#/data/workflow'
+
+/** 데모 로그인 계정 — 본개발에서는 `GET /api/me` 가 준다 (규약 §4-2) */
+const ME = '김현대'
 
 const TAB_KEYS = ['mine', 'all', 'requested', 'done'] as const
 const DEFAULT_TAB: Tab = 'mine'
@@ -95,23 +101,48 @@ function ApprovalsPage() {
   const setTab = (next: Tab) =>
     void navigate({ to: '/approvals', search: { tab: orNone(next, DEFAULT_TAB) } })
   const [query, setQuery] = useState('')
-  // 프로토타입: 처리 결과는 화면 상태로만 든다
-  const [decided, setDecided] = useState<Record<string, '승인' | '반려'>>({})
-  const [detail, setDetail] = useState<ApprovalRequest | null>(null)
+  /* ⚠⚠ 처리 결과가 **이 화면의 useState** 였다: 승인을 눌러도 사양서로 돌아가면 여전히
+     '승인 대기'였고, 새로고침하면 아무 일도 없던 것이 됐다(2026-08-18). 정본은 결재함
+     스토어이고, 승인/반려는 workflow 를 지나 사양서·배포까지 함께 움직인다. */
+  const requests = useApprovalList()
+  const [detail, setDetail] = useState<ApprovalRecord | null>(null)
   const [opinion, setOpinion] = useState('')
+  const [lineOpen, setLineOpen] = useState(false)
 
-  const pending = approvalRequests.filter((r) => !(r.id in decided))
+  const pending = requests.filter((r) => r.state === '진행 중')
+  const processed = requests.filter((r) => r.state !== '진행 중')
+  const myRequests = requests.filter((r) => r.requester === ME)
   const matches = (text: string) => query.trim() === '' || text.includes(query.trim())
 
   const rows = useMemo(() => {
     const base = tab === 'mine' ? pending.filter((r) => r.myTurn) : pending
     return base.filter((r) => matches(`${r.title} ${r.id} ${r.requester}`))
-  }, [tab, decided, query])
+  }, [tab, requests, query])
 
-  const decide = (req: ApprovalRequest, action: '승인' | '반려') => {
-    setDecided((d) => ({ ...d, [req.id]: action }))
+  const decide = (req: ApprovalRecord, action: '승인' | '반려') => {
+    // 반려는 사유가 필수 — 스토어가 막지만, 화면이 먼저 말해 준다(누르고 나서 알면 늦다)
+    if (action === '반려' && opinion.trim() === '') {
+      toast(t('approvals.toast.needOpinion', '반려 사유를 입력해 주세요 — 요청자는 이 글을 보고 고칩니다'))
+      return
+    }
+    const res = decideFlow(req.id, action, opinion, ME)
+    if (!res.ok) {
+      toast(t('approvals.toast.decideFailed', '이미 처리된 요청입니다'))
+      return
+    }
     setDetail(null)
     setOpinion('')
+    // 마지막 단계가 아니면 **아직 끝난 게 아니다** — 다음 결재자에게 넘어갔다고 말한다
+    if (action === '승인' && !res.finished) {
+      toast(
+        tf(
+          'approvals.toast.passedOn',
+          { title: req.title },
+          '{title} — 승인했습니다. 다음 결재자에게 넘어갔습니다',
+        ),
+      )
+      return
+    }
     // 승인은 끝이 아니라 다음 단계의 시작이다 — 무엇이 이어지는지 함께 말한다
     if (action === '승인' && req.kind === '배포') {
       toast(
@@ -142,10 +173,10 @@ function ApprovalsPage() {
 
   const approvedCount =
     processedRequests.filter((p) => p.result === '승인').length +
-    Object.values(decided).filter((v) => v === '승인').length
+    processed.filter((r) => r.state === '승인 완료').length
   const rejectedCount =
     processedRequests.filter((p) => p.result === '반려').length +
-    Object.values(decided).filter((v) => v === '반려').length
+    processed.filter((r) => r.state === '반려').length
 
   // 지난주 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
   // (난수 금지, 규약 §10). "전체 요청"은 누적 총계라 전과 견줘도 뜻이 서지 않아 증감을 빼고
@@ -158,7 +189,7 @@ function ApprovalsPage() {
   const deltaCaption = t('approvals.delta.caption', '지난주 대비')
 
   const stats = [
-    { label: t('approvals.stat.total', '전체 요청'), value: approvalRequests.length + processedRequests.length },
+    { label: t('approvals.stat.total', '전체 요청'), value: requests.length + processedRequests.length },
     {
       label: t('approvals.stat.pending', '대기 중'),
       value: pending.length,
@@ -207,6 +238,15 @@ function ApprovalsPage() {
             )}
           </p>
         </div>
+        {/* FR-114 ② "승인선을 설정으로 변경할 수 있다" — 설정은 결재를 보는 자리 옆에 둔다
+            (별도 메뉴로 빼면 결재선을 고치러 어디로 가야 하는지 아무도 모른다) */}
+        <button
+          type="button"
+          onClick={() => setLineOpen(true)}
+          className="h-9 shrink-0 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          {t('approvals.lineSettings', '결재선 설정')}
+        </button>
       </div>
 
       {/* 요약 — 라벨 줄은 머리(옅은 면), 숫자는 몸 (규약 §7·§10) */}
@@ -318,13 +358,34 @@ function ApprovalsPage() {
                   <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      r.status === '승인'
+                      r.state === '승인 완료'
                         ? 'bg-deployed-bg text-deployed-ink'
-                        : 'bg-review-bg text-review-ink'
+                        : r.state === '반려'
+                          ? 'bg-danger-bg text-danger-ink'
+                          : r.state === '회수'
+                            ? 'bg-chip text-ink-subtle'
+                            : 'bg-review-bg text-review-ink'
                     }`}
                   >
-                    {r.status}
+                    {r.state}
                   </span>
+                  {/* 회수 — 아직 아무도 판단하지 않은 건만 (⚠ 요구사항 밖 기능) */}
+                  {r.state === '진행 중' && r.trail.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ok = withdrawFlow(r.id, ME)
+                        toast(
+                          ok
+                            ? t('approvals.toast.withdrawn', '요청을 회수했습니다')
+                            : t('approvals.toast.withdrawFailed', '이미 결재가 진행되어 회수할 수 없습니다'),
+                        )
+                      }}
+                      className="rounded-lg border border-hairline px-2.5 py-1 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                    >
+                      {t('approvals.withdraw', '회수')}
+                    </button>
+                  )}
                   <span className="ml-auto text-xs text-ink-subtle">
                     {tf(
                       'approvals.approverDeadline',
@@ -344,16 +405,19 @@ function ApprovalsPage() {
       ) : (
         <ol className="mt-5 space-y-2.5">
           {[
-            ...Object.entries(decided).map(([id, result]) => {
-              const r = approvalRequests.find((x) => x.id === id)
+            /* 결재함이 끝났다고 말하는 건들 — 마지막 처리 기록(trail)이 누가·언제·왜를 안다.
+               ⚠ 예전엔 이 목록이 화면 state(`decided`)라 새로고침하면 사라졌다 */
+            ...processed.map((r) => {
+              // ⚠ `.at(-1)` 은 빈 배열에서 undefined 를 준다 — 자리 인덱스는 타입이 그걸 못 말한다
+              const last = r.trail.at(-1)
               return {
-                id,
-                kind: r?.kind ?? ('사양서' as const),
-                title: r?.title ?? id,
-                result,
-                by: '김현대',
-                at: '방금',
-                reason: result === '반려' ? opinion || undefined : undefined,
+                id: r.id,
+                kind: r.kind,
+                title: r.title,
+                result: r.state === '승인 완료' ? ('승인' as const) : r.state === '반려' ? ('반려' as const) : ('회수' as const),
+                by: last?.approver ?? r.requester,
+                at: last?.at ?? r.requestedAt,
+                reason: r.state === '반려' ? last?.opinion : undefined,
               }
             }),
             ...processedRequests.map((p) => ({ ...p, reason: 'reason' in p ? p.reason : undefined })),
@@ -549,6 +613,121 @@ function ApprovalsPage() {
           )}
         </Modal>
       )}
+
+      {lineOpen && <ApprovalLineModal onClose={() => setLineOpen(false)} />}
     </AppShell>
+  )
+}
+
+
+/**
+ * 결재선 설정 — FR-114 ② "승인선을 설정으로 변경할 수 있다".
+ *
+ * ⚠ ASM-011: **최대 3단계, 조건부 분기 없음.** 단계를 더 넣을 수 없다는 것을 버튼이
+ *   사라지는 것으로만 말하지 않고 글로도 적는다(규약 §17 — 못 하는 일은 이유를 적는다).
+ * ⚠ 이미 올라간 건의 결재선은 **안 바뀐다**(approvalStore.ApprovalRecord.line 주석) —
+ *   결재 중에 선이 움직이면 이력이 못 믿을 것이 된다. 그 말을 화면에도 적는다.
+ */
+function ApprovalLineModal({ onClose }: { onClose: () => void }) {
+  const { t, tf } = useI18n()
+  const toast = useToast()
+  const current = useApprovalLine()
+  const [draft, setDraft] = useState(current.map((a) => ({ name: a.name, role: a.role, label: a.label })))
+
+  const set = (i: number, patch: Partial<(typeof draft)[number]>) =>
+    setDraft((d) => d.map((row, j) => (j === i ? { ...row, ...patch } : row)))
+
+  return (
+    <Modal
+      title={t('approvals.lineModalTitle', '결재선 설정')}
+      onClose={onClose}
+      footer={
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (!setApprovalLine(draft)) {
+                toast(t('approvals.toast.lineInvalid', '결재자 이름이 빈 단계가 있습니다'))
+                return
+              }
+              onClose()
+              toast(
+                tf(
+                  'approvals.toast.lineSaved',
+                  { n: draft.length },
+                  '결재선을 {n}단계로 저장했습니다 — 다음 상신부터 적용됩니다',
+                ),
+              )
+            }}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+          >
+            {t('common.save', '저장')}
+          </button>
+        </div>
+      }
+    >
+      <ol className="space-y-2.5">
+        {draft.map((row, i) => (
+          <li key={i} className="rounded-xl border border-hairline p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-chip px-2 py-0.5 text-xs font-semibold text-ink-muted">
+                {tf('approvals.lineStepNo', { n: i + 1 }, '{n}차')}
+              </span>
+              <input
+                value={row.name}
+                onChange={(e) => set(i, { name: e.target.value })}
+                placeholder={t('approvals.lineNamePlaceholder', '결재자 이름')}
+                className="h-9 min-w-0 flex-1 basis-40 rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+              />
+              <input
+                value={row.label}
+                onChange={(e) => set(i, { label: e.target.value })}
+                placeholder={t('approvals.lineLabelPlaceholder', '단계 이름 (검토·최종 승인)')}
+                className="h-9 min-w-0 flex-1 basis-40 rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+              />
+              {/* 마지막 한 단계는 못 지운다 — 결재선이 비면 상신이 갈 곳을 잃는다 */}
+              {draft.length > 1 && (
+                <button
+                  type="button"
+                  aria-label={t('approvals.lineRemove', '단계 삭제')}
+                  onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
+                >
+                  <Icon name="trash" />
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {draft.length < MAX_APPROVAL_STEPS ? (
+        <button
+          type="button"
+          onClick={() => setDraft((d) => [...d, { name: '', role: 'IBD_APPROVER', label: '검토' }])}
+          className="mt-3 h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          {t('approvals.lineAdd', '+ 단계 추가')}
+        </button>
+      ) : (
+        <p className="mt-3 rounded-lg bg-chip px-3 py-2 text-xs text-ink-subtle">
+          {tf(
+            'approvals.lineMaxHint',
+            { n: MAX_APPROVAL_STEPS },
+            '결재선은 최대 {n}단계입니다 (조건부 분기는 이번 범위가 아닙니다).',
+          )}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-ink-subtle">
+        {t('approvals.lineScopeHint', '이미 올라간 결재는 상신 시점의 결재선을 그대로 따릅니다.')}
+      </p>
+    </Modal>
   )
 }

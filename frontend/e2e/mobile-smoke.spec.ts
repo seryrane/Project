@@ -781,3 +781,154 @@ test('감사 로그 — 한 쪽은 스무 줄까지, 넘치면 쪽이 선다 (�
     await expect(foot, '발은 전체 수를 계속 말한다').toHaveText(new RegExp('^전체 ' + total + '건'))
   }
 })
+
+/* ── FR-114 결재 수명주기 ──────────────────────────────────────────────
+   요청 → 다단계 검토·승인 → 반려·재요청 · 승인선 설정 · 단계별 알림 · 이력 조회.
+   ⚠ 이 판 전까지 흐름은 **반쪽**이었다: 상신은 사양서 상태만 바꾸고 결재함엔 안 생겼고,
+   승인 관리의 [승인]은 그 화면 useState 라 사양서로 돌아가면 여전히 '승인 대기'였다.
+   즉 결재가 올라가기만 하고 내려오지 않았다 — 그 자리를 좌표로 못 박는다.
+
+   ⚠⚠ **화면 사이는 앱 안에서 옮겨 다닌다**(LNB 링크). `goto` 는 새로고침이라 프로토타입의
+   정본(모듈 스코프 스토어)이 초기화된다 — 상신해 놓고 새로고침하면 없던 일이 된다.
+   ⚠ 그리고 이 판은 **넓은 화면**에서 잰다: 좁은 화면에서 LNB 는 서랍 안이라 링크가 뷰포트
+   밖이다(모바일 규격은 위 스모크가 따로 지킨다). */
+test.describe('결재 수명주기 (FR-114)', () => {
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false })
+
+  /** 사양서 상세에서 상신까지 — 여러 판이 같은 세 걸음을 쓴다 */
+  async function submitSpec(page: Page, specId: string) {
+    await ready(page, `/specs/${specId}`)
+    await page.getByRole('button', { name: /승인 요청|재요청/ }).first().click()
+    await page.getByRole('dialog').getByRole('button', { name: '상신', exact: true }).click()
+    await expect(page.getByRole('button', { name: /결재 진행 보기/ }).first()).toBeVisible()
+  }
+
+  /** ⚠ LNB 링크의 접근성 이름에는 **배지 수가 붙는다**("승인 관리 3") — exact 로 집으면
+   *  못 찾는다(2026-08-18). 부분 일치로 잡되 첫 번째만 쓴다(서랍/레일에 같은 링크가 둘). */
+  const goto = (page: Page, name: string) => page.getByRole('link', { name }).first().click()
+
+  test('상신 — 사양서 상태와 결재함이 함께 움직인다 (한쪽만 바뀌면 두 화면이 다른 말을 한다)', async ({
+    page,
+  }) => {
+    await submitSpec(page, 'SP-004') // 초안
+    await goto(page, '승인 관리')
+    await page.getByRole('button', { name: /전체 대기/ }).click()
+    await expect(
+      page.getByText('차체 구조 안전 기준서', { exact: false }).first(),
+      '상신한 건이 결재함에 실제로 서 있다',
+    ).toBeVisible()
+  })
+
+  test('승인 — 마지막 단계까지 통과하면 사양서가 승인 완료가 된다 (결재가 내려온다)', async ({ page }) => {
+    await ready(page, '/approvals')
+    // 시드 중 마지막 단계(2/2)인 건 — 승인하면 그 자리에서 끝난다
+    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+
+    await goto(page, '사양서 관리')
+    await expect(
+      page.getByRole('button', { name: /^승인 완료\s*1$/ }),
+      '승인이 사양서까지 내려와 상태 칩이 함께 센다',
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: /^승인 대기\s*1$/ }), '대기 하나가 빠진다').toBeVisible()
+  })
+
+  test('반려 — 사유 없이는 못 하고, 사유는 사양서까지 따라간다 (되돌아온 문서는 이유를 안고 온다)', async ({
+    page,
+  }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /전기차 배터리 규격서 v1.5/ }).click()
+    const dialog = page.getByRole('dialog')
+    const reject = dialog.getByRole('button', { name: /반려/ })
+    await expect(reject, '사유가 비면 반려는 잠겨 있다 (규약 §2)').toBeDisabled()
+
+    await dialog.getByPlaceholder(/의견/).fill('안전 시험 근거가 빠졌습니다 — 시험성적서를 붙여 주세요.')
+    await expect(reject).toBeEnabled()
+    await reject.click()
+
+    // ⚠ 새로고침하면 스토어가 초기화된다 — 앱 안에서 사양서로 건너간다
+    await goto(page, '사양서 관리')
+    await page
+      .locator('article')
+      .filter({ hasText: '전기차 배터리 규격서' })
+      .first()
+      .getByRole('button', { name: /상세 보기/ })
+      .click()
+    await expect(page.getByText(/반려했습니다/), '누가·언제 반려했는지 적힌다').toBeVisible()
+    await expect(page.getByText(/안전 시험 근거가 빠졌습니다/), '사유가 그대로 따라온다').toBeVisible()
+    await expect(page.getByRole('button', { name: '재요청' }), '다음 손은 재요청이다').toBeVisible()
+  })
+
+  test('회수 — 아무도 판단하지 않았을 때만 내릴 수 있다 (⚠ 요구사항 밖 기능)', async ({ page }) => {
+    await submitSpec(page, 'SP-004')
+    await page.getByRole('button', { name: '요청 회수' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: '회수', exact: true }).click()
+    await expect(
+      page.getByRole('button', { name: '승인 요청', exact: true }),
+      '초안으로 돌아온다',
+    ).toBeVisible()
+  })
+
+  test('결재선 설정 — 최대 3단계, 저장하면 다음 상신부터 그 선을 탄다 (FR-114 ② · ASM-011)', async ({
+    page,
+  }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: '결재선 설정' }).click()
+    const dialog = page.getByRole('dialog')
+
+    await dialog.getByRole('button', { name: '+ 단계 추가' }).click()
+    await dialog.getByPlaceholder('결재자 이름').last().fill('최수진')
+    await dialog.getByPlaceholder(/단계 이름/).last().fill('최종 승인')
+    await expect(
+      dialog.getByRole('button', { name: '+ 단계 추가' }),
+      '3단계가 차면 더 넣을 수 없다 (ASM-011)',
+    ).toHaveCount(0)
+    await expect(dialog.getByText(/최대 3단계/), '못 하는 일은 이유를 적는다 (규약 §17)').toBeVisible()
+    await dialog.getByRole('button', { name: '저장' }).click()
+
+    // 다음 상신은 세 단계짜리 선을 탄다
+    await goto(page, '사양서 관리')
+    await page
+      .locator('article')
+      .filter({ hasText: '차체 구조 안전 기준서' })
+      .first()
+      .getByRole('button', { name: /상세 보기/ })
+      .click()
+    await page.getByRole('button', { name: '승인 요청', exact: true }).click()
+    await expect(page.getByRole('dialog').getByText('최수진'), '바꾼 결재선이 상신 모달에 선다').toBeVisible()
+  })
+
+  test('승인 완료 — 다음 행동은 배포 요청이다 (죽은 [승인 요청]을 다시 내밀지 않는다)', async ({
+    page,
+  }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+
+    await goto(page, '사양서 관리')
+    await page
+      .locator('article')
+      .filter({ hasText: 'VN7 엔진 사양서' })
+      .first()
+      .getByRole('button', { name: /상세 보기/ })
+      .click()
+    await expect(page.getByRole('button', { name: /배포 요청하기/ }), '다음 행동으로 끝난다').toBeVisible()
+    await expect(
+      page.getByRole('button', { name: '승인 요청', exact: true }),
+      '스토어가 안 받는 조작은 화면에도 없다',
+    ).toHaveCount(0)
+  })
+
+  test('배포 요청 — 배포 목록과 결재함에 **함께** 남는다 (토스트만 쏘고 끝나지 않는다)', async ({
+    page,
+  }) => {
+    await ready(page, '/deploys')
+    await page.getByRole('button', { name: /새 배포 요청/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /배포 승인 요청/ }).click()
+
+    await expect(page.getByText(/DEP-\d{4}-\d+/).first(), '배포 목록에 선다').toBeVisible()
+    await goto(page, '승인 관리')
+    await page.getByRole('button', { name: /전체 대기/ }).click()
+    await expect(page.getByText(/Release .* 배포/).first(), '결재함에도 같은 순간 생긴다').toBeVisible()
+  })
+})

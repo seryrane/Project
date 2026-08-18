@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
+import { useApprovalList } from '#/data/approvalStore'
 import type { IconName, NavItem, NavSection } from '#/data/nav'
 import { unseenCount } from '#/data/whatsnew'
 import { apiSend, clearToken, useApi } from '#/lib/api'
@@ -88,7 +89,6 @@ const NOTIFICATIONS: Array<{
   to: string
   search?: Record<string, string>
 }> = [
-  { icon: 'approve', text: 'VN7 엔진 사양서 v2.3 승인 요청', time: '10분 전', todo: true, to: '/approvals' },
   { icon: 'engine', text: '배치 검증 완료 — 오류 12건 검출', time: '1시간 전', todo: true, to: '/validation-results' },
   { icon: 'message', text: 'Q&A 답변 대기 1건 — 버전 비교 문의', time: '25분 전', todo: true, to: '/qna' },
   { icon: 'message', text: '전기차 배터리 규격서에 검토 의견이 달렸습니다', time: '42분 전', todo: false, to: '/specs', search: { open: 'SP-002' } },
@@ -178,7 +178,11 @@ function Shell({
     })),
   }))
   const [bellTab, setBellTab] = useState<'all' | 'todo'>('all')
-  const [unread, setUnread] = useState(3)
+  /* FR-114 ③ "각 단계에서 담당자에게 알림" — 벨은 **결재함이 말하는 내 차례**를 센다.
+     ⚠ 예전엔 배지가 `useState(3)` 로 박혀 있었다: 결재를 다 처리해도 3이 그대로였고,
+        새 요청이 올라와도 3이었다(2026-08-18). 숫자는 코드가 센다(규약 §10). */
+  const myTurns = useApprovalList().filter((r) => r.state === '진행 중' && r.myTurn)
+  const [readCount, setReadCount] = useState(0)
 
   // ⚠ **첫 방문에서 한 번만 읽는다.** 상자가 이미 차 있으면 건드리지 않는다 —
   //   화면을 옮길 때마다 다시 읽으면 그때마다 한 프레임 기본값이 보인다(깜빡임의 원인).
@@ -266,7 +270,19 @@ function Shell({
     }
   }, [rail, collapsed, displayNav])
 
-  const bellItems = NOTIFICATIONS.filter((n) => bellTab === 'all' || n.todo)
+  const turnNotis: typeof NOTIFICATIONS = myTurns.map((r) => ({
+    icon: 'approve',
+    text: `${r.title} — ${r.step[0]}/${r.step[1]}단계 결재 요청`,
+    time: r.requestedAt,
+    todo: true,
+    to: '/approvals',
+    search: undefined,
+  }))
+  const bellItems = [...turnNotis, ...NOTIFICATIONS].filter((n) => bellTab === 'all' || n.todo)
+  const todoCount = turnNotis.length + NOTIFICATIONS.filter((n) => n.todo).length
+  /* ⚠ 세는 수를 0 으로 **덮지 않는다** — [모두 읽음]은 "여기까지 봤다"는 표시일 뿐이고,
+     새 결재가 올라오면 배지가 다시 선다(0 으로 덮으면 그 뒤 요청을 영영 못 본다). */
+  const unread = Math.max(0, todoCount - readCount)
 
   return (
     <div className="flex min-h-dvh bg-canvas text-ink">
@@ -581,7 +597,7 @@ function Shell({
                 <button
                   type="button"
                   onClick={() => {
-                    setUnread(0)
+                    setReadCount(todoCount)
                     toast('알림을 모두 읽음 처리했습니다')
                   }}
                   className="rounded-md px-2 py-1 text-xs text-ink-muted transition-colors hover:bg-chip hover:text-ink"

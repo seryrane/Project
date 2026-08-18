@@ -5,6 +5,7 @@ const styles: Record<SpecStatus, string> = {
   '초안': 'bg-draft-bg text-draft-ink',
   '검토 중': 'bg-review-bg text-review-ink',
   '승인 대기': 'bg-pending-bg text-pending-ink',
+  '승인 완료': 'bg-approved-bg text-approved-ink',
   '배포 완료': 'bg-deployed-bg text-deployed-ink',
 }
 

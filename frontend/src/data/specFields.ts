@@ -95,6 +95,8 @@ export function workflowIndex(status: string): number {
       return 1
     case '승인 대기':
       return 4
+    case '승인 완료':
+      return 5
     case '배포 완료':
       return 6
     default:

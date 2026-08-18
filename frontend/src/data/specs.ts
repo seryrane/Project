@@ -1,4 +1,7 @@
-export type SpecStatus = '초안' | '검토 중' | '승인 대기' | '배포 완료'
+/* ⚠ '승인 완료'는 2026-08-18 에 늘렸다 — 없던 동안 결재가 **올라가기만 하고 내려오지
+   않았다**: 승인 관리에서 [승인]을 눌러도 사양서는 '승인 대기' 그대로였다(승인자가
+   처리한 화면과 사양서 화면이 다른 말을 했다). 승인은 끝이 아니라 배포 앞의 자리다. */
+export type SpecStatus = '초안' | '검토 중' | '승인 대기' | '승인 완료' | '배포 완료'
 
 export interface SpecField {
   label: string
@@ -12,6 +15,10 @@ export interface SpecVersion {
   summary: string
   author: string
   fields: Array<SpecField>
+  /** 반려당한 자국 — 누가·왜·언제. 되돌아온 문서는 **이유를 안고 온다**(규약 §17):
+   *  이것이 없으면 결재에서 밀려난 문서가 그냥 '초안'으로 돌아와, 요청자는 무엇을
+   *  고쳐야 하는지 모른 채 다시 올린다(2026-08-18 FR-114 판에서 신설). */
+  rejection?: { reason: string; by: string; at: string }
 }
 
 export interface Spec {
@@ -99,7 +106,10 @@ export const specs: Array<Spec> = [
     history: [
       {
         version: 'v1.5',
-        status: '검토 중',
+        /* ⚠ 결재함(approvals.ts APR-2026-0113)에 이 사양서가 **올라가 있다** — 그런데 여기는
+           '검토 중'이라, 승인/반려를 눌러도 사양서가 꿈쩍 않았다(2026-08-18 화면에서 잡음).
+           결재 중인 문서의 상태는 '승인 대기'다. 시드끼리 어긋나면 흐름이 조용히 죽는다. */
+        status: '승인 대기',
         date: '2026.07.14',
         summary: '급속 충전 프로파일 개정',
         author: '이서연',

@@ -14,7 +14,7 @@ import { registerSpec, useSpecList } from '#/data/specStore'
 import type { NewSpecInput } from '#/data/specStore'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
 
-const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
+const allStatuses: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '승인 완료', '배포 완료']
 
 // 필터 내부 값(sentinel)은 한국어 원문 그대로 — 화면에 보일 때만 사전을 입힌다
 const ALL_CATEGORY = '전체 카테고리'

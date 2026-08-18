@@ -14,6 +14,8 @@ export interface ApprovalRequest {
   kind: RequestKind
   /** 사양서 결재일 때만 — 누르면 그 사양서로 간다 */
   specId?: string
+  /** 배포 결재일 때만 — 승인되면 이 배포가 시작된다 (FR-114 뒷단) */
+  deployId?: string
   title: string
   version?: string
   type: RequestType
@@ -87,6 +89,8 @@ export const approvalRequests: Array<ApprovalRequest> = [
   {
     id: 'APR-2026-0114',
     kind: '배포',
+    // ⚠ 매달지 않으면 승인해도 배포 목록은 '대기' 그대로다 — 결재와 대상은 짝이 있어야 한다
+    deployId: 'DEP-2026-0115',
     title: 'Release v3.1.1 운영 배포',
     type: '신규',
     urgent: true,

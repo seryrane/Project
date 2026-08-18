@@ -111,23 +111,65 @@ export function submitSpecForApproval(id: string): boolean {
   return true
 }
 
+/** 지금 버전의 상태만 갈아 끼운다 — 나머지는 그대로 둔다(이력은 손대지 않는다) */
+function setStatus(id: string, status: SpecStatus, patch: Partial<Spec['history'][number]> = {}): boolean {
+  const spec = specList.find((s) => s.id === id)
+  if (!spec) return false
+  const cur = currentVersion(spec)
+  const next: Spec = {
+    ...spec,
+    history: [{ ...cur, status, ...patch }, ...spec.history.slice(1)],
+  }
+  specList = specList.map((s) => (s.id === id ? next : s))
+  notify()
+  return true
+}
+
+/** 결재가 끝났다 — 승인 완료. **배포는 아직이다**(다음은 배포 관리에서 요청). */
+export function approveSpec(id: string): boolean {
+  const spec = specList.find((s) => s.id === id)
+  if (!spec || currentVersion(spec).status !== '승인 대기') return false
+  return setStatus(id, '승인 완료', { rejection: undefined })
+}
+
+/** 반려 — 초안으로 되돌리되 **사유를 안고 돌아온다**. 요청자는 이것을 보고 고친다. */
+export function rejectSpec(id: string, reason: string, by: string): boolean {
+  const spec = specList.find((s) => s.id === id)
+  if (!spec || currentVersion(spec).status !== '승인 대기') return false
+  return setStatus(id, '초안', { rejection: { reason, by, at: today() } })
+}
+
+/** 회수 — 요청자가 도로 내렸다. 초안으로 돌아가되 반려 자국은 남기지 않는다
+ *  (⚠ 요구사항 밖 기능 — approvalStore.withdrawRequest 주석 참고). */
+export function withdrawSpec(id: string): boolean {
+  const spec = specList.find((s) => s.id === id)
+  if (!spec || currentVersion(spec).status !== '승인 대기') return false
+  return setStatus(id, '초안')
+}
+
+/** 배포까지 끝났다 */
+export function markSpecDeployed(id: string): boolean {
+  return setStatus(id, '배포 완료')
+}
+
 /* ── 파생 셈 — 숫자는 코드가 센다 (규약 §10) ─────────────────────── */
 
-export const SPEC_STATUSES: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '배포 완료']
+export const SPEC_STATUSES: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '승인 완료', '배포 완료']
 
 export function countByStatus(list: Array<Spec>): Record<SpecStatus, number> {
-  const c: Record<SpecStatus, number> = { 초안: 0, '검토 중': 0, '승인 대기': 0, '배포 완료': 0 }
+  const c: Record<SpecStatus, number> = { 초안: 0, '검토 중': 0, '승인 대기': 0, '승인 완료': 0, '배포 완료': 0 }
   for (const s of list) c[currentVersion(s).status]++
   return c
 }
 
 /** 도넛·상태 칩용 분포. prev 는 "이전 동일 기간" mock — 실 이력이 없는 프로토타입이라
  *  결정적 상수다(난수 금지). ⚠ 현재 값(value)만은 반드시 목록에서 센다. */
-const STATUS_PREV: Record<SpecStatus, number> = { 초안: 1, '검토 중': 2, '승인 대기': 1, '배포 완료': 1 }
+const STATUS_PREV: Record<SpecStatus, number> = { 초안: 1, '검토 중': 2, '승인 대기': 1, '승인 완료': 0, '배포 완료': 1 }
 const STATUS_FILL: Record<SpecStatus, string> = {
   초안: 'var(--color-fill-draft)',
   '검토 중': 'var(--color-fill-review)',
   '승인 대기': 'var(--color-fill-pending)',
+  '승인 완료': 'var(--color-fill-approved)',
   '배포 완료': 'var(--color-fill-deployed)',
 }
 

@@ -10,6 +10,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'specStatus.초안': { ko: '초안', en: 'Draft' },
   'specStatus.검토 중': { ko: '검토 중', en: 'In review' },
   'specStatus.승인 대기': { ko: '승인 대기', en: 'Pending approval' },
+  'specStatus.승인 완료': { ko: '승인 완료', en: 'Approved' },
   'specStatus.배포 완료': { ko: '배포 완료', en: 'Deployed' },
 
   // ── 사양서 목록 (/specs) ──────────────────────────────────────────
@@ -90,6 +91,71 @@ export const WORK_DICT: Record<string, Entry> = {
     en: 'Fields are locked while in approval — approvers must sign off on exactly what they reviewed. Editing reopens once it is rejected or fully approved.',
   },
   'specDetail.submitting': { ko: '상신 중…', en: 'Submitting…' },
+  /* 결재 수명주기 (FR-114, 2026-08-18) — 반려 자국·재요청·회수 */
+  'specDetail.resubmit': { ko: '재요청', en: 'Resubmit' },
+  'specDetail.goDeploy': { ko: '배포 요청하기 →', en: 'Request deployment →' },
+  'specDetail.alreadyDeployed': { ko: '배포까지 완료된 버전입니다', en: 'This version is fully deployed' },
+  'specDetail.rejectedTitle': { ko: '{by} 님이 반려했습니다 · {at}', en: 'Rejected by {by} · {at}' },
+  'specDetail.rejectedHint': {
+    ko: '고친 뒤 [재요청]을 누르면 같은 결재선으로 다시 올라갑니다.',
+    en: 'Fix the issues, then Resubmit to send it up the same approval line.',
+  },
+  'specDetail.withdraw': { ko: '요청 회수', en: 'Withdraw request' },
+  'specDetail.withdrawTitle': { ko: '요청 회수', en: 'Withdraw request' },
+  'specDetail.withdrawSubmit': { ko: '회수', en: 'Withdraw' },
+  'specDetail.withdrawing': { ko: '회수 중…', en: 'Withdrawing…' },
+  'specDetail.withdrawDesc': {
+    ko: '결재함에서 이 요청을 내리고 사양서를 초안으로 되돌립니다. 고친 뒤 다시 상신할 수 있습니다.',
+    en: 'Removes the request from the approval queue and returns the spec to draft. You can submit it again after edits.',
+  },
+  'specDetail.toast.withdrawn': {
+    ko: '요청을 회수했습니다 — 초안으로 돌아왔습니다',
+    en: 'Request withdrawn — the spec is back to draft',
+  },
+  'specDetail.toast.withdrawFailed': {
+    ko: '이미 결재가 진행되어 회수할 수 없습니다',
+    en: 'Cannot withdraw — approval has already started',
+  },
+  // 승인 관리 — 결재선 설정·회수·단계 넘김
+  'approvals.lineSettings': { ko: '결재선 설정', en: 'Approval line' },
+  'approvals.lineModalTitle': { ko: '결재선 설정', en: 'Approval line settings' },
+  'approvals.lineStepNo': { ko: '{n}차', en: 'Step {n}' },
+  'approvals.lineNamePlaceholder': { ko: '결재자 이름', en: 'Approver name' },
+  'approvals.lineLabelPlaceholder': { ko: '단계 이름 (검토·최종 승인)', en: 'Step name (Review, Final approval)' },
+  'approvals.lineAdd': { ko: '+ 단계 추가', en: '+ Add step' },
+  'approvals.lineRemove': { ko: '단계 삭제', en: 'Remove step' },
+  'approvals.lineMaxHint': {
+    ko: '결재선은 최대 {n}단계입니다 (조건부 분기는 이번 범위가 아닙니다).',
+    en: 'Up to {n} steps (conditional branching is out of scope).',
+  },
+  'approvals.lineScopeHint': {
+    ko: '이미 올라간 결재는 상신 시점의 결재선을 그대로 따릅니다.',
+    en: 'Requests already in flight keep the approval line they were submitted with.',
+  },
+  'approvals.withdraw': { ko: '회수', en: 'Withdraw' },
+  'approvals.toast.lineSaved': {
+    ko: '결재선을 {n}단계로 저장했습니다 — 다음 상신부터 적용됩니다',
+    en: 'Approval line saved with {n} steps — applies to new submissions',
+  },
+  'approvals.toast.lineInvalid': { ko: '결재자 이름이 빈 단계가 있습니다', en: 'A step has no approver name' },
+  'approvals.toast.needOpinion': {
+    ko: '반려 사유를 입력해 주세요 — 요청자는 이 글을 보고 고칩니다',
+    en: 'Enter a rejection reason — the requester works from this text',
+  },
+  'approvals.toast.decideFailed': { ko: '이미 처리된 요청입니다', en: 'This request was already handled' },
+  'approvals.toast.passedOn': {
+    ko: '{title} — 승인했습니다. 다음 결재자에게 넘어갔습니다',
+    en: '{title} — approved. Passed to the next approver',
+  },
+  'approvals.toast.withdrawn': { ko: '요청을 회수했습니다', en: 'Request withdrawn' },
+  'approvals.toast.withdrawFailed': {
+    ko: '이미 결재가 진행되어 회수할 수 없습니다',
+    en: 'Cannot withdraw — approval has already started',
+  },
+  'deploys.toast.requestedWithId': {
+    ko: '배포 승인 요청을 보냈습니다 ({id}) — 승인 관리에서 진행을 확인하세요',
+    en: 'Deploy approval requested ({id}) — track it in Approvals',
+  },
 
   // ── 승인 관리 (/approvals) ───────────────────────────────────────
   'approvals.tab.mine': { ko: '내 차례', en: 'My turn' },

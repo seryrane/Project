@@ -8,11 +8,17 @@ import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
-import { PIPELINE, deploys } from '#/data/deploys'
+import { PIPELINE } from '#/data/deploys'
+import { useDeployList } from '#/data/deployStore'
+import { requestDeploy } from '#/data/workflow'
+import { useSpecList } from '#/data/specStore'
 import type { Deploy, DeployStatus } from '#/data/deploys'
-import { specs } from '#/data/specs'
+import { currentVersion, specs } from '#/data/specs'
 
 export const Route = createFileRoute('/deploys')({ component: DeploysPage })
+
+/** 데모 로그인 계정 — 본개발에서는 `GET /api/me` 가 준다 (규약 §4-2) */
+const ME = '박준혁'
 
 const STATUS_CLS: Record<DeployStatus, string> = {
   대기: 'bg-review-bg text-review-ink',
@@ -101,10 +107,16 @@ function DeploysPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
   const navigate = useNavigate()
+  /* 정본은 배포 스토어 — 요청하면 목록에 실제로 서고, 승인되면 상태가 바뀐다.
+     ⚠ 예전엔 고정 mock 배열이라 [배포 승인 요청]이 토스트만 쏘고 끝났다(2026-08-18). */
+  const deploys = useDeployList()
+  const specList = useSpecList()
   const [detail, setDetail] = useState<Deploy | null>(null)
   const [creating, setCreating] = useState(false)
   const [newEnv, setNewEnv] = useState('Production')
   const [newSpecs, setNewSpecs] = useState<Array<string>>(['SP-001', 'SP-002'])
+  // ⚠ 버전 칸이 `defaultValue` 라 화면에 적은 값이 요청에 안 실렸다 — 상태로 든다
+  const [newVersion, setNewVersion] = useState('v3.1.2')
 
   return (
     <AppShell active="deploys" title="배포 관리">
@@ -326,10 +338,25 @@ function DeploysPage() {
                 onAction={async () => {
                   await simulate()
                   setCreating(false)
+                  /* 배포 목록에 '대기'로 서고 **같은 순간 결재함에도 건이 생긴다**(workflow).
+                     승인 전에는 배포가 시작되지 않는다 — 상태가 그것을 말한다. */
+                  const picked = specList.filter((sp) => newSpecs.includes(sp.id))
+                  const rec = requestDeploy({
+                    version: newVersion.trim() || 'v0.0.1',
+                    env: newEnv as Deploy['env'],
+                    owner: ME,
+                    specs: picked.map((sp) => ({
+                      id: sp.id,
+                      name: sp.name,
+                      version: currentVersion(sp).version,
+                    })),
+                    changes: picked.map((sp) => `${sp.name} ${currentVersion(sp).version} 반영`),
+                  })
                   toast(
-                    t(
-                      'deploys.toast.requested',
-                      '배포 승인 요청을 보냈습니다 — 승인 관리에서 진행 상황을 확인하세요',
+                    tf(
+                      'deploys.toast.requestedWithId',
+                      { id: rec?.id ?? '' },
+                      '배포 승인 요청을 보냈습니다 ({id}) — 승인 관리에서 진행을 확인하세요',
                     ),
                   )
                 }}
@@ -348,7 +375,8 @@ function DeploysPage() {
           <label className="mt-4 block">
             <span className="text-xs font-medium text-ink-subtle">{t('deploys.label.version', '배포 버전')}</span>
             <input
-              defaultValue="v3.1.2"
+              value={newVersion}
+              onChange={(e) => setNewVersion(e.target.value)}
               className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-[13px] outline-none focus:border-primary/60"
             />
           </label>

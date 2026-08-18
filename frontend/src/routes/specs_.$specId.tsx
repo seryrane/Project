@@ -13,8 +13,10 @@ import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { currentVersion } from '#/data/specs'
-import { isSeededSpec, submitSpecForApproval, useSpecList } from '#/data/specStore'
-import { SPEC_APPROVAL_LINE, approvalOf } from '#/data/approvals'
+import { isSeededSpec, useSpecList } from '#/data/specStore'
+import { activeRequestOfSpec, useApprovalLine, useApprovalList } from '#/data/approvalStore'
+import { submitSpec, withdrawSpecRequest } from '#/data/workflow'
+import type { ApprovalStep } from '#/data/approvals'
 import { SERVICE_ROLE_LABEL } from '#/data/members'
 import {
   FIELD_CATEGORIES,
@@ -70,10 +72,13 @@ function WorkflowStepper({
    ⚠ 예전엔 상신 모달 안에만, 그것도 글자로 박혀 있었다 — 결재에 올라간 뒤에는
    화면 어디서도 "지금 누구에게 가 있는지" 알 수 없었다(2026-08-18). */
 function ApprovalLine({
+  line,
   step,
   roleLabel,
   stepLabel,
 }: {
+  /** ⚠ 결재선은 **설정으로 바뀐다**(FR-114 ②) — 상수를 직접 읽으면 바꾼 선이 안 보인다 */
+  line: Array<ApprovalStep>
   /** 지금 몇 번째 결재가 진행 중인가 (1부터) — 결재함이 알려 준다 */
   step: number
   roleLabel: (code: string) => string
@@ -82,7 +87,7 @@ function ApprovalLine({
 }) {
   return (
     <ol className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
-      {SPEC_APPROVAL_LINE.map((a, i) => {
+      {line.map((a, i) => {
         const done = a.seq < step
         const now = a.seq === step
         return (
@@ -141,13 +146,18 @@ function SpecDetailPage() {
   // 예전엔 이 화면의 useState 로만 움직여서, 목록으로 돌아가면 카드가 여전히
   // '검토 중'이었다 — 상신했다는 화면과 안 했다는 화면이 공존했다(2026-08-18).
   const [requesting, setRequesting] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
 
   /* ── 결재 중 잠금 (규약 §2 되돌릴 수 없는 것은 묻는다 · §17 못 하면 이유를 적는다) ──
      ⚠ 결재에 올라간 문서를 그 자리에서 계속 고칠 수 있었다. 승인자가 본 것과 다른
      문서가 승인되는 길이 열려 있었던 셈이다(2026-08-18). 잠그되 **왜 잠겼는지**와
      **언제 풀리는지**를 함께 적는다 — 회색 버튼만 있으면 고장으로 읽힌다. */
   const locked = spec ? currentVersion(spec).status === '승인 대기' : false
-  const approval = approvalOf(specId)
+  /* 결재함을 구독한다 — 승인 관리에서 누가 처리하면 이 화면의 결재선·잠금이 함께 움직인다.
+     ⚠ `useApprovalList()` 의 결과를 안 쓰더라도 **구독은 해야** 다시 그린다. */
+  useApprovalList()
+  const approval = activeRequestOfSpec(specId)
+  const line = useApprovalLine()
   /** 결재자의 Role 코드를 사람 말로 — 회원 화면과 같은 사전을 쓴다 (규약 §4-7) */
   const roleLabel = (code: string) =>
     t(`role.${code}`, (SERVICE_ROLE_LABEL as Record<string, string | undefined>)[code] ?? code)
@@ -271,20 +281,52 @@ function SpecDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* 흐름 연결 — 이 문서가 결재 중이면 결재로, 아니면 승인 요청으로 가는 길 */}
           {cur.status === '승인 대기' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/approvals' })}
+                className="h-9 rounded-lg border border-pending-ink/40 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
+              >
+                {t('specDetail.viewApproval', '결재 진행 보기 →')}
+              </button>
+              {/* 회수 — ⚠ **요구사항 밖**(approvalStore.withdrawRequest 주석). 한 단계라도
+                  승인이 찍혔으면 버튼 자체를 안 낸다: 누를 수 없는 버튼을 두면 왜 안 되는지
+                  묻게 되고, 여기서는 "이미 누가 판단했다"가 답이라 결재선이 그것을 말한다 */}
+              {approval && approval.trail.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => setWithdrawing(true)}
+                  className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  {t('specDetail.withdraw', '요청 회수')}
+                </button>
+              )}
+            </>
+          ) : cur.status === '승인 완료' ? (
+            /* ⚠ 승인이 끝난 문서에 [승인 요청]을 또 내밀면 **눌러도 아무 일이 없다**(스토어가
+               초안·검토 중만 받는다) — 1판에서 고친 죽은 조작과 같은 부류다. 다음 행동은
+               배포 요청이므로 길을 그쪽으로 낸다(규약 §10 카드는 다음 행동으로 끝난다). */
             <button
               type="button"
-              onClick={() => navigate({ to: '/approvals' })}
-              className="h-9 rounded-lg border border-pending-ink/40 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
+              onClick={() => navigate({ to: '/deploys' })}
+              className="h-9 rounded-lg border border-approved-ink/40 bg-approved-bg px-3.5 text-[13px] font-semibold text-approved-ink transition-opacity hover:opacity-85"
             >
-              {t('specDetail.viewApproval', '결재 진행 보기 →')}
+              {t('specDetail.goDeploy', '배포 요청하기 →')}
             </button>
+          ) : cur.status === '배포 완료' ? (
+            // 배포까지 끝난 문서에는 올릴 것이 없다 — 빈 자리로 두고 버튼을 만들지 않는다
+            <span className="text-[13px] text-ink-subtle">
+              {t('specDetail.alreadyDeployed', '배포까지 완료된 버전입니다')}
+            </span>
           ) : (
             <button
               type="button"
               onClick={() => setRequesting(true)}
               className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
-              {t('specDetail.requestApproval', '승인 요청')}
+              {cur.rejection
+                ? t('specDetail.resubmit', '재요청')
+                : t('specDetail.requestApproval', '승인 요청')}
             </button>
           )}
           <button
@@ -376,7 +418,7 @@ function SpecDetailPage() {
             <span className="text-xs font-medium text-ink-subtle">
               {t('specDetail.approvalLineLabel', '결재선')}
             </span>
-            <ApprovalLine step={approval?.step[0] ?? 1} roleLabel={roleLabel} stepLabel={stepLabel} />
+            <ApprovalLine line={approval?.line ?? line} step={approval?.step[0] ?? 1} roleLabel={roleLabel} stepLabel={stepLabel} />
             {approval && (
               <span className="text-xs text-ink-subtle">
                 {tf(
@@ -389,6 +431,24 @@ function SpecDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 반려 자국 — 결재에서 밀려난 문서는 **왜** 밀렸는지를 안고 돌아온다(규약 §17).
+          이것이 없으면 요청자는 초안으로 돌아온 문서를 보고 무엇을 고칠지 모른 채 다시 올린다. */}
+      {cur.rejection && (
+        <div className="anim-fade-in mt-4 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-[13px] text-danger-ink">
+          <div className="font-semibold">
+            {tf(
+              'specDetail.rejectedTitle',
+              { by: cur.rejection.by, at: cur.rejection.at },
+              '{by} 님이 반려했습니다 · {at}',
+            )}
+          </div>
+          <p className="mt-1 leading-relaxed">{cur.rejection.reason}</p>
+          <p className="mt-1.5 text-xs opacity-80">
+            {t('specDetail.rejectedHint', '고친 뒤 [재요청]을 누르면 같은 결재선으로 다시 올라갑니다.')}
+          </p>
+        </div>
+      )}
 
       {/* 잠근 이유와 풀리는 조건을 함께 적는다 — 회색 버튼만 있으면 고장으로 읽힌다 (⑧) */}
       {locked && (
@@ -667,8 +727,9 @@ function SpecDetailPage() {
                 onAction={async () => {
                   await simulate()
                   setRequesting(false)
-                  // 스토어가 상태를 바꾼다 — 목록 칩·대시보드 도넛·이 화면 스테퍼가 같이 움직인다
-                  submitSpecForApproval(spec.id)
+                  // 사양서 상태와 **결재함**이 함께 움직인다 (workflow.ts) — 예전엔 상태만
+                  // 바뀌고 결재함엔 안 생겨서, 승인 관리에 가면 그 건이 없었다
+                  submitSpec(spec, cur.author)
                   toast(
                     t(
                       'specDetail.toast.submitted',
@@ -703,11 +764,53 @@ function SpecDetailPage() {
           <div className="mt-3 rounded-xl border border-hairline px-4 py-3 text-[13px]">
             <div className="text-xs text-ink-subtle">{t('specDetail.approverLabel', '승인자')}</div>
             {/* ⚠ 이름이 글자로 박혀 있었다 — 상신 모달과 상세의 결재선이 갈라질 수 있었다.
-                둘 다 data/approvals.ts 의 SPEC_APPROVAL_LINE 을 읽는다 (규약 §10) */}
+                둘 다 결재함 정본(approvalStore)의 결재선을 읽는다 (규약 §10) */}
             <div className="mt-1.5">
-              <ApprovalLine step={1} roleLabel={roleLabel} stepLabel={stepLabel} />
+              <ApprovalLine line={line} step={1} roleLabel={roleLabel} stepLabel={stepLabel} />
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* 회수 확인 — 되돌릴 수 있는 일이지만 **결재자가 이미 본 것을 치우는** 일이라 묻는다.
+          ⚠ 요구사항 밖 기능이다(FR-114 는 요청–승인–반려–재요청까지) */}
+      {withdrawing && (
+        <Modal
+          title={t('specDetail.withdrawTitle', '요청 회수')}
+          onClose={() => setWithdrawing(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setWithdrawing(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <CtaButton
+                busyLabel={t('specDetail.withdrawing', '회수 중…')}
+                onAction={async () => {
+                  await simulate()
+                  setWithdrawing(false)
+                  const ok = withdrawSpecRequest(spec.id, cur.author)
+                  toast(
+                    ok
+                      ? t('specDetail.toast.withdrawn', '요청을 회수했습니다 — 초안으로 돌아왔습니다')
+                      : t('specDetail.toast.withdrawFailed', '이미 결재가 진행되어 회수할 수 없습니다'),
+                  )
+                }}
+              >
+                {t('specDetail.withdrawSubmit', '회수')}
+              </CtaButton>
+            </div>
+          }
+        >
+          <p className="text-[13px] leading-relaxed text-ink-muted">
+            {t(
+              'specDetail.withdrawDesc',
+              '결재함에서 이 요청을 내리고 사양서를 초안으로 되돌립니다. 고친 뒤 다시 상신할 수 있습니다.',
+            )}
+          </p>
         </Modal>
       )}
     </AppShell>

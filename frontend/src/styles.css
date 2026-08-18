@@ -66,6 +66,13 @@
   --color-review-ink: #f2b65a;
   --color-pending-bg: #262047;
   --color-pending-ink: #b3a4ff;
+  /* '승인 완료' — 결재는 끝났고 배포는 아직인 자리(2026-08-18 신설).
+     ⚠ 이웃과 **뜻이 붙어 있어** 색을 고르기 까다롭다: 배포 완료(초록)와 헷갈리면
+     "배포된 줄" 알고, 승인 대기(보라)와 헷갈리면 "아직 결재 중인 줄" 안다.
+     그래서 초록도 보라도 아닌 파랑(h 230)으로 두되, 회청색 draft(h 250·C 0.05)와는
+     채도로 가른다 — draft 는 거의 무채색이다. */
+  --color-approved-bg: #10283f;
+  --color-approved-ink: #7cc0f5;
   --color-deployed-bg: #12301f;
   --color-deployed-ink: #57dd92;
   --color-danger-bg: #391b1f;
@@ -156,6 +163,7 @@
      네 조각짜리 누적 막대에서 한 칸이 죽어 보였다. 중립이되 무채색은 아니게 잡았다.
      ⚠ 값을 바꾸면 반드시 `node scripts/validate-palette.mjs` 를 돌려 통과시킨다. */
   --color-fill-draft: oklch(0.5 0.05 250);
+  --color-fill-approved: oklch(0.68 0.13 230);
   --color-fill-deployed: oklch(0.63 0.14 158);
   --color-fill-pending: oklch(0.72 0.17 295);
   --color-fill-review: oklch(0.84 0.15 82);
@@ -315,6 +323,8 @@
   --color-review-ink: #96570a;
   --color-pending-bg: #ece7ff;
   --color-pending-ink: #5f43d6;
+  --color-approved-bg: #e2eefb;
+  --color-approved-ink: #10538f;
   --color-deployed-bg: #dff3e8;
   --color-deployed-ink: #177245;
   --color-danger-bg: #fcebeb;
@@ -329,6 +339,7 @@
   --color-fill-deployed: oklch(0.58 0.14 158);
   --color-fill-review: oklch(0.7 0.16 82);
   --color-fill-draft: oklch(0.74 0.05 250);
+  --color-fill-approved: oklch(0.55 0.13 230);
 
   /* 계열 색 — 라이트 면(#ffffff)에서 다시 검증한 값. 다크와 색상은 같고 명도만 다르다.
      ⚠ 청록은 다크 값(#199e70)을 그대로 쓴다 — 밝은 쪽(#1baf7a)은 흰 면에서 대비 2.82 로
