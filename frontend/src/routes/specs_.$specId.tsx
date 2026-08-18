@@ -14,6 +14,8 @@ import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { currentVersion } from '#/data/specs'
 import { isSeededSpec, submitSpecForApproval, useSpecList } from '#/data/specStore'
+import { SPEC_APPROVAL_LINE, approvalOf } from '#/data/approvals'
+import { SERVICE_ROLE_LABEL } from '#/data/members'
 import {
   FIELD_CATEGORIES,
   FIELD_STATUS_CLS,
@@ -32,7 +34,14 @@ export const Route = createFileRoute('/specs_/$specId')({
 })
 
 /* 배포 워크플로우 스테퍼 — 지금 어디까지 왔는지가 헤더에서 한눈에 보인다 */
-function WorkflowStepper({ current }: { current: number }) {
+function WorkflowStepper({
+  current,
+  label,
+}: {
+  current: number
+  /** 단계 이름은 값(한국어 정본)을 그대로 두고 표시만 옮긴다 (규약 §4-7) */
+  label: (s: string) => string
+}) {
   return (
     <div className="overflow-x-auto">
       <ol className="flex min-w-max items-center gap-1 text-xs">
@@ -48,12 +57,57 @@ function WorkflowStepper({ current }: { current: number }) {
                     : 'text-ink-subtle'
               }`}
             >
-              {s}
+              {label(s)}
             </span>
           </li>
         ))}
       </ol>
     </div>
+  )
+}
+
+/* 결재선 — 누가 · 몇 번째 · 지금 누구 차례. 정본은 data/approvals.ts 한 곳이다.
+   ⚠ 예전엔 상신 모달 안에만, 그것도 글자로 박혀 있었다 — 결재에 올라간 뒤에는
+   화면 어디서도 "지금 누구에게 가 있는지" 알 수 없었다(2026-08-18). */
+function ApprovalLine({
+  step,
+  roleLabel,
+  stepLabel,
+}: {
+  /** 지금 몇 번째 결재가 진행 중인가 (1부터) — 결재함이 알려 준다 */
+  step: number
+  roleLabel: (code: string) => string
+  /** 단계 이름(검토·최종 승인) — 값은 정본 그대로, 표시만 사전이 옮긴다 */
+  stepLabel: (label: string) => string
+}) {
+  return (
+    <ol className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+      {SPEC_APPROVAL_LINE.map((a, i) => {
+        const done = a.seq < step
+        const now = a.seq === step
+        return (
+          <li key={a.seq} className="flex items-center gap-2">
+            {i > 0 && <span className="text-ink-subtle">→</span>}
+            <span
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 ${
+                now
+                  ? 'bg-pending-bg font-semibold text-pending-ink ring-1 ring-pending-ink/30'
+                  : done
+                    ? 'bg-chip text-ink-muted'
+                    : 'text-ink-subtle'
+              }`}
+            >
+              {/* 색만으로 가르지 않는다 — 끝난 단계는 체크, 지금 차례는 채운 점 (규약 §2) */}
+              <span aria-hidden>{done ? '✓' : now ? '●' : '○'}</span>
+              {a.name}
+              <span className="font-normal opacity-70">
+                {stepLabel(a.label)} · {roleLabel(a.role)}
+              </span>
+            </span>
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
@@ -87,6 +141,17 @@ function SpecDetailPage() {
   // 예전엔 이 화면의 useState 로만 움직여서, 목록으로 돌아가면 카드가 여전히
   // '검토 중'이었다 — 상신했다는 화면과 안 했다는 화면이 공존했다(2026-08-18).
   const [requesting, setRequesting] = useState(false)
+
+  /* ── 결재 중 잠금 (규약 §2 되돌릴 수 없는 것은 묻는다 · §17 못 하면 이유를 적는다) ──
+     ⚠ 결재에 올라간 문서를 그 자리에서 계속 고칠 수 있었다. 승인자가 본 것과 다른
+     문서가 승인되는 길이 열려 있었던 셈이다(2026-08-18). 잠그되 **왜 잠겼는지**와
+     **언제 풀리는지**를 함께 적는다 — 회색 버튼만 있으면 고장으로 읽힌다. */
+  const locked = spec ? currentVersion(spec).status === '승인 대기' : false
+  const approval = approvalOf(specId)
+  /** 결재자의 Role 코드를 사람 말로 — 회원 화면과 같은 사전을 쓴다 (규약 §4-7) */
+  const roleLabel = (code: string) =>
+    t(`role.${code}`, (SERVICE_ROLE_LABEL as Record<string, string | undefined>)[code] ?? code)
+  const stepLabel = (label: string) => t(`approvalStep.${label}`, label)
 
   // 목록 카드 [승인 요청]에서 ?request=1 로 들어오면 상신 모달을 열고 주소에서 지운다
   // (새로고침이 모달을 또 열지 않게 — specs.tsx 의 ?new=1 과 같은 규칙)
@@ -239,7 +304,8 @@ function SpecDetailPage() {
           <button
             type="button"
             onClick={saveDraft}
-            disabled={dirty === 0}
+            disabled={dirty === 0 || locked}
+            title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
             className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
           >
             {t('specDetail.saveDraft', '임시저장')}
@@ -257,7 +323,8 @@ function SpecDetailPage() {
                 ),
               )
             }}
-            disabled={dirty === 0}
+            disabled={dirty === 0 || locked}
+            title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
             className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {t('specDetail.saveAll', '전체 저장')}
@@ -300,9 +367,47 @@ function SpecDetailPage() {
           <span className="text-xs font-medium text-ink-subtle">
             {t('specDetail.workflowLabel', '배포 워크플로우')}
           </span>
-          <WorkflowStepper current={workflowIndex(cur.status)} />
+          <WorkflowStepper current={workflowIndex(cur.status)} label={(w) => t(`workflow.${w}`, w)} />
         </div>
+
+        {/* 결재 중일 때만 — 지금 누구 차례인지가 이 화면에서 보여야 한다 (⑦) */}
+        {locked && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-hairline pt-3">
+            <span className="text-xs font-medium text-ink-subtle">
+              {t('specDetail.approvalLineLabel', '결재선')}
+            </span>
+            <ApprovalLine step={approval?.step[0] ?? 1} roleLabel={roleLabel} stepLabel={stepLabel} />
+            {approval && (
+              <span className="text-xs text-ink-subtle">
+                {tf(
+                  'specDetail.approvalWaiting',
+                  { days: approval.waitingDays, at: approval.deadline },
+                  '{days}일째 대기 · 기한 {at}',
+                )}
+              </span>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* 잠근 이유와 풀리는 조건을 함께 적는다 — 회색 버튼만 있으면 고장으로 읽힌다 (⑧) */}
+      {locked && (
+        <div className="anim-fade-in mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-pending-ink/30 bg-pending-bg px-4 py-3 text-[13px] text-pending-ink">
+          <span>
+            {t(
+              'specDetail.lockedBanner',
+              '결재 중이라 필드를 고칠 수 없습니다 — 승인자가 본 문서가 그대로 승인되어야 합니다. 반려되거나 승인이 끝나면 다시 열립니다.',
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/approvals' })}
+            className="rounded-lg bg-pending-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
+          >
+            {t('specDetail.viewApproval', '결재 진행 보기 →')}
+          </button>
+        </div>
+      )}
 
       {/* 필드 목록 — 엑셀 시트(카테고리) = 탭, 표가 정본, 행을 누르면 우측에서 편집 */}
       <section className="mt-5 card-spotlight rounded-2xl border border-hairline bg-surface p-5">
@@ -323,7 +428,7 @@ function SpecDetailPage() {
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               {STATUS_OPTIONS.map((s) => (
                 <span key={s} className={`rounded-full px-2 py-0.5 font-semibold tabular-nums ${FIELD_STATUS_CLS[s]}`}>
-                  {s} {counts[s]}
+                  {t(`fieldStatus.${s}`, s)} {counts[s]}
                 </span>
               ))}
             </div>
@@ -343,14 +448,18 @@ function SpecDetailPage() {
               onClick={() =>
                 toast(t('specDetail.toast.excelUpload', '엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다'))
               }
-              className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+              disabled={locked}
+              title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
+              className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
             >
               {t('specDetail.excelUpload', '엑셀 업로드')}
             </button>
             <button
               type="button"
               onClick={() => toast(t('specDetail.toast.addField', '필드 추가 — 본개발에서 연결됩니다'))}
-              className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              disabled={locked}
+              title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
+              className="h-8 rounded-lg bg-gradient-to-r from-primary to-accent2 px-3 text-xs font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {t('specDetail.addField', '+ 필드 추가')}
             </button>
@@ -391,7 +500,8 @@ function SpecDetailPage() {
           className="mt-4"
           rows={visible}
           rowKey={(f) => String(f.no)}
-          onRowClick={setEditing}
+          // 결재 중에는 행을 눌러도 편집 서랍이 열리지 않는다 — 커서도 안 바뀐다
+          onRowClick={locked ? undefined : setEditing}
           minWidth={880}
           empty={
             // 빈 자리에는 **이유**를 적는다(규약 §17): 아직 안 만든 것과 걸러진 것은 다른 말이다
@@ -460,7 +570,7 @@ function SpecDetailPage() {
                 <span
                   className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${FIELD_STATUS_CLS[f.status]}`}
                 >
-                  {f.status}
+                  {t(`fieldStatus.${f.status}`, f.status)}
                 </span>
               ),
             },
@@ -592,12 +702,10 @@ function SpecDetailPage() {
           </p>
           <div className="mt-3 rounded-xl border border-hairline px-4 py-3 text-[13px]">
             <div className="text-xs text-ink-subtle">{t('specDetail.approverLabel', '승인자')}</div>
-            <div className="mt-1 font-medium text-ink">
-              {tf(
-                'specDetail.approverChain',
-                { primary: '한동현', final: '김현대' },
-                '{primary} (1차) → {final} (최종)',
-              )}
+            {/* ⚠ 이름이 글자로 박혀 있었다 — 상신 모달과 상세의 결재선이 갈라질 수 있었다.
+                둘 다 data/approvals.ts 의 SPEC_APPROVAL_LINE 을 읽는다 (규약 §10) */}
+            <div className="mt-1.5">
+              <ApprovalLine step={1} roleLabel={roleLabel} stepLabel={stepLabel} />
             </div>
           </div>
         </Modal>

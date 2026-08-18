@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { apiSend } from '#/lib/api'
@@ -145,7 +146,7 @@ function RolesPage() {
                     onClick={() => setDeleting(r)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
-                    🗑
+                    <Icon name="trash" />
                   </button>
                 </span>
               </div>

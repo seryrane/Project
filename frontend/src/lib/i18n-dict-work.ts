@@ -64,6 +64,31 @@ export const WORK_DICT: Record<string, Entry> = {
   'specDetail.viewing': { ko: '보는 중', en: 'Viewing' },
   'specDetail.compare': { ko: '비교', en: 'Compare' },
   'specDetail.submit': { ko: '상신', en: 'Submit' },
+  // 결재선·결재 중 잠금 (2026-08-18 — 결재에 올라간 문서가 계속 고쳐지던 것을 막으며 신설)
+  'specDetail.approvalLineLabel': { ko: '결재선', en: 'Approval line' },
+  /* 결재 단계 이름 — 정본(data/approvals.ts)이 한국어 문자열을 들고 있어 **낱말 자체가 키**다
+     (위 specStatus.* 와 같은 임시 규칙 · 본개발에서 code+label 로 가른다). 값은 그대로, 표시만. */
+  'approvalStep.검토': { ko: '검토', en: 'Review' },
+  'approvalStep.최종 승인': { ko: '최종 승인', en: 'Final approval' },
+  /* 배포 워크플로우 단계·필드 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다(같은 임시 규칙).
+     ⚠ EN 화면에서 이 두 줄만 한국어로 남아 있었다(2026-08-18) — 값은 그대로, 표시만 옮긴다. */
+  'workflow.초안': { ko: '초안', en: 'Draft' },
+  'workflow.수정중': { ko: '수정중', en: 'Editing' },
+  'workflow.임시저장': { ko: '임시저장', en: 'Saved draft' },
+  'workflow.최종완료': { ko: '최종완료', en: 'Finalized' },
+  'workflow.승인요청': { ko: '승인요청', en: 'Approval requested' },
+  'workflow.배포승인': { ko: '배포승인', en: 'Deploy approved' },
+  'workflow.배포완료': { ko: '배포완료', en: 'Deployed' },
+  'fieldStatus.완료': { ko: '완료', en: 'Done' },
+  'fieldStatus.진행중': { ko: '진행중', en: 'In progress' },
+  'fieldStatus.검토중': { ko: '검토중', en: 'In review' },
+  'fieldStatus.미완료': { ko: '미완료', en: 'Not started' },
+  'specDetail.approvalWaiting': { ko: '{days}일째 대기 · 기한 {at}', en: 'Waiting {days}d · due {at}' },
+  'specDetail.lockedHint': { ko: '결재 중에는 고칠 수 없습니다', en: 'Locked while in approval' },
+  'specDetail.lockedBanner': {
+    ko: '결재 중이라 필드를 고칠 수 없습니다 — 승인자가 본 문서가 그대로 승인되어야 합니다. 반려되거나 승인이 끝나면 다시 열립니다.',
+    en: 'Fields are locked while in approval — approvers must sign off on exactly what they reviewed. Editing reopens once it is rejected or fully approved.',
+  },
   'specDetail.submitting': { ko: '상신 중…', en: 'Submitting…' },
 
   // ── 승인 관리 (/approvals) ───────────────────────────────────────
@@ -87,13 +112,13 @@ export const WORK_DICT: Record<string, Entry> = {
 
   // ── 검증엔진 관리 (/validation-engine) ───────────────────────────
   'engine.register': { ko: '+ 엔진 등록', en: '+ Register engine' },
-  'engine.runNow': { ko: '⚡ 즉시 실행', en: '⚡ Run now' },
+  'engine.runNow': { ko: '즉시 실행', en: 'Run now' },
   'engine.editAria': { ko: '엔진 수정', en: 'Edit engine' },
   'engine.deleteAria': { ko: '엔진 삭제', en: 'Delete engine' },
   'engine.collapse': { ko: '접기', en: 'Collapse' },
   'engine.expand': { ko: '펼치기', en: 'Expand' },
   'engine.tab.code': { ko: '</> Python 함수', en: '</> Python function' },
-  'engine.tab.schedule': { ko: '📅 스케줄', en: '📅 Schedule' },
+  'engine.tab.schedule': { ko: '스케줄', en: 'Schedule' },
   'engine.addSchedule': { ko: '+ 스케줄 추가', en: '+ Add schedule' },
   'engine.schedToggleAria': { ko: '스케줄 활성화', en: 'Enable schedule' },
   'engine.namePlaceholder': { ko: '예: NULL 값 검증 엔진', en: 'e.g. NULL value check engine' },
@@ -125,8 +150,8 @@ export const WORK_DICT: Record<string, Entry> = {
   'reports.view': { ko: '보기', en: 'View' },
   'reports.publish': { ko: '발행', en: 'Publish' },
   'reports.goResults': { ko: '실행 상세는 검증 결과 조회 →', en: 'Run details in Validation Results →' },
-  'reports.print': { ko: '🖨 인쇄', en: '🖨 Print' },
-  'reports.downloadPdf': { ko: '⬇ PDF 다운로드', en: '⬇ Download PDF' },
+  'reports.print': { ko: '인쇄', en: 'Print' },
+  'reports.downloadPdf': { ko: 'PDF 다운로드', en: 'Download PDF' },
 
   // ── 사양서 목록 — 빈 상태 ────────────────────────────────────────
   'specs.empty': { ko: '조건에 맞는 사양서가 없습니다.', en: 'No specs match your filters.' },

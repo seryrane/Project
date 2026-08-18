@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
@@ -236,14 +237,20 @@ function ValidationReportsPage() {
                 onClick={() => toast(t('reports.toast.print', '인쇄 — 본개발에서 연결됩니다'))}
                 className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
-                {t('reports.print', '🖨 인쇄')}
+                <span className="inline-flex items-center gap-1.5">
+                  <Icon name="print" />
+                  {t('reports.print', '인쇄')}
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => toast(t('reports.toast.pdfDownload', 'PDF 다운로드 — 본개발에서 연결됩니다'))}
                 className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
-                {t('reports.downloadPdf', '⬇ PDF 다운로드')}
+                <span className="inline-flex items-center gap-1.5">
+                  <Icon name="download" />
+                  {t('reports.downloadPdf', 'PDF 다운로드')}
+                </span>
               </button>
             </div>
           }

@@ -48,12 +48,16 @@ export function ChipMulti<T extends string>({
   values,
   onChange,
   mono,
+  label,
 }: {
   options: ReadonlyArray<T>
   values: Array<T>
   onChange: (v: Array<T>) => void
   /** 코드성 값(Role 등)은 모노로 */
   mono?: boolean
+  /** 표시만 갈아끼운다 — 값은 언제나 옵션 그대로다 (규약 §4-7 번역은 라벨에만).
+   *  라벨을 주면 코드는 title 로 남아, 코드를 아는 사람도 확인할 수 있다. */
+  label?: (o: T) => string
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -64,6 +68,7 @@ export function ChipMulti<T extends string>({
             key={o}
             type="button"
             aria-pressed={on}
+            title={label ? o : undefined}
             onClick={() => onChange(on ? values.filter((x) => x !== o) : [...values, o])}
             className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95 ${
               mono ? 'font-mono text-[10px]' : ''
@@ -74,7 +79,7 @@ export function ChipMulti<T extends string>({
             }`}
           >
             {on ? '✓ ' : ''}
-            {o}
+            {label ? label(o) : o}
           </button>
         )
       })}

@@ -186,6 +186,26 @@ export const SERVICE_ROLES = [
   'VALIDATION_MANAGER',
 ] as const
 
+export type ServiceRole = (typeof SERVICE_ROLES)[number]
+
+/**
+ * Role **코드 ↔ 사람 말** 매핑 — 코드는 값이고 라벨은 표시다 (규약 §4-7).
+ *
+ * ⚠ 화면이 `KPI_ADMIN` 을 그대로 세우고 있었다. 만든 사람에게만 읽히는 글자다 —
+ * 회원 표에서 "이 사람이 무엇을 할 수 있는가"를 묻는 자리인데, 답이 영문 코드였다
+ * (규약 §15 이름 어긋남 · 2026-08-18). 값은 코드 그대로 두므로 필터·비교·서버
+ * 전달은 흔들리지 않는다. EN 은 사전(`role.<코드>`)이 따로 입힌다.
+ */
+export const SERVICE_ROLE_LABEL: Record<ServiceRole, string> = {
+  KPI_ADMIN: 'KPI 관리자',
+  KPI_EDITOR: 'KPI 편집자',
+  IBD_ADMIN: '사양서 관리자',
+  IBD_EDITOR: '사양서 편집자',
+  IBD_APPROVER: '사양서 승인자',
+  DEPLOY_MANAGER: '배포 담당자',
+  VALIDATION_MANAGER: '검증 담당자',
+}
+
 export const GRADE_CLS: Record<Grade, string> = {
   'Super Admin': 'bg-danger-bg text-danger-ink',
   Admin: 'bg-pending-bg text-pending-ink',

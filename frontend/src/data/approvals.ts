@@ -30,6 +30,37 @@ export interface ApprovalRequest {
   changes: Array<ChangeRow>
 }
 
+/**
+ * 사양서 결재선 **정본** — 검토(1차) → 최종 승인.
+ *
+ * ⚠ 결재선이 상신 모달 안에 '한동현 (1차) → 김현대 (최종)' 글자로 박혀 있었다.
+ * 상세 화면은 결재선을 아예 안 보여 줬고, 승인 관리는 자기 mock 의 approver 를
+ * 따로 들고 있었다 — 같은 결재선을 세 화면이 제각기 말할 수 있는 모양이었다
+ * (규약 §10 같은 것은 한 곳에서 · 2026-08-18).
+ *
+ * 본개발에서는 조직·문서 종류로 파생된다(결재선 엔진). 지금은 한 벌 고정이라
+ * 이 배열이 정본이고, 화면은 여기만 읽는다.
+ */
+export interface ApprovalStep {
+  /** 몇 번째 결재인가 — 화면의 단계 점이 이 순서로 선다 */
+  seq: number
+  name: string
+  /** 결재자의 서비스 Role 코드 — 라벨은 화면이 사전으로 입힌다 (규약 §4-7) */
+  role: string
+  /** 이 단계가 하는 일 */
+  label: string
+}
+
+export const SPEC_APPROVAL_LINE: Array<ApprovalStep> = [
+  { seq: 1, name: '한동현', role: 'IBD_APPROVER', label: '검토' },
+  { seq: 2, name: '김현대', role: 'IBD_ADMIN', label: '최종 승인' },
+]
+
+/** 지금 이 사양서가 결재 어디까지 왔나 — 결재함에서 찾는다(없으면 아직 안 올라간 것). */
+export function approvalOf(specId: string): ApprovalRequest | undefined {
+  return approvalRequests.find((r) => r.specId === specId)
+}
+
 export const approvalRequests: Array<ApprovalRequest> = [
   {
     id: 'APR-2026-0115',

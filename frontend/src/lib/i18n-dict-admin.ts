@@ -627,4 +627,13 @@ export const ADMIN_DICT: Record<string, Entry> = {
     ko: '알림 규칙을 저장했습니다 — 값은 언제든 [규칙 편집]에서 다시 바꿀 수 있습니다',
     en: 'Saved alert rules — change them again anytime in [Edit rules]',
   },
+  /* 서비스 Role — **값은 코드**(KPI_ADMIN…), 여기서는 표시만 옮긴다 (규약 §4-7).
+     한국어 정본은 data/members.ts 의 SERVICE_ROLE_LABEL 이다. */
+  'role.KPI_ADMIN': { ko: 'KPI 관리자', en: 'KPI admin' },
+  'role.KPI_EDITOR': { ko: 'KPI 편집자', en: 'KPI editor' },
+  'role.IBD_ADMIN': { ko: '사양서 관리자', en: 'Spec admin' },
+  'role.IBD_EDITOR': { ko: '사양서 편집자', en: 'Spec editor' },
+  'role.IBD_APPROVER': { ko: '사양서 승인자', en: 'Spec approver' },
+  'role.DEPLOY_MANAGER': { ko: '배포 담당자', en: 'Deployment manager' },
+  'role.VALIDATION_MANAGER': { ko: '검증 담당자', en: 'Validation manager' },
 }

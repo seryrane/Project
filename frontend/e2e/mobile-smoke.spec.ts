@@ -694,12 +694,19 @@ test('등록·상신 — 셈과 상태가 함께 움직인다 (등록 → 빈 �
   // 상신은 확인을 지나야 하고, 지나면 상태가 **진짜로** 바뀐다
   await page.getByRole('button', { name: '승인 요청', exact: true }).click()
   const confirm = page.getByRole('dialog')
-  await expect(confirm.getByText(/승인자/), '무엇이 누구에게 올라가는지 보여 준다').toBeVisible()
+  // ⚠ '승인자'로 찾으면 라벨과 Role 이름('사양서 승인자')이 둘 다 걸린다 — 사람 이름으로 잰다
+  await expect(confirm.getByText('한동현'), '누구에게 올라가는지 보여 준다').toBeVisible()
   await confirm.getByRole('button', { name: '상신', exact: true }).click()
+  // ⚠ 상신 뒤에는 [결재 진행 보기]가 **둘**이다 — 머리의 길과 잠금 띠 안의 길.
+  //   둘 다 같은 곳으로 가므로 첫 번째로 잰다(이름으로 통째로 집으면 strict 위반).
   await expect(
-    page.getByRole('button', { name: /결재 진행 보기/ }),
+    page.getByRole('button', { name: /결재 진행 보기/ }).first(),
     '상신한 것을 또 상신하지 못한다 — 길은 결재 쪽으로 바뀐다',
   ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '승인 요청', exact: true }),
+    '상신한 문서에는 [승인 요청]이 남아 있지 않다',
+  ).toHaveCount(0)
 
   // 목록으로 — 총 수와 승인 대기 수가 함께 늘어야 한다
   await page.getByRole('link', { name: /사양서 목록/ }).click()
@@ -710,4 +717,42 @@ test('등록·상신 — 셈과 상태가 함께 움직인다 (등록 → 빈 �
     after.pending,
     '상신 하나가 승인 대기 수를 늘린다 — 토스트만 뜨고 셈이 그대로면 안 된다',
   ).toBe(before.pending + 1)
+})
+
+/* 결재 중 잠금 + 결재선 — 결재에 올라간 문서는 승인자가 본 그대로 승인돼야 한다.
+   ⚠ 이 가드가 없던 동안 승인 대기 문서의 필드를 그 자리에서 계속 고칠 수 있었고,
+   결재선은 상신 모달 안에만 글자로 박혀 있어 "지금 누구 차례"를 화면에서 알 수
+   없었다 (2026-08-18). 잠그는 것과 **잠근 이유를 적는 것**은 한 쌍이다 (규약 §17). */
+test('결재 중 — 편집이 잠기고, 잠긴 이유와 결재선이 함께 선다', async ({ page }) => {
+  await ready(page, '/specs/SP-001') // 시드 중 유일한 '승인 대기'
+
+  await expect(page.getByText(/결재 중이라 필드를 고칠 수 없습니다/), '왜 잠겼는지 적는다').toBeVisible()
+  await expect(
+    page.getByText(/반려되거나 승인이 끝나면 다시 열립니다/),
+    '언제 풀리는지도 적는다 — 회색 버튼만 있으면 고장으로 읽힌다',
+  ).toBeVisible()
+
+  // 결재선 — 누가·몇 번째·지금 누구 차례
+  const line = page.getByText('결재선', { exact: true }).locator('..')
+  await expect(line.getByText('한동현'), '1차 결재자가 보인다').toBeVisible()
+  await expect(line.getByText('김현대'), '최종 결재자가 보인다').toBeVisible()
+
+  // 고치는 길은 전부 막힌다
+  await expect(page.getByRole('button', { name: '임시저장' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '+ 필드 추가' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '엑셀 업로드' })).toBeDisabled()
+
+  // 행을 눌러도 편집 서랍이 열리지 않는다
+  await page.locator('tbody tr').first().click()
+  await expect(page.getByRole('dialog'), '결재 중에는 편집 서랍이 없다').toHaveCount(0)
+})
+
+test('초안 — 결재 전에는 잠기지 않는다 (잠금이 상태를 안 보고 걸리면 아무도 못 고친다)', async ({
+  page,
+}) => {
+  await ready(page, '/specs/SP-004') // 초안
+  await expect(page.getByText(/결재 중이라 필드를 고칠 수 없습니다/)).toHaveCount(0)
+  await expect(page.getByText('결재선', { exact: true }), '결재 전에는 결재선도 없다').toHaveCount(0)
+  await page.locator('tbody tr').first().click()
+  await expect(page.getByRole('dialog'), '초안은 행을 누르면 편집이 열린다').toBeVisible()
 })

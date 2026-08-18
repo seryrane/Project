@@ -5,12 +5,13 @@ import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
 import { DataTable } from '#/components/portal/DataTable'
+import { Icon } from '#/components/portal/Icon'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { GRADE_CLS, SERVICE_ROLES, STATUS_CLS, members } from '#/data/members'
+import { GRADE_CLS, SERVICE_ROLES, SERVICE_ROLE_LABEL, STATUS_CLS, members } from '#/data/members'
 import type { Grade, Member } from '#/data/members'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
@@ -69,6 +70,13 @@ function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
 
 function MembersPage() {
   const { t, tf } = useI18n()
+  /** Role 코드를 사람 말로 — 값은 코드 그대로다(필터·서버 전달은 안 흔들린다).
+   *  사전에 없는 코드는 한국어 정본으로, 그것도 없으면 코드 그대로 보인다
+   *  (본개발에서 서버가 새 Role 을 늘려도 화면이 빈칸이 되지 않는다). */
+  const roleLabel = (code: string) =>
+    // 타입상으론 카탈로그 밖 코드가 없지만, 서버가 늘린 코드는 타입이 못 막는다 —
+    // 넓혀 읽어서 모르는 코드는 코드 그대로 보인다(빈칸보다 낫다)
+    t(`role.${code}`, (SERVICE_ROLE_LABEL as Record<string, string | undefined>)[code] ?? code)
   const toast = useToast()
   const navigate = useNavigate()
   const { q: query = '', status = ALL_STATUS, grade = ALL_GRADE } = Route.useSearch()
@@ -298,7 +306,14 @@ function MembersPage() {
                       st === '잠금' ? 'bg-review-bg text-review-ink' : 'text-ink-subtle'
                     }`}
                   >
-                    {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
+                    {st === '잠금' ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="lock" />
+                        {t('members.unlockShort')}
+                      </span>
+                    ) : (
+                      <Icon name="unlock" />
+                    )}
                   </span>
                 </span>
                 <span className="mt-2.5 flex flex-wrap items-center gap-1">
@@ -306,8 +321,12 @@ function MembersPage() {
                     {m.grade}
                   </span>
                   {m.roles.map((r) => (
-                    <span key={r} className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
-                      {r}
+                    <span
+                      key={r}
+                      title={r}
+                      className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted"
+                    >
+                      {roleLabel(r)}
                     </span>
                   ))}
                   <span className="ml-auto font-mono text-xs tabular-nums text-ink-subtle">
@@ -366,9 +385,10 @@ function MembersPage() {
                   {m.roles.map((r) => (
                     <span
                       key={r}
-                      className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted"
+                      title={r}
+                      className="whitespace-nowrap rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted"
                     >
-                      {r}
+                      {roleLabel(r)}
                     </span>
                   ))}
                 </span>
@@ -415,7 +435,14 @@ function MembersPage() {
                         : 'text-ink-subtle hover:bg-chip hover:text-ink'
                     }`}
                   >
-                    {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
+                    {st === '잠금' ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="lock" />
+                        {t('members.unlockShort')}
+                      </span>
+                    ) : (
+                      <Icon name="unlock" />
+                    )}
                   </button>
                 )
               },
@@ -525,7 +552,10 @@ function MembersPage() {
                         },
                         {
                           k: t('members.label.serviceRole', '서비스 Role'),
-                          v: detail.roles.length > 0 ? detail.roles.join(', ') : t('members.none', '— (없음)'),
+                          v:
+                            detail.roles.length > 0
+                              ? detail.roles.map(roleLabel).join(', ')
+                              : t('members.none', '— (없음)'),
                         },
                       ].map((row) => (
                         <div key={row.k} className="rounded-xl border border-hairline px-3.5 py-2.5">
@@ -584,7 +614,12 @@ function MembersPage() {
                             {t('members.perm.serviceRoleMulti', '서비스 Role (겸직 가능)')}
                           </span>
                           <div className="mt-1.5">
-                            <ChipMulti options={SERVICE_ROLES} values={draftRoles} onChange={setDraftRoles} mono />
+                            <ChipMulti
+                              options={SERVICE_ROLES}
+                              values={draftRoles}
+                              onChange={setDraftRoles}
+                              label={roleLabel}
+                            />
                           </div>
                         </div>
                       </div>

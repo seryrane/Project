@@ -26,6 +26,16 @@ export type IconName =
   | 'settings'
   | 'logout'
   | 'chat'
+  // 조작 아이콘 — 이모지를 걷어내고 같은 세트의 획으로 그린다 (규약 §22 선 아이콘)
+  | 'unlock'
+  | 'trash'
+  | 'edit'
+  | 'bolt'
+  | 'calendar'
+  | 'print'
+  | 'download'
+  | 'thumbsUp'
+  | 'info'
 
 export interface NavItem {
   key: string

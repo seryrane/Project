@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
@@ -255,7 +256,10 @@ function ValidationEnginePage() {
                       onClick={() => run(e)}
                       className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                     >
-                      {t('engine.runNow', '⚡ 즉시 실행')}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon name="bolt" />
+                        {t('engine.runNow', '즉시 실행')}
+                      </span>
                     </button>
                   )}
                   <button
@@ -264,7 +268,7 @@ function ValidationEnginePage() {
                     onClick={() => setEditing(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
                   >
-                    ✎
+                    <Icon name="edit" />
                   </button>
                   <button
                     type="button"
@@ -272,7 +276,7 @@ function ValidationEnginePage() {
                     onClick={() => setDeleting(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
-                    🗑
+                    <Icon name="trash" />
                   </button>
                   <button
                     type="button"
@@ -292,8 +296,12 @@ function ValidationEnginePage() {
                   <div className="mt-4 flex gap-1 rounded-lg border border-hairline bg-canvas/50 p-1 text-xs w-fit">
                     {(
                       [
-                        { key: 'code', label: t('engine.tab.code', '</> Python 함수') },
-                        { key: 'schedule', label: `${t('engine.tab.schedule', '📅 스케줄')} (${schedules.length})` },
+                        { key: 'code', label: t('engine.tab.code', '</> Python 함수'), icon: null },
+                        {
+                          key: 'schedule',
+                          label: `${t('engine.tab.schedule', '스케줄')} (${schedules.length})`,
+                          icon: <Icon name="calendar" />,
+                        },
                       ] as const
                     ).map((tb) => (
                       <button
@@ -304,7 +312,10 @@ function ValidationEnginePage() {
                           tab === tb.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
                         }`}
                       >
-                        {tb.label}
+                        <span className="inline-flex items-center gap-1.5">
+                          {tb.icon}
+                          {tb.label}
+                        </span>
                       </button>
                     ))}
                   </div>

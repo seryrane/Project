@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { m } from '#/components/portal/motion'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
@@ -141,9 +142,14 @@ function GuidePage() {
                 로그인은 HMG-SSO 계정으로 합니다. 첫 화면(대시보드)은 역할에 맞는 위젯이 자동
                 배치되며, [위젯 편집]으로 크기·위치를 바꿀 수 있습니다.
               </p>
-              <p className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-xs">
-                💡 상단의 <b className="text-ink">⌘K</b> (또는 검색창)를 누르면 어느 화면에서든
-                메뉴·사양서를 바로 찾아 이동할 수 있습니다.
+              <p className="flex items-start gap-2 rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-xs">
+                <span className="mt-0.5 text-primary">
+                  <Icon name="info" />
+                </span>
+                <span>
+                  상단의 <b className="text-ink">⌘K</b> (또는 검색창)를 누르면 어느 화면에서든
+                  메뉴·사양서를 바로 찾아 이동할 수 있습니다.
+                </span>
               </p>
             </div>
           </section>

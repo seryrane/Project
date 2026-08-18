@@ -172,7 +172,9 @@ function SpecsPage() {
                   : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
               }`}
             >
-              {st === ALL_STATUS ? t('common.all', '전체') : st}
+              {/* 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 — 배지는 EN 인데 칩만
+                  한국어면 같은 낱말이 한 화면에서 두 말을 한다 (규약 §15, 2026-08-18) */}
+              {st === ALL_STATUS ? t('common.all', '전체') : t(`specStatus.${st}`, st)}
               <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
             </button>
           )

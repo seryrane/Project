@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { CtaButton } from '#/components/portal/Skeleton'
@@ -134,7 +135,10 @@ function FaqPage() {
                             : 'border-hairline text-ink-muted hover:border-primary/30 hover:text-ink'
                         }`}
                       >
-                        👍 {t('faq.helpful', '도움됨')} {f.helpful + (voted[f.id] ? 1 : 0)}
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="thumbsUp" />
+                          {t('faq.helpful', '도움됨')} {f.helpful + (voted[f.id] ? 1 : 0)}
+                        </span>
                       </button>
                     </div>
                   </div>
