@@ -373,7 +373,7 @@ function Shell({
                 {section.title ? (
                   rail ? (
                     <div
-                      className={`truncate whitespace-nowrap rounded-md bg-[var(--color-sidebar-section)] px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink ${railHide}`}
+                      className={`truncate whitespace-nowrap rounded-md bg-[var(--color-sidebar-section)] px-2.5 py-2.5 text-xs font-semibold tracking-wide text-sidebar-ink ${railHide}`}
                     >
                       {section.title}
                     </div>
@@ -386,7 +386,7 @@ function Shell({
                     <button
                       type="button"
                       onClick={() => toggleSection(section.id)}
-                      className="flex w-full items-center justify-between rounded-md bg-[var(--color-sidebar-section)] px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:bg-sidebar-hover hover:text-sidebar-strong"
+                      className="flex w-full items-center justify-between rounded-md bg-[var(--color-sidebar-section)] px-2.5 py-2.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:text-sidebar-strong"
                     >
                       {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
                       <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>

@@ -7,11 +7,14 @@ export function ChipSelect<T extends string>({
   options,
   value,
   onChange,
+  label,
   mono,
 }: {
   options: ReadonlyArray<T>
   value: T
   onChange: (v: T) => void
+  /** 표시만 갈아끼운다 — 값은 옵션 그대로 (규약 §4-7) */
+  label?: (o: T) => string
   /** 코드성 값(타입 등)은 모노로 */
   mono?: boolean
 }) {
@@ -35,7 +38,7 @@ export function ChipSelect<T extends string>({
           >
             {/* 규약 16절 — 고른 것은 색만으로 말하지 않는다. 글자로도 남긴다 */}
             {on ? '✓ ' : ''}
-            {o}
+            {label ? label(o) : o}
           </button>
         )
       })}

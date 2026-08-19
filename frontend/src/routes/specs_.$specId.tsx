@@ -290,9 +290,9 @@ function SpecDetailPage() {
               >
                 {t('specDetail.viewApproval', '결재 진행 보기 →')}
               </button>
-              {/* 회수 — ⚠ **요구사항 밖**(approvalStore.withdrawRequest 주석). 한 단계라도
-                  승인이 찍혔으면 버튼 자체를 안 낸다: 누를 수 없는 버튼을 두면 왜 안 되는지
-                  묻게 되고, 여기서는 "이미 누가 판단했다"가 답이라 결재선이 그것을 말한다 */}
+              {/* 회수 — 한 단계라도 승인이 찍혔으면 버튼 자체를 안 낸다: 누를 수 없는 버튼을
+                  두면 왜 안 되는지 묻게 되고, 여기서는 "이미 누가 판단했다"가 답이라
+                  결재선이 그것을 말한다 (✔ 2026-08-19 채택) */}
               {approval && approval.trail.length === 0 && (
                 <button
                   type="button"
@@ -840,8 +840,7 @@ function SpecDetailPage() {
         </Modal>
       )}
 
-      {/* 회수 확인 — 되돌릴 수 있는 일이지만 **결재자가 이미 본 것을 치우는** 일이라 묻는다.
-          ⚠ 요구사항 밖 기능이다(FR-114 는 요청–승인–반려–재요청까지) */}
+      {/* 회수 확인 — 되돌릴 수 있는 일이지만 **결재자가 이미 본 것을 치우는** 일이라 묻는다 */}
       {withdrawing && (
         <Modal
           title={t('specDetail.withdrawTitle', '요청 회수')}

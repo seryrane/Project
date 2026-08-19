@@ -61,13 +61,15 @@
      있는 값은 토큰으로 둔다 — 그래야 테마가 늘어도 마크업을 안 고친다(2026-08-13). */
   --color-sidebar-strong: #ffffff;
   --color-sidebar-hover: rgb(255 255 255 / 6%);
-  /* 상위 메뉴(섹션 머리)가 앉는 면 — **호버보다 옅다**(4% < 6%). 머리가 항목보다 진하면
-     누를 것처럼 보인다: 이 면은 "여기부터 다른 묶음"이라는 표시일 뿐이다 (2026-08-19).
+  /* 상위 메뉴(섹션 머리)가 앉는 면 — 2026-08-19 사용자 요청으로 4% → **7%** 로 올리고
+     높이도 키웠다(py-1.5 → py-2.5). 면이 옅으면 묶음 경계가 훑을 때 안 잡힌다.
+     ⚠ 대신 **호버에서 면을 더 밝히지 않는다** — 머리는 누르는 것이 아니라 묶음의 표시라,
+     글자 색만 또렷해진다(면까지 움직이면 항목처럼 보인다).
      ⚠⚠ 마크업에서는 **`bg-[var(--color-sidebar-section)]` 로만** 쓴다 — 이름 유틸
      (`bg-sidebar-section`)로 쓰면 Tailwind v4 가 **값을 그 자리에 박아** 라이트에서
      다크 값(흰 4%)이 그대로 나온다. 흰 사이드바에 흰 4% 는 아무 일도 안 한다
      (위 --shadow-topbar 주석과 같은 함정 — 실제로 여기서 또 밟았다). */
-  --color-sidebar-section: rgb(255 255 255 / 4%);
+  --color-sidebar-section: rgb(255 255 255 / 7%);
   --color-sidebar-line: rgb(255 255 255 / 8%);
   --color-chip: rgb(255 255 255 / 6%);
   --color-chip-strong: rgb(255 255 255 / 11%);
@@ -298,7 +300,7 @@
   --color-sidebar: #ffffff;
   /* ⚠ 라이트에서는 사이드바가 **흰 면**이라 흰색을 더 깔면 아무 일도 안 일어난다 —
      반대로 한 단 눌러야 묶음이 보인다(같은 뜻, 반대 방향) */
-  --color-sidebar-section: rgb(15 27 46 / 4%);
+  --color-sidebar-section: rgb(15 27 46 / 7%);
   --color-sidebar-ink: #5b667e; /* 캔버스·흰 면 둘 다에서 읽히는 보조 글자 */
   --color-sidebar-strong: #0f1b2e; /* 활성·호버의 강한 글자 */
   --color-sidebar-hover: #eef3fa; /* 호버 면 — 조작은 면보다 한 단계 눌린다(field 와 같은 계열) */

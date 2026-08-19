@@ -136,6 +136,14 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M4.5 19.5h15" />
     </>
   ),
+  /* 올리기 — 내려받기와 **화살표 방향이 반대**다(색이 아니라 모양이 뜻을 진다) */
+  upload: (
+    <>
+      <path d="M12 19.5V8.5" />
+      <path d="M7.5 13 12 8.5l4.5 4.5" />
+      <path d="M4.5 4.5h15" />
+    </>
+  ),
   thumbsUp: (
     <>
       <path d="M7 20.5V10l4-6.5A2 2 0 0 1 14 5l-.8 4.5h5.1a2 2 0 0 1 2 2.4l-1.4 6.2a2 2 0 0 1-2 1.4z" />

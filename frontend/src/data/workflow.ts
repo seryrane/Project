@@ -103,7 +103,7 @@ export function decide(
   return { ok: true, finished: res.finished }
 }
 
-/* ── 회수 (⚠ 요구사항 밖 — approvalStore.withdrawRequest 주석 참고) ── */
+/* ── 회수 (✔ 2026-08-19 채택 — FR-114 의 확장. approvalStore 주석 참고) ── */
 
 /** 결재함에서 곧장 회수 — 승인 관리 [내 요청]이 쓴다. 대상(사양서)도 함께 되돌린다. */
 export function withdrawRequestById(requestId: string, by: string): boolean {

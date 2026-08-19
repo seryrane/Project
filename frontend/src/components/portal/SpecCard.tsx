@@ -43,7 +43,8 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
       {/* 몸 */}
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
       <h3 className="text-base font-semibold text-ink">{spec.name}</h3>
-      <div className="mt-0.5 text-xs text-ink-subtle">{spec.category}</div>
+      {/* 카테고리도 표시만 옮긴다 — 값은 정본(한국어) 그대로 */}
+      <div className="mt-0.5 text-xs text-ink-subtle">{t(`specCategory.${spec.category}`, spec.category)}</div>
       <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-muted">
         {spec.description}
       </p>

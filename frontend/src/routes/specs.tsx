@@ -5,13 +5,15 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
+import { SpecImportModal } from '#/components/portal/SpecImportModal'
 import { SavedFilters } from '#/components/portal/SavedFilters'
 import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { orNone, pickOne, pickText } from '#/lib/urlState'
-import { currentVersion, specs } from '#/data/specs'
+import { members } from '#/data/members'
+import { SPEC_CATEGORIES, currentVersion } from '#/data/specs'
 import { registerSpec, useSpecList } from '#/data/specStore'
 import type { NewSpecInput } from '#/data/specStore'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
@@ -24,7 +26,9 @@ const ALL_STATUS = '전체 상태'
 
 // 카테고리 선택지는 초기 정본에서 — 등록으로 늘어난 목록에 따라 필터 허용값이
 // 흔들리면 옛 링크가 기본값으로 떨어진다(urlState 규칙 ②는 지키되 축은 고정)
-const specCategories = Array.from(new Set(specs.map((s) => s.category)))
+/* ⚠ 예전에는 mock 에서 뽑았다 — 등록으로 카테고리가 늘면 필터 허용값이 흔들리고 옛 링크가
+   기본값으로 떨어진다. 축은 **정본**이 정한다(data/specs.ts SPEC_CATEGORIES). */
+const specCategories = SPEC_CATEGORIES
 
 /** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
 interface SpecsSearch {
@@ -48,8 +52,15 @@ export const Route = createFileRoute('/specs')({
   }),
 })
 
+/** 카테고리 표시 — 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 (2026-08-19) */
+function useCategoryLabel() {
+  const { t } = useI18n()
+  return (c: string) => t(`specCategory.${c}`, c)
+}
+
 function SpecsPage() {
   const { t, tf } = useI18n()
+  const catLabel = useCategoryLabel()
   const {
     open,
     q: query = '',
@@ -60,6 +71,7 @@ function SpecsPage() {
   const navigate = useNavigate()
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
   const [creating, setCreating] = useState(false)
+  const [importing, setImporting] = useState(false)
   // 정본은 스토어 — 등록·상신이 일어나면 목록·상태 칩이 같이 다시 센다
   const specList = useSpecList()
 
@@ -124,6 +136,15 @@ function SpecsPage() {
         </div>
         {/* ⚠ 이 버튼은 onClick 없이 노출돼 있었다 — 화면에서 가장 눈에 띄는 CTA 가
             눌러도 아무 일 없는 죽은 조작이었다(2026-08-18 실측, 규약 §0 예측 가능성) */}
+        {/* 엑셀 이관(FR-115) — 최초 대량 이관은 여기서 시작한다. 등록 옆에 두는 이유:
+            "한 건 만들기"와 "여러 건 가져오기"는 같은 자리에서 고르는 일이다 */}
+        <button
+          type="button"
+          onClick={() => setImporting(true)}
+          className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          {t('specs.import', '엑셀 올리기')}
+        </button>
         <button
           type="button"
           onClick={() => setCreating(true)}
@@ -145,6 +166,7 @@ function SpecsPage() {
           {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
           <ChipSelect
             options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
+            label={(c) => (c === t('specs.allCategories', ALL_CATEGORY) ? c : catLabel(c))}
             value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
             onChange={(v) =>
               setSearch({
@@ -235,6 +257,35 @@ function SpecsPage() {
 
       {/* 등록 — 끝내고 닫는 것이라 MODAL (규약 §1). 저장되면 상세로 보낸다:
           등록의 다음 행동은 언제나 "필드를 채우는 것"이다 (규약 §10 카드는 다음 행동으로 끝난다) */}
+      {importing && (
+        <SpecImportModal
+          knownSpecNames={specList.map((s) => s.name)}
+          knownMemberNames={members.map((m) => m.name)}
+          onClose={() => setImporting(false)}
+          onApply={(kind, rows) => {
+            /* ⚠ **정상 행만** 온다(검증은 관문이 끝냈다). 여기서는 "이미 있으면 건너뛴다"만
+               판단한다 — 같은 파일을 다시 올려도 안전해야 한다(설계 §5). 필드 정의는
+               사양서 본문에 붙는 것이라 **본개발에서 서버로** 간다(지금은 셈만 돌려준다). */
+            if (kind === 'fields') return rows.length
+            const have = new Set(specList.map((s) => s.name))
+            let applied = 0
+            for (const r of rows) {
+              if (have.has(r['사양서명'])) continue
+              registerSpec({
+                name: r['사양서명'],
+                category: r['카테고리'],
+                description: r['설명'] ?? '',
+                tags: (r['태그'] ?? '').split(',').map((x) => x.trim()).filter(Boolean),
+                author: r['담당자'] || '김현대',
+              })
+              have.add(r['사양서명'])
+              applied++
+            }
+            return applied
+          }}
+        />
+      )}
+
       {creating && (
         <RegisterSpecModal
           onClose={() => setCreating(false)}
@@ -257,10 +308,11 @@ function RegisterSpecModal({
   onClose: () => void
   onRegistered: (id: string) => void
 }) {
+  const catLabel = useCategoryLabel()
   const { t, tf } = useI18n()
   const toast = useToast()
   const [name, setName] = useState('')
-  const [category, setCategory] = useState(specCategories[0])
+  const [category, setCategory] = useState<(typeof specCategories)[number]>(specCategories[0])
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState('')
   const [nameError, setNameError] = useState(false)
@@ -333,7 +385,7 @@ function RegisterSpecModal({
         <div>
           <span className="text-xs font-medium text-ink-subtle">{t('specs.form.category', '카테고리')}</span>
           <div className="mt-1.5">
-            <ChipSelect options={specCategories} value={category} onChange={setCategory} />
+            <ChipSelect options={specCategories} value={category} onChange={setCategory} label={catLabel} />
           </div>
         </div>
         <label className="block">

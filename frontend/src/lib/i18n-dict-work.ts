@@ -11,6 +11,13 @@ export const WORK_DICT: Record<string, Entry> = {
   'specStatus.검토 중': { ko: '검토 중', en: 'In review' },
   'specStatus.승인 대기': { ko: '승인 대기', en: 'Pending approval' },
   'specStatus.승인 완료': { ko: '승인 완료', en: 'Approved' },
+
+  /* 사양서 카테고리 — 값은 한국어 정본(엑셀 양식·서버·필터가 이 문자열로 맞물린다),
+     표시만 옮긴다. ⚠ 등록 모달의 카테고리 칩도 같은 사전을 탄다(2026-08-19). */
+  'specCategory.파워트레인': { ko: '파워트레인', en: 'Powertrain' },
+  'specCategory.전동화': { ko: '전동화', en: 'Electrification' },
+  'specCategory.자율주행': { ko: '자율주행', en: 'Autonomous driving' },
+  'specCategory.차체/안전': { ko: '차체/안전', en: 'Body & safety' },
   'specStatus.배포 완료': { ko: '배포 완료', en: 'Deployed' },
 
   /* 결재 종류 · 배포 상태 · 파이프라인 단계 · 검증 결과 상태 — 전부 같은 규칙이다:
@@ -42,6 +49,65 @@ export const WORK_DICT: Record<string, Entry> = {
 
   // ── 사양서 목록 (/specs) ──────────────────────────────────────────
   'specs.register': { ko: '+ 사양서 등록', en: '+ New spec' },
+  /* 엑셀 이관 (FR-115, 2026-08-19) — 사양서가 지금 엑셀로 관리되어 최초 이관이 파일로 온다 */
+  'specs.import': { ko: '엑셀 올리기', en: 'Import Excel' },
+  'import.title': { ko: '엑셀 사양서 올리기', en: 'Import specs from Excel' },
+  'import.stepOf': { ko: '{n}/{total} · {name}', en: '{n}/{total} · {name}' },
+  'import.step.고르기': { ko: '고르기', en: 'Choose' },
+  'import.step.확인': { ko: '확인', en: 'Review' },
+  'import.step.검증': { ko: '검증', en: 'Validate' },
+  'import.step.반영': { ko: '반영', en: 'Apply' },
+  'import.back': { ko: '뒤로', en: 'Back' },
+  'import.toValidate': { ko: '검증 결과 보기', en: 'See validation' },
+  'import.apply': { ko: '정상 {n}건 반영', en: 'Apply {n} valid rows' },
+  'import.nothingToApply': { ko: '반영할 정상 행이 없습니다', en: 'No valid rows to apply' },
+  'import.whatKind': { ko: '무엇을 올리나요', en: 'What are you importing?' },
+  'import.kind.catalog': { ko: '사양서 대장 (한 행 = 사양서)', en: 'Spec catalog (one row = one spec)' },
+  'import.kind.fields': { ko: '필드 정의 (한 행 = 필드)', en: 'Field definitions (one row = one field)' },
+  'import.needCols': { ko: '필요한 열', en: 'Required columns' },
+  'import.optional': { ko: '선택', en: 'optional' },
+  'import.template': { ko: '템플릿 내려받기', en: 'Download template' },
+  'import.pick': { ko: '파일 고르기 (CSV)', en: 'Choose a file (CSV)' },
+  'import.pickHint': {
+    ko: '엑셀은 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 주세요 · 10MB 이하',
+    en: 'From Excel: Save As → CSV UTF-8 · 10MB or less',
+  },
+  'import.xlsxHint': {
+    ko: '지금은 CSV 만 읽습니다 — 엑셀에서 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 올려 주세요',
+    en: 'CSV only for now — save the workbook as CSV UTF-8 and upload that',
+  },
+  'import.readAs': { ko: '{file} 을 이렇게 읽었습니다 — 자료 {n}행', en: 'Read {file} as follows — {n} data rows' },
+  'import.previewHint': {
+    ko: '앞 5행만 보여 줍니다 — 열이 밀렸으면 뒤로 가서 파일을 다시 고르세요',
+    en: 'First 5 rows shown — if columns look shifted, go back and pick another file',
+  },
+  'import.okCount': { ko: '정상 {n}건', en: '{n} valid' },
+  'import.warnCount': { ko: '경고 {n}건', en: '{n} warnings' },
+  'import.errCount': { ko: '오류 {n}건', en: '{n} errors' },
+  'import.report': { ko: '오류 리포트 받기', en: 'Download error report' },
+  'import.clean': { ko: '고칠 것이 없습니다 — 그대로 반영할 수 있습니다.', en: 'Nothing to fix — ready to apply.' },
+  'import.partialHint': {
+    ko: '오류 행은 빼고 정상 행만 반영합니다 — 고친 뒤 같은 파일을 다시 올려도 안전합니다.',
+    en: 'Only valid rows are applied — re-uploading the same file after fixes is safe.',
+  },
+  'import.result': {
+    ko: '{applied}건 반영했습니다 · 이미 있어 건너뜀 {skipped}건 · 오류로 빠짐 {failed}건',
+    en: 'Applied {applied} · skipped {skipped} (already exist) · {failed} left out (errors)',
+  },
+  'import.nextStep': {
+    ko: '오류 행은 리포트를 받아 고친 뒤 다시 올려 주세요 — 이미 반영된 건은 중복으로 들어가지 않습니다.',
+    en: 'Download the report, fix the rows, and upload again — applied rows will not duplicate.',
+  },
+  'import.auditHint': {
+    ko: '업로드 사실은 감사 로그에 남습니다 (본개발에서 배치 단위로 되돌릴 수 있게 확장).',
+    en: 'The upload is recorded in the audit log (batch-level undo comes in the main build).',
+  },
+  'import.th.row': { ko: '행', en: 'Row' },
+  'import.th.column': { ko: '열', en: 'Column' },
+  'import.th.level': { ko: '수준', en: 'Level' },
+  'import.th.reason': { ko: '사유', en: 'Reason' },
+  'import.noRows': { ko: '읽은 행이 없습니다.', en: 'No rows were read.' },
+  'import.noIssues': { ko: '걸린 행이 없습니다.', en: 'No rows flagged.' },
   'specs.searchPlaceholder': { ko: '사양서 명, ID, 태그 검색...', en: 'Search name, ID, tag...' },
   'specs.allCategories': { ko: '전체 카테고리', en: 'All categories' },
   // 등록 모달 (2026-08-18 — 죽은 CTA 를 실제 등록으로 배선하며 신설)

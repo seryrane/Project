@@ -32,6 +32,18 @@ export interface Spec {
   history: Array<SpecVersion>
 }
 
+/**
+ * 사양서 카테고리 **정본** — 값은 한국어, 표시만 사전이 옮긴다(`specCategory.<한국어>`).
+ *
+ * ⚠ 예전에는 목록 화면이 `Array.from(new Set(specs.map(s => s.category)))` 로 **mock 에서
+ * 뽑아** 쓰고 있었다. 그러면 등록으로 새 카테고리가 생기는 순간 필터 허용값이 흔들리고,
+ * 엑셀 업로드(FR-115)가 카테고리를 검사할 축도 없다 — 축은 데이터가 아니라 **정본**이 정한다.
+ * ⚠ 값을 영문으로 바꾸지 않는다: 엑셀 양식·서버·필터가 전부 이 문자열로 맞물린다
+ * (2026-08-19 "카테고리 EN 표기" 요청 — 표기만 옮기고 값은 그대로).
+ */
+export const SPEC_CATEGORIES = ['파워트레인', '전동화', '자율주행', '차체/안전'] as const
+export type SpecCategory = (typeof SPEC_CATEGORIES)[number]
+
 export function currentVersion(spec: Spec): SpecVersion {
   return spec.history[0]
 }

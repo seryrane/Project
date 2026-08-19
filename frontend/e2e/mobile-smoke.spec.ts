@@ -1059,3 +1059,63 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await expect(page.getByText(/Release .* 배포/).first(), '결재함에도 같은 순간 생긴다').toBeVisible()
   })
 })
+
+/* 엑셀 이관 — FR-115 (Excel/CSV 템플릿 기반 대량 업로드, 오류 리포트, **부분 반영**).
+   ⚠ 사양서는 지금 엑셀로 관리되고 있어 **최초 이관이 파일로 들어온다**(2026-08-19 사용자).
+   수용기준 셋을 그대로 좌표로 박는다: ①형식 위반 사전 차단 ②오류 행이 사유와 함께
+   ③정상 행만 부분 반영. 규칙은 `lib/specImport.ts` 가 지고 화면은 걸음만 그린다. */
+test.describe('엑셀 이관 (FR-115)', () => {
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false })
+
+  const csv = (body: string) => ({
+    name: 'specs.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(`사양서명,카테고리,설명,태그,담당자,버전\n${body}`, 'utf-8'),
+  })
+
+  test('형식 위반은 한 행도 읽지 않는다 — 어느 열이 없는지 이름으로 말한다 (AC ①)', async ({
+    page,
+  }) => {
+    await ready(page, '/specs')
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.locator('input[type=file]').setInputFiles({
+      name: 'wrong.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('이름,분류\nA,B', 'utf-8'),
+    })
+    await expect(page.getByText(/필수 열이 없습니다/), '무엇이 없는지 말한다').toBeVisible()
+    await expect(page.getByText(/사양서명/).first()).toBeVisible()
+  })
+
+  test('오류 행은 사유와 함께 남고, 정상 행만 반영된다 (AC ②③)', async ({ page }) => {
+    await ready(page, '/specs')
+    const before = Number((await page.getByText(/총 \d+개 사양서/).textContent())?.match(/총 (\d+)개/)?.[1])
+
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.locator('input[type=file]').setInputFiles(
+      csv(
+        [
+          'CSV 신규 사양서 A,파워트레인,설명 A,태그1,김민준,v0.1', // 정상
+          'CSV 신규 사양서 B,없는카테고리,설명 B,,김민준,v0.1', // 오류(카테고리)
+          'VN7 엔진 사양서,파워트레인,이미 있는 이름,,김민준,v0.1', // 경고(건너뜀)
+        ].join('\n'),
+      ),
+    )
+
+    // ② 확인 — 읽은 대로 보여 준다
+    await expect(page.getByText(/이렇게 읽었습니다/)).toBeVisible()
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+
+    // ③ 검증 — 사유가 행·열과 함께 남는다
+    await expect(page.getByText(/정본에 없는 값입니다/), '왜 오류인지 적는다').toBeVisible()
+    await expect(page.getByText(/이미 있는 사양서라 건너뜁니다/), '중복은 오류가 아니라 경고').toBeVisible()
+
+    // ④ 반영 — 정상 행만
+    await page.getByRole('button', { name: /정상 \d+건 반영/ }).click()
+    await expect(page.getByText(/건 반영했습니다/)).toBeVisible()
+    await page.getByRole('button', { name: '닫기' }).last().click()
+
+    // 목록이 실제로 늘었다 — 정상 1건만(오류 1 · 중복 1 은 안 들어간다)
+    await expect(page.getByText(new RegExp(`총 ${before + 1}개 사양서`))).toBeVisible()
+  })
+})

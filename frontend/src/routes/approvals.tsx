@@ -400,7 +400,7 @@ function ApprovalsPage() {
                   >
                     {r.state}
                   </span>
-                  {/* 회수 — 아직 아무도 판단하지 않은 건만 (⚠ 요구사항 밖 기능) */}
+                  {/* 회수 — 아직 아무도 판단하지 않은 건만 (✔ 2026-08-19 채택) */}
                   {r.state === '진행 중' && r.trail.length === 0 && (
                     <button
                       type="button"

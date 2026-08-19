@@ -34,6 +34,7 @@ export type IconName =
   | 'calendar'
   | 'print'
   | 'download'
+  | 'upload'
   | 'thumbsUp'
   | 'info'
   // 관문 밖에서 손으로 그려지던 모양들 — 화면마다 굵기가 1.5~2.2 로 갈렸다(2026-08-18)
