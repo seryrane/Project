@@ -66,6 +66,12 @@ function nextId(): string {
   return `SP-${String(max + 1).padStart(3, '0')}`
 }
 
+/** 대량 등록에서 번호를 잇는다 — 목록에 **아직 안 넣은 것**만큼 밀어야 번호가 겹치지 않는다 */
+function nextIdFrom(offset: number): string {
+  const max = specList.reduce((m, s) => Math.max(m, Number(s.id.replace('SP-', '')) || 0), 0)
+  return `SP-${String(max + offset + 1).padStart(3, '0')}`
+}
+
 function today(): string {
   const d = new Date()
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
@@ -73,8 +79,16 @@ function today(): string {
 
 /** 등록 — v0.1 초안으로 태어난다. 새것이 맨 앞(목록이 "방금 만든 것"부터 보인다). */
 export function registerSpec(input: NewSpecInput): Spec {
+  const spec = makeSpec(input, nextId())
+  specList = [spec, ...specList]
+  notify()
+  return spec
+}
+
+/** 사양서 한 건의 **모양** — 한 건 등록과 대량 이관이 이 함수를 함께 쓴다(두 벌이면 어긋난다) */
+function makeSpec(input: NewSpecInput, id: string): Spec {
   const spec: Spec = {
-    id: nextId(),
+    id,
     name: input.name.trim(),
     category: input.category,
     description: input.description.trim(),
@@ -93,9 +107,32 @@ export function registerSpec(input: NewSpecInput): Spec {
       },
     ],
   }
-  specList = [spec, ...specList]
-  notify()
+  // ⚠ 여기서 목록에 넣지 않는다 — 만드는 함수가 넣기까지 하면 대량 등록이 **두 번** 넣는다
+  //   (2026-08-19 실측: 시트 2개 파일에서 "1건 반영"이라 말하고 목록엔 같은 SP-005 가 두 장)
   return spec
+}
+
+/**
+ * 여러 건을 **한 번에** 등록한다 (엑셀 이관). 알림은 마지막에 한 번.
+ *
+ * ⚠ `registerSpec` 을 반복해 부르면 건마다 구독자가 깨어난다 — 시트 100개짜리 파일에서
+ * 목록·대시보드·도넛이 100번 다시 그려진다. 사람 눈엔 멈춘 화면으로 보인다.
+ * ⚠ 이미 있는 이름은 건너뛴다(설계 §5) — 같은 파일을 다시 올려도 안전해야 한다.
+ * 돌려주는 값은 **실제로 들어간 수**다: 화면이 "n건 반영"이라고 말할 근거가 여기서 나온다.
+ */
+export function registerSpecs(inputs: Array<NewSpecInput>): number {
+  const have = new Set(specList.map((s) => s.name))
+  const born: Array<Spec> = []
+  for (const input of inputs) {
+    const name = input.name.trim()
+    if (name === '' || have.has(name)) continue
+    born.push(makeSpec(input, nextIdFrom(born.length)))
+    have.add(name)
+  }
+  if (born.length === 0) return 0
+  specList = [...born.reverse(), ...specList]
+  notify()
+  return born.length
 }
 
 /** 상신 — 초안·검토 중만 승인 대기로 간다. 이미 결재 중·배포면 아무 일도 안 한다.

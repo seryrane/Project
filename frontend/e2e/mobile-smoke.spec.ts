@@ -1175,6 +1175,12 @@ test.describe('엑셀 이관 (FR-115)', () => {
     await page.getByRole('button', { name: '닫기' }).last().click()
     await expect(page.getByText(new RegExp(`총 ${before + 1}개 사양서`))).toBeVisible()
 
+    /* ⚠ 화면이 "감사 로그에 남았습니다"라고 말한다 — **정말 남았는지**를 좌표로 지킨다.
+       이 문장은 2026-08-19 까지 거짓이었다(프런트에 감사 쓰기 경로가 아예 없었다). */
+    await page.getByRole('link', { name: /개인정보보호/ }).click()
+    await expect(page.getByText(/사양서 엑셀 이관/).filter({ visible: true }).first()).toBeVisible()
+    await page.getByRole('link', { name: /사양서 관리/ }).click()
+
     // 머리 행의 열이 그대로 필드가 됐다 — 첫 자료 행이 예시 값으로 붙는다
     await page
       .getByRole('article')

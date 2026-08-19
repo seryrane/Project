@@ -13,6 +13,7 @@
 import { SPEC_CATEGORIES } from '#/data/specs'
 import type { SpecField } from '#/data/specs'
 import type { SheetGrid } from '#/lib/xlsx'
+import type { SheetOut } from '#/lib/xlsxWrite'
 
 export type ImportKind = 'catalog' | 'fields'
 
@@ -249,16 +250,72 @@ export function issuesToCsv(issues: Array<RowIssue>): string {
   ].join('\n')
 }
 
-/** 빈 템플릿 CSV — 받는 쪽이 무엇을 채워야 하는지가 파일 자체로 말한다 */
-export function templateCsv(kind: ImportKind): string {
-  const t = TEMPLATE[kind]
-  const headers = [...t.required, ...t.optional]
-  const sample =
-    kind === 'catalog'
-      ? ['VN9 하이브리드 파워트레인 사양서', '파워트레인', '출력·연비 규격', '하이브리드,VN9', '김민준', 'v0.1']
-      : ['VN7 엔진 사양서', '기본정보 · 식별자', '항목코드', 'string', 'Y', '20', '^[A-Z]{2}\\d{4}$', '완료']
-  return `${headers.join(',')}\n${sample.map((s) => (/[",]/.test(s) ? `"${s}"` : s)).join(',')}`
+/**
+ * **우리 표준 양식(초안)** — 실물 엑셀을 받기 전에 우리가 먼저 그린다
+ * (2026-08-19 사용자: "지금은 초안만 우리가 먼저 작성하는 형태로").
+ *
+ * ⚠ 양식이 없으면 회의가 말로만 돈다. 초안이 있으면 "이 열은 우리 쪽에 없다 / 이건
+ * 두 칸으로 나뉜다" 같은 **구체적인 반론**이 나온다 — 그게 실물을 당기는 가장 빠른 길이다.
+ * ⚠ 열 정의의 정본은 위 `TEMPLATE` 하나다. 이 함수는 그것을 엑셀로 옮겨 적을 뿐이라
+ * 열을 고치면 화면 검증과 내려받는 양식이 **함께** 바뀐다(두 벌이 되면 반드시 어긋난다).
+ * ⚠ 첫 시트는 표가 아니라 **읽어보기**다 — 받는 사람은 설명서를 따로 안 읽는다.
+ */
+export function templateWorkbook(): Array<SheetOut> {
+  const guide: Array<Array<string>> = [
+    ['HMG 사양서 이관 표준 양식 (초안)'],
+    [''],
+    ['이 파일은 아직 초안입니다 — 실제 쓰시는 엑셀을 주시면 그 모양에 맞춰 고칩니다.'],
+    ['★ 표시된 열은 반드시 채워야 하고, 나머지는 비워도 됩니다.'],
+    [''],
+    ['시트', '한 행이 무엇인가', '필수 열'],
+    ['사양서 대장', '사양서 한 건', TEMPLATE.catalog.required.join(', ')],
+    ['필드 정의', '사양서의 필드 하나', TEMPLATE.fields.required.join(', ')],
+    [''],
+    ['정해진 값만 쓰는 열'],
+    ['카테고리', SPEC_CATEGORIES.join(' / ')],
+    ['타입', FIELD_TYPES.join(' / ')],
+    ['상태', FIELD_STATES.join(' / ')],
+    ['필수', 'Y / N'],
+    [''],
+    ['이 양식을 꼭 쓰셔야 하는 것은 아닙니다.'],
+    ['지금 쓰시는 엑셀을 그대로 올리셔도 됩니다 — 그때는 시트 이름이 사양서 명이 되고,'],
+    ['맨 위 행이 컬럼명(필드)이 되며, 화면에서 시트·머리 행·열을 짚어 맞출 수 있습니다.'],
+    [''],
+    ['올릴 때 지켜지는 규칙'],
+    ['오류가 있는 행/시트만 빠지고 나머지는 반영됩니다 (전부 아니면 전무가 아닙니다).'],
+    ['오류는 행·열·사유가 적힌 리포트로 받으실 수 있습니다.'],
+    ['이미 있는 사양서 이름은 건너뜁니다 — 고친 파일을 통째로 다시 올리셔도 안전합니다.'],
+  ]
+
+  const catalogCols = [...TEMPLATE.catalog.required, ...TEMPLATE.catalog.optional]
+  const fieldCols = [...TEMPLATE.fields.required, ...TEMPLATE.fields.optional]
+  const star = (cols: Array<string>, required: Array<string>) =>
+    cols.map((c) => (required.includes(c) ? `${c} ★` : c))
+
+  return [
+    { name: '읽어보기', rows: guide, widths: [30, 26, 40] },
+    {
+      name: '사양서 대장',
+      rows: [
+        star(catalogCols, TEMPLATE.catalog.required),
+        ['VN9 하이브리드 파워트레인 사양서', '파워트레인', '출력·연비 규격', '하이브리드,VN9', '김민준', 'v0.1'],
+        ['', '', '', '', '', ''],
+      ],
+      widths: [34, 14, 30, 20, 12, 10],
+    },
+    {
+      name: '필드 정의',
+      rows: [
+        star(fieldCols, TEMPLATE.fields.required),
+        ['VN9 하이브리드 파워트레인 사양서', '항목코드', 'string', '기본정보 · 식별자', 'Y', '20', '^[A-Z]{2}\\d{4}$', '완료'],
+        ['VN9 하이브리드 파워트레인 사양서', '최대 출력', 'number', '성능', 'Y', '10', '', '진행중'],
+        ['', '', '', '', '', '', '', ''],
+      ],
+      widths: [34, 16, 10, 22, 8, 10, 20, 10],
+    },
+  ]
 }
+
 
 /* ════════════════════════════════════════════════════════════════════
    원본 엑셀 길 — **시트 = 사양서 · 머리 행 = 컬럼명 · 나머지 행 = 자료**

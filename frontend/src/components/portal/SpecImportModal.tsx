@@ -18,7 +18,7 @@ import {
   planWorkbook,
   plansToSpecs,
   rejectFile,
-  templateCsv,
+  templateWorkbook,
   validatePlans,
 } from '#/lib/specImport'
 import type {
@@ -31,6 +31,7 @@ import type {
   SheetPlan,
 } from '#/lib/specImport'
 import { XlsxError, readWorkbook } from '#/lib/xlsx'
+import { buildXlsx } from '#/lib/xlsxWrite'
 import type { SheetGrid } from '#/lib/xlsx'
 
 /**
@@ -113,6 +114,16 @@ export function SpecImportModal({
   )
   const badSheets = new Set(planIssues.filter((i) => i.level === '오류').map((i) => i.sheet)).size
   const warnSheets = new Set(planIssues.filter((i) => i.level === '경고').map((i) => i.sheet)).size
+
+  /** 우리 **표준 양식(초안)** — 대장·필드·읽어보기 세 시트를 한 통합문서로 준다 */
+  const downloadTemplate = () => {
+    const url = URL.createObjectURL(buildXlsx(templateWorkbook()))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'HMG_사양서_이관_표준양식_초안.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const download = (name: string, text: string) => {
     /* ⚠ 브라우저가 파일을 만들어 준다 — 서버 왕복이 없다. 본개발에서 서버 리포트로 옮기면
@@ -342,6 +353,15 @@ export function SpecImportModal({
                   '다음 걸음에서 시트·머리 행·열을 고칠 수 있습니다 — 목차·이력 시트는 빼면 됩니다.',
                 )}
               </p>
+              {/* 초안 양식을 여기서도 준다 — "이 열은 우리 쪽에 없다" 같은 반론이 실물을 당긴다 */}
+              <button
+                type="button"
+                onClick={downloadTemplate}
+                className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                <Icon name="download" />
+                {t('import.templateDraft', '우리 표준 양식(초안) 받기')}
+              </button>
             </div>
           ) : (
             <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
@@ -370,11 +390,11 @@ export function SpecImportModal({
               </p>
               <button
                 type="button"
-                onClick={() => download(`사양서_${kind === 'catalog' ? '대장' : '필드'}_템플릿.csv`, templateCsv(kind))}
+                onClick={downloadTemplate}
                 className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 <Icon name="download" />
-                {t('import.template', '템플릿 내려받기')}
+                {t('import.template', '표준 양식 받기 (xlsx)')}
               </button>
             </div>
           )}
@@ -818,7 +838,10 @@ export function SpecImportModal({
             </p>
           )}
           <p className="text-xs text-ink-subtle">
-            {t('import.auditHint', '업로드 사실은 감사 로그에 남습니다 (본개발에서 배치 단위로 되돌릴 수 있게 확장).')}
+            {t(
+              'import.auditHint',
+              '업로드 사실이 감사 로그에 남았습니다 — 개인정보 관리 화면에서 확인할 수 있습니다 (배치 단위 되돌리기는 본개발).',
+            )}
           </p>
         </div>
       )}

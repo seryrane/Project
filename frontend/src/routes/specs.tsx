@@ -12,9 +12,10 @@ import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { orNone, pickOne, pickText } from '#/lib/urlState'
+import { recordAudit } from '#/data/auditStore'
 import { members } from '#/data/members'
 import { SPEC_CATEGORIES, currentVersion } from '#/data/specs'
-import { registerSpec, useSpecList } from '#/data/specStore'
+import { registerSpec, registerSpecs, useSpecList } from '#/data/specStore'
 import type { NewSpecInput } from '#/data/specStore'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
 
@@ -136,22 +137,27 @@ function SpecsPage() {
         </div>
         {/* ⚠ 이 버튼은 onClick 없이 노출돼 있었다 — 화면에서 가장 눈에 띄는 CTA 가
             눌러도 아무 일 없는 죽은 조작이었다(2026-08-18 실측, 규약 §0 예측 가능성) */}
-        {/* 엑셀 이관(FR-115) — 최초 대량 이관은 여기서 시작한다. 등록 옆에 두는 이유:
-            "한 건 만들기"와 "여러 건 가져오기"는 같은 자리에서 고르는 일이다 */}
-        <button
-          type="button"
-          onClick={() => setImporting(true)}
-          className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-        >
-          {t('specs.import', '엑셀 올리기')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-        >
-          {t('specs.register', '+ 사양서 등록')}
-        </button>
+        {/* ⚠ 두 버튼을 **한 묶음**으로 둔다. 바깥이 justify-between 이라 낱개로 두면
+            엑셀 버튼이 제목과 등록 사이 허공으로 밀려난다(2026-08-19 실측 — 화면 가운데에
+            혼자 떠 있었다). 조작은 오른쪽 끝에 모이고, **주 행동이 바깥쪽**에 선다. */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 엑셀 이관(FR-115) — 최초 대량 이관은 여기서 시작한다. 등록 옆에 두는 이유:
+              "한 건 만들기"와 "여러 건 가져오기"는 같은 자리에서 고르는 일이다 */}
+          <button
+            type="button"
+            onClick={() => setImporting(true)}
+            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('specs.import', '엑셀 올리기')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+          >
+            {t('specs.register', '+ 사양서 등록')}
+          </button>
+        </div>
       </div>
 
       {/* 좁은 화면: 검색 한 줄 + 필터 한 줄로 접힌다 (규약 §8 — 가로 스크롤 금지) */}
@@ -267,40 +273,43 @@ function SpecsPage() {
                판단한다 — 같은 파일을 다시 올려도 안전해야 한다(설계 §5). 필드 정의는
                사양서 본문에 붙는 것이라 **본개발에서 서버로** 간다(지금은 셈만 돌려준다). */
             if (kind === 'fields') return rows.length
-            const have = new Set(specList.map((s) => s.name))
-            let applied = 0
-            for (const r of rows) {
-              if (have.has(r['사양서명'])) continue
-              registerSpec({
+            // 관문이 한 번에 넣고 **한 번만** 알린다 — 건마다 알리면 100건에서 화면이 100번 다시 그려진다
+            const applied = registerSpecs(
+              rows.map((r) => ({
                 name: r['사양서명'],
                 category: r['카테고리'],
                 description: r['설명'] ?? '',
                 tags: (r['태그'] ?? '').split(',').map((x) => x.trim()).filter(Boolean),
                 author: r['담당자'] || '김현대',
-              })
-              have.add(r['사양서명'])
-              applied++
-            }
+              })),
+            )
+            recordAudit({
+              action: '업로드',
+              target: `사양서 대장 엑셀 (${applied}건 반영 / ${rows.length}건 중)`,
+              reason: '사양서 엑셀 이관',
+            })
             return applied
           }}
           onApplyPlans={(planned) => {
             /* 원본 엑셀 길 — **시트 하나가 사양서 하나**로 들어온다(설계 §1-1). 필드까지 안고
                오므로 등록 관문에 그대로 넘긴다. 여기서도 판단은 "이미 있으면 건너뛴다" 하나뿐. */
-            const have = new Set(specList.map((s) => s.name))
-            let applied = 0
-            for (const p of planned) {
-              if (have.has(p.name)) continue
-              registerSpec({
+            const applied = registerSpecs(
+              planned.map((p) => ({
                 name: p.name,
                 category: p.category,
-                description: `엑셀 이관 — 시트 '${p.sheet}' (자료 ${p.dataRows}행)`,
+                description: `엑셀 이관 — 시트 '${p.sheet}' (자료 ${p.dataRows.toLocaleString()}행)`,
                 tags: ['엑셀 이관'],
                 author: '김현대',
                 fields: p.fields,
-              })
-              have.add(p.name)
-              applied++
-            }
+              })),
+            )
+            /* ⚠ 화면이 "감사 로그에 남습니다"라고 적어 두고 **아무 데도 안 남기던** 자리다
+               (2026-08-19). 시트 이름을 함께 남긴다 — 나중에 "무엇이 들어왔나"를 되짚는 축이다. */
+            recordAudit({
+              action: '업로드',
+              target: `사양서 엑셀 (${applied}건 반영: ${planned.map((p) => p.sheet).join(', ')})`,
+              reason: '사양서 엑셀 이관',
+            })
             return applied
           }}
         />

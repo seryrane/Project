@@ -119,7 +119,8 @@ export const WORK_DICT: Record<string, Entry> = {
   'import.kind.fields': { ko: '필드 정의 (한 행 = 필드)', en: 'Field definitions (one row = one field)' },
   'import.needCols': { ko: '필요한 열', en: 'Required columns' },
   'import.optional': { ko: '선택', en: 'optional' },
-  'import.template': { ko: '템플릿 내려받기', en: 'Download template' },
+  'import.template': { ko: '표준 양식 받기 (xlsx)', en: 'Get standard form (xlsx)' },
+  'import.templateDraft': { ko: '우리 표준 양식(초안) 받기', en: 'Get our draft standard form' },
   'import.pick': { ko: '파일 고르기 (CSV)', en: 'Choose a file (CSV)' },
   'import.pickHint': {
     ko: '엑셀은 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 주세요 · 10MB 이하',
@@ -152,8 +153,8 @@ export const WORK_DICT: Record<string, Entry> = {
     en: 'Download the report, fix the rows, and upload again — applied rows will not duplicate.',
   },
   'import.auditHint': {
-    ko: '업로드 사실은 감사 로그에 남습니다 (본개발에서 배치 단위로 되돌릴 수 있게 확장).',
-    en: 'The upload is recorded in the audit log (batch-level undo comes in the main build).',
+    ko: '업로드 사실이 감사 로그에 남았습니다 — 개인정보 관리 화면에서 확인할 수 있습니다 (배치 단위 되돌리기는 본개발).',
+    en: 'The upload was recorded in the audit log — see it under Privacy (batch-level undo comes in the main build).',
   },
   'import.th.row': { ko: '행', en: 'Row' },
   'import.th.column': { ko: '열', en: 'Column' },

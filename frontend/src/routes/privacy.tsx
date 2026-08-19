@@ -7,6 +7,7 @@ import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
 import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { useToast } from '#/components/portal/toast'
+import { mergeAudit, useLocalAudit } from '#/data/auditStore'
 import { members } from '#/data/members'
 import type { Member } from '#/data/members'
 import { useApi } from '#/lib/api'
@@ -49,7 +50,12 @@ function PrivacyPage() {
   const [retention, setRetention] = useState('365일')
 
   // 감사 로그 정본은 서버 — 잠금 처리 등 실제 행위가 쌓인다 (없으면 mock)
-  const { data: auditList } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
+  const { data: serverAudit } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
+  /* ⚠ 이 화면에서 일어나지 않은 행위도 여기 보여야 한다 — 엑셀 업로드처럼 **다른 화면이
+     남긴 것**이 안 보이면, 화면이 "감사 로그에 남습니다"라고 한 약속이 거짓이 된다
+     (2026-08-19 신설 `data/auditStore.ts`). 서버가 살아 있으면 같은 줄이 겹치므로 걷어낸다. */
+  const localAudit = useLocalAudit()
+  const auditList = mergeAudit(serverAudit, localAudit)
   // 회원 명단은 **회원 관리와 같은 소스**로 읽는다 — 다르게 읽으면 두 화면이 갈라진다
   const { data: memberList } = useApi<Array<Member>>('/members', members)
 
