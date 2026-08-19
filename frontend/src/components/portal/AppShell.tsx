@@ -373,15 +373,20 @@ function Shell({
                 {section.title ? (
                   rail ? (
                     <div
-                      className={`truncate whitespace-nowrap px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink ${railHide}`}
+                      className={`truncate whitespace-nowrap rounded-md bg-[var(--color-sidebar-section)] px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink ${railHide}`}
                     >
                       {section.title}
                     </div>
                   ) : (
+                    /* ⚠ 상위 메뉴(섹션 머리)에 **옅은 면**을 깔았다 (2026-08-19 사용자 요청:
+                       "회사 포탈처럼 LNB 상위 메뉴 영역에 음영"). 글자 굵기만으로 층을
+                       나누던 자리라, 항목이 열대여섯인 LNB 에서 "어디부터 어느 묶음인지"가
+                       훑을 때 안 잡혔다. 면은 **호버보다 옅게**(6% → 4%) 둔다 — 머리가
+                       항목보다 진하면 누를 것처럼 보인다. */
                     <button
                       type="button"
                       onClick={() => toggleSection(section.id)}
-                      className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:text-sidebar-strong"
+                      className="flex w-full items-center justify-between rounded-md bg-[var(--color-sidebar-section)] px-2 py-1.5 text-xs font-semibold tracking-wide text-sidebar-ink transition-colors hover:bg-sidebar-hover hover:text-sidebar-strong"
                     >
                       {/* 영문은 한글의 1.5~2배 — 넘치면 말줄임 (규약 §4-5) */}
                       <span className="min-w-0 truncate whitespace-nowrap">{section.title}</span>
