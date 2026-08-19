@@ -1,3 +1,7 @@
+import { fileURLToPath } from 'node:url'
+
+import { dirname, join } from 'node:path'
+
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
@@ -1117,5 +1121,101 @@ test.describe('엑셀 이관 (FR-115)', () => {
 
     // 목록이 실제로 늘었다 — 정상 1건만(오류 1 · 중복 1 은 안 들어간다)
     await expect(page.getByText(new RegExp(`총 ${before + 1}개 사양서`))).toBeVisible()
+  })
+
+  /* ── 원본 엑셀 길 — 시트 = 사양서 (설계 §1-1) ───────────────────────────
+     ⚠ 표본은 실물을 닮게 만들었다: 위쪽에 제목 줄이 있어 머리 행이 1행이 아니고,
+        사양서가 아닌 '목차' 시트가 섞여 있다. e2e/fixtures/make_fixture.py 로 다시 만든다. */
+  // ⚠ ESM 이라 __dirname 이 없다 — 시험 파일 자리에서 표본 자리를 잰다
+  const here = dirname(fileURLToPath(import.meta.url))
+  const RAW = join(here, 'fixtures', '사양서_원본_샘플.xlsx')
+  const BIG = join(here, 'fixtures', '사양서_대용량_샘플.xlsx')
+
+  test('시트가 사양서가 된다 — 목차 시트는 빼고, 머리 행은 제목 줄 아래를 잡는다', async ({ page }) => {
+    await ready(page, '/specs')
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.locator('input[type=file]').setInputFiles(RAW)
+
+    // ② 매핑 — 시트 셋을 읽되 '목차'는 기본으로 꺼져 있다(자료가 아니라 안내다)
+    await expect(page.getByText(/시트 3개를 읽었습니다/)).toBeVisible()
+    await expect(page.getByRole('checkbox', { name: '목차' })).not.toBeChecked()
+
+    // 제목 줄(1행) 아래를 머리 행으로 잡았다 — 열 이름이 그대로 필드명으로 선다
+    const sheet = page.locator('section').filter({ hasText: 'VN9 하이브리드 사양서' }).first()
+    // ⚠ 열 이름은 [엑셀 열] 칸과 [필드명] 입력칸 두 곳에 선다(제안이 곧 기본값이다) — first() 로 집는다
+    await expect(sheet.getByRole('cell', { name: '항목코드', exact: true }).first()).toBeVisible()
+    await expect(sheet.getByRole('cell', { name: '최대길이', exact: true }).first()).toBeVisible()
+    // 제목 줄이 머리 행으로 잡혔다면 이 이름이 열로 섰을 것이다
+    await expect(sheet.getByRole('cell', { name: /2026년 개정/ })).toHaveCount(0)
+  })
+
+  test('카테고리는 엑셀에 없다 — 안 고르면 막고, 고르면 시트마다 사양서가 된다', async ({ page }) => {
+    await ready(page, '/specs')
+    const before = Number((await page.getByText(/총 \d+개 사양서/).textContent())?.match(/총 (\d+)개/)?.[1])
+
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.locator('input[type=file]').setInputFiles(RAW)
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+
+    // ③ 검증 — 사유가 **시트 이름과 함께** 남고, 반영 단추는 막혀 있다
+    await expect(page.getByText(/카테고리를 골라 주세요/).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /사양서 \d+건 반영/ })).toBeDisabled()
+
+    // 뒤로 가서 일괄로 고른다 — 카테고리는 엑셀에 없는 값이라 사람이 정한다
+    await page.getByRole('button', { name: '뒤로' }).click()
+    await page.getByLabel('카테고리 일괄').selectOption('전동화')
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+
+    // ④ 반영 — 목차를 뺀 두 시트가 후보이고, **이미 있는 이름은 건너뛴다**
+    //    (표본의 '전기차 배터리 규격서' 는 시드에 이미 있다 — 오류가 아니라 경고다: 설계 §5)
+    await expect(page.getByText(/반영할 사양서 2건/)).toBeVisible()
+    await expect(page.getByText(/이미 있는 사양서라 건너뜁니다/)).toBeVisible()
+    await page.getByRole('button', { name: /사양서 2건 반영/ }).click()
+    await expect(page.getByText(/1건 반영했습니다 · 이미 있어 건너뜀 1건/)).toBeVisible()
+    await page.getByRole('button', { name: '닫기' }).last().click()
+    await expect(page.getByText(new RegExp(`총 ${before + 1}개 사양서`))).toBeVisible()
+
+    // 머리 행의 열이 그대로 필드가 됐다 — 첫 자료 행이 예시 값으로 붙는다
+    await page
+      .getByRole('article')
+      .filter({ hasText: 'VN9 하이브리드 사양서' })
+      .getByRole('button', { name: /상세 보기/ })
+      .first()
+      .click()
+    await expect(page.getByText('항목코드').first()).toBeVisible()
+    await expect(page.getByText('ENG001').first(), '첫 자료 행이 예시 값으로 붙는다').toBeVisible()
+  })
+
+  test('열 150개·1,000행도 화면이 버틴다 — 찾기로 좁히고 한 번에 켜고 끈다', async ({ page }) => {
+    test.slow() // 큰 파일을 실제로 읽는 시험이다
+    await ready(page, '/specs')
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.locator('input[type=file]').setInputFiles(BIG)
+
+    // 셈은 파일 전체(1,000행), 격자는 앞부분만 — 두 숫자를 섞지 않는다
+    await expect(page.getByText(/자료 1,000행 · 열 150개 중 150개/)).toBeVisible()
+    // 표는 앞 60개만 그린다 — 200개를 다 그리면 사람도 브라우저도 못 읽는다
+    await expect(page.getByText(/150개 중 앞 60개만 보입니다/)).toBeVisible()
+
+    // 찾기로 좁힌 뒤 [전체 끄기] — 지금 보이는 것만 꺼진다
+    await page.getByPlaceholder('열 찾기').fill('항목1')
+    await page.getByRole('button', { name: '전체 끄기' }).click()
+    await expect(page.getByText(/열 150개 중 99개/), '항목1x 51개가 꺼졌다').toBeVisible()
+
+    // 다 끄면 검증이 막는다 — "가져올 열이 하나도 없습니다"
+    await page.getByPlaceholder('열 찾기').fill('')
+    await page.getByRole('button', { name: '전체 끄기' }).click()
+    await page.getByLabel('카테고리 일괄').selectOption('자율주행')
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+    await expect(page.getByText(/가져올 열이 하나도 없습니다/)).toBeVisible()
+
+    await page.getByRole('button', { name: '뒤로' }).click()
+    await page.getByRole('button', { name: '전체 켜기' }).click()
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+    // 열이 아주 많으면 막지 않고 **말해 준다**
+    await expect(page.getByText(/가져올 열이 150개입니다/)).toBeVisible()
+    await expect(page.getByText(/앞부분만 읽었습니다/), '표본으로 추론했다고 밝힌다').toBeVisible()
+    await page.getByRole('button', { name: /사양서 1건 반영/ }).click()
+    await expect(page.getByText(/1건 반영했습니다/)).toBeVisible()
   })
 })

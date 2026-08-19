@@ -14,7 +14,7 @@
 import { useSyncExternalStore } from 'react'
 
 import { currentVersion, specs as initialSpecs } from './specs'
-import type { Spec, SpecStatus } from './specs'
+import type { Spec, SpecField, SpecStatus } from './specs'
 
 /* ── 스토어 본체 ─────────────────────────────────────────────────── */
 
@@ -56,6 +56,9 @@ export interface NewSpecInput {
   description: string
   tags: Array<string>
   author: string
+  /** 엑셀 이관으로 들어올 때만 채워진다 — 손으로 등록하면 빈 표로 태어난다(위 `isSeededSpec`).
+   *  ⚠ 원본 엑셀은 시트가 사양서이고 **머리 행이 곧 필드 목록**이라, 이관은 필드를 알고 온다. */
+  fields?: Array<SpecField>
 }
 
 function nextId(): string {
@@ -83,10 +86,10 @@ export function registerSpec(input: NewSpecInput): Spec {
         version: 'v0.1',
         status: '초안',
         date: today(),
-        summary: '신규 등록 — 필드 정의 작성 전',
+        summary: input.fields?.length ? `엑셀 이관 — 필드 ${input.fields.length}개` : '신규 등록 — 필드 정의 작성 전',
         author: input.author,
         // 필드는 상세 화면에서 채운다 — 빈 배열이면 카드가 필드 상자를 그리지 않는다
-        fields: [],
+        fields: input.fields ?? [],
       },
     ],
   }

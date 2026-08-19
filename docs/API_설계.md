@@ -227,6 +227,10 @@ GET /api/approvals?mine=true&state=진행 중   → 배지 수 = 길이
 | POST | `/api/specs/import/validate` | 파일 업로드 → **검증만** (행·열·사유 리포트 반환, 반영 없음) |
 | POST | `/api/specs/import/apply` | 검증 통과 행만 반영 → `{ applied, skipped, failed, batchId }` |
 
+⚠ 파일이 크면(열 수백·행 수만) **브라우저가 아니라 서버가 읽는다** — 프로토타입은 앞 200행만
+표본으로 보고 행 수만 세지만(설계 §3-1), 서버는 전체를 본다. 그래서 `validate` 응답에는
+`{ rows, sampled: false }` 처럼 **무엇을 다 봤는지**가 들어가야 한다.
+
 ⚠ 검증과 반영을 **가른다**: 사람이 "무엇이 들어갈지" 보고 나서 누르는 걸음이 있어야 한다
 (지금 화면이 그렇게 돈다). `batchId` 는 본개발의 배치 되돌리기용이다.
 

@@ -283,6 +283,26 @@ function SpecsPage() {
             }
             return applied
           }}
+          onApplyPlans={(planned) => {
+            /* 원본 엑셀 길 — **시트 하나가 사양서 하나**로 들어온다(설계 §1-1). 필드까지 안고
+               오므로 등록 관문에 그대로 넘긴다. 여기서도 판단은 "이미 있으면 건너뛴다" 하나뿐. */
+            const have = new Set(specList.map((s) => s.name))
+            let applied = 0
+            for (const p of planned) {
+              if (have.has(p.name)) continue
+              registerSpec({
+                name: p.name,
+                category: p.category,
+                description: `엑셀 이관 — 시트 '${p.sheet}' (자료 ${p.dataRows}행)`,
+                tags: ['엑셀 이관'],
+                author: '김현대',
+                fields: p.fields,
+              })
+              have.add(p.name)
+              applied++
+            }
+            return applied
+          }}
         />
       )}
 
