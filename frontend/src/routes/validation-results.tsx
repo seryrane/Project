@@ -15,6 +15,8 @@ import {
   errorTypeDistribution,
   validationRuns,
 } from '#/data/validationResults'
+import { recordAudit } from '#/data/auditStore'
+import { buildXlsx } from '#/lib/xlsxWrite'
 import type { ValidationRun } from '#/data/validationResults'
 
 export const Route = createFileRoute('/validation-results')({ component: ValidationResultsPage })
@@ -125,11 +127,44 @@ function ValidationResultsPage() {
             )}
           </p>
         </div>
+        {/* ⚠ 토스트만 띄우던 자리다. 지금 **보고 있는 그대로**(필터·검색이 걸린 rows) 내보낸다 —
+            화면과 다른 것이 나가면 "어느 것이 맞나"를 사람이 대조해야 한다. */}
         <button
           type="button"
-          onClick={() =>
-            toast(t('results.toast.exportExcel', 'Excel 리포트 내보내기 — 본개발에서 연결됩니다'))
-          }
+          onClick={() => {
+            const cols = ['실행 ID', '시각', '모드', '사양서 ID', '사양서', 'Rule', '오류 유형', '심각도', '검사 건수', '오류 건수', '상태']
+            const url = URL.createObjectURL(
+              buildXlsx([
+                {
+                  name: '검증 결과',
+                  rows: [
+                    cols,
+                    ...rows.map((r) => [
+                      r.id,
+                      r.at,
+                      r.mode,
+                      r.specId,
+                      r.specName,
+                      r.rule,
+                      r.errorType,
+                      r.severity,
+                      String(r.total),
+                      String(r.errors),
+                      r.status,
+                    ]),
+                  ],
+                  widths: [16, 18, 8, 10, 26, 24, 20, 8, 10, 10, 10],
+                },
+              ]),
+            )
+            const a = document.createElement('a')
+            a.href = url
+            a.download = '검증결과.xlsx'
+            a.click()
+            URL.revokeObjectURL(url)
+            recordAudit({ action: '다운로드', target: `검증 결과 (${rows.length}건)`, reason: '검증 리포트 반출' })
+            toast(tf('results.toast.exported', { n: rows.length }, '{n}건을 엑셀로 내보냈습니다'))
+          }}
           className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
           {t('results.exportExcel', 'Excel 내보내기')}

@@ -1224,4 +1224,75 @@ test.describe('엑셀 이관 (FR-115)', () => {
     await page.getByRole('button', { name: /사양서 1건 반영/ }).click()
     await expect(page.getByText(/1건 반영했습니다/)).toBeVisible()
   })
+
+  /* ── 필드 정의 업로드 — 세기만 하던 자리가 실제로 붙는다 (2026-08-20) ───────────── */
+
+  const fieldsCsv = (body: string) => ({
+    name: 'fields.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(`사양서명,필드명,타입,카테고리(대/중/소),필수,최대길이,유효성,상태\n${body}`, 'utf-8'),
+  })
+
+  test('필드 정의 업로드가 실제로 표에 붙는다 — "반영했다"는 말이 사실이 된다', async ({ page }) => {
+    await ready(page, '/specs')
+    await page.getByRole('button', { name: /엑셀 올리기/ }).click()
+    await page.getByRole('button', { name: /우리 템플릿/ }).click()
+    await page.getByRole('button', { name: /필드 정의/ }).click()
+    await page.locator('input[type=file]').setInputFiles(
+      fieldsCsv(
+        [
+          '차체 구조 안전 기준서,신규항목A,string,기본정보 · 식별자,Y,20,,완료', // 정상
+          '차체 구조 안전 기준서,신규항목B,없는타입,기본정보,N,,,미완료', // 오류(타입)
+          'VN7 엔진 사양서,엔진 형식,string,기본정보,Y,20,,완료', // 오류(결재 중이라 못 고침)
+        ].join('\n'),
+      ),
+    )
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+    await expect(page.getByText(/허용되지 않는 타입입니다/)).toBeVisible()
+    await expect(page.getByText(/결재 중이라 필드를 고칠 수 없습니다/), '승인자가 본 문서는 못 바꾼다').toBeVisible()
+    await page.getByRole('button', { name: /정상 1건 반영/ }).click()
+    await expect(page.getByText(/1건 반영했습니다/)).toBeVisible()
+    await page.getByRole('button', { name: '닫기' }).last().click()
+
+    // 상세로 들어가면 그 필드가 **실제로** 서 있다 (예전엔 아무 데도 안 붙었다)
+    await page
+      .getByRole('article')
+      .filter({ hasText: '차체 구조 안전 기준서' })
+      .getByRole('button', { name: /상세 보기/ })
+      .first()
+      .click()
+    await page.getByPlaceholder(/필드명/).fill('신규항목A')
+    await expect(page.getByText('신규항목A').first()).toBeVisible()
+  })
+
+  test('상세에서 내려받아 고쳐 다시 올리는 왕복이 돈다', async ({ page }) => {
+    await ready(page, '/specs')
+    await page
+      .getByRole('article')
+      .filter({ hasText: '차체 구조 안전 기준서' })
+      .getByRole('button', { name: /상세 보기/ })
+      .first()
+      .click()
+
+    // ① 내려받기 — 실제로 파일이 나온다(예전엔 토스트만 떴다)
+    const download = page.waitForEvent('download')
+    await page.getByRole('button', { name: 'Excel 다운로드' }).click()
+    const file = await download
+    expect(file.suggestedFilename()).toContain('필드정의.xlsx')
+
+    // ② 올리기 — 이 화면에서는 사양서가 정해져 있어 사양서명 열이 없어도 된다
+    await page.getByRole('button', { name: '엑셀 업로드' }).click()
+    await expect(page.getByText(/필드 정의를 올립니다/)).toBeVisible()
+    await page.locator('input[type=file]').setInputFiles({
+      name: 'fields.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('필드명,타입,필수,상태\n왕복항목,number,Y,진행중', 'utf-8'),
+    })
+    await page.getByRole('button', { name: /검증 결과 보기/ }).click()
+    await page.getByRole('button', { name: /정상 1건 반영/ }).click()
+    await expect(page.getByText(/1건 반영했습니다/)).toBeVisible()
+    await page.getByRole('button', { name: '닫기' }).last().click()
+    await page.getByPlaceholder(/필드명/).fill('왕복항목')
+    await expect(page.getByText('왕복항목').first()).toBeVisible()
+  })
 })

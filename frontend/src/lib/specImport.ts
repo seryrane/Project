@@ -10,6 +10,8 @@
  * ⚠ xlsx 는 브라우저에서 공짜가 아니다. 지금은 **CSV 만** 읽고 xlsx 는 안내로 돌려보낸다
  * (설계 문서 §3). 본개발에서 서버 파싱으로 옮기면 이 파일의 `parseCsv` 만 대체된다.
  */
+import { FIELD_CATEGORIES } from '#/data/specFields'
+import type { FieldDef } from '#/data/specFields'
 import { SPEC_CATEGORIES } from '#/data/specs'
 import type { SpecField } from '#/data/specs'
 import type { SheetGrid } from '#/lib/xlsx'
@@ -132,7 +134,9 @@ export function parseGrid(kind: ImportKind, gridIn: Array<Array<string>>, known:
 
   // ⚠ 엑셀이 저장한 CSV 는 첫 열 이름 앞에 BOM 이 붙는다 — 안 떼면 '사양서명' 을 못 찾는다
   const headers = grid[0].map((h) => h.trim().replace(/^/, ''))
-  const missing = TEMPLATE[kind].required.filter((r) => !headers.includes(r))
+  // ⚠ 사양서가 이미 정해진 화면(상세)에서는 `사양서명` 열을 요구하지 않는다 — 그 화면이 곧 사양서다
+  const required = TEMPLATE[kind].required.filter((r) => !(r === '사양서명' && known.lockToSpec != null))
+  const missing = required.filter((r) => !headers.includes(r))
   if (missing.length > 0) {
     return {
       reject: {
@@ -169,6 +173,11 @@ export function parseGrid(kind: ImportKind, gridIn: Array<Array<string>>, known:
 export interface KnownData {
   specNames: Array<string>
   memberNames: Array<string>
+  /** 결재 중이라 **본문을 고칠 수 없는** 사양서 (API 설계 §1: 서버도 409 로 막는다).
+   *  ⚠ 이 축이 없으면 엑셀 한 장이 승인자가 본 문서를 몰래 바꾼다 — 이력이 못 믿을 것이 된다. */
+  lockedSpecNames?: Array<string>
+  /** 상세 화면에서 올릴 때처럼 **사양서가 이미 정해진** 경우 — 사양서명 열이 없어도 된다 */
+  lockToSpec?: string
 }
 
 function validateRow(
@@ -182,7 +191,7 @@ function validateRow(
   const err = (column: string, message: string) => out.push({ row, column, message, level: '오류' })
   const warn = (column: string, message: string) => out.push({ row, column, message, level: '경고' })
 
-  const name = v['사양서명'] ?? ''
+  const name = (v['사양서명'] ?? '') || (kind === 'fields' ? (known.lockToSpec ?? '') : '')
   if (name === '') err('사양서명', '비어 있습니다')
 
   if (kind === 'catalog') {
@@ -208,9 +217,14 @@ function validateRow(
   }
 
   // fields
-  if (name !== '' && !known.specNames.includes(name))
+  if (known.lockToSpec != null && name !== '' && name !== known.lockToSpec)
+    err('사양서명', `이 화면은 '${known.lockToSpec}' 의 필드만 받습니다 (파일에는 '${name}')`)
+  else if (name !== '' && !known.specNames.includes(name))
     err('사양서명', `대장에 없는 사양서입니다: '${name}' (대장을 먼저 올려 주세요)`)
-  const key = `${name} ${v['필드명'] ?? ''}`
+  // ⚠ 결재 중에는 본문을 고칠 수 없다 — 승인자가 본 문서가 그대로 승인되어야 한다
+  if (name !== '' && (known.lockedSpecNames ?? []).includes(name))
+    err('사양서명', `결재 중이라 필드를 고칠 수 없습니다: '${name}' (반려·승인 뒤에 올려 주세요)`)
+  const key = `${name}::${v['필드명'] ?? ''}`
   if ((v['필드명'] ?? '') === '') err('필드명', '비어 있습니다')
   else {
     const dup = seen.get(key)
@@ -235,10 +249,44 @@ function validateRow(
       err('유효성', `정규식을 해석할 수 없습니다: '${rule}'`)
     }
   }
+  const cat = (v['카테고리(대/중/소)'] ?? '').trim()
+  if (cat !== '') {
+    const major = cat.split(/[·/|>]/)[0].trim()
+    if (!(FIELD_CATEGORIES as ReadonlyArray<string>).includes(major))
+      err('카테고리(대/중/소)', `대분류가 정본에 없습니다: '${major}' (허용: ${FIELD_CATEGORIES.join(', ')})`)
+  }
   const st = v['상태'] ?? ''
   if (st !== '' && !(FIELD_STATES as ReadonlyArray<string>).includes(st))
     err('상태', `허용되지 않는 상태입니다: '${st}' (허용: ${FIELD_STATES.join(', ')})`)
   return out
+}
+
+/**
+ * 검증을 통과한 '필드 정의' 한 행 → 화면이 쓰는 필드 모양.
+ *
+ * ⚠ 이 변환이 화면에 있으면 "엑셀의 Y 가 무엇이 되는가"가 화면마다 달라진다 —
+ * 판단은 전부 이 파일에 모은다(규약 §10). `no`(표의 자리 번호)는 붙일 때 다시 매긴다.
+ */
+export function rowToFieldDef(v: Record<string, string>, owner: string): Omit<FieldDef, 'no'> {
+  const cat = (v['카테고리(대/중/소)'] ?? '').trim()
+  const parts = cat.split(/[·/|>]/).map((x) => x.trim())
+  const major = (FIELD_CATEGORIES as ReadonlyArray<string>).includes(parts[0])
+    ? (parts[0] as FieldDef['category'])
+    : '기본정보'
+  const len = (v['최대길이'] ?? '').trim()
+  return {
+    category: major,
+    sub: parts.slice(1).join(' · '),
+    name: (v['필드명'] ?? '').trim(),
+    type: (v['타입'] ?? 'string').trim() as FieldType,
+    required: (v['필수'] ?? '').trim().toUpperCase() === 'Y',
+    // ⚠ 빈 칸과 0 은 다르다 — 안 적은 것은 null(제한 없음)이지 0 이 아니다
+    maxLen: /^\d+$/.test(len) ? Number(len) : null,
+    desc: (v['설명'] ?? '').trim(),
+    rule: (v['유효성'] ?? '').trim() || null,
+    owner,
+    status: ((v['상태'] ?? '').trim() || '미완료') as FieldDef['status'],
+  }
 }
 
 /** 오류 리포트 CSV — 엑셀로 고칠 사람에게는 **파일**이 필요하다 (설계 §4) */

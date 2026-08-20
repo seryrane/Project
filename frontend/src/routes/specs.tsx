@@ -11,10 +11,12 @@ import { SpecCard } from '#/components/portal/SpecCard'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
+import { rowToFieldDef } from '#/lib/specImport'
 import { orNone, pickOne, pickText } from '#/lib/urlState'
 import { recordAudit } from '#/data/auditStore'
 import { members } from '#/data/members'
 import { SPEC_CATEGORIES, currentVersion } from '#/data/specs'
+import { mergeSpecFields } from '#/data/specFieldStore'
 import { registerSpec, registerSpecs, useSpecList } from '#/data/specStore'
 import type { NewSpecInput } from '#/data/specStore'
 import type { Spec, SpecStatus, SpecVersion } from '#/data/specs'
@@ -267,12 +269,44 @@ function SpecsPage() {
         <SpecImportModal
           knownSpecNames={specList.map((s) => s.name)}
           knownMemberNames={members.map((m) => m.name)}
+          lockedSpecNames={specList
+            .filter((sp) => currentVersion(sp).status === '승인 대기')
+            .map((sp) => sp.name)}
           onClose={() => setImporting(false)}
+          onSeeResult={() => {
+            /* 방금 들어온 것만 보이게 좁힌다 — 목록에 100건이 섞여 있으면 "들어갔다"는
+               말이 확인되지 않는다. 이관본은 '엑셀 이관' 태그를 달고 태어난다. */
+            setSearch({ q: '엑셀 이관', cat: undefined, status: undefined })
+          }}
           onApply={(kind, rows) => {
             /* ⚠ **정상 행만** 온다(검증은 관문이 끝냈다). 여기서는 "이미 있으면 건너뛴다"만
                판단한다 — 같은 파일을 다시 올려도 안전해야 한다(설계 §5). 필드 정의는
                사양서 본문에 붙는 것이라 **본개발에서 서버로** 간다(지금은 셈만 돌려준다). */
-            if (kind === 'fields') return rows.length
+            if (kind === 'fields') {
+              /* ⚠ 여기가 `return rows.length` 였다 — 검증만 하고 **아무 데도 안 붙이면서**
+                 화면은 "n건 반영했습니다"라고 말했다(2026-08-19). 붙일 자리를 만들었다:
+                 `data/specFieldStore.ts`(필드 정본). 같은 이름은 덮어쓰고 없으면 더한다. */
+              const byName = new Map<string, Array<Record<string, string>>>()
+              for (const r of rows) {
+                const key = r['사양서명']
+                byName.set(key, [...(byName.get(key) ?? []), r])
+              }
+              let done = 0
+              for (const [name, group] of byName) {
+                const target = specList.find((sp) => sp.name === name)
+                if (!target) continue
+                done += mergeSpecFields(
+                  target.id,
+                  group.map((r) => rowToFieldDef(r, '김현대')),
+                )
+              }
+              recordAudit({
+                action: '업로드',
+                target: `사양서 필드 정의 (${done}건 반영 / ${rows.length}건 중)`,
+                reason: '사양서 엑셀 이관',
+              })
+              return done
+            }
             // 관문이 한 번에 넣고 **한 번만** 알린다 — 건마다 알리면 100건에서 화면이 100번 다시 그려진다
             const applied = registerSpecs(
               rows.map((r) => ({

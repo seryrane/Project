@@ -64,22 +64,33 @@ export interface ImportOutcome {
 export function SpecImportModal({
   knownSpecNames,
   knownMemberNames,
+  lockedSpecNames,
+  lockToSpec,
   onApply,
   onApplyPlans,
   onClose,
+  onSeeResult,
 }: {
   knownSpecNames: Array<string>
   knownMemberNames: Array<string>
+  /** 결재 중이라 필드를 못 고치는 사양서 — 검증이 막는다(API 설계 §1) */
+  lockedSpecNames?: Array<string>
+  /** 사양서 상세에서 열었을 때 — 그 사양서의 **필드만** 받는다(사양서명 열이 없어도 된다) */
+  lockToSpec?: string
   /** 템플릿 길 — 정상 행만 넘긴다. 반영 자체는 부르는 쪽(스토어)이 한다 */
   onApply: (kind: ImportKind, rows: Array<Record<string, string>>) => number
   /** 원본 길 — 시트에서 굳힌 사양서(필드까지)를 넘긴다 */
   onApplyPlans: (specs: Array<PlannedSpec>) => number
   onClose: () => void
+  /** 반영 뒤의 **다음 행동** — 들어간 것을 보러 간다(규약 §10) */
+  onSeeResult?: () => void
 }) {
   const { t, tf } = useI18n()
+  const known = { specNames: knownSpecNames, memberNames: knownMemberNames, lockedSpecNames, lockToSpec }
   const [step, setStep] = useState(0)
-  const [mode, setMode] = useState<Mode>('raw')
-  const [kind, setKind] = useState<ImportKind>('catalog')
+  // 상세에서 열면 길이 정해져 있다 — 그 사양서의 **필드 시트**를 받는 화면이다
+  const [mode, setMode] = useState<Mode>(lockToSpec == null ? 'raw' : 'template')
+  const [kind, setKind] = useState<ImportKind>(lockToSpec == null ? 'catalog' : 'fields')
   const [fileName, setFileName] = useState('')
   const [note, setNote] = useState('')
   const [reject, setReject] = useState<RejectReason | null>(null)
@@ -105,8 +116,9 @@ export function SpecImportModal({
 
   /* ── 원본 길의 셈 — 화면이 세는 숫자와 실제로 들어가는 것이 **같은 함수**에서 나온다 ── */
   const planIssues = useMemo(
-    () => (plans.length > 0 ? validatePlans(plans, { specNames: knownSpecNames, memberNames: knownMemberNames }) : []),
-    [plans, knownSpecNames, knownMemberNames],
+    () => (plans.length > 0 ? validatePlans(plans, known) : []),
+    // ⚠ `known` 자체는 매 렌더 새 객체라 의존성으로 못 쓴다 — **안의 값들**이 축이다
+    [plans, knownSpecNames, knownMemberNames, lockedSpecNames, lockToSpec],
   )
   const planned = useMemo(
     () => (plans.length > 0 ? plansToSpecs(plans, sheets, planIssues) : []),
@@ -144,7 +156,7 @@ export function SpecImportModal({
   }
 
   const useTemplateText = (text: string) => {
-    const res = parseCsv(kind, text, { specNames: knownSpecNames, memberNames: knownMemberNames })
+    const res = parseCsv(kind, text, known)
     setReject(res.reject ?? null)
     setReport(res.report ?? null)
     if (res.report) setStep(1)
@@ -187,7 +199,7 @@ export function SpecImportModal({
     if (mode === 'template') {
       // 템플릿을 xlsx 로 준 경우 — 첫 시트를 쓴다. **어느 시트를 썼는지 말한다**
       setNote(tf('import.usedFirstSheet', { sheet: read[0].name }, "첫 시트 '{sheet}' 를 읽었습니다"))
-      const res = parseGrid(kind, read[0].rows, { specNames: knownSpecNames, memberNames: knownMemberNames })
+      const res = parseGrid(kind, read[0].rows, known)
       setReject(res.reject ?? null)
       setReport(res.report ?? null)
       if (res.report) setStep(1)
@@ -317,6 +329,13 @@ export function SpecImportModal({
       {/* ── ① 고르기 ─────────────────────────────────────────────── */}
       {step === 0 && (
         <div className="mt-4 space-y-4">
+          {/* 사양서가 이미 정해진 화면(상세)에서는 **고를 것이 없다** — 고르는 시늉을 내면
+              "다른 사양서도 올릴 수 있나" 하고 헷갈린다 */}
+          {lockToSpec != null ? (
+            <p className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px] text-ink-muted">
+              {tf('import.scoped', { name: lockToSpec }, "'{name}' 의 필드 정의를 올립니다 — 사양서명 열은 없어도 됩니다.")}
+            </p>
+          ) : (
           <div>
             <span className="text-xs font-medium text-ink-subtle">{t('import.whichWay', '어떤 파일인가요')}</span>
             <div className="mt-1.5">
@@ -337,6 +356,7 @@ export function SpecImportModal({
               />
             </div>
           </div>
+          )}
 
           {mode === 'raw' ? (
             <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
@@ -367,6 +387,7 @@ export function SpecImportModal({
             <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-[13px]">
               {/* ⚠ 한 파일에 대장과 필드가 섞여 오면 "행 하나가 무엇인지"가 흔들린다 —
                   한 번에 하나만 받는다(설계 §1) */}
+              {lockToSpec == null && (
               <ChipSelect
                 options={['catalog', 'fields'] as const}
                 value={kind}
@@ -381,6 +402,7 @@ export function SpecImportModal({
                     : t('import.kind.fields', '필드 정의 (한 행 = 필드)')
                 }
               />
+              )}
               <div className="mt-2.5 font-medium text-ink">{t('import.needCols', '필요한 열')}</div>
               <p className="mt-1 text-xs text-ink-muted">
                 <b className="text-ink">{TEMPLATE[kind].required.join(' · ')}</b>{' '}
@@ -816,6 +838,37 @@ export function SpecImportModal({
               { applied: outcome.applied, skipped: outcome.skipped, failed: outcome.failed },
               '{applied}건 반영했습니다 · 이미 있어 건너뜀 {skipped}건 · 오류로 빠짐 {failed}건',
             )}
+          </div>
+          {/* ⚠ 여기는 [닫기] 하나로 끝나 있었다 — 반영이 끝난 자리는 **다음 행동**으로 끝나야
+              한다(규약 §10). 들어간 것을 보러 가거나, 고쳐서 다시 올리거나. */}
+          <div className="flex flex-wrap gap-2">
+            {outcome.applied > 0 && onSeeResult != null && (
+              <button
+                type="button"
+                onClick={() => {
+                  onSeeResult()
+                  onClose()
+                }}
+                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('import.seeResult', '들어간 것 보기')}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                // 같은 걸음을 처음부터 — 고친 파일을 다시 올리는 것이 가장 흔한 다음 행동이다
+                setOutcome(null)
+                setReport(null)
+                setPlans([])
+                setSheets([])
+                setFileName('')
+                setStep(0)
+              }}
+              className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              {t('import.again', '다른 파일 올리기')}
+            </button>
           </div>
           {outcome.failed > 0 && (
             <p className="text-[13px] text-ink-muted">

@@ -12,8 +12,13 @@ import { StatusBadge } from '#/components/portal/StatusBadge'
 import { VersionCompareModal } from '#/components/portal/VersionCompareModal'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
+import { TEMPLATE, rowToFieldDef } from '#/lib/specImport'
+import { buildXlsx } from '#/lib/xlsxWrite'
+import { SpecImportModal } from '#/components/portal/SpecImportModal'
 import { currentVersion } from '#/data/specs'
-import { isSeededSpec, useSpecList } from '#/data/specStore'
+import { useSpecList } from '#/data/specStore'
+import { mergeSpecFields, setSpecFields, useSpecFields } from '#/data/specFieldStore'
+import { recordAudit } from '#/data/auditStore'
 import { activeRequestOfSpec, requestsOfSpec, useApprovalLine, useApprovalList } from '#/data/approvalStore'
 import { submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { ApprovalStep } from '#/data/approvals'
@@ -22,7 +27,6 @@ import {
   FIELD_CATEGORIES,
   FIELD_STATUS_CLS,
   WORKFLOW_STEPS,
-  specFieldDefs,
   workflowIndex,
 } from '#/data/specFields'
 import type { FieldDef, FieldStatus, FieldType } from '#/data/specFields'
@@ -132,15 +136,23 @@ function SpecDetailPage() {
   const draftKey = `spec-fields-draft.${specId}`
   // ⚠ 시드 4건만 mock 필드표를 갖는다 — 방금 등록한 사양서는 **빈 표**로 시작한다
   //   (안 그러면 "필드 정의를 채워 주세요" 토스트 옆에 남의 필드 32개가 서 있다)
-  const [fields, setFields] = useState<Array<FieldDef>>(() =>
-    isSeededSpec(specId) ? specFieldDefs : [],
-  )
+  /* ⚠ 정본은 **스토어**다(`data/specFieldStore.ts`). 예전엔 이 화면의 useState 가 정본이라
+     엑셀의 '필드 정의' 시트를 올려도 붙일 곳이 없었다 — 업로드 화면은 검증만 하고
+     "n건 반영했습니다"라고 말했다(2026-08-19). 화면은 편집 중인 사본을 들고, 저장할 때
+     정본에 넣는다. 정본이 밖에서 바뀌면(엑셀 이관) 사본을 다시 맞춘다. */
+  const saved = useSpecFields(specId)
+  const [fields, setFields] = useState<Array<FieldDef>>(saved)
+  useEffect(() => {
+    setFields(saved)
+    setDirty(0)
+  }, [saved])
   const [dirty, setDirty] = useState(0)
   const [draftInfo, setDraftInfo] = useState<string | null>(null) // 임시저장본 안내 배너
   const [cat, setCat] = useState<string>('전체')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<FieldDef | null>(null)
   const [history, setHistory] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [compare, setCompare] = useState(false)
   // 승인 요청 흐름 — 상신하면 **스토어 상태가 실제로 바뀐다** (specStore).
   // 예전엔 이 화면의 useState 로만 움직여서, 목록으로 돌아가면 카드가 여전히
@@ -223,6 +235,35 @@ function SpecDetailPage() {
     setFields((fs) => fs.map((f) => (f.no === next.no ? next : f)))
     setDirty((d) => d + 1)
     toast(tf('specDetail.toast.fieldUpdated', { name: next.name }, '{name} 필드를 수정했습니다'))
+  }
+
+  /** 필드표를 엑셀로 — **올릴 때 읽는 열 이름 그대로** 내보낸다(왕복이 성립하는 이유) */
+  const downloadFields = () => {
+    const cols = [...TEMPLATE.fields.required, ...TEMPLATE.fields.optional]
+    const rows = [
+      cols,
+      ...fields.map((f) => [
+        spec.name,
+        f.name,
+        f.type,
+        [f.category, f.sub].filter(Boolean).join(' · '),
+        f.required ? 'Y' : 'N',
+        f.maxLen == null ? '' : String(f.maxLen),
+        f.rule ?? '',
+        f.status,
+      ]),
+    ]
+    const url = URL.createObjectURL(
+      buildXlsx([{ name: '필드 정의', rows, widths: [34, 18, 10, 24, 8, 10, 22, 10] }]),
+    )
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${spec.name}_필드정의.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+    // 반출은 감사에 남는다 (개인정보 처리방침 제4조와 같은 축 — 규약: 나간 것은 기록한다)
+    recordAudit({ action: '다운로드', target: `${spec.name} 필드 정의 (${fields.length}건)`, reason: '엑셀 편집' })
+    toast(tf('specDetail.toast.excelDownloaded', { n: fields.length }, '필드 {n}건을 엑셀로 내려받았습니다'))
   }
 
   const saveDraft = () => {
@@ -357,6 +398,9 @@ function SpecDetailPage() {
           <button
             type="button"
             onClick={() => {
+              // ⚠ 예전엔 dirty 만 0 으로 되돌리고 **아무 데도 안 넣었다** — 다른 화면이 보는
+              //   필드는 그대로였다. 정본에 넣는다(그래야 이관·상세가 같은 표를 본다).
+              setSpecFields(specId, fields)
               setDirty(0)
               localStorage.removeItem(draftKey)
               toast(
@@ -495,20 +539,19 @@ function SpecDetailPage() {
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">
+            {/* ⚠ 둘 다 토스트만 띄우던 자리다 — 이제 **내려받아 엑셀에서 고쳐 다시 올리는**
+                왕복이 화면에서 실제로 돈다(FR-115). 내려받는 열 이름은 올릴 때 읽는 열
+                이름과 **같은 정본**(`TEMPLATE.fields`)이라 그대로 되돌아올 수 있다. */}
             <button
               type="button"
-              onClick={() =>
-                toast(t('specDetail.toast.excelDownload', 'Excel 다운로드 — 본개발에서 연결됩니다'))
-              }
+              onClick={() => downloadFields()}
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('specDetail.excelDownload', 'Excel 다운로드')}
             </button>
             <button
               type="button"
-              onClick={() =>
-                toast(t('specDetail.toast.excelUpload', '엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다'))
-              }
+              onClick={() => setImporting(true)}
               disabled={locked}
               title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
               className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
@@ -660,6 +703,31 @@ function SpecDetailPage() {
       )}
 
       {/* 버전 이력 — 타임라인 */}
+      {/* 이 사양서의 **필드 시트만** 받는다 — 사양서명 열이 없어도 여기서 올린 것은 이 사양서다 */}
+      {importing && (
+        <SpecImportModal
+          knownSpecNames={specList.map((sp) => sp.name)}
+          knownMemberNames={[]}
+          lockToSpec={spec.name}
+          lockedSpecNames={locked ? [spec.name] : []}
+          onApply={(_kind, rows) => {
+            const done = mergeSpecFields(
+              spec.id,
+              rows.map((r) => rowToFieldDef(r, '김현대')),
+            )
+            recordAudit({
+              action: '업로드',
+              target: `${spec.name} 필드 정의 (${done}건 반영)`,
+              reason: '사양서 엑셀 이관',
+            })
+            return done
+          }}
+          /* 원본 길(시트=사양서)은 여기서 안 쓴다 — 이 화면은 사양서가 이미 정해져 있다 */
+          onApplyPlans={() => 0}
+          onClose={() => setImporting(false)}
+        />
+      )}
+
       {history && (
         <Modal
           title={tf('specDetail.historyTitle', { name: spec.name }, '버전 이력 — {name}')}

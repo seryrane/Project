@@ -121,6 +121,12 @@ export const WORK_DICT: Record<string, Entry> = {
   'import.optional': { ko: '선택', en: 'optional' },
   'import.template': { ko: '표준 양식 받기 (xlsx)', en: 'Get standard form (xlsx)' },
   'import.templateDraft': { ko: '우리 표준 양식(초안) 받기', en: 'Get our draft standard form' },
+  'import.seeResult': { ko: '들어간 것 보기', en: 'See what landed' },
+  'import.again': { ko: '다른 파일 올리기', en: 'Upload another file' },
+  'import.scoped': {
+    ko: "'{name}' 의 필드 정의를 올립니다 — 사양서명 열은 없어도 됩니다.",
+    en: "Uploading field definitions for '{name}' — the spec-name column is optional.",
+  },
   'import.pick': { ko: '파일 고르기 (CSV)', en: 'Choose a file (CSV)' },
   'import.pickHint': {
     ko: '엑셀은 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 주세요 · 10MB 이하',
@@ -403,14 +409,9 @@ export const WORK_DICT: Record<string, Entry> = {
     ko: '행을 누르면 우측에서 편집합니다 · 표는 자기 상자 안에서만 가로로 흐릅니다',
     en: 'Click a row to edit it on the right · the table scrolls only within its own box',
   },
-  'specDetail.toast.excelDownload': {
-    ko: 'Excel 다운로드 — 본개발에서 연결됩니다',
-    en: 'Download Excel — wired up in production build',
-  },
-  'specDetail.toast.excelUpload': {
-    ko: '엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다',
-    en: 'Upload Excel (bulk apply) — wired up in production build',
-  },
+  /* ⚠ 이 둘은 "본개발에서 연결됩니다" 토스트였다 — 2026-08-20 에 **실물로 연결**했다:
+     내려받은 열 이름 = 올릴 때 읽는 열 이름(TEMPLATE.fields)이라 왕복이 성립한다. */
+  'specDetail.toast.excelDownloaded': { ko: '필드 {n}건을 엑셀로 내려받았습니다', en: 'Downloaded {n} fields as Excel' },
   'specDetail.toast.addField': {
     ko: '필드 추가 — 본개발에서 연결됩니다',
     en: 'Add field — wired up in production build',
@@ -629,10 +630,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'results.detail.ofWhichErrors': { ko: ' 중 오류 ', en: ', errors ' },
   'results.noSamplesPass': { ko: '오류가 없어 샘플이 없습니다 (통과).', en: 'No samples — no errors (passed).' },
   'results.rowLabel': { ko: '행 {n}', en: 'Row {n}' },
-  'results.toast.exportExcel': {
-    ko: 'Excel 리포트 내보내기 — 본개발에서 연결됩니다',
-    en: 'Export Excel report — wired up in production build',
-  },
+  'results.toast.exported': { ko: '{n}건을 엑셀로 내보냈습니다', en: 'Exported {n} rows to Excel' },
   'results.detailDrawerTitle': { ko: '검증 상세 — {id}', en: 'Validation details — {id}' },
   'results.toast.requeued': {
     ko: '{id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다',
