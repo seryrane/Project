@@ -296,6 +296,16 @@ export const WORK_DICT: Record<string, Entry> = {
   /* 알림 줄의 머리표 — 한 낱말. 문장 전체를 상태색으로 칠하는 대신 이 낱말과 색막대만 물든다 */
   'specDetail.noticeLockedLabel': { ko: '잠김', en: 'Locked' }, // ⚠ 본문이 "결재 중이라…"로 시작한다 — 머리표까지 '결재 중'이면 같은 말이 두 번 선다
   'specDetail.noticeConflictLabel': { ko: '겹침', en: 'Overlap' },
+  /* 목록 보기 축 — 값은 한국어 정본('카드'·'표')이고 표시만 옮긴다 (규약 §4-7) */
+  'specs.view.카드': { ko: '카드', en: 'Cards' },
+  'specs.view.표': { ko: '표', en: 'Table' },
+  'specs.th.id': { ko: 'ID', en: 'ID' },
+  'specs.th.name': { ko: '사양서명', en: 'Spec' },
+  'specs.th.category': { ko: '카테고리', en: 'Category' },
+  'specs.th.version': { ko: '버전', en: 'Version' },
+  'specs.th.status': { ko: '상태', en: 'Status' },
+  'specs.th.author': { ko: '담당', en: 'Owner' },
+  'specs.th.updated': { ko: '수정', en: 'Updated' },
   'specDetail.addChangeRequest': { ko: '변경 요청 추가', en: 'Add change request' },
   'specDetail.conflictBanner': {
     ko: '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',

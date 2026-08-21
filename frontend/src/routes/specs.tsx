@@ -3,6 +3,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
+import { StatusBadge } from '#/components/portal/StatusBadge'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { SpecImportModal } from '#/components/portal/SpecImportModal'
@@ -33,6 +35,19 @@ const ALL_STATUS = '전체 상태'
    기본값으로 떨어진다. 축은 **정본**이 정한다(data/specs.ts SPEC_CATEGORIES). */
 const specCategories = SPEC_CATEGORIES
 
+/**
+ * 목록을 **어떻게 볼 것인가** — 카드냐 표냐 (2026-08-21).
+ *
+ * ⚠⚠ 카드 하나가 300px 대다(설명 2줄 + 태그 5개 + 스펙 미리보기 4값 + 발 버튼). 지금은
+ * 4건이라 견디지만 **사양서는 결국 수백 건이 된다** — 20건만 되어도 카드로는 못 훑는다.
+ * 나중에 반드시 겪을 문제라 골격에 지금 넣는다(나중에 넣으면 화면을 다시 짜야 한다).
+ * ⚠ 카드를 표로 **바꾸지는 않는다** — 카드는 몇 건 안 될 때 내용을 보여 주는 데 낫다.
+ *   고르는 것은 사람이고, 고른 것은 **주소에 남는다**(새로고침·링크 공유에서 살아남는다).
+ */
+const VIEWS = ['카드', '표'] as const
+type SpecsView = (typeof VIEWS)[number]
+const DEFAULT_VIEW: SpecsView = '카드'
+
 /** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
 interface SpecsSearch {
   open?: string
@@ -41,6 +56,8 @@ interface SpecsSearch {
   status?: SpecStatus
   /** 등록 모달을 열고 진입 — GNB [+ 새 사양서]가 이 문으로 들어온다 */
   new?: string
+  /** 카드로 볼지 표로 볼지 — 기본은 카드 */
+  view?: SpecsView
 }
 
 export const Route = createFileRoute('/specs')({
@@ -52,6 +69,7 @@ export const Route = createFileRoute('/specs')({
     cat: pickOne(search.cat, specCategories),
     status: pickOne(search.status, allStatuses),
     new: search.new === '1' || search.new === 1 || search.new === true ? '1' : undefined,
+    view: pickOne(search.view, VIEWS),
   }),
 })
 
@@ -70,6 +88,7 @@ function SpecsPage() {
     cat: category = ALL_CATEGORY,
     status = ALL_STATUS,
     new: wantNew,
+    view = DEFAULT_VIEW,
   } = Route.useSearch()
   const navigate = useNavigate()
   const [compare, setCompare] = useState<{ spec: Spec; base: SpecVersion } | null>(null)
@@ -211,6 +230,16 @@ function SpecsPage() {
             </button>
           )
         })}
+        {/* 보기 전환 — 거르는 칩과 **같은 줄 반대쪽**에 둔다. 거르는 것과 보는 방식은 다른
+            축이라 섞으면 "표도 필터인가"로 읽힌다. 고른 것은 면으로 말한다(규약 §16). */}
+        <span className="ml-auto">
+          <ChipSelect
+            options={VIEWS}
+            value={view}
+            onChange={(v) => setSearch({ view: orNone(v, DEFAULT_VIEW) })}
+            label={(v) => t(`specs.view.${v}`, v)}
+          />
+        </span>
       </div>
 
       {/* 저장 필터 — 자주 쓰는 조합에 이름을 붙여 둔다(관문 SavedFilters).
@@ -230,25 +259,83 @@ function SpecsPage() {
         }
       />
 
-      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        {filtered.map((spec, i) => (
-          <SpecCard
-            key={spec.id}
-            spec={spec}
-            index={i}
-            onDetail={() => navigate({ to: '/specs/$specId', params: { specId: spec.id } })}
-            onCompare={() => openCompare(spec)}
-            /* 상신 판단은 상세 한 곳 — 카드는 상세의 상신 모달로 보내기만 한다 (SpecCard 주석) */
-            onRequest={() =>
-              navigate({ to: '/specs/$specId', params: { specId: spec.id }, search: { request: '1' } })
-            }
+      {view === '표' ? (
+        /* 표 — 관문이 그린다(규약 §9 "표는 한 곳에서만"). 카드가 보여 주던 것 중
+           **훑을 때 쓰는 것만** 열로 세운다: 설명·태그·스펙 미리보기는 상세가 맡는다.
+           ⚠ 열 폭 합은 코드의 본문 폭(1360)을 넘지 않게 잡는다 — 넘으면 마지막 열이
+           화면에서 조용히 잘린다(DESIGN.md 폭 표 참고). */
+        <div className="mt-6">
+          <DataTable
+            rows={filtered}
+            rowKey={(sp) => sp.id}
+            minWidth={880}
+            onRowClick={(sp) => navigate({ to: '/specs/$specId', params: { specId: sp.id } })}
+            empty={{ title: t('specs.empty', '조건에 맞는 사양서가 없습니다.') }}
+            columns={[
+              {
+                header: t('specs.th.id', 'ID'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => <span className="font-mono text-xs text-ink-subtle">{sp.id}</span>,
+              },
+              {
+                header: t('specs.th.name', '사양서명'),
+                cell: (sp) => <span className="font-medium text-ink">{sp.name}</span>,
+              },
+              {
+                header: t('specs.th.category', '카테고리'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => (
+                  <span className="text-ink-muted">{catLabel(sp.category)}</span>
+                ),
+              },
+              {
+                header: t('specs.th.version', '버전'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => (
+                  <span className="font-mono text-xs text-primary">{currentVersion(sp).version}</span>
+                ),
+              },
+              {
+                header: t('specs.th.status', '상태'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => <StatusBadge status={currentVersion(sp).status} />,
+              },
+              {
+                header: t('specs.th.author', '담당'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => <span className="text-ink-muted">{currentVersion(sp).author}</span>,
+              },
+              {
+                header: t('specs.th.updated', '수정'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (sp) => <span className="tabular-nums text-ink-subtle">{sp.updated}</span>,
+              },
+            ]}
           />
-        ))}
-      </div>
-      {filtered.length === 0 && (
-        <div className="mt-16 text-center text-sm text-ink-subtle">
-          {t('specs.empty', '조건에 맞는 사양서가 없습니다.')}
         </div>
+      ) : (
+        <>
+          <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+            {filtered.map((spec, i) => (
+              <SpecCard
+                key={spec.id}
+                spec={spec}
+                index={i}
+                onDetail={() => navigate({ to: '/specs/$specId', params: { specId: spec.id } })}
+                onCompare={() => openCompare(spec)}
+                /* 상신 판단은 상세 한 곳 — 카드는 상세의 상신 모달로 보내기만 한다 (SpecCard 주석) */
+                onRequest={() =>
+                  navigate({ to: '/specs/$specId', params: { specId: spec.id }, search: { request: '1' } })
+                }
+              />
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <div className="mt-16 text-center text-sm text-ink-subtle">
+              {t('specs.empty', '조건에 맞는 사양서가 없습니다.')}
+            </div>
+          )}
+        </>
       )}
       {/* ⚠ 목록은 몇 건인지 말하고 끝난다(규약 §9). **카드 목록에도 발이 필요하다** —
           표에만 달아 두어서, 거르면 카드가 줄어드는데 화면은 아무 말이 없었다: 보는 사람은

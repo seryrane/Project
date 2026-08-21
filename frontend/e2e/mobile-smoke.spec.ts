@@ -1491,3 +1491,34 @@ test.describe('겹친 변경 요청', () => {
     await expect(page.getByText(/변경 요청이 3건 겹쳐 있습니다/), '막지 않고 받는다').toBeVisible()
   })
 })
+
+/* ── 목록 밀도 — [카드 / 표] 전환 (2026-08-21) ─────────────────────────────────
+   ⚠ 사양서는 결국 수백 건이 된다. 카드 하나가 300px 대라 20건만 되어도 못 훑는다 —
+   나중에 반드시 겪을 문제라 골격에 지금 넣었다. 고른 보기는 **주소에 남는다**. */
+test.describe('목록 보기 전환', () => {
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false })
+
+  test('표로 바꾸면 주소에 남고, 새로고침해도 표다', async ({ page }) => {
+    await ready(page, '/specs')
+    // 카드 보기에서는 카드가 `<article>` 이다 (버튼도 링크도 아니다)
+    await expect(page.locator('article').first()).toBeVisible()
+
+    await page.getByRole('button', { name: /^✓?\s*표$/ }).click()
+    await expect(page.getByRole('table'), '표가 선다').toBeVisible()
+    await expect(page.locator('article'), '카드는 물러난다').toHaveCount(0)
+
+    /* ⚠ **새로고침으로 잰다** — 이 판의 요점이 "주소에 남는가"라서 앱 안 이동으로는
+       아무것도 확인하지 못한다(모듈 스토어가 초기화되는 것은 여기서는 상관없다). */
+    await page.reload()
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    await expect(page.getByRole('table'), '주소에 남았으니 새로고침해도 표다').toBeVisible()
+  })
+
+  test('표의 줄을 누르면 그 사양서로 들어간다', async ({ page }) => {
+    await ready(page, '/specs')
+    await page.getByRole('button', { name: /^✓?\s*표$/ }).click()
+    await page.getByRole('row').filter({ hasText: 'SP-002' }).click()
+    await expect(page.getByRole('heading', { name: /전기차 배터리 규격서/ })).toBeVisible()
+  })
+})
+
