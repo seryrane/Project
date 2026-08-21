@@ -135,13 +135,21 @@ export function registerSpecs(inputs: Array<NewSpecInput>): number {
   return born.length
 }
 
-/** 상신 — 초안·검토 중만 승인 대기로 간다. 이미 결재 중·배포면 아무 일도 안 한다.
+/** 상신 — 초안·검토 중은 승인 대기로 간다. 승인 완료·배포 완료면 아무 일도 안 한다.
  *  ⚠ 스토어가 상태를 실제로 바꾸므로, 상신 직후 목록 칩·대시보드 도넛이 같이 움직인다 —
- *    "전송됐습니다" 토스트와 화면 상태가 서로 다른 말을 하지 않는다. */
+ *    "전송됐습니다" 토스트와 화면 상태가 서로 다른 말을 하지 않는다.
+ *
+ *  ⚠⚠ **이미 '승인 대기'여도 받는다**(2026-08-21, 동일 사양 다중 수정 요청 충돌 관리).
+ *  예전엔 여기서 false 를 줘서, 두 번째 사람의 변경 요청이 **아무 말 없이 사라졌다** —
+ *  고객이 회의에서 못 박은 자리다: "누가 먼저 했다고 다른 사람 걸 막느냐, 그건 안 될 것
+ *  같다." 사양서 상태는 이미 '승인 대기'라 바뀔 것이 없고, 요청만 하나 더 선다(겹침).
+ *  ⚠ 문서 **본문**은 여전히 잠긴 채다 — 승인자가 본 것이 심사 중에 바뀌면 안 된다.
+ *  잠그는 것은 '내용'이고, 여는 것은 '요청'이다. 둘을 같은 자물쇠로 묶지 않는다. */
 export function submitSpecForApproval(id: string): boolean {
   const spec = specList.find((s) => s.id === id)
   if (!spec) return false
   const cur = currentVersion(spec)
+  if (cur.status === '승인 대기') return true // 겹친 요청 — 상태는 이미 맞다
   if (cur.status !== '초안' && cur.status !== '검토 중') return false
   const next: Spec = {
     ...spec,
@@ -180,12 +188,39 @@ export function rejectSpec(id: string, reason: string, by: string): boolean {
   return setStatus(id, '초안', { rejection: { reason, by, at: today() } })
 }
 
-/** 회수 — 요청자가 도로 내렸다. 초안으로 돌아가되 반려 자국은 남기지 않는다
- *  (⚠ 요구사항 밖 기능 — approvalStore.withdrawRequest 주석 참고). */
-export function withdrawSpec(id: string): boolean {
+/**
+ * 결재가 하나도 안 남았다 — 사양서를 초안으로 되돌린다. 반려 자국은 남기지 않는다.
+ *
+ * ⚠ **부르기 전에 "진행 중인 요청이 정말 없는지"를 먼저 세야 한다.** 겹친 요청 둘 중
+ * 하나만 내려갔는데 여기까지 오면, 아직 심사 중인 다른 건이 있는데도 사양서가 초안으로
+ * 풀려 편집이 열린다 — 승인자가 본 것과 다른 문서가 승인되는 그 길이 다시 열린다.
+ * 그 셈은 두 스토어를 함께 보는 `data/workflow.ts` 가 한다.
+ */
+export function releaseSpecToDraft(id: string): boolean {
   const spec = specList.find((s) => s.id === id)
   if (!spec || currentVersion(spec).status !== '승인 대기') return false
   return setStatus(id, '초안')
+}
+
+/**
+ * **승인이 취소됐다** — '승인 완료'를 되돌린다 (2026-08-21, 겹침 정리).
+ *
+ * ⚠⚠ 이 자리가 없으면 구멍이 난다: 겹친 둘 중 승인까지 간 건을 내리고 **다른 건으로 가기로**
+ * 했는데, 사양서는 '승인 완료'로 남는다 → 배포 관문은 겹침이 풀렸다고 보고 길을 열어 준다
+ * → **아무도 승인하지 않은 변경이 반영된다.**
+ *
+ * @param stillPending 심사 중인 다른 요청이 남았는가 — 남았으면 '승인 대기', 없으면 '초안'
+ * ⚠ 배포까지 간 문서는 되돌리지 않는다(반영은 되돌리기 어렵다 — 상태가 '승인 완료'가 아니면 그냥 만다).
+ */
+export function revertSpecApproval(id: string, stillPending: boolean): boolean {
+  const spec = specList.find((s) => s.id === id)
+  if (!spec || currentVersion(spec).status !== '승인 완료') return false
+  return setStatus(id, stillPending ? '승인 대기' : '초안')
+}
+
+/** 회수 — 요청자가 도로 내렸다 (✔ 2026-08-19 채택, FR-114 확장). */
+export function withdrawSpec(id: string): boolean {
+  return releaseSpecToDraft(id)
 }
 
 /** 배포까지 끝났다 */

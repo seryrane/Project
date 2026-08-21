@@ -53,12 +53,20 @@ export function approvalLine(): Array<ApprovalStep> {
 
 /* ── 결재함 ──────────────────────────────────────────────────────── */
 
-export type RequestState = '진행 중' | '승인 완료' | '반려' | '회수'
+/**
+ * ⚠ **'취소'는 '반려'·'회수'와 다른 것이다** (2026-08-21, 동일 사양 다중 수정 요청 충돌 관리).
+ *   반려 = "이 내용은 틀렸다" — 요청자가 고쳐서 재요청한다.
+ *   회수 = "내가 올린 것을 내가 내린다" — 요청자 본인만, 아무도 판단하기 전에만.
+ *   취소 = "이 건이 틀린 게 아니라, **같은 사양서의 다른 건으로 간다**" — 판단하는 쪽이
+ *          사유를 내고 내린다. 겹친 요청 중 채택되지 않은 것이 여기로 간다.
+ * 셋을 한 낱말로 뭉치면 요청자가 "내 요청이 왜 반려됐지"를 영영 오해한다.
+ */
+export type RequestState = '진행 중' | '승인 완료' | '반려' | '회수' | '취소' | '반영 완료'
 
 export interface TrailEntry {
   seq: number
   approver: string
-  action: '승인' | '반려'
+  action: '승인' | '반려' | '취소'
   at: string
   /** 반려는 사유가 **필수**다(규약 §2) — 승인 의견은 비어 있을 수 있다 */
   opinion: string
@@ -133,9 +141,47 @@ export function findRequest(id: string): ApprovalRecord | undefined {
   return records.find((r) => r.id === id)
 }
 
-/** 이 사양서로 지금 **진행 중인** 결재. 끝난 건은 안 잡는다(재요청하면 새 건이 선다). */
+/** 이 사양서로 지금 **진행 중인** 결재 중 **가장 먼저 올라온 것**.
+ *  ⚠ 겹칠 수 있다(아래 `activeRequestsOfSpec`) — 한 건만 필요한 자리(잠금 띠·회수 버튼)가
+ *    이것을 쓴다. "몇 건이 겹쳤나"를 물을 때는 반드시 복수형 쪽을 부른다. */
 export function activeRequestOfSpec(specId: string): ApprovalRecord | undefined {
   return records.find((r) => r.specId === specId && r.state === '진행 중')
+}
+
+/**
+ * 이 사양서로 지금 진행 중인 결재 **전부** — 겹침(동일 사양 다중 수정 요청)을 세는 자리.
+ *
+ * ⚠⚠ **겹침은 막지 않는다**(고객 2026-07-20 회의): "권한이 있는 사람이 둘 다 같은 사양을
+ * 수정하고 싶으면 둘 다 신청할 수 있어야 한다 — 누가 먼저 했다고 다른 사람 걸 막는 건
+ * 안 될 것 같다." 그래서 이 관문은 **세기만 한다**. 막는 자리는 딱 하나, **반영(배포)**이다
+ * (같은 회의: "2개 이상이면 반영을 못하게 검증하는 것도 있어야겠다").
+ */
+export function activeRequestsOfSpec(specId: string): Array<ApprovalRecord> {
+  return records.filter((r) => r.specId === specId && r.state === '진행 중')
+}
+
+/** **아직 반영되지 않은** 요청 — 심사 중이거나, 승인은 났는데 배포는 안 된 것.
+ *  겹침을 세는 기준이 이것이다(아래 `conflictedSpecIds` 주석 참고). */
+export function unsettledRequestsOfSpec(specId: string): Array<ApprovalRecord> {
+  return records.filter((r) => r.specId === specId && UNSETTLED.has(r.state))
+}
+
+/** 요청이 **끝나지 않은** 상태 — 대기 풀에 남아 있다는 뜻 */
+const UNSETTLED = new Set<RequestState>(['진행 중', '승인 완료'])
+
+/**
+ * 겹친 사양서 id — 진행 중 요청이 **둘 이상**인 사양서.
+ *
+ * ⚠ 목록을 인자로 받는다: 화면은 `useApprovalList()` 로 구독한 그 배열을 그대로 넘긴다.
+ *   모듈 상태를 몰래 읽으면 구독을 안 탄 화면이 옛 숫자를 그린다(규약 §10).
+ */
+export function conflictedSpecIds(list: Array<ApprovalRecord>): Set<string> {
+  const seen = new Map<string, number>()
+  for (const r of list) {
+    if (!UNSETTLED.has(r.state) || !r.specId) continue
+    seen.set(r.specId, (seen.get(r.specId) ?? 0) + 1)
+  }
+  return new Set([...seen].filter(([, n]) => n > 1).map(([id]) => id))
 }
 
 /** 이 사양서의 결재 이력 전부 — 사후 조회(FR-114 ④), 최근 것이 앞 */
@@ -273,6 +319,52 @@ export function decideRequest(
  * ⚠ **한 단계라도 승인이 찍혔으면 못 내린다** — 이미 판단한 사람이 있는 건을 요청자가
  *   지우면 그 판단의 기록이 사라진다.
  */
+/**
+ * 취소 — **겹친 요청 중 채택되지 않은 것**을 결재자가 사유를 내고 내린다.
+ *
+ * 근거(2026-07-20 회의): "동일한 항목이 두 개 있으면 반영을 관리하는 담당자가 수기로
+ * 검증하고 **둘 중 하나는 취소해야 된다, 그러면 취소 사유를 내고 취소한다**."
+ *
+ * ⚠ **사유가 없으면 받지 않는다.** 남이 올린 요청을 내리는 일이다 — 요청자가 나중에
+ *   "왜 내 것이 사라졌나"를 물었을 때 답이 없으면 이 기능은 신뢰를 잃는다.
+ * ⚠ 이미 판단이 찍힌 건도 취소할 수 있다(회수와 다른 점). 1차 승인까지 갔더라도 겹친
+ *   다른 건이 채택되면 이 건은 갈 곳이 없다 — 자국(trail)은 그대로 남기고 상태만 닫는다.
+ */
+export function cancelRequest(id: string, reason: string, by: string): ApprovalRecord | null {
+  const rec = records.find((r) => r.id === id)
+  /* ⚠ **승인이 난 건도 반영 전이면 내릴 수 있다.** 겹친 둘이 다 승인까지 갔을 때
+     아무것도 못 내리면 그 사양서는 영영 배포되지 않는다(막다른 골목). 반영이 곧
+     되돌릴 수 없는 지점이고, 그 전까지는 사람이 고를 수 있어야 한다. */
+  if (!rec || !UNSETTLED.has(rec.state)) return null
+  if (reason.trim() === '') return null
+  const entry: TrailEntry = {
+    seq: rec.step[0],
+    approver: by,
+    action: '취소',
+    at: today(),
+    opinion: reason.trim(),
+  }
+  const next: ApprovalRecord = { ...rec, state: '취소', myTurn: false, trail: [...rec.trail, entry] }
+  records = records.map((r) => (r.id === id ? next : r))
+  notify()
+  return next
+}
+
+/**
+ * 반영됐다 — 배포가 끝난 사양서의 **승인 완료** 요청을 대기 풀에서 내린다.
+ *
+ * ⚠⚠ 이 자리가 없으면 겹침이 **거짓으로** 뜬다: 배포까지 끝난 옛 요청이 '승인 완료'로
+ * 계속 남아, 나중에 새 변경 요청이 하나 들어오면 둘이 되어 "겹쳤다"고 말한다.
+ * 대기 풀은 **반영되면 비워져야** 한다.
+ */
+export function markRequestsReflected(specId: string): void {
+  // ⚠ 바꿀 것이 없으면 알리지 않는다 — 배포에 실린 사양서 수만큼 화면이 다시 그려진다
+  const hit = (r: ApprovalRecord) => r.specId === specId && r.state === '승인 완료'
+  if (!records.some(hit)) return
+  records = records.map((r) => (hit(r) ? { ...r, state: '반영 완료' } : r))
+  notify()
+}
+
 export function withdrawRequest(id: string, by: string): boolean {
   const rec = records.find((r) => r.id === id)
   if (!rec || rec.state !== '진행 중') return false

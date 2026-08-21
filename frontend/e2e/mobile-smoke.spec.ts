@@ -46,6 +46,22 @@ async function ready(page: Page, path: string) {
   await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
 }
 
+/**
+ * 겹친 두 건 중 **먼저 것**(APR-2026-0115 · VN7 v2.3)의 상세를 연다.
+ *
+ * ⚠⚠ 이름 일부로 집으면 겹친 두 건이 **다 걸려** strict 위반이 난다("VN7 엔진 사양서 v2.3"
+ * 과 "… (출력 재조정)"). 2026-08-21 에 겹침 시드가 서면서 판 넷이 이 이유로 깨졌다 —
+ * 카드를 먼저 가르고 그 안의 버튼을 누른다.
+ */
+const openVn7Request = (page: Page) =>
+  page
+    .locator('ol > li')
+    .filter({ hasText: 'VN7 엔진 사양서 v2.3' })
+    .filter({ hasNotText: '출력 재조정' })
+    .first()
+    .getByRole('button')
+    .click()
+
 for (const path of PAGES) {
   test(`${path} — 페이지가 가로로 넘치지 않는다`, async ({ page }) => {
     await ready(page, path)
@@ -864,7 +880,7 @@ test.describe('결재 수명주기 (FR-114)', () => {
   test('승인 — 마지막 단계까지 통과하면 사양서가 승인 완료가 된다 (결재가 내려온다)', async ({ page }) => {
     await ready(page, '/approvals')
     // 시드 중 마지막 단계(2/2)인 건 — 승인하면 그 자리에서 끝난다
-    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await openVn7Request(page)
     await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
     /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
        가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
@@ -960,7 +976,7 @@ test.describe('결재 수명주기 (FR-114)', () => {
     page,
   }) => {
     await ready(page, '/approvals')
-    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await openVn7Request(page)
     await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
     /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
        가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
@@ -985,7 +1001,7 @@ test.describe('결재 수명주기 (FR-114)', () => {
     page,
   }) => {
     await ready(page, '/approvals')
-    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await openVn7Request(page)
     const dialog = page.getByRole('dialog')
     await expect(dialog.getByText(/다음 내 차례 건으로 이어집니다/), '처리 전에 알려 준다').toBeVisible()
 
@@ -994,8 +1010,14 @@ test.describe('결재 수명주기 (FR-114)', () => {
     /* ⚠ **제목으로 재면 안 된다** — 다음 건(배포)의 변경 항목 표에 방금 처리한 사양서가
        실려 있어서 "VN7"이 그대로 걸린다(2026-08-18에 이 테스트가 먼저 걸렸다).
        건을 가르는 것은 **요청 ID** 다. */
-    await expect(dialog.getByText('APR-2026-0115'), '방금 처리한 건은 물러난다').toHaveCount(0)
-    await expect(dialog.getByText(/Release v3\.1\.1/), '다음 내 차례 건이 선다').toBeVisible()
+    /* ⚠ **덮개 안 아무 데나 찾으면 안 된다** — 다음 건이 겹친 건이면 겹침 패널이 방금 처리한
+       건의 ID 를 (형제로서) 그대로 적는다. 2026-08-21 에 여기가 그래서 깨졌다.
+       머리에 선 ID 하나만 본다 — 그것이 "지금 보고 있는 건"이다.
+       ⚠ 다음 건은 목록 순서를 따라간다. 순서가 바뀌면 이 좌표도 함께 고친다. */
+    await expect(
+      dialog.getByText(/^APR-\d{4}-\d+$/).first(),
+      '방금 처리한 건은 물러나고 다음 내 차례 건이 머리에 선다',
+    ).toHaveText('APR-2026-0116')
   })
 
   test('결재 이력 — 누가·언제·무슨 의견으로 처리했는지 사후에 조회된다 (FR-114 ④)', async ({
@@ -1055,6 +1077,11 @@ test.describe('결재 수명주기 (FR-114)', () => {
   }) => {
     await ready(page, '/deploys')
     await page.getByRole('button', { name: /새 배포 요청/ }).click()
+    /* ⚠ 기본 선택에 VN7(SP-001)이 들어 있는데 그 사양서는 **겹침 시드** 때문에 반영이 막힌다
+       (2026-08-21). 이 판이 볼 것은 "요청이 배포 목록과 결재함에 함께 남는가"이므로 겹친
+       사양서는 빼고 본다 — 겹침 자체는 [겹친 변경 요청] 묶음이 따로 잰다. */
+    // ⚠ 선택된 칩의 접근성 이름에는 **✓ 가 붙는다** — 앞을 고정하면 못 찾는다
+    await page.getByRole('dialog').getByRole('button', { name: /VN7 엔진 사양서 v2\.3$/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: /배포 승인 요청/ }).click()
 
     await expect(page.getByText(/DEP-\d{4}-\d+/).first(), '배포 목록에 선다').toBeVisible()
@@ -1308,7 +1335,7 @@ test.describe('감사 축', () => {
         워크플로 한 곳에서 남기므로 **어느 화면에서 눌러도 같은 줄**이 서야 한다. */
   test('결재 판단이 감사 로그에 남는다 — 구분 칩으로 접속·반출과 갈라 본다', async ({ page }) => {
     await ready(page, '/approvals')
-    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await openVn7Request(page)
     await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
     await page.keyboard.press('Escape') // 덮개가 열려 있으면 가리개가 LNB 클릭을 먹는다
     await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -1333,5 +1360,134 @@ test.describe('감사 축', () => {
     // 접속·반출 칸에 선다 — 이 화면이 원래 보던 축이다
     await page.getByRole('button', { name: '접속·반출' }).click()
     await expect(row.first()).toBeVisible()
+  })
+})
+
+/* ── 동일 사양 다중 수정 요청 충돌 관리 (2026-07-20 회의) ────────────────────────
+   ⚠ 이 묶음의 좌표는 전부 **고객이 회의에서 말한 문장**에서 나왔다:
+     "누가 먼저 했다고 다른 사람 걸 막느냐, 그건 안 될 것 같다"   → 신청은 막지 않는다
+     "같은 항목이면 이 밑에 한 번 더 가지식으로 리스트업"          → 목록에서 붙여 세운다
+     "2개 이상이면 반영을 못하게 검증하는 것도 있어야겠다"          → 반영만 막는다
+     "둘 중 하나는 취소해야 된다, 취소 사유를 내고 취소한다"        → 사유 없이는 못 내린다 */
+test.describe('겹친 변경 요청', () => {
+  // LNB 로 오가는 시험이라 넓은 화면에서 본다 — 좁은 화면에선 링크가 서랍 안이다
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false })
+
+  const goto = (page: Page, name: string) => page.getByRole('link', { name }).first().click()
+  test('같은 사양서를 보는 요청은 붙어 서고 겹침 수를 말한다', async ({ page }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /전체 대기/ }).click()
+
+    // ⚠ 배지는 **나를 포함한** 수다 — "겹침 2"는 이 건 말고 하나가 더 있다는 뜻
+    await expect(page.getByText('겹침 2').first()).toBeVisible()
+
+    /* 붙어 서는지 — 두 건 사이에 다른 건이 끼면 겹친 줄을 못 알아본다.
+       ⚠ 카드 제목으로 순서를 잰다(목록 순서 = DOM 순서). */
+    const titles = await page.locator('ol > li button span.text-base').allInnerTexts()
+    const a = titles.findIndex((x) => x.includes('VN7 엔진 사양서 v2.3') && !x.includes('출력 재조정'))
+    const b = titles.findIndex((x) => x.includes('출력 재조정'))
+    expect(a, '겹친 두 건이 목록에 다 있다').toBeGreaterThanOrEqual(0)
+    expect(b - a, '겹친 건은 바로 아래 붙어 선다').toBe(1)
+  })
+
+  test('반영은 막힌다 — 둘 다 들어가면 어느 쪽이 최종인지 알 수 없다', async ({ page }) => {
+    await ready(page, '/deploys')
+    await page.getByRole('button', { name: /배포 요청/ }).first().click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText(/변경 요청이 겹쳐 있어 반영할 수 없습니다/)).toBeVisible()
+    await expect(
+      dialog.getByRole('button', { name: /배포 승인 요청/ }),
+      '못 하는 이유를 적고 버튼은 잠근다 (규약 §17)',
+    ).toBeDisabled()
+  })
+
+  test('사유 없이는 못 내린다 — 남의 요청을 내리는 일이다', async ({ page }) => {
+    await ready(page, '/approvals')
+    await openVn7Request(page)
+    await page.getByRole('dialog').getByRole('button', { name: '이 건 취소' }).click()
+    const cancelBox = page.getByRole('dialog').filter({ hasText: '겹친 요청 취소' })
+    await expect(cancelBox.getByRole('button', { name: '취소 처리' })).toBeDisabled()
+    await cancelBox.getByLabel(/취소 사유/).fill('APR-2026-0115 로 통합해 반영합니다')
+    await expect(cancelBox.getByRole('button', { name: '취소 처리' })).toBeEnabled()
+  })
+
+  test('하나를 고르고 나머지를 취소하면 반영이 풀린다 — 취소는 반려가 아니다', async ({ page }) => {
+    await ready(page, '/approvals')
+    await openVn7Request(page)
+    await page.getByRole('dialog').getByRole('button', { name: '이 건 취소' }).click()
+    const cancelBox = page.getByRole('dialog').filter({ hasText: '겹친 요청 취소' })
+    await cancelBox.getByLabel(/취소 사유/).fill('APR-2026-0115 로 통합해 반영합니다')
+    await cancelBox.getByRole('button', { name: '취소 처리' }).click()
+    await page.keyboard.press('Escape') // 덮개가 남아 있으면 가리개가 LNB 클릭을 먹는다
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    await expect(page.getByText('겹침 2'), '겹침이 풀렸다').toHaveCount(0)
+
+    /* 취소는 반려와 **다른 낱말로** 남는다 — 요청자가 "내 요청이 왜 반려됐지"를 오해하면
+       이 기능은 신뢰를 잃는다. 사유도 함께 남아야 한다. */
+    await page.getByRole('button', { name: /처리됨/ }).click()
+    const row = page.locator('li').filter({ hasText: '출력 재조정' }).first()
+    await expect(row.getByText('취소', { exact: true })).toBeVisible()
+    await expect(row.getByText(/APR-2026-0115 로 통합해 반영합니다/)).toBeVisible()
+
+    // ⚠ 새로고침하면 모듈 스토어가 초기화된다 — 앱 안 링크로 건너간다
+    await goto(page, '배포 관리')
+    await page.getByRole('button', { name: /배포 요청/ }).first().click()
+    await expect(
+      page.getByRole('dialog').getByRole('button', { name: /배포 승인 요청/ }),
+      '겹침을 정리하면 반영이 풀린다',
+    ).toBeEnabled()
+  })
+
+  /* ⚠⚠ 이 판이 막는 구멍: 겹친 둘 중 **승인까지 간 건**을 내리고 다른 건으로 가기로 했는데
+     사양서가 '승인 완료'로 남으면, 배포 관문은 겹침이 풀렸다고 보고 길을 열어 준다 —
+     **아무도 승인하지 않은 변경이 반영된다.** */
+  test('승인까지 간 건을 내리면 사양서의 승인도 되돌아간다', async ({ page }) => {
+    await ready(page, '/approvals')
+    await openVn7Request(page)
+    await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // 승인이 났어도 **반영 전**이면 대기 풀에 남는다 — 겹침은 그대로다
+    await page.getByRole('button', { name: /전체 대기/ }).click()
+    await page
+      .locator('ol > li')
+      .filter({ hasText: '출력 재조정' })
+      .first()
+      .getByRole('button')
+      .click()
+    await page.getByRole('dialog').getByRole('button', { name: '이 건 취소' }).click()
+    const cancelBox = page.getByRole('dialog').filter({ hasText: '겹친 요청 취소' })
+    await cancelBox.getByLabel(/취소 사유/).fill('출력 재조정 건으로 갑니다')
+    await cancelBox.getByRole('button', { name: '취소 처리' }).click()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    await goto(page, '사양서 관리')
+    await page
+      .locator('article')
+      .filter({ hasText: 'VN7 엔진 사양서' })
+      .first()
+      .getByRole('button', { name: /상세 보기/ })
+      .click()
+    await expect(
+      page.getByRole('button', { name: /결재 진행 보기/ }).first(),
+      '승인이 취소됐으니 다시 심사 중이다',
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /배포 요청하기/ }),
+      '승인 완료 자리로 가면 안 된다 — 아무도 승인하지 않은 변경이 반영된다',
+    ).toHaveCount(0)
+  })
+
+  test('잠긴 문서에도 변경 요청은 낼 수 있다 — 잠근 것은 내용이지 요청이 아니다', async ({ page }) => {
+    await ready(page, '/specs/SP-001')
+    await expect(page.getByText(/변경 요청이 2건 겹쳐 있습니다/)).toBeVisible()
+    await page.getByRole('button', { name: '변경 요청 추가' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText(/이미 심사 중인 변경 요청이 2건 있습니다/)).toBeVisible()
+    await dialog.getByRole('button', { name: '상신', exact: true }).click()
+    await expect(page.getByText(/변경 요청이 3건 겹쳐 있습니다/), '막지 않고 받는다').toBeVisible()
   })
 })

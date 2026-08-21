@@ -12,6 +12,7 @@ import { useI18n } from '#/lib/i18n'
 import { PIPELINE } from '#/data/deploys'
 import { useDeployList } from '#/data/deployStore'
 import { requestDeploy } from '#/data/workflow'
+import { conflictedSpecIds, useApprovalList } from '#/data/approvalStore'
 import { useSpecList } from '#/data/specStore'
 import type { Deploy, DeployStatus } from '#/data/deploys'
 import { currentVersion, specs } from '#/data/specs'
@@ -106,6 +107,14 @@ function DeploysPage() {
   const [newSpecs, setNewSpecs] = useState<Array<string>>(['SP-001', 'SP-002'])
   // ⚠ 버전 칸이 `defaultValue` 라 화면에 적은 값이 요청에 안 실렸다 — 상태로 든다
   const [newVersion, setNewVersion] = useState('v3.1.2')
+
+  /* ⚠⚠ **반영은 겹침을 막는 유일한 자리다** (고객 2026-07-20: "마지막에 반영할 때 동일하게
+     2개 이상이면 반영을 못하게 검증하는 것도 있어야겠다 — 사용자가 체크 못 해서 두 개가
+     다 반영돼 버리면 무슨 문제가 생길지 모르니까"). 신청은 막지 않는다 — 같은 회의에서
+     못 박은 자리다. 결재함을 구독해야 승인 관리에서 겹침을 정리하면 이 화면이 함께 풀린다. */
+  const blocked = conflictedSpecIds(useApprovalList())
+  const blockedPicked = newSpecs.filter((id) => blocked.has(id))
+  const nameOf = (id: string) => specList.find((sp) => sp.id === id)?.name ?? id
 
   return (
     <AppShell active="deploys" title="배포 관리">
@@ -326,6 +335,7 @@ function DeploysPage() {
               </button>
               {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
               <CtaButton
+                disabled={blockedPicked.length > 0}
                 busyLabel={t('deploys.submitting', '요청 보내는 중…')}
                 onAction={async () => {
                   await simulate()
@@ -344,10 +354,21 @@ function DeploysPage() {
                     })),
                     changes: picked.map((sp) => `${sp.name} ${currentVersion(sp).version} 반영`),
                   })
+                  /* 관문(workflow)이 겹침을 마지막으로 한 번 더 본다 — 화면이 잠갔더라도
+                     여기서 null 이면 요청은 서지 않았다. "보냈습니다"라고 말하지 않는다. */
+                  if (!rec) {
+                    toast(
+                      t(
+                        'deploys.toast.blockedByConflict',
+                        '겹친 변경 요청이 있는 사양서가 포함되어 요청하지 못했습니다 — 승인 관리에서 하나를 고르세요',
+                      ),
+                    )
+                    return
+                  }
                   toast(
                     tf(
                       'deploys.toast.requestedWithId',
-                      { id: rec?.id ?? '' },
+                      { id: rec.id },
                       '배포 승인 요청을 보냈습니다 ({id}) — 승인 관리에서 진행을 확인하세요',
                     ),
                   )
@@ -364,6 +385,31 @@ function DeploysPage() {
               '배포는 승인자의 최종 승인 후 진행됩니다. 미승인 상태에서는 배포가 시작되지 않습니다.',
             )}
           </div>
+          {/* 못 하면 **이유와 푸는 법**을 함께 적는다 (규약 §17) — 회색 버튼만 있으면 고장으로 읽힌다 */}
+          {blockedPicked.length > 0 && (
+            <div className="mt-3 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-[13px] leading-relaxed text-danger-ink">
+              <div className="font-semibold">
+                {tf(
+                  'deploys.conflictBlockTitle',
+                  { names: blockedPicked.map(nameOf).join(' · ') },
+                  '{names} — 변경 요청이 겹쳐 있어 반영할 수 없습니다',
+                )}
+              </div>
+              <p className="mt-1 opacity-90">
+                {t(
+                  'deploys.conflictBlockDesc',
+                  '같은 사양서에 심사 중인 요청이 둘 이상입니다. 둘 다 반영되면 어느 쪽이 최종인지 알 수 없습니다 — 승인 관리에서 하나를 고르고 나머지를 취소한 뒤 다시 요청하세요.',
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/approvals' })}
+                className="mt-2 rounded-lg bg-danger-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
+              >
+                {t('deploys.goResolveConflict', '겹침 정리하러 가기 →')}
+              </button>
+            </div>
+          )}
           <label className="mt-4 block">
             <span className="text-xs font-medium text-ink-subtle">{t('deploys.label.version', '배포 버전')}</span>
             <input

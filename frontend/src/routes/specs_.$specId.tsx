@@ -19,7 +19,13 @@ import { currentVersion } from '#/data/specs'
 import { useSpecList } from '#/data/specStore'
 import { mergeSpecFields, setSpecFields, useSpecFields } from '#/data/specFieldStore'
 import { recordAudit } from '#/data/auditStore'
-import { activeRequestOfSpec, requestsOfSpec, useApprovalLine, useApprovalList } from '#/data/approvalStore'
+import {
+  activeRequestOfSpec,
+  requestsOfSpec,
+  unsettledRequestsOfSpec,
+  useApprovalLine,
+  useApprovalList,
+} from '#/data/approvalStore'
 import { submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { ApprovalStep } from '#/data/approvals'
 import { SERVICE_ROLE_LABEL } from '#/data/members'
@@ -30,6 +36,9 @@ import {
   workflowIndex,
 } from '#/data/specFields'
 import type { FieldDef, FieldStatus, FieldType } from '#/data/specFields'
+
+/** 데모 로그인 계정 — 본개발에서는 `GET /api/me` 가 준다 (규약 §4-2) */
+const ME = '김현대'
 
 export const Route = createFileRoute('/specs_/$specId')({
   component: SpecDetailPage,
@@ -169,6 +178,9 @@ function SpecDetailPage() {
      ⚠ `useApprovalList()` 의 결과를 안 쓰더라도 **구독은 해야** 다시 그린다. */
   useApprovalList()
   const approval = activeRequestOfSpec(specId)
+  /* 겹침 — 같은 사양서를 보는 진행 중 요청. 둘 이상이면 "누구 것으로 갈지"가 아직 안 정해진
+     문서다(2026-07-20 회의). ⚠ 세는 자리는 결재함이지 이 화면이 아니다. */
+  const overlapping = unsettledRequestsOfSpec(specId)
   const approvalHistory = requestsOfSpec(specId)
   const line = useApprovalLine()
   /** 결재자의 Role 코드를 사람 말로 — 회원 화면과 같은 사전을 쓴다 (규약 §4-7) */
@@ -511,6 +523,38 @@ function SpecDetailPage() {
           >
             {t('specDetail.viewApproval', '결재 진행 보기 →')}
           </button>
+          {/* ⚠⚠ **잠근 것은 '내용'이지 '요청'이 아니다**(2026-07-20 고객): "권한이 있는 사람이
+              둘 다 같은 사양을 수정하고 싶으면 둘 다 신청할 수 있어야 한다 — 누가 먼저 했다고
+              다른 사람 걸 막는 건 안 될 것 같다." 예전엔 이 자리에 길이 아예 없어서, 두 번째
+              사람의 변경 요청이 **갈 곳 없이 사라졌다**. */}
+          <button
+            type="button"
+            onClick={() => setRequesting(true)}
+            className="rounded-lg border border-pending-ink/40 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
+          >
+            {t('specDetail.addChangeRequest', '변경 요청 추가')}
+          </button>
+        </div>
+      )}
+
+      {/* 겹침 — 막지 않고 **말해 준다**. 정리는 승인 관리에서 사람이 한다 */}
+      {overlapping.length > 1 && (
+        <div className="anim-fade-in mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-[13px] text-danger-ink">
+          <span>
+            {tf(
+              'specDetail.conflictBanner',
+              { n: overlapping.length },
+              '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
+            )}
+          </span>
+          <span className="font-mono text-xs opacity-80">{overlapping.map((r) => r.id).join(' · ')}</span>
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/approvals' })}
+            className="ml-auto rounded-lg bg-danger-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
+          >
+            {t('specDetail.resolveConflict', '겹침 정리하러 가기 →')}
+          </button>
         </div>
       )}
 
@@ -817,10 +861,11 @@ function SpecDetailPage() {
                             {tf('specDetail.trailStep', { n: e.seq }, '{n}차')}
                           </span>
                           <span className="font-medium text-ink">{e.approver}</span>
+                          {/* ⚠ 값은 정본(한국어), 표시만 사전이 옮긴다 — 승인·반려·취소 세 갈래 */}
                           <span
                             className={e.action === '승인' ? 'text-deployed-ink' : 'text-danger-ink'}
                           >
-                            {e.action}
+                            {t(`trailAction.${e.action}`, e.action)}
                           </span>
                           <span className="tabular-nums text-ink-subtle">{e.at}</span>
                           {e.opinion && <span className="w-full text-ink-muted">— {e.opinion}</span>}
@@ -865,12 +910,23 @@ function SpecDetailPage() {
                   setRequesting(false)
                   // 사양서 상태와 **결재함**이 함께 움직인다 (workflow.ts) — 예전엔 상태만
                   // 바뀌고 결재함엔 안 생겨서, 승인 관리에 가면 그 건이 없었다
-                  submitSpec(spec, cur.author)
+                  const overlapped = overlapping.length
+                  /* ⚠ 겹친 요청은 **다른 사람이 올린 것**이라야 뜻이 선다 — 요청자를 문서
+                     담당자(`cur.author`)로 적으면 "김민준이 자기 문서에 두 번 올렸다"가 되어
+                     겹침 화면이 거짓말을 한다. 겹칠 때는 **지금 로그인한 사람**이 요청자다.
+                     (본개발에서는 둘 다 `GET /api/me` 가 준다 — 규약 §4-2) */
+                  submitSpec(spec, overlapped > 0 ? ME : cur.author)
                   toast(
-                    t(
-                      'specDetail.toast.submitted',
-                      '승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요',
-                    ),
+                    overlapped > 0
+                      ? tf(
+                          'specDetail.toast.submittedOverlap',
+                          { n: overlapped + 1 },
+                          '변경 요청을 올렸습니다 — 이 사양서의 요청이 {n}건이 되었습니다. 승인 관리에서 하나를 고릅니다',
+                        )
+                      : t(
+                          'specDetail.toast.submitted',
+                          '승인 요청을 상신했습니다 — 승인 관리 [내 요청]에서 진행을 확인하세요',
+                        ),
                   )
                 }}
               >
@@ -897,6 +953,17 @@ function SpecDetailPage() {
               '상신하면 결재선(검토 → 최종 승인)을 따라 승인 관리에 등록되고, 승인 완료 전까지 배포에 포함할 수 없습니다.',
             )}
           </p>
+          {/* 겹칠 것을 **누르기 전에** 말한다 — 올리고 나서 알면 늦다 (규약 §0 예측 가능성).
+              막지는 않는다: 막는 자리는 반영 하나뿐이다 */}
+          {overlapping.length > 0 && (
+            <p className="mt-2 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-[13px] leading-relaxed text-danger-ink">
+              {tf(
+                'specDetail.approvalOverlapWarn',
+                { n: overlapping.length },
+                '이미 심사 중인 변경 요청이 {n}건 있습니다. 올릴 수는 있지만, 겹친 채로는 배포하지 못합니다 — 승인 관리에서 하나를 고르고 나머지는 사유를 내고 취소해야 합니다.',
+              )}
+            </p>
+          )}
           <div className="mt-3 rounded-xl border border-hairline px-4 py-3 text-[13px]">
             <div className="text-xs text-ink-subtle">{t('specDetail.approverLabel', '승인자')}</div>
             {/* ⚠ 이름이 글자로 박혀 있었다 — 상신 모달과 상세의 결재선이 갈라질 수 있었다.

@@ -80,6 +80,12 @@ const CORE_DICT: Record<string, Entry> = {
   'gnb.toggleTheme': { ko: '테마 전환', en: 'Toggle theme' },
   'common.approve': { ko: '승인', en: 'Approve' },
   'common.reject': { ko: '반려', en: 'Reject' },
+  /* 결재 자국의 **값**은 한국어 정본이고 표시만 여기서 옮긴다 (규약 §4-7 — Role 코드와 같은 규칙).
+     ⚠ 승인·반려만 있던 자리에 '취소'가 늘었다(2026-08-21 겹침 정리) — 네 낱말이 한 벌이다. */
+  'trailAction.승인': { ko: '승인', en: 'Approved' },
+  'trailAction.반려': { ko: '반려', en: 'Rejected' },
+  'trailAction.취소': { ko: '취소', en: 'Canceled' },
+  'trailAction.회수': { ko: '회수', en: 'Withdrawn' },
   'common.reset': { ko: '초기화', en: 'Reset' },
   'common.apply': { ko: '적용', en: 'Apply' },
   'common.create': { ko: '만들기', en: 'Create' },

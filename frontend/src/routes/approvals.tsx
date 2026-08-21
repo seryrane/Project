@@ -12,9 +12,19 @@ import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
 import { orNone, pickOne } from '#/lib/urlState'
 import { KIND_CLS, processedRequests } from '#/data/approvals'
-import { MAX_APPROVAL_STEPS, setApprovalLine, useApprovalLine, useApprovalList } from '#/data/approvalStore'
+import {
+  MAX_APPROVAL_STEPS,
+  conflictedSpecIds,
+  setApprovalLine,
+  useApprovalLine,
+  useApprovalList,
+} from '#/data/approvalStore'
 import type { ApprovalRecord } from '#/data/approvalStore'
-import { decide as decideFlow, withdrawRequestById as withdrawFlow } from '#/data/workflow'
+import {
+  cancelRequestById as cancelFlow,
+  decide as decideFlow,
+  withdrawRequestById as withdrawFlow,
+} from '#/data/workflow'
 
 /** 데모 로그인 계정 — 본개발에서는 `GET /api/me` 가 준다 (규약 §4-2) */
 const ME = '김현대'
@@ -115,6 +125,22 @@ function ApprovalsPage() {
   const [detail, setDetail] = useState<ApprovalRecord | null>(null)
   const [opinion, setOpinion] = useState('')
   const [lineOpen, setLineOpen] = useState(false)
+  /* 겹침 정리 — 취소는 **남의 요청을 내리는 일**이라 사유 없이는 못 누른다 (workflow 가 막지만
+     화면이 먼저 말해 준다). 대상 건을 들고 있는 상태 하나로 모달을 연다. */
+  const [canceling, setCanceling] = useState<ApprovalRecord | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+
+  /* ⚠ 겹침은 **결재함이 센다**(conflictedSpecIds) — 화면이 자기 목록을 다시 훑어 세면
+     탭·검색으로 걸러진 목록을 세게 되어 "겹쳤는데 안 겹쳤다"고 말한다 (규약 §10). */
+  const conflicted = useMemo(() => conflictedSpecIds(requests), [requests])
+  /** 이 건과 같은 사양서를 보는 **다른** 진행 중 요청 */
+  const siblingsOf = (r: ApprovalRecord) =>
+    r.specId && conflicted.has(r.specId)
+      ? requests.filter(
+          // ⚠ **승인만 나고 아직 반영 안 된 건도 형제다** — 대기 풀에 같이 남아 있다
+          (o) => o.specId === r.specId && (o.state === '진행 중' || o.state === '승인 완료') && o.id !== r.id,
+        )
+      : []
 
   const pending = requests.filter((r) => r.state === '진행 중')
   const processed = requests.filter((r) => r.state !== '진행 중')
@@ -123,8 +149,27 @@ function ApprovalsPage() {
 
   const rows = useMemo(() => {
     const base = tab === 'mine' ? pending.filter((r) => r.myTurn) : pending
-    return base.filter((r) => matches(`${r.title} ${r.id} ${r.requester}`))
-  }, [tab, requests, query])
+    const hit = base.filter((r) => matches(`${r.title} ${r.id} ${r.requester}`))
+    /* 겹친 건은 **붙여 세운다** (고객 2026-07-20: "같은 항목에 대해서 들어오면 이 밑에
+       한 번 더 가지식으로 리스트업이 되면 좋겠다"). 목록 순서는 그대로 두고, 먼저 나온
+       형제 뒤에 나머지를 끌어다 붙인다 — 위아래로 흩어져 있으면 겹친 줄을 모른다.
+       ⚠ 정렬로 뒤집지 않는다: 기한 순서가 무너지면 "왜 이 건이 위에 있지"가 된다. */
+    const out: Array<ApprovalRecord> = []
+    const done = new Set<string>()
+    for (const r of hit) {
+      if (done.has(r.id)) continue
+      out.push(r)
+      done.add(r.id)
+      if (!r.specId || !conflicted.has(r.specId)) continue
+      for (const o of hit) {
+        if (o.specId === r.specId && !done.has(o.id)) {
+          out.push(o)
+          done.add(o.id)
+        }
+      }
+    }
+    return out
+  }, [tab, requests, query, conflicted])
 
   /** 방금 처리한 건 **다음**의 내 차례 건. 없으면 null(덮개를 닫는다). */
   const queueAfter = (doneId: string): ApprovalRecord | null => {
@@ -335,6 +380,13 @@ function ApprovalsPage() {
                       {t('approvals.tab.mine', '내 차례')}
                     </span>
                   )}
+                  {/* 겹침 — 같은 사양서를 보는 요청이 둘 이상이다. 세는 값은 **나를 포함한** 수라
+                      "겹침 2"는 이 건 말고 하나가 더 있다는 뜻이다 */}
+                  {r.specId && conflicted.has(r.specId) && (
+                    <span className="rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger-ink">
+                      {tf('approvals.conflictBadge', { n: siblingsOf(r).length + 1 }, '겹침 {n}')}
+                    </span>
+                  )}
                   <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-subtle">
                     <Avatar name={r.requester} size={16} />
                     {r.requester} · {r.requestedAt} · {t('approvals.deadlineLabel', '기한')}{' '}
@@ -445,10 +497,18 @@ function ApprovalsPage() {
                 id: r.id,
                 kind: r.kind,
                 title: r.title,
-                result: r.state === '승인 완료' ? ('승인' as const) : r.state === '반려' ? ('반려' as const) : ('회수' as const),
+                result:
+                  r.state === '승인 완료' || r.state === '반영 완료'
+                    ? ('승인' as const)
+                    : r.state === '반려'
+                      ? ('반려' as const)
+                      : r.state === '취소'
+                        ? ('취소' as const)
+                        : ('회수' as const),
                 by: last?.approver ?? r.requester,
                 at: last?.at ?? r.requestedAt,
-                reason: r.state === '반려' ? last?.opinion : undefined,
+                // ⚠ 취소도 사유가 남는다 — 요청자가 "왜 내 것이 내려갔나"를 여기서 읽는다
+                reason: r.state === '반려' || r.state === '취소' ? last?.opinion : undefined,
               }
             }),
             ...processedRequests.map((p) => ({ ...p, reason: 'reason' in p ? p.reason : undefined })),
@@ -466,10 +526,14 @@ function ApprovalsPage() {
               <span className="flex items-center gap-2.5 text-xs text-ink-subtle">
                 <span
                   className={`rounded-full px-2 py-0.5 font-semibold ${
-                    p.result === '승인' ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+                    p.result === '승인'
+                      ? 'bg-deployed-bg text-deployed-ink'
+                      : p.result === '회수'
+                        ? 'bg-chip text-ink-subtle'
+                        : 'bg-danger-bg text-danger-ink'
                   }`}
                 >
-                  {p.result}
+                  {t(`trailAction.${p.result}`, p.result)}
                 </span>
                 {p.by} · {p.at}
               </span>
@@ -554,6 +618,48 @@ function ApprovalsPage() {
               )}
             </div>
           </div>
+
+          {/* ⚠⚠ 겹침을 **판단 전에** 세운다 — 승인 버튼을 누르고 나서 "사실 같은 사양서에
+              한 건이 더 있었다"를 알면 이미 늦다. 고르는 것도 여기서 한다: 형제 건마다
+              [취소]가 붙어, 하나를 승인하기 전에 나머지를 사유와 함께 내릴 수 있다. */}
+          {siblingsOf(detail).length > 0 && (
+            <div className="mt-4 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3.5 text-[13px] text-danger-ink">
+              <div className="font-semibold">
+                {tf(
+                  'approvals.conflictTitle',
+                  { n: siblingsOf(detail).length + 1 },
+                  '같은 사양서에 변경 요청이 {n}건 겹쳐 있습니다',
+                )}
+              </div>
+              <p className="mt-1 leading-relaxed opacity-90">
+                {t(
+                  'approvals.conflictDesc',
+                  '하나를 골라 승인하고 나머지는 사유를 내고 취소합니다. 겹친 채로는 배포 요청이 서지 않습니다.',
+                )}
+              </p>
+              <ul className="mt-2.5 space-y-1.5">
+                {siblingsOf(detail).map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface/60 px-3 py-2">
+                    <span className="font-mono text-xs opacity-80">{o.id}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{o.title}</span>
+                    <span className="text-xs opacity-80">
+                      {o.requester} · {o.requestedAt}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCanceling(o)
+                        setCancelReason('')
+                      }}
+                      className="rounded-lg bg-danger-ink/15 px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                    >
+                      {t('approvals.cancelRequest', '이 건 취소')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="mt-4">
             <div className="text-xs font-medium text-ink-subtle">
@@ -653,6 +759,77 @@ function ApprovalsPage() {
               )}
             </p>
           )}
+        </Modal>
+      )}
+
+      {/* 겹친 요청 취소 — 사유가 없으면 못 누른다. 고객이 회의에서 요구한 그대로다:
+          "둘 중 하나는 취소해야 된다, 그러면 취소 사유를 내고 취소한다" (2026-07-20) */}
+      {canceling && (
+        <Modal
+          title={t('approvals.cancelModalTitle', '겹친 요청 취소')}
+          onClose={() => setCanceling(null)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCanceling(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close', '닫기')}
+              </button>
+              <button
+                type="button"
+                disabled={cancelReason.trim() === ''}
+                onClick={() => {
+                  const target = canceling
+                  const ok = cancelFlow(target.id, cancelReason, ME)
+                  setCanceling(null)
+                  setCancelReason('')
+                  if (!ok) {
+                    toast(t('approvals.toast.cancelFailed', '이미 처리된 요청입니다'))
+                    return
+                  }
+                  // 상세를 열어 둔 채 형제를 내렸다 — 목록이 바뀌었으니 정본에서 다시 집는다
+                  setDetail((d) => (d && d.id === target.id ? null : d))
+                  toast(
+                    tf(
+                      'approvals.toast.canceled',
+                      { title: target.title },
+                      '{title} — 취소했습니다. 요청자에게 사유가 남습니다',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {t('approvals.cancelSubmit', '취소 처리')}
+              </button>
+            </div>
+          }
+        >
+          <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5 text-[13px]">
+            <span className="font-mono text-xs text-ink-subtle">{canceling.id}</span>
+            <b className="ml-2 text-ink">{canceling.title}</b>
+            <span className="ml-2 text-ink-subtle">
+              {canceling.requester} · {canceling.requestedAt}
+            </span>
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
+            {t(
+              'approvals.cancelDesc',
+              '취소는 반려가 아닙니다 — 이 요청이 틀렸다는 뜻이 아니라, 같은 사양서의 다른 요청으로 간다는 뜻입니다. 요청자는 이 사유를 보고 이해합니다.',
+            )}
+          </p>
+          <label className="mt-3 block text-xs font-medium text-ink-subtle" htmlFor="cancel-reason">
+            {t('approvals.cancelReasonLabel', '취소 사유 (필수)')}
+          </label>
+          <textarea
+            id="cancel-reason"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            rows={3}
+            placeholder={t('approvals.cancelReasonPlaceholder', '예: APR-2026-0012 로 통합해 반영합니다')}
+            className="mt-1.5 w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+          />
         </Modal>
       )}
 

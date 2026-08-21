@@ -96,7 +96,9 @@ const NOTIFICATIONS: Array<{
   { icon: 'bell', text: '[공지] 8월 정기 점검 — 8/9(토) 02:00~06:00', time: '어제', todo: false, to: '/notice' },
 ]
 
-/** 본문 폭 — 표·대시보드는 설계서 폭(1680), 글을 읽는 화면은 읽기 폭(960) */
+/** 본문 폭 — 표·대시보드는 1440, 글을 읽는 화면은 읽기 폭(960).
+ *  ⚠ 1680(설계서 폭)이었는데 1920 에서 사이드바 240 을 빼면 딱 1680 이라 좌우에 남는 것이
+ *  패딩뿐이었다 → 2026-08-18 축소. 값의 정본은 styles.css 의 `--container-data`. */
 export type ContentWidth = 'data' | 'doc'
 
 /**
@@ -123,7 +125,7 @@ function Shell({
 }: {
   active: string
   title: string
-  /** 본문 폭 — 'data'(표·대시보드, 1680) 기본, 'doc'(글 읽는 화면, 960) */
+  /** 본문 폭 — 'data'(표·대시보드, 1440) 기본, 'doc'(글 읽는 화면, 960) */
   width?: ContentWidth
   children: React.ReactNode
 }) {
@@ -556,7 +558,7 @@ function Shell({
         </header>
         {/* 본문 폭은 **화면 종류가 고른다** (styles.css 의 container-data/doc).
             한 값(예전 max-w-7xl)이 두 일을 하면 1920 에서 표는 좁고 글은 넓다 —
-            데이터형은 설계서 폭 1680 까지 펴고, 글 읽는 화면은 960 에서 멈춘다. */}
+            데이터형은 1440 까지 펴고, 글 읽는 화면은 960 에서 멈춘다. */}
         <main
           /* ⚠ 좌우 패딩도 한 단 키웠다(pc:px-8 → pc:px-10) — 폭을 줄인 것과 같은 이유로,
              본문이 상자 벽에 붙어 서면 "꽉 찬다"로 읽힌다 (2026-08-18) */

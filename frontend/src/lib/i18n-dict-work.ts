@@ -289,6 +289,63 @@ export const WORK_DICT: Record<string, Entry> = {
     en: 'Requests already in flight keep the approval line they were submitted with.',
   },
   'approvals.withdraw': { ko: '회수', en: 'Withdraw' },
+
+  /* ── 동일 사양 다중 수정 요청 충돌 관리 (2026-07-20 회의) ──────────────────────
+     ⚠ EN 에서 conflict 와 cancel 을 뒤섞지 않는다: 겹친 상태는 conflict, 그중 하나를
+     내리는 행위는 cancel 이다(reject 가 아니다 — 내용이 틀렸다는 뜻이 되어 버린다). */
+  'specDetail.addChangeRequest': { ko: '변경 요청 추가', en: 'Add change request' },
+  'specDetail.conflictBanner': {
+    ko: '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
+    en: '{n} change requests overlap on this spec — pick one and cancel the rest with a reason before it can be deployed.',
+  },
+  'specDetail.resolveConflict': { ko: '겹침 정리하러 가기 →', en: 'Resolve the overlap →' },
+  'specDetail.approvalOverlapWarn': {
+    ko: '이미 심사 중인 변경 요청이 {n}건 있습니다. 올릴 수는 있지만, 겹친 채로는 배포하지 못합니다 — 승인 관리에서 하나를 고르고 나머지는 사유를 내고 취소해야 합니다.',
+    en: '{n} change requests are already under review. You can still submit, but nothing deploys while they overlap — pick one in Approvals and cancel the rest with a reason.',
+  },
+  'specDetail.toast.submittedOverlap': {
+    ko: '변경 요청을 올렸습니다 — 이 사양서의 요청이 {n}건이 되었습니다. 승인 관리에서 하나를 고릅니다',
+    en: 'Change request submitted — this spec now has {n} open requests. Pick one in Approvals',
+  },
+  'approvals.conflictBadge': { ko: '겹침 {n}', en: 'Overlap {n}' },
+  'approvals.conflictTitle': {
+    ko: '같은 사양서에 변경 요청이 {n}건 겹쳐 있습니다',
+    en: '{n} change requests overlap on the same spec',
+  },
+  'approvals.conflictDesc': {
+    ko: '하나를 골라 승인하고 나머지는 사유를 내고 취소합니다. 겹친 채로는 배포 요청이 서지 않습니다.',
+    en: 'Approve one and cancel the others with a reason. No deployment request can be raised while they overlap.',
+  },
+  'approvals.cancelRequest': { ko: '이 건 취소', en: 'Cancel this one' },
+  'approvals.cancelModalTitle': { ko: '겹친 요청 취소', en: 'Cancel overlapping request' },
+  'approvals.cancelSubmit': { ko: '취소 처리', en: 'Cancel request' },
+  'approvals.cancelDesc': {
+    ko: '취소는 반려가 아닙니다 — 이 요청이 틀렸다는 뜻이 아니라, 같은 사양서의 다른 요청으로 간다는 뜻입니다. 요청자는 이 사유를 보고 이해합니다.',
+    en: 'Canceling is not rejecting — it does not mean this request was wrong, only that another request on the same spec was chosen. The requester reads this reason.',
+  },
+  'approvals.cancelReasonLabel': { ko: '취소 사유 (필수)', en: 'Reason for cancellation (required)' },
+  'approvals.cancelReasonPlaceholder': {
+    ko: '예: APR-2026-0012 로 통합해 반영합니다',
+    en: 'e.g. Merged into APR-2026-0012',
+  },
+  'approvals.toast.canceled': {
+    ko: '{title} — 취소했습니다. 요청자에게 사유가 남습니다',
+    en: '{title} — canceled. The requester can read your reason',
+  },
+  'approvals.toast.cancelFailed': { ko: '이미 처리된 요청입니다', en: 'This request was already decided' },
+  'deploys.conflictBlockTitle': {
+    ko: '{names} — 변경 요청이 겹쳐 있어 반영할 수 없습니다',
+    en: '{names} — cannot deploy while change requests overlap',
+  },
+  'deploys.conflictBlockDesc': {
+    ko: '같은 사양서에 심사 중인 요청이 둘 이상입니다. 둘 다 반영되면 어느 쪽이 최종인지 알 수 없습니다 — 승인 관리에서 하나를 고르고 나머지를 취소한 뒤 다시 요청하세요.',
+    en: 'More than one request is under review for the same spec. If both landed, no one could tell which is final — pick one in Approvals, cancel the rest, then request again.',
+  },
+  'deploys.goResolveConflict': { ko: '겹침 정리하러 가기 →', en: 'Resolve the overlap →' },
+  'deploys.toast.blockedByConflict': {
+    ko: '겹친 변경 요청이 있는 사양서가 포함되어 요청하지 못했습니다 — 승인 관리에서 하나를 고르세요',
+    en: 'Not submitted — a spec with overlapping change requests was included. Pick one in Approvals',
+  },
   'approvals.queueRemaining': {
     ko: '처리하면 다음 내 차례 건으로 이어집니다 (남은 {n}건)',
     en: 'Deciding opens the next item in your queue ({n} left)',
