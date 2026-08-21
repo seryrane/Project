@@ -909,7 +909,7 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await expect(page.getByRole('button', { name: '재요청' }), '다음 손은 재요청이다').toBeVisible()
   })
 
-  test('회수 — 아무도 판단하지 않았을 때만 내릴 수 있다 (⚠ 요구사항 밖 기능)', async ({ page }) => {
+  test('회수 — 아무도 판단하지 않았을 때만 내릴 수 있다 (✔ 2026-08-19 채택, FR-114 확장)', async ({ page }) => {
     await submitSpec(page, 'SP-004')
     await page.getByRole('button', { name: '요청 회수' }).click()
     await page.getByRole('dialog').getByRole('button', { name: '회수', exact: true }).click()
@@ -1294,5 +1294,44 @@ test.describe('엑셀 이관 (FR-115)', () => {
     await page.getByRole('button', { name: '닫기' }).last().click()
     await page.getByPlaceholder(/필드명/).fill('왕복항목')
     await expect(page.getByText('왕복항목').first()).toBeVisible()
+  })
+})
+
+/* ── 감사 축 (2026-08-20) — 결재·배포도 같은 표에 남는다 ───────────────────────── */
+test.describe('감사 축', () => {
+  // ⚠ LNB 로 오가는 시험이라 넓은 화면에서 본다 — 좁은 화면에선 링크가 서랍 안에 있다
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false })
+
+  /* 여기서부터는 엑셀과 무관하다 — 묶음을 가른다(제목이 곧 실패 보고서의 첫 줄이다).
+
+     ⚠ 화면마다 남기면 "상세에서 승인하면 남고 결재함에서 승인하면 안 남는" 식이 된다.
+        워크플로 한 곳에서 남기므로 **어느 화면에서 눌러도 같은 줄**이 서야 한다. */
+  test('결재 판단이 감사 로그에 남는다 — 구분 칩으로 접속·반출과 갈라 본다', async ({ page }) => {
+    await ready(page, '/approvals')
+    await page.getByRole('button', { name: /VN7 엔진 사양서 v2.3/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^✓?\s*승인$/ }).click()
+    await page.keyboard.press('Escape') // 덮개가 열려 있으면 가리개가 LNB 클릭을 먹는다
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    await page.getByRole('link', { name: /개인정보보호/ }).click()
+    await expect(page.getByText(/결재 승인/).filter({ visible: true }).first()).toBeVisible()
+
+    // [접속·반출]로 좁히면 업무 처리 줄은 빠진다 — 화면 이름의 뜻이 흐려지지 않는다
+    await page.getByRole('button', { name: '접속·반출' }).click()
+    await expect(page.getByText(/결재 승인/).filter({ visible: true })).toHaveCount(0)
+  })
+
+  /* 이 화면 **자기 정책**을 바꾼 것도 남는다 — 발치에 "정책 변경 이력도 감사 대상"이라고
+     적어 두고 아무 데도 안 남기던 자리(2026-08-20). 되돌리기까지 한 줄로 남는다. */
+  test('마스킹·보존 정책을 바꾼 것도 남는다 — 되돌린 것도 일어난 일이다', async ({ page }) => {
+    await ready(page, '/privacy')
+    await page.getByRole('switch', { name: '연락처 마스킹' }).click() // 켜짐 → 해제
+    // ⚠ 같은 줄이 카드(좁은 화면)와 표(넓은 화면) 두 벌로 그려진다 — 보이는 것만 센다
+    const row = page.getByText('연락처 마스킹 정책').filter({ visible: true })
+    await expect(row.first()).toBeVisible()
+
+    // 접속·반출 칸에 선다 — 이 화면이 원래 보던 축이다
+    await page.getByRole('button', { name: '접속·반출' }).click()
+    await expect(row.first()).toBeVisible()
   })
 })

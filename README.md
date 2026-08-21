@@ -34,7 +34,7 @@
 
 | 폴더 | 스택 | 포트 | 상태 |
 |---|---|---|---|
-| `frontend/` | React 19 · TanStack Start/Router · Vite 8 · TypeScript · Tailwind 4 | 3000 | 정본 |
+| `frontend/` | React 19 · TanStack Start/Router · Vite 8 · TypeScript · Tailwind 4 | 3000 (리뷰 빌드 3010) | 정본 |
 | `backend-python/` | FastAPI · SQLite | 8080 | **API 모양의 정본** |
 | `backend/` | Spring Boot 4.1 · Java 21 · JdbcTemplate · PostgreSQL(H2 호환 모드) | 8081 | 같은 API의 두 번째 벌 |
 
@@ -62,6 +62,19 @@ npm run dev
 **백엔드 없이도 화면은 돕니다.** 통신 관문(`frontend/src/lib/api.ts`)이 서버가 없으면
 목데이터로 되돌아갑니다 — 시연이 서버 상태에 흔들리지 않게 하려는 장치이고, 본개발에서는
 교체합니다.
+
+리뷰어에게 보여 줄 때는 **빌드 서버**를 씁니다 — `hmg.stock-autotrade.com` 은 :3010 을 봅니다.
+
+```bash
+cd frontend && npm run build && npm run preview   # :3010
+```
+
+> ⚠ **고친 것을 리뷰어에게 보이려면 `npm run build` 를 다시 돌려야 합니다.** 개발 서버(:3000)는
+> 그대로 두고 따로 세웁니다 — 같은 포트를 쓰면 고치는 동안 리뷰어 화면이 죽고 e2e 도 못 돕니다.
+> 왜 나눴나: dev 서버는 번들을 안 만들어 **파일 200개를 각각** 왕복하는데 터널 엣지가 홍콩이라
+> 1건당 0.4~1.2초가 붙습니다 — 첫 로딩이 **18.7초**였습니다(실측). 빌드하면 첫 화면 자산이
+> 19개로 줄어 **2.9초**입니다(실측). 되돌리려면 `.cloudflared\hmg.yml` 의 service 를
+> `[::1]:3000` 으로 돌리고 터널만 다시 띄웁니다(`hmg.yml.bak-20260820` 참고).
 
 스프링 벌을 볼 때:
 

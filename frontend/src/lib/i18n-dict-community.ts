@@ -132,11 +132,10 @@ export const COMMUNITY_DICT: Record<string, Entry> = {
   'privacy.tile.purgeScheduled.value': { ko: '{n}건', en: '{n}' },
   'privacy.tile.purgeScheduled.sub': { ko: '비활성 90일 경과', en: 'Inactive 90+ days' },
   // 감사 로그 — 표 헤더만 번역, 로그 내용(사용자·액션·대상·사유 값)은 그대로
-  'privacy.auditLogTitle': { ko: '접속·반출 감사 로그', en: 'Access & export audit log' },
-  'privacy.auditLogHint': {
-    ko: '다운로드·마스킹 해제는 사유가 필수로 남습니다',
-    en: 'A reason is required for downloads and unmasking',
-  },
+  'privacy.auditLogTitle': { ko: '감사 로그', en: 'Audit log' },
+  'privacy.auditKind.전체': { ko: '전체', en: 'All' },
+  'privacy.auditKind.접속·반출': { ko: '접속·반출', en: 'Access & export' },
+  'privacy.auditKind.업무 처리': { ko: '업무 처리', en: 'Work actions' },
   'privacy.label.reason': { ko: '사유', en: 'Reason' },
   'privacy.th.at': { ko: '시각', en: 'Time' },
   'privacy.th.user': { ko: '사용자', en: 'User' },

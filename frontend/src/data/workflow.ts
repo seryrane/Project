@@ -7,10 +7,15 @@
  *
  * 서버로 가면 이 파일이 하는 **두 곳 동시 변경**은 트랜잭션이 진다 — `docs/API_설계.md` §5.
  *
+ * ⚠ **감사 기록도 여기서 남긴다**(2026-08-20). 화면마다 남기면 어떤 길로 들어왔느냐에 따라
+ * 남는 것이 달라진다 — 상세에서 승인하면 남고 결재함에서 승인하면 안 남는 식이다.
+ * 두 스토어가 함께 움직이는 이 자리를 지나면 **어느 화면에서 눌러도 같은 줄**이 남는다.
+ *
  * ⚠⚠ 이 파일이 없던 동안 흐름이 반쪽이었다(2026-08-18):
  *   상신 → 사양서 상태만 바뀌고 결재함엔 없음 · 승인 → 그 화면의 useState 뿐 ·
  *   배포 요청 → 토스트만. 즉 **결재는 올라가기만 하고 내려오지 않았다.**
  */
+import { recordAudit } from './auditStore'
 import {
   activeRequestOfSpec,
   approvalLine,
@@ -43,6 +48,14 @@ export function submitSpec(spec: Spec, requester: string, requesterTeam = 'IT �
   const cur = currentVersion(spec)
   const isResubmit = Boolean(cur.rejection)
   if (!submitSpecForApproval(spec.id)) return null
+  recordAudit(
+    {
+      action: '결재 상신',
+      target: `${spec.name} ${cur.version}`,
+      reason: isResubmit ? '반려 사유 반영 후 재요청' : '신규 상신',
+    },
+    requester,
+  )
   return createRequest({
     kind: '사양서',
     specId: spec.id,
@@ -85,6 +98,16 @@ export function decide(
   if (!res.ok) return { ok: false, finished: false, reason: 'need-opinion' }
 
   const rec = res.record!
+  /* 승인·반려는 **판단**이다 — 누가 언제 무엇을 어떤 의견으로 판단했는지가 감사의 본체다.
+     ⚠ 반려 사유는 그대로 남긴다(사유 없이는 반려가 안 되므로 빈 줄이 남지 않는다). */
+  recordAudit(
+    {
+      action: action === '승인' ? '결재 승인' : '결재 반려',
+      target: `${rec.title} (${rec.kind})`,
+      reason: opinion.trim() || (res.finished ? '최종 승인' : '단계 승인'),
+    },
+    by,
+  )
   if (action === '반려') {
     if (rec.specId) rejectSpec(rec.specId, opinion.trim(), by)
     if (rec.kind === '배포' && rec.deployId) markDeployRejected(rec.deployId)
@@ -110,6 +133,7 @@ export function withdrawRequestById(requestId: string, by: string): boolean {
   const rec = findRequest(requestId)
   if (!rec) return false
   if (!withdrawRequest(requestId, by)) return false
+  recordAudit({ action: '결재 회수', target: `${rec.title} (${rec.kind})`, reason: '요청자 회수' }, by)
   if (rec.specId) withdrawSpec(rec.specId)
   if (rec.deployId) markDeployRejected(rec.deployId)
   return true
@@ -119,6 +143,7 @@ export function withdrawSpecRequest(specId: string, by: string): boolean {
   const rec = activeRequestOfSpec(specId)
   if (!rec) return false
   if (!withdrawRequest(rec.id, by)) return false
+  recordAudit({ action: '결재 회수', target: rec.title, reason: '요청자 회수' }, by)
   withdrawSpec(specId)
   return true
 }
@@ -134,6 +159,15 @@ export function requestDeploy(
   requesterTeam = '플랫폼운영팀',
 ): ApprovalRecord | null {
   const deploy = createDeploy(input)
+  // ⚠ 배포는 되돌리기 어려운 일이다 — **요청 자체**가 감사에 남아야 "누가 올렸나"를 되짚는다
+  recordAudit(
+    {
+      action: '배포 요청',
+      target: `${deploy.id} Release ${deploy.version} (${deploy.env})`,
+      reason: `사양서 ${deploy.specs.length}건 · ${deploy.changes.join(' · ')}`,
+    },
+    input.owner,
+  )
   return createRequest({
     kind: '배포',
     deployId: deploy.id,

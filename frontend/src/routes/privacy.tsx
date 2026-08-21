@@ -7,7 +7,7 @@ import { DataTable } from '#/components/portal/DataTable'
 import { Drawer } from '#/components/portal/Drawer'
 import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { useToast } from '#/components/portal/toast'
-import { mergeAudit, useLocalAudit } from '#/data/auditStore'
+import { mergeAudit, recordAudit, useLocalAudit } from '#/data/auditStore'
 import { members } from '#/data/members'
 import type { Member } from '#/data/members'
 import { useApi } from '#/lib/api'
@@ -16,6 +16,15 @@ import { useI18n } from '#/lib/i18n'
 /** 위험 액션은 **반출 계열만** — 로그인 이력(요구사항: 5년 보관)까지 ⚠ 로 칠하면 신호가 죽는다.
  *  좁은 화면 카드와 넓은 화면 표가 **같은 저울**을 쓰도록 한 곳에 둔다. */
 const isDanger = (action: string) => action === '다운로드' || action === '마스킹 해제'
+
+/* ⚠ 감사 축이 넓어졌다(2026-08-20): 결재 상신·승인·반려·회수, 배포 요청, 엑셀 업로드가
+   같은 표에 쌓인다. 그런데 이 화면의 이름은 **접속·반출** 감사 로그다 — 섞어만 두면
+   화면의 뜻이 흐려진다. 그래서 저장은 한 곳, **보기는 구분**으로 가른다.
+   가르는 기준은 이 화면이 원래 보던 것 — 반출·열람·로그인과, 그것을 좌우하는 정책이다.
+   ⚠ 토글의 켜기·끄기가 서로 다른 칸으로 갈리면 같은 줄이 사라졌다 나타나 보인다. */
+const AUDIT_KINDS = ['전체', '접속·반출', '업무 처리'] as const
+const ACCESS_ACTIONS = ['다운로드', '마스킹 해제', '마스킹 적용', '보존 정책 변경', '열람', '로그인']
+const kindOf = (action: string) => (ACCESS_ACTIONS.includes(action) ? '접속·반출' : '업무 처리')
 
 export const Route = createFileRoute('/privacy')({ component: PrivacyPage })
 
@@ -48,6 +57,21 @@ function PrivacyPage() {
   const [maskPhone, setMaskPhone] = useState(true)
   const [maskEmail, setMaskEmail] = useState(false)
   const [retention, setRetention] = useState('365일')
+  const [auditKind, setAuditKind] = useState<(typeof AUDIT_KINDS)[number]>('전체')
+
+  /* ⚠ 이 화면은 발치에 "정책 변경 이력도 감사 대상입니다"라고 적어 두고 **아무 데도
+     안 남기고** 있었다(2026-08-20). 엑셀 업로드에서 잡았던 병과 같은 부류다 —
+     화면이 약속한 것은 화면이 지킨다.
+     ⚠ 되돌리기도 이 자리를 지난다: 되돌린 것도 일어난 일이라 한 줄로 남아야 한다.
+        (여기서 안 남기면 "껐다"만 있고 "다시 켰다"가 없는 로그가 된다) */
+  const setMask = (which: 'phone' | 'email', v: boolean) => {
+    ;(which === 'phone' ? setMaskPhone : setMaskEmail)(v)
+    recordAudit({
+      action: v ? '마스킹 적용' : '마스킹 해제',
+      target: which === 'phone' ? '연락처 마스킹 정책' : '이메일 마스킹 정책',
+      reason: '개인정보 화면에서 정책 변경',
+    })
+  }
 
   // 감사 로그 정본은 서버 — 잠금 처리 등 실제 행위가 쌓인다 (없으면 mock)
   const { data: serverAudit } = useApi<typeof AUDIT_LOG>('/audit', AUDIT_LOG)
@@ -64,7 +88,8 @@ function PrivacyPage() {
      쪽을 나누라고 하는데 이 화면만 안 나누고 있었다: 목록이 자라는 화면일수록 발이
      "몇 건인지"만 말하고 끝나면 화면이 한없이 길어진다. 카드(좁은 화면)와 표(넓은 화면)는
      **같은 쪽**을 본다 — 갈리면 같은 자리에서 다른 줄이 보인다. */
-  const { page, pageCount, pageRows, setPage } = usePaged(auditList)
+  const shownAudit = auditKind === '전체' ? auditList : auditList.filter((l) => kindOf(l.action) === auditKind)
+  const { page, pageCount, pageRows, setPage } = usePaged(shownAudit)
 
   const downloads30d = auditList.filter((l) => l.action === '다운로드').length
   /** 파기 대상 — 비활성이면서 마지막 접속이 90일을 넘긴 계정 (처리방침 제3조) */
@@ -128,10 +153,16 @@ function PrivacyPage() {
         {/* 감사 로그 — 표는 자기 상자 안에서만 흐른다 */}
         <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
           <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '접속·반출 감사 로그')}</h2>
-            <span className="text-xs text-ink-subtle">
-              {t('privacy.auditLogHint', '다운로드·마스킹 해제는 사유가 필수로 남습니다')}
-            </span>
+            <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '감사 로그')}</h2>
+            <ChipSelect
+              options={AUDIT_KINDS}
+              value={auditKind}
+              onChange={(v) => {
+                setAuditKind(v)
+                setPage(1) // ⚠ 걸러 놓고 3쪽에 서 있으면 빈 표가 보인다
+              }}
+              label={(k) => t(`privacy.auditKind.${k}`, k)}
+            />
           </div>
           {/* 좁은 화면: 카드 — 로그 한 건이 독립 개체라 열 비교가 필요 없다 */}
           <ol className="space-y-2 p-4 pc:hidden">
@@ -214,7 +245,7 @@ function PrivacyPage() {
               같은 쪽을 보므로 발도 하나다. */}
           <div className="px-4 pb-4 pc:px-4">
             <ListFoot
-              total={auditList.length}
+              total={shownAudit.length}
               shown={pageRows.length}
               unit="건"
               page={page}
@@ -247,7 +278,7 @@ function PrivacyPage() {
               <Switch
                 checked={maskPhone}
                 onChange={(v) => {
-                  setMaskPhone(v)
+                  setMask('phone', v)
                   toast(
                     tf(
                       'privacy.toast.maskToggle',
@@ -257,7 +288,7 @@ function PrivacyPage() {
                       },
                       `연락처 마스킹을 ${v ? '켰습니다' : '껐습니다'}`,
                     ),
-                    { onUndo: () => setMaskPhone(!v) },
+                    { onUndo: () => setMask('phone', !v) },
                   )
                 }}
                 label={t('privacy.label.maskPhone', '연락처 마스킹')}
@@ -273,7 +304,7 @@ function PrivacyPage() {
               <Switch
                 checked={maskEmail}
                 onChange={(v) => {
-                  setMaskEmail(v)
+                  setMask('email', v)
                   toast(
                     tf(
                       'privacy.toast.maskToggle',
@@ -283,7 +314,7 @@ function PrivacyPage() {
                       },
                       `이메일 마스킹을 ${v ? '켰습니다' : '껐습니다'}`,
                     ),
-                    { onUndo: () => setMaskEmail(!v) },
+                    { onUndo: () => setMask('email', !v) },
                   )
                 }}
                 label={t('privacy.label.maskEmail', '이메일 마스킹')}
@@ -299,7 +330,15 @@ function PrivacyPage() {
                   value={retentionLabel(retention)}
                   onChange={(v) => {
                     const raw = RETENTION_OPTIONS.find((d) => retentionLabel(d) === v) ?? '365일'
+                    const before = retention
                     setRetention(raw)
+                    /* ⚠ 보존 기간을 줄이는 것은 **기록을 지우는 결정**이다 — 무엇에서
+                       무엇으로 갔는지가 없으면 나중에 되짚을 수 없다(값은 한국어 원문). */
+                    recordAudit({
+                      action: '보존 정책 변경',
+                      target: `접속기록 보존 기간 ${before} → ${raw}`,
+                      reason: '개인정보 화면에서 정책 변경',
+                    })
                     toast(
                       tf(
                         'privacy.toast.retentionSaved',
