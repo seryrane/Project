@@ -110,3 +110,18 @@ export const FIELD_STATUS_CLS: Record<FieldStatus, string> = {
   검토중: 'bg-review-bg text-review-ink',
   미완료: 'bg-danger-bg text-danger-ink',
 }
+
+/**
+ * 같은 상태를 **표 안에서** 말할 때 쓰는 점 색 (2026-08-21 색 절제).
+ *
+ * ⚠⚠ 위 `FIELD_STATUS_CLS`(색면 칩)가 요약 줄에서 한 번, **표의 매 행에서 또 한 번** 쓰여
+ * 서른두 줄짜리 표가 네 색으로 얼룩졌다. 색면은 "몇 건인가"를 세는 요약에서만 값이 있고,
+ * 행에서는 **점 하나면 충분하다** — 눈은 열을 따라 내려가며 점의 색만 본다.
+ * 규약 §Rules 2("상태는 배지로만, 카드 전체를 상태색으로 칠하지 않는다")의 표 버전이다.
+ */
+export const FIELD_STATUS_DOT: Record<FieldStatus, string> = {
+  완료: 'bg-deployed-ink',
+  진행중: 'bg-draft-ink',
+  검토중: 'bg-review-ink',
+  미완료: 'bg-danger-ink',
+}

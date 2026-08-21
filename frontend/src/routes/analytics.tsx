@@ -120,7 +120,8 @@ function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="anim-fade-up mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {/* 좁은 화면도 2열 — 대시보드·승인 관리와 같은 규칙 (2026-08-21) */}
+      <div className="anim-fade-up mt-5 grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
         <StatTile
           label={t('analytics.stat.attainment', '전사 KPI 달성률')}
           value="92.4%"

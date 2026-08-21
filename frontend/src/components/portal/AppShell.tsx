@@ -562,7 +562,11 @@ function Shell({
         <main
           /* ⚠ 좌우 패딩도 한 단 키웠다(pc:px-8 → pc:px-10) — 폭을 줄인 것과 같은 이유로,
              본문이 상자 벽에 붙어 서면 "꽉 찬다"로 읽힌다 (2026-08-18) */
-          className={`relative mx-auto w-full flex-1 px-4 py-6 pc:px-10 pc:py-8 ${
+          /* ⚠ **떠 있는 버튼이 목록 끝을 가린다**(2026-08-21 393px 실측 — 마지막 카드와
+             목록의 발이 FAB 뒤로 들어갔다). 좁은 화면에서만 아래 여백을 FAB 만큼 더 준다:
+             떠 있는 것은 자리를 차지하지 않으므로 **밑에서 자리를 비워 줘야** 한다.
+             넓은 화면은 그대로 — FAB 가 본문 오른쪽 바깥 여백에 선다. */
+          className={`relative mx-auto w-full flex-1 px-4 pb-[calc(1.5rem+var(--fab-size)+env(safe-area-inset-bottom,0px))] pt-6 pc:px-10 pc:py-8 ${
             width === 'doc' ? 'max-w-doc' : 'max-w-data'
           }`}
         >

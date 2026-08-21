@@ -230,7 +230,10 @@ function DashboardPage() {
     kpi: (
       // 칸이 정한다 (위 @container): 1칸(≈530)이면 2열, 전체 칸(≈1600)이면 4열.
       // 예전 `sm:grid-cols-2 xl:grid-cols-4` 는 1칸으로 줄여 놔도 4열을 고집했다
-      <div className="grid grid-cols-1 gap-5 @sm:grid-cols-2 @3xl:grid-cols-4">
+      // ⚠ 좁은 화면에서 **1열이라 첫 화면에 타일이 셋뿐이었다**(393px 실측) — 대시보드인데
+      //   "한눈에"가 안 됐다. 승인 관리는 이미 2열이라 화면끼리 규칙이 갈려 있었다.
+      //   ⚠ 여기는 `(` 바로 안이라 JSX 주석 `{/* */}` 을 쓸 수 없다 — 줄 주석이어야 한다.
+      <div className="grid grid-cols-2 gap-3 @sm:gap-5 @3xl:grid-cols-4">
         {/* ⚠ value="128"·"7" 손글씨였다 — 바로 위 주석이 "숫자는 코드가 센다"라고
             경고하면서도 이 두 칸은 그대로였다(사양서 관리는 4건·결재함은 4건이었다).
             증감은 prev mock 과의 차 — 0이면 배지를 안 단다(±0 은 아무 말도 아니다). */}

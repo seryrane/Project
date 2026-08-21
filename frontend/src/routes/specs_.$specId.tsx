@@ -32,6 +32,7 @@ import { SERVICE_ROLE_LABEL } from '#/data/members'
 import {
   FIELD_CATEGORIES,
   FIELD_STATUS_CLS,
+  FIELD_STATUS_DOT,
   WORKFLOW_STEPS,
   workflowIndex,
 } from '#/data/specFields'
@@ -39,6 +40,50 @@ import type { FieldDef, FieldStatus, FieldType } from '#/data/specFields'
 
 /** 데모 로그인 계정 — 본개발에서는 `GET /api/me` 가 준다 (규약 §4-2) */
 const ME = '김현대'
+
+/**
+ * 알림 줄 — **왼쪽 4px 색막대 + 옅은 면**. 화면 위쪽 한 자리에 모아 쌓는다.
+ *
+ * ⚠⚠ 꽉 찬 폭 + 진한 면은 이 화면이 낼 수 있는 **가장 센 강도**다. 그것을 둘 이상 쌓으면
+ * 강도가 사라져 무엇이 더 급한지 못 읽는다(2026-08-21 실측: 잠금 띠 + 겹침 띠가 연달아
+ * 서서 화면 위 1/3이 경고였다). 강도는 색막대가 지고, 면은 배경으로 물러난다.
+ * ⚠ 글자는 `text-ink` 다 — 상태색으로 문장을 통째로 칠하면 읽는 속도가 떨어진다.
+ *   색은 **막대와 라벨**에만 쓴다(규약 §Rules 2 "상태는 배지로만"과 같은 뜻).
+ */
+function Notice({
+  tone,
+  label,
+  actions,
+  children,
+}: {
+  tone: 'pending' | 'danger'
+  /** 한 낱말짜리 머리표 — 무슨 종류의 알림인지 (예: 결재 중 · 겹침) */
+  label: string
+  actions?: React.ReactNode
+  children: React.ReactNode
+}) {
+  const bar = tone === 'danger' ? 'bg-danger-ink' : 'bg-pending-ink'
+  const ink = tone === 'danger' ? 'text-danger-ink' : 'text-pending-ink'
+  const face = tone === 'danger' ? 'bg-danger-bg/40' : 'bg-pending-bg/40'
+  return (
+    <div className={`anim-fade-in flex overflow-hidden rounded-xl border border-hairline ${face}`}>
+      {/* 색막대 — `self-stretch` 라 줄이 길어져도 끝까지 따라 내려간다 */}
+      <span aria-hidden className={`w-1 shrink-0 self-stretch ${bar}`} />
+      {/* ⚠⚠ **좁은 화면에서 글이 세로로 흘렀다**(2026-08-21 393px 실측). 라벨·본문·버튼을
+          한 줄에 `flex-wrap` 으로 두면, `flex-1` 인 본문은 줄을 바꾸지 않고 **남은 폭을
+          그대로 쥔다** — 라벨과 버튼이 자리를 먼저 먹으면 본문 폭이 한 글자가 된다.
+          좁을 땐 **세로로 쌓고**(flex-col) 넓을 때만 한 줄로 돌린다.
+          ⚠ 라벨은 본문 문단 **안에** 넣는다 — 밖에 두면 라벨만 홀로 한 줄을 차지한다. */}
+      <div className="flex flex-1 flex-col gap-2 px-4 py-3 text-[13px] pc:flex-row pc:items-center pc:gap-3">
+        <p className="min-w-0 flex-1 leading-relaxed text-ink">
+          <span className={`mr-2 text-xs font-semibold ${ink}`}>{label}</span>
+          {children}
+        </p>
+        {actions && <span className="flex flex-wrap items-center gap-2">{actions}</span>}
+      </div>
+    </div>
+  )
+}
 
 export const Route = createFileRoute('/specs_/$specId')({
   component: SpecDetailPage,
@@ -383,17 +428,21 @@ function SpecDetailPage() {
                 : t('specDetail.requestApproval', '승인 요청')}
             </button>
           )}
+          {/* ⚠ **머리 줄에 같은 무게의 버튼이 다섯이었다**(2026-08-21 실측) — 다 같은 테두리라
+              어느 것이 주 동작인지 안 보였다. 무게를 세 단으로 가른다:
+                유령(보기만 하는 것) < 테두리(저장) < 그라디언트(최종 반영)
+              ⚠ 버튼 자체는 지운 것이 없다 — 위계만 바꾼다(e2e 가 이름으로 집는다). */}
           <button
             type="button"
             onClick={() => setCompare(true)}
-            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-transparent px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specDetail.compareVersions', '버전 비교')}
           </button>
           <button
             type="button"
             onClick={() => setHistory(true)}
-            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-transparent px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specDetail.history', '이력')}
           </button>
@@ -507,54 +556,69 @@ function SpecDetailPage() {
         </div>
       )}
 
-      {/* 잠근 이유와 풀리는 조건을 함께 적는다 — 회색 버튼만 있으면 고장으로 읽힌다 (⑧) */}
-      {locked && (
-        <div className="anim-fade-in mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-pending-ink/30 bg-pending-bg px-4 py-3 text-[13px] text-pending-ink">
-          <span>
-            {t(
-              'specDetail.lockedBanner',
-              '결재 중이라 필드를 고칠 수 없습니다 — 승인자가 본 문서가 그대로 승인되어야 합니다. 반려되거나 승인이 끝나면 다시 열립니다.',
-            )}
-          </span>
-          <button
-            type="button"
-            onClick={() => navigate({ to: '/approvals' })}
-            className="rounded-lg bg-pending-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
-          >
-            {t('specDetail.viewApproval', '결재 진행 보기 →')}
-          </button>
-          {/* ⚠⚠ **잠근 것은 '내용'이지 '요청'이 아니다**(2026-07-20 고객): "권한이 있는 사람이
-              둘 다 같은 사양을 수정하고 싶으면 둘 다 신청할 수 있어야 한다 — 누가 먼저 했다고
-              다른 사람 걸 막는 건 안 될 것 같다." 예전엔 이 자리에 길이 아예 없어서, 두 번째
-              사람의 변경 요청이 **갈 곳 없이 사라졌다**. */}
-          <button
-            type="button"
-            onClick={() => setRequesting(true)}
-            className="rounded-lg border border-pending-ink/40 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
-          >
-            {t('specDetail.addChangeRequest', '변경 요청 추가')}
-          </button>
-        </div>
-      )}
+      {/* ⚠⚠ **알림은 한 자리에 모은다** (2026-08-21 디자인 정리). 예전엔 잠금 띠와 겹침 띠가
+          각각 꽉 찬 폭 + 진한 면으로 **연달아 쌓여** 화면 위 1/3이 경고였다. 꽉 찬 진한 띠는
+          가장 센 강도인데, 그게 둘이면 강도가 사라진다 — 무엇이 더 급한지 못 읽는다.
+          그래서 강도를 **왼쪽 4px 색막대**로 옮기고 면은 옅게 깔았다. 줄이 늘어도 견딘다. */}
+      {(locked || overlapping.length > 1) && (
+        <div className="mt-4 space-y-2">
+          {locked && (
+            <Notice
+              tone="pending"
+              label={t('specDetail.noticeLockedLabel', '잠김')}
+              actions={
+                <>
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: '/approvals' })}
+                    className="h-9 shrink-0 rounded-lg bg-pending-ink/15 px-3 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-80"
+                  >
+                    {t('specDetail.viewApproval', '결재 진행 보기 →')}
+                  </button>
+                  {/* ⚠⚠ **잠근 것은 '내용'이지 '요청'이 아니다**(2026-07-20 고객): "권한이 있는
+                      사람이 둘 다 같은 사양을 수정하고 싶으면 둘 다 신청할 수 있어야 한다 —
+                      누가 먼저 했다고 다른 사람 걸 막는 건 안 될 것 같다." 예전엔 이 자리에
+                      길이 아예 없어서, 두 번째 사람의 변경 요청이 **갈 곳 없이 사라졌다**. */}
+                  <button
+                    type="button"
+                    onClick={() => setRequesting(true)}
+                    className="h-9 shrink-0 rounded-lg border border-hairline px-3 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                  >
+                    {t('specDetail.addChangeRequest', '변경 요청 추가')}
+                  </button>
+                </>
+              }
+            >
+              {t(
+                'specDetail.lockedBanner',
+                '결재 중이라 필드를 고칠 수 없습니다 — 승인자가 본 문서가 그대로 승인되어야 합니다. 반려되거나 승인이 끝나면 다시 열립니다.',
+              )}
+            </Notice>
+          )}
 
-      {/* 겹침 — 막지 않고 **말해 준다**. 정리는 승인 관리에서 사람이 한다 */}
-      {overlapping.length > 1 && (
-        <div className="anim-fade-in mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-danger-ink/30 bg-danger-bg px-4 py-3 text-[13px] text-danger-ink">
-          <span>
-            {tf(
-              'specDetail.conflictBanner',
-              { n: overlapping.length },
-              '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
-            )}
-          </span>
-          <span className="font-mono text-xs opacity-80">{overlapping.map((r) => r.id).join(' · ')}</span>
-          <button
-            type="button"
-            onClick={() => navigate({ to: '/approvals' })}
-            className="ml-auto rounded-lg bg-danger-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
-          >
-            {t('specDetail.resolveConflict', '겹침 정리하러 가기 →')}
-          </button>
+          {/* 겹침 — 막지 않고 **말해 준다**. 정리는 승인 관리에서 사람이 한다 */}
+          {overlapping.length > 1 && (
+            <Notice
+              tone="danger"
+              label={t('specDetail.noticeConflictLabel', '겹침')}
+              actions={
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/approvals' })}
+                  className="h-9 shrink-0 rounded-lg bg-danger-ink/15 px-3 text-[13px] font-semibold text-danger-ink transition-opacity hover:opacity-80"
+                >
+                  {t('specDetail.resolveConflict', '겹침 정리하러 가기 →')}
+                </button>
+              }
+            >
+              {tf(
+                'specDetail.conflictBanner',
+                { n: overlapping.length },
+                '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
+              )}{' '}
+              <span className="font-mono text-xs text-ink-subtle">{overlapping.map((r) => r.id).join(' · ')}</span>
+            </Notice>
+          )}
         </div>
       )}
 
@@ -714,10 +778,11 @@ function SpecDetailPage() {
             },
             {
               header: t('specDetail.th.status', '상태'),
+              /* 색면 칩 → **점 + 글자**. 색은 요약 줄이 이미 말했다 (색 절제, 2026-08-21).
+                 ⚠ 색만으로 가르지 않는다 — 글자가 함께 서니 색맹·흑백 인쇄에서도 읽힌다 */
               cell: (f) => (
-                <span
-                  className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${FIELD_STATUS_CLS[f.status]}`}
-                >
+                <span className="flex items-center gap-1.5 whitespace-nowrap text-xs text-ink-muted">
+                  <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full ${FIELD_STATUS_DOT[f.status]}`} />
                   {t(`fieldStatus.${f.status}`, f.status)}
                 </span>
               ),

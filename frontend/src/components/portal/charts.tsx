@@ -168,7 +168,11 @@ export function StatTile({
        "담는 상자"가 아니라 **떠 있는 요약**이라, 면과 그림자만으로 띄우면 아래 카드들과
        위계가 생긴다(표식에서 테두리 조건을 뺀 이유 — styles.css '유리와 깊이' 절).
        호버는 선 대신 한 단계 더 뜨는 것으로 답한다. */
-    <div className="card-spotlight card-hover rounded-2xl bg-surface p-5">
+    /* ⚠ **타일 골격은 네 칸이다**: 라벨·델타 / 값 / 그림(있으면) / 캡션.
+       스파크라인이 있는 타일과 없는 타일이 한 줄에 서면 격자가 키를 맞추느라 없는 쪽
+       **아래가 텅 빈다**(2026-08-21 실측, 센터 KPI 4칸 중 2칸). 캡션을 `mt-auto` 로
+       바닥에 붙이면 빈 자리가 캡션 **위**로 가서 네 칸의 바닥선이 나란해진다. */
+    <div className="card-spotlight card-hover flex h-full flex-col rounded-2xl bg-surface p-5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-ink-subtle">{label}</span>
         {delta && <DeltaChip delta={delta} good={deltaGood ?? true} />}
@@ -186,7 +190,7 @@ export function StatTile({
           하고 있는 말을 글로 또 적으면 한 칸에 같은 이야기가 두 번 선다. 다만 그 판단은
           **부르는 쪽**이 한다: 관문이 내용을 조용히 감추면 왜 안 나오는지 아무도 모른다
           (대시보드에서 중복 캡션 셋을 걷었다. "vs 이전 동일 기간"은 다른 말이라 남겼다). */}
-      {caption && <div className="mt-2 text-xs text-ink-subtle">{caption}</div>}
+      {caption && <div className="mt-auto pt-2 text-xs text-ink-subtle">{caption}</div>}
     </div>
   )
 }

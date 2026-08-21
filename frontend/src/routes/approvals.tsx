@@ -369,24 +369,29 @@ function ApprovalsPage() {
               >
                 {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
                 <span className="flex flex-wrap items-center gap-2 surface-head px-5 py-3">
+                  {/* ⚠⚠ **배지가 여섯이었다**(2026-08-21 실측: 긴급·종류·ID·대기·내 차례·겹침,
+                      색이 여섯 가지). 다 중요하다고 말하면 아무것도 중요하지 않다 — 좁은
+                      화면에서는 이 줄이 두 줄로 접혀 **제목보다 자리를 더 먹었다**.
+                      규칙: **색 배지는 카드당 둘까지** — 위험 하나(긴급·겹침) + 내 차례 하나.
+                      나머지(종류·ID·대기)는 무채색 사실이라 글자로 적는다. */}
                   {r.urgent && <UrgentChip />}
-                  <KindChip kind={r.kind} />
-                  <span className="font-mono text-xs text-ink-subtle">{r.id}</span>
-                  <span className="rounded-full bg-review-bg px-2 py-0.5 text-xs font-semibold text-review-ink">
-                    {t('approvals.waitingBadge', '대기')}
-                  </span>
-                  {r.myTurn && (
-                    <span className="rounded-full bg-pending-bg px-2 py-0.5 text-xs font-semibold text-pending-ink">
-                      {t('approvals.tab.mine', '내 차례')}
-                    </span>
-                  )}
-                  {/* 겹침 — 같은 사양서를 보는 요청이 둘 이상이다. 세는 값은 **나를 포함한** 수라
-                      "겹침 2"는 이 건 말고 하나가 더 있다는 뜻이다 */}
+                  {/* 겹침은 **위험**이다 — 이 건만 보고 승인하면 반영이 막힌다 */}
                   {r.specId && conflicted.has(r.specId) && (
                     <span className="rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger-ink">
                       {tf('approvals.conflictBadge', { n: siblingsOf(r).length + 1 }, '겹침 {n}')}
                     </span>
                   )}
+                  {r.myTurn && (
+                    <span className="flex items-center gap-1 rounded-full bg-pending-bg px-2 py-0.5 text-xs font-semibold text-pending-ink">
+                      {/* 색만으로 가르지 않는다 — 점을 함께 둔다 (규약 §2) */}
+                      <span aria-hidden>●</span>
+                      {t('approvals.tab.mine', '내 차례')}
+                    </span>
+                  )}
+                  <span className="text-xs text-ink-subtle">
+                    {t(`requestKind.${r.kind}`, r.kind)} · <span className="font-mono">{r.id}</span> ·{' '}
+                    {t('approvals.waitingBadge', '대기')}
+                  </span>
                   <span className="ml-auto flex items-center gap-1.5 text-xs text-ink-subtle">
                     <Avatar name={r.requester} size={16} />
                     {r.requester} · {r.requestedAt} · {t('approvals.deadlineLabel', '기한')}{' '}
@@ -397,11 +402,17 @@ function ApprovalsPage() {
                 <span className="block px-5 pb-5 pt-4">
                   <span className="block text-base font-semibold text-ink">{r.title}</span>
                   <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">{r.summary}</span>
+                  {/* ⚠⚠ **눌리게 생겼는데 안 눌리던 자리**(2026-08-21). 여기엔 카드 폭 70% 를
+                      차지하는 초록 띠가 "상세 검토 후 처리"라고 적혀 있었다 — 크기가 곧
+                      약속이라 사람은 그것을 버튼으로 읽는데, 실은 안내문이었다.
+                      ⚠ 카드 자체가 이미 `<button>` 이라 안에 버튼을 또 둘 수 없다(중첩 금지).
+                      그래서 **카드의 어포던스를 대신 말하는 한 줄**로 낮춘다 — 오른쪽 끝에
+                      서고, 누르면 실제로 그 일이 일어난다(카드를 누르는 것과 같다). */}
                   <span className="mt-3 flex items-center justify-between gap-3">
                     <StepDots step={r.step} />
                     {r.myTurn && (
-                      <span className="flex-1 rounded-lg bg-deployed-bg/60 py-1.5 text-center text-xs font-medium text-deployed-ink">
-                        {t('approvals.reviewThenProcess', '상세 검토 후 처리')}
+                      <span className="shrink-0 text-[13px] font-semibold text-primary">
+                        {t('approvals.reviewCta', '검토하기 →')}
                       </span>
                     )}
                   </span>
