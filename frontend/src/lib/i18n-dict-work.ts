@@ -293,6 +293,9 @@ export const WORK_DICT: Record<string, Entry> = {
   /* ── 동일 사양 다중 수정 요청 충돌 관리 (2026-07-20 회의) ──────────────────────
      ⚠ EN 에서 conflict 와 cancel 을 뒤섞지 않는다: 겹친 상태는 conflict, 그중 하나를
      내리는 행위는 cancel 이다(reject 가 아니다 — 내용이 틀렸다는 뜻이 되어 버린다). */
+  /* 알림 줄의 머리표 — 한 낱말. 문장 전체를 상태색으로 칠하는 대신 이 낱말과 색막대만 물든다 */
+  'specDetail.noticeLockedLabel': { ko: '잠김', en: 'Locked' }, // ⚠ 본문이 "결재 중이라…"로 시작한다 — 머리표까지 '결재 중'이면 같은 말이 두 번 선다
+  'specDetail.noticeConflictLabel': { ko: '겹침', en: 'Overlap' },
   'specDetail.addChangeRequest': { ko: '변경 요청 추가', en: 'Add change request' },
   'specDetail.conflictBanner': {
     ko: '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
@@ -533,7 +536,9 @@ export const WORK_DICT: Record<string, Entry> = {
   'approvals.stat.rejected': { ko: '반려', en: 'Rejected' },
   'approvals.delta.caption': { ko: '지난주 대비', en: 'vs last week' },
   'approvals.waitingBadge': { ko: '대기', en: 'Waiting' },
-  'approvals.reviewThenProcess': { ko: '상세 검토 후 처리', en: 'Review details, then process' },
+  /* ⚠ `reviewThenProcess`(꽉 찬 초록 띠)를 걷어내고 **행동을 말하는 한 줄**로 바꿨다
+     (2026-08-21) — 크기가 곧 약속인데 그 띠는 눌리지 않는 안내문이었다. */
+  'approvals.reviewCta': { ko: '검토하기 →', en: 'Review →' },
   'approvals.emptyMine': { ko: '내 차례인 결재가 없습니다.', en: 'No approvals waiting on you.' },
   'approvals.emptyAll': { ko: '대기 중인 결재가 없습니다.', en: 'No pending approvals.' },
   'approvals.approverDeadline': {

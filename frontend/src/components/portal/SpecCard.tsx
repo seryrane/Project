@@ -91,13 +91,16 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
           >
             {t('specCard.detail')}
           </button>
+          {/* ⚠ [상세 보기]와 [버전 비교]가 **같은 무게**라 주 동작이 안 보였다(2026-08-21).
+              카드를 눌러 들어가는 것이 주 동작이고, 비교는 곁길이다 — 테두리를 걷어
+              한 단 낮춘다. 지운 버튼은 없다(e2e 가 이름으로 집는다). */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
               onCompare()
             }}
-            className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
+            className="h-8 rounded-lg border border-transparent px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specCard.compare')}
           </button>
