@@ -24,6 +24,9 @@
 | [docs/화면_공통규칙.md](docs/화면_공통규칙.md) | 화면 규약 — 표시 영역·알림·로딩·다국어·표·모바일·강조 색 (22개 절) |
 | [frontend/DESIGN.md](frontend/DESIGN.md) | 시각 토큰 — 색·치수·테마·모션 |
 | [docs/RBAC_설계노트.md](docs/RBAC_설계노트.md) | 권한 설계 — 메뉴 × 액션 × 범위, 본개발 원칙 |
+| [docs/엑셀_마이그레이션_설계.md](docs/엑셀_마이그레이션_설계.md) | 엑셀 사양서 이관 (FR-115) — 템플릿·검증 규칙·부분 반영 정책·화면 네 걸음. **사양서는 지금 엑셀로 관리된다** |
+| [docs/API_설계.md](docs/API_설계.md) | 사양서·결재·배포 API 모양 (FR-114) — **서버는 아직 안 붙였다**, 화면이 알아낸 규칙을 스키마로 굳혀 둔 문서 |
+| [docs/챗봇_표준질의_설계.md](docs/챗봇_표준질의_설계.md) | 챗봇 — 무엇을 묻고 어떻게 답하나(표준 질의·답의 칸) |
 | [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md) | 사업 배경·원문 자료 위치·확정/미확정 |
 | [CLAUDE.md](CLAUDE.md) | 이 저장소에서 일하는 방식(작업 규율) |
 
@@ -31,7 +34,7 @@
 
 | 폴더 | 스택 | 포트 | 상태 |
 |---|---|---|---|
-| `frontend/` | React 19 · TanStack Start/Router · Vite 8 · TypeScript · Tailwind 4 | 3000 | 정본 |
+| `frontend/` | React 19 · TanStack Start/Router · Vite 8 · TypeScript · Tailwind 4 | 3000 (리뷰 빌드 3010) | 정본 |
 | `backend-python/` | FastAPI · SQLite | 8080 | **API 모양의 정본** |
 | `backend/` | Spring Boot 4.1 · Java 21 · JdbcTemplate · PostgreSQL(H2 호환 모드) | 8081 | 같은 API의 두 번째 벌 |
 
@@ -60,6 +63,19 @@ npm run dev
 목데이터로 되돌아갑니다 — 시연이 서버 상태에 흔들리지 않게 하려는 장치이고, 본개발에서는
 교체합니다.
 
+리뷰어에게 보여 줄 때는 **빌드 서버**를 씁니다 — `hmg.stock-autotrade.com` 은 :3010 을 봅니다.
+
+```bash
+cd frontend && npm run build && npm run preview   # :3010
+```
+
+> ⚠ **고친 것을 리뷰어에게 보이려면 `npm run build` 를 다시 돌려야 합니다.** 개발 서버(:3000)는
+> 그대로 두고 따로 세웁니다 — 같은 포트를 쓰면 고치는 동안 리뷰어 화면이 죽고 e2e 도 못 돕니다.
+> 왜 나눴나: dev 서버는 번들을 안 만들어 **파일 200개를 각각** 왕복하는데 터널 엣지가 홍콩이라
+> 1건당 0.4~1.2초가 붙습니다 — 첫 로딩이 **18.7초**였습니다(실측). 빌드하면 첫 화면 자산이
+> 19개로 줄어 **2.9초**입니다(실측). 되돌리려면 `.cloudflared\hmg.yml` 의 service 를
+> `[::1]:3000` 으로 돌리고 터널만 다시 띄웁니다(`hmg.yml.bak-20260820` 참고).
+
 스프링 벌을 볼 때:
 
 ```bash
@@ -81,6 +97,11 @@ cd frontend && npm run build       # 프로덕션 빌드
 
 마지막은 **눈으로 봅니다** — 라이트/다크, 한국어/영어, 393px 폭. 한 언어·한 테마로만
 보면 넘침은 반드시 늦게 발견됩니다(규약 §4-5).
+
+> ⚠ `npm run e2e` 가 **`browserType.launch: spawn UNKNOWN`** 으로 통째 실패하면 코드 탓이
+> 아닙니다 — 회사 PC 의 **애플리케이션 제어 정책이 Playwright 번들 브라우저를 차단**한 것입니다
+> (실행 파일을 직접 돌려 보면 그렇게 말합니다). 그때는 설치된 Chrome 으로 돌립니다:
+> `PW_CHANNEL=chrome npm run e2e`.
 
 ## 구조
 

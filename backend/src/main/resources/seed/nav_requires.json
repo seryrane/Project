@@ -12,5 +12,6 @@
  "engine": "검증엔진",
  "results": "검증엔진",
  "reports": "검증엔진",
+ "alerts": "권한 관리",
  "privacy": "권한 관리"
 }

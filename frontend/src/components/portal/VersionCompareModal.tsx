@@ -79,7 +79,7 @@ function DiffCell({
         : 'text-ink'
   return (
     <div className={`rounded-lg border px-4 py-2.5 ${toneClass}`}>
-      <div className="text-[11px] text-ink-subtle">{label}</div>
+      <div className="text-xs text-ink-subtle">{label}</div>
       <div className={`mt-0.5 text-[13px] font-medium tabular-nums ${valueClass}`}>
         {value ?? '—'}
       </div>

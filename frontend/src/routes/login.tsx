@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { Modal } from '#/components/portal/Modal'
+import { Icon } from '#/components/portal/Icon'
 import { MotionRoot, m } from '#/components/portal/motion'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { ToastProvider, useToast } from '#/components/portal/toast'
@@ -103,7 +104,7 @@ function LoginPage() {
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-white">HMG Admin</span>
-            <span className="block text-[11px] text-sidebar-ink/60">{t('brand.tagline')}</span>
+            <span className="block text-xs text-sidebar-ink/60">{t('brand.tagline')}</span>
           </span>
         </div>
         <m.div
@@ -120,7 +121,7 @@ function LoginPage() {
             {t('login.brand.desc')}
           </p>
         </m.div>
-        <p className="text-[11px] text-sidebar-ink/50">{t('brand.loginFooter')}</p>
+        <p className="text-xs text-sidebar-ink/50">{t('brand.loginFooter')}</p>
       </div>
 
       {/* 우: 로그인 카드 */}
@@ -146,7 +147,7 @@ function LoginPage() {
               type="button"
               onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
               aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-surface text-[11px] font-bold text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-surface text-xs font-bold text-ink-muted transition-colors hover:text-ink"
             >
               {locale === 'ko' ? '한' : 'EN'}
             </button>
@@ -164,7 +165,7 @@ function LoginPage() {
             {t('login.sso')}
           </button>
 
-          <div className="my-5 flex items-center gap-3 text-[11px] text-ink-subtle">
+          <div className="my-5 flex items-center gap-3 text-xs text-ink-subtle">
             <span className="h-px flex-1 bg-hairline" /> {t('login.or')}{' '}
             <span className="h-px flex-1 bg-hairline" />
           </div>
@@ -187,7 +188,7 @@ function LoginPage() {
                     idHint ? 'border-danger-ink/50' : 'border-hairline'
                   }`}
                 />
-                {idHint && <span className="mt-1 block text-[11px] text-danger-ink">{idHint}</span>}
+                {idHint && <span className="mt-1 block text-xs text-danger-ink">{idHint}</span>}
               </label>
               <label className="block">
                 <span className="text-xs font-medium text-ink-subtle">{t('login.password')}</span>
@@ -209,27 +210,17 @@ function LoginPage() {
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-ink-subtle transition-colors hover:text-ink"
                   >
-                    {showPw ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
-                        <circle cx="12" cy="12" r="2.5" />
-                        <path d="m4 4 16 16" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-                        <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z" />
-                        <circle cx="12" cy="12" r="2.5" />
-                      </svg>
-                    )}
+                    {/* 눈·가린 눈도 관문에서 — 화면마다 다른 펜으로 그리지 않는다 */}
+                  <Icon name={showPw ? 'eyeOff' : 'eye'} />
                   </button>
                 </span>
-                {pwHint && <span className="mt-1 block text-[11px] text-danger-ink">{pwHint}</span>}
+                {pwHint && <span className="mt-1 block text-xs text-danger-ink">{pwHint}</span>}
                 {caps && (
-                  <span className="mt-1 block text-[11px] text-pending-ink">{t('login.capsLock')}</span>
+                  <span className="mt-1 block text-xs text-pending-ink">{t('login.capsLock')}</span>
                 )}
               </label>
 
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-xs">
                 <label className="flex cursor-pointer items-center gap-1.5 text-ink-muted">
                   <input
                     type="checkbox"
@@ -250,7 +241,7 @@ function LoginPage() {
 
               {/* 실패는 그 자리에서 — 시도 횟수(n/5)와 잠금 안내가 서버에서 온다 */}
               {error && (
-                <p className="rounded-xl border border-danger-ink/30 bg-danger-bg px-3.5 py-2.5 text-[12px] leading-relaxed text-danger-ink">
+                <p className="rounded-xl border border-danger-ink/30 bg-danger-bg px-3.5 py-2.5 text-xs leading-relaxed text-danger-ink">
                   {error}
                 </p>
               )}
@@ -272,12 +263,10 @@ function LoginPage() {
               className="rounded-2xl border border-primary/30 bg-surface p-5 text-center"
             >
               <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/12 text-primary">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
-                  <path d="M12 11v4M7 10.5V9a5 5 0 0 1 10 0v1.5M5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-6A1.5 1.5 0 0 0 18.5 12h-13A1.5 1.5 0 0 0 4 13.5v6A1.5 1.5 0 0 0 5.5 21Z" />
-                </svg>
+                <Icon name="check" size="lg" />
               </span>
-              <h2 className="mt-3 text-[15px] font-semibold">{t('login.fido.title')}</h2>
-              <p className="mt-1 whitespace-pre-line text-[12px] leading-relaxed text-ink-subtle">
+              <h2 className="mt-3 text-base font-semibold">{t('login.fido.title')}</h2>
+              <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-ink-subtle">
                 {tf('login.fido.desc', { name: fidoTicket.name })}
               </p>
               <CtaButton
@@ -300,14 +289,14 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => setFidoTicket(null)}
-                className="mt-2 text-[11px] text-ink-subtle hover:text-ink"
+                className="mt-2 text-xs text-ink-subtle hover:text-ink"
               >
                 {t('login.fido.other')}
               </button>
             </m.div>
           )}
 
-          <p className="mt-5 text-center text-[12px] text-ink-subtle">
+          <p className="mt-5 text-center text-xs text-ink-subtle">
             {t('login.partner')}{' '}
             <Link to="/signup" className="font-medium text-primary hover:underline">
               {t('login.signup')}
@@ -318,7 +307,7 @@ function LoginPage() {
 
           {/* 데모 계정 — 프로토타입 리뷰용. 역할별로 메뉴가 어떻게 갈리는지 바로 본다 */}
           <div className="mt-6 rounded-2xl border border-hairline/70 bg-surface/60 p-4">
-            <p className="text-[11px] font-semibold text-ink-subtle">
+            <p className="text-xs font-semibold text-ink-subtle">
               {tf('login.demo.title', { pw: 'hmg1234!' })}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -331,7 +320,7 @@ function LoginPage() {
                     setPw('hmg1234!')
                     setError('')
                   }}
-                  className="rounded-full border border-hairline px-2.5 py-1 text-[11px] text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                  className="rounded-full border border-hairline px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                 >
                   {a.name} · {a.grade}
                   {a.fido && ' · FIDO'}
@@ -345,7 +334,33 @@ function LoginPage() {
 
       {/* 비밀번호 찾기 — 계정 존재 여부를 노출하지 않는다 */}
       {forgotOpen && (
-        <Modal title={t('login.forgotTitle', '비밀번호 찾기')} onClose={() => setForgotOpen(false)}>
+        <Modal
+          title={t('login.forgotTitle', '비밀번호 찾기')}
+          onClose={() => setForgotOpen(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={!/.+@.+\..+/.test(forgotEmail)}
+                busyLabel={t('login.forgotSending', '보내는 중…')}
+                onAction={async () => {
+                  const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
+                  setForgotOpen(false)
+                  setForgotEmail('')
+                  toast(res.data?.message ?? t('login.forgotSent', '가입된 이메일이라면 재설정 안내를 보냈습니다.'))
+                }}
+              >
+                {t('login.forgotSubmit', '재설정 메일 보내기')}
+              </CtaButton>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">
             {t('login.forgotDesc', '가입한 이메일을 입력하면 재설정 안내를 보냅니다.')}
           </p>
@@ -358,27 +373,6 @@ function LoginPage() {
               className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setForgotOpen(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={!/.+@.+\..+/.test(forgotEmail)}
-              busyLabel={t('login.forgotSending', '보내는 중…')}
-              onAction={async () => {
-                const res = await apiPost<{ message: string }>('/auth/forgot', { email: forgotEmail })
-                setForgotOpen(false)
-                setForgotEmail('')
-                toast(res.data?.message ?? t('login.forgotSent', '가입된 이메일이라면 재설정 안내를 보냈습니다.'))
-              }}
-            >
-              {t('login.forgotSubmit', '재설정 메일 보내기')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </div>

@@ -53,7 +53,7 @@ export function Preferences({ theme, onToggleTheme }: { theme: 'dark' | 'light';
 
       <section>
         <h3 className="text-[13px] font-semibold text-ink">{t('prefs.accent')}</h3>
-        <p className="mt-1 text-[12px] leading-relaxed text-ink-subtle">{t('prefs.accent.desc')}</p>
+        <p className="mt-1 text-xs leading-relaxed text-ink-subtle">{t('prefs.accent.desc')}</p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {ACCENTS.map((a) => {
             const on = accent === a.key
@@ -71,7 +71,7 @@ export function Preferences({ theme, onToggleTheme }: { theme: 'dark' | 'light';
                   className={`h-8 w-8 rounded-full ${on ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-surface' : ''}`}
                   style={{ background: a.swatch }}
                 />
-                <span className={`text-[12px] ${on ? 'font-semibold text-ink' : 'text-ink-muted'}`}>
+                <span className={`text-xs ${on ? 'font-semibold text-ink' : 'text-ink-muted'}`}>
                   {on && '✓ '}
                   {t(`accent.${a.key}`)}
                 </span>

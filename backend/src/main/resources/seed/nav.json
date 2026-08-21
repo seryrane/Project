@@ -159,6 +159,13 @@
   "title": "시스템",
   "items": [
    {
+    "key": "alerts",
+    "label": "시스템 알림",
+    "labelEn": "System Alerts",
+    "icon": "bell",
+    "to": "/alerts"
+   },
+   {
     "key": "privacy",
     "label": "개인정보보호",
     "labelEn": "Privacy",

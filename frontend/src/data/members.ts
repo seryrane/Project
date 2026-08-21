@@ -186,6 +186,39 @@ export const SERVICE_ROLES = [
   'VALIDATION_MANAGER',
 ] as const
 
+export type ServiceRole = (typeof SERVICE_ROLES)[number]
+
+/**
+ * Role **코드 ↔ 사람 말** 매핑 — 코드는 값이고 라벨은 표시다 (규약 §4-7).
+ *
+ * ⚠ 화면이 `KPI_ADMIN` 을 그대로 세우고 있었다. 만든 사람에게만 읽히는 글자다 —
+ * 회원 표에서 "이 사람이 무엇을 할 수 있는가"를 묻는 자리인데, 답이 영문 코드였다
+ * (규약 §15 이름 어긋남 · 2026-08-18). 값은 코드 그대로 두므로 필터·비교·서버
+ * 전달은 흔들리지 않는다. EN 은 사전(`role.<코드>`)이 따로 입힌다.
+ */
+export const SERVICE_ROLE_LABEL: Record<ServiceRole, string> = {
+  KPI_ADMIN: 'KPI 관리자',
+  KPI_EDITOR: 'KPI 편집자',
+  IBD_ADMIN: '사양서 관리자',
+  IBD_EDITOR: '사양서 편집자',
+  IBD_APPROVER: '사양서 승인자',
+  DEPLOY_MANAGER: '배포 담당자',
+  VALIDATION_MANAGER: '검증 담당자',
+}
+
+/**
+ * 이 Role 을 가진 회원들 — **결재선이 사람 이름을 손으로 받지 않게** 하는 정본 파생.
+ *
+ * ⚠ 결재선 설정이 이름을 자유 입력으로 받던 동안, 오타 하나로 **존재하지 않는 결재자**에게
+ * 결재가 올라갈 수 있었다(그 건은 영영 내 차례가 되지 않는다 — 2026-08-18).
+ * 역할을 먼저 고르고 그 보유자 중에서 고르면 그 길이 막힌다.
+ *
+ * 본개발에서는 서버가 `GET /api/members?role=` 로 준다 — 이 함수의 안쪽만 바뀐다.
+ */
+export function membersWithRole(role: string, list: Array<Member> = members): Array<Member> {
+  return list.filter((m) => m.roles.includes(role))
+}
+
 export const GRADE_CLS: Record<Grade, string> = {
   'Super Admin': 'bg-danger-bg text-danger-ink',
   Admin: 'bg-pending-bg text-pending-ink',
@@ -197,4 +230,26 @@ export const STATUS_CLS: Record<MemberStatus, string> = {
   활성: 'bg-deployed-bg text-deployed-ink',
   비활성: 'bg-chip text-ink-subtle',
   잠금: 'bg-review-bg text-review-ink',
+}
+
+/** 권한별 회원 분포 — **명단에서 센다** (규약 §10 "같은 이름의 숫자는 한 곳에서").
+ *  ⚠ 대시보드가 2/5/18/41(합 66명)을 손으로 들고 있던 동안 회원 관리는 10명을
+ *    보여 줬다 — 같은 앱이 다른 조직을 말했다(2026-08-18). 인자를 받는 이유:
+ *    회원 화면과 같은 소스(서버 있으면 서버, 없으면 이 mock)로 세야 한다.
+ *  fill 토큰은 CVD·대비 검증 통과값(dashboard.ts 의 기존 배정 그대로). */
+export const GRADES: Array<Grade> = ['Super Admin', 'Admin', 'Editor', 'Viewer']
+
+const GRADE_FILL: Record<Grade, string> = {
+  'Super Admin': 'var(--color-fill-draft)',
+  Admin: 'var(--color-fill-review)',
+  Editor: 'var(--color-fill-pending)',
+  Viewer: 'var(--color-fill-deployed)',
+}
+
+export function gradeDistribution(list: Array<Member>) {
+  return GRADES.map((label) => ({
+    label,
+    value: list.filter((m) => m.grade === label).length,
+    fill: GRADE_FILL[label],
+  }))
 }

@@ -55,8 +55,15 @@ def add_audit(entry: dict[str, Any], user_name: str) -> None:
 @router.get("/audit")
 def audit() -> list[dict[str, Any]]:
     with db.connect() as conn:
-        rows = conn.execute("SELECT json FROM audit_log ORDER BY seq DESC").fetchall()
-    return [json.loads(r["json"]) for r in rows]
+        rows = conn.execute("SELECT seq, json FROM audit_log").fetchall()
+    # ⚠ 정렬은 **시각**으로 한다 (규약 §9: 시간 축은 시간순). 예전엔 seq DESC 였는데,
+    #   시드는 화면 표시 순서(최신부터)로 INSERT 되어 seq DESC 가 그걸 **뒤집었다** —
+    #   서버 기록분(최신순) 뒤에 시드(오래된순)가 이어 붙어 나갔다(2026-08-18 실측).
+    #   `at`("2026.08.05 09:41")는 0 채움 고정 포맷이라 문자열 비교가 곧 시간 비교다.
+    #   같은 시각은 나중에 기록된 것(seq 큰 것)이 위 — 기록 순서가 두 번째 축이다.
+    records = [(json.loads(r["json"]), r["seq"]) for r in rows]
+    records.sort(key=lambda p: (p[0].get("at", ""), p[1]), reverse=True)
+    return [rec for rec, _seq in records]
 
 
 @router.post("/audit")

@@ -4,20 +4,49 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
+import { Icon } from '#/components/portal/Icon'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { Select } from '#/components/portal/Select'
 import { useToast } from '#/components/portal/toast'
-import { GRADE_CLS, SERVICE_ROLES, STATUS_CLS, members } from '#/data/members'
+import { MiniStackBar } from '#/components/portal/charts'
+import {
+  GRADE_CLS,
+  SERVICE_ROLES,
+  SERVICE_ROLE_LABEL,
+  STATUS_CLS,
+  gradeDistribution,
+  members,
+} from '#/data/members'
 import type { Grade, Member } from '#/data/members'
 import { ACTIONS, MENUS, PREVIEW_ACTIONS, PREVIEW_MENUS, SCOPE_LABEL, roleDefs, scopeOf } from '#/data/roles'
 import type { Action } from '#/data/roles'
 import { apiSend, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
-
-export const Route = createFileRoute('/members')({ component: MembersPage })
+import { orNone, pickOne, pickText } from '#/lib/urlState'
 
 const GRADES: Array<Grade> = ['Super Admin', 'Admin', 'Editor', 'Viewer']
+const MEMBER_STATES = ['활성', '비활성', '잠금'] as const
+const ALL_STATUS = '전체 상태'
+const ALL_GRADE = '전체 등급'
+
+/** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) — 새로고침·뒤로가기·링크 공유에서 살아남는다 */
+interface MembersSearch {
+  q?: string
+  status?: string
+  grade?: string
+}
+
+export const Route = createFileRoute('/members')({
+  component: MembersPage,
+  validateSearch: (search: Record<string, unknown>): MembersSearch => ({
+    q: pickText(search.q),
+    status: pickOne(search.status, MEMBER_STATES),
+    grade: pickOne(search.grade, GRADES),
+  }),
+})
 
 const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], string> = {
   auth: 'bg-fill-draft',
@@ -26,13 +55,47 @@ const ACTIVITY_DOT: Record<NonNullable<Member['activity']>[number]['kind'], stri
   admin: 'bg-fill-review',
 }
 
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
+
 function MembersPage() {
   const { t, tf } = useI18n()
+  /** Role 코드를 사람 말로 — 값은 코드 그대로다(필터·서버 전달은 안 흔들린다).
+   *  사전에 없는 코드는 한국어 정본으로, 그것도 없으면 코드 그대로 보인다
+   *  (본개발에서 서버가 새 Role 을 늘려도 화면이 빈칸이 되지 않는다). */
+  const roleLabel = (code: string) =>
+    // 타입상으론 카탈로그 밖 코드가 없지만, 서버가 늘린 코드는 타입이 못 막는다 —
+    // 넓혀 읽어서 모르는 코드는 코드 그대로 보인다(빈칸보다 낫다)
+    t(`role.${code}`, (SERVICE_ROLE_LABEL as Record<string, string | undefined>)[code] ?? code)
   const toast = useToast()
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState('전체 상태')
-  const [grade, setGrade] = useState('전체 등급')
+  const { q: query = '', status = ALL_STATUS, grade = ALL_GRADE } = Route.useSearch()
+  /** 칩은 뒤로가기로 되돌 수 있게 쌓고, 글자 입력은 replace 로 덮는다 (lib/urlState.ts) */
+  // ⚠ `prev` 는 모든 화면의 검색 타입을 합친 것으로 들어온다 — 이 화면 몫으로 좁힌다
+  const setSearch = (patch: Partial<MembersSearch>, replace = false) =>
+    void navigate({
+      to: '/members',
+      search: (prev) => ({ ...(prev as MembersSearch), ...patch }),
+      replace,
+    })
   const [detail, setDetail] = useState<Member | null>(null)
   const [tab, setTab] = useState<'info' | 'activity' | 'perm'>('info')
   const [creating, setCreating] = useState(false)
@@ -63,8 +126,8 @@ function MembersPage() {
         const q = query.trim()
         return (
           (q === '' || `${m.name} ${m.email} ${m.dept}`.includes(q)) &&
-          (status === '전체 상태' || st === status) &&
-          (grade === '전체 등급' || m.grade === grade)
+          (status === ALL_STATUS || st === status) &&
+          (grade === ALL_GRADE || m.grade === grade)
         )
       }),
     [memberList, query, status, grade, lockOverride],
@@ -77,11 +140,84 @@ function MembersPage() {
     locked: memberList.filter((m) => effStatus(m) === '잠금').length,
   }
 
+  // 지난주 이 시각 스냅샷 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10).
+  const PREV_WEEK = { active: 7, locked: 0 }
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+  const activeDelta = counts.active - PREV_WEEK.active
+  const lockedDelta = counts.locked - PREV_WEEK.locked
+
+  /* ── 타일이 말할 거리 ─────────────────────────────────────────────────
+     ⚠ 숫자 하나만 서 있으면 판단이 안 된다(규약 §10). 넷 다 "몇 명"만 크게 적고 아래가
+     비어 있어서 카드가 횡했다(2026-08-18 사용자 지적). 채우는 것은 장식이 아니라
+     **그 숫자가 무엇으로 이뤄졌는지**와 **다음에 할 일**이다 — 전부 명단에서 센다. */
+  const grades = gradeDistribution(memberList)
+  const activeRate = counts.all ? Math.round((counts.active / counts.all) * 100) : 0
+  /** 오래 안 들어온 계정 — 90일 기준(개인정보 화면의 '파기 예정 계정'과 같은 잣대) */
+  const staleCount = memberList.filter((m) => {
+    const d = new Date(m.lastLogin.slice(0, 10).replaceAll('.', '-'))
+    return (Date.now() - d.getTime()) / 86400000 > 90
+  }).length
+  const lockedNames = memberList.filter((m) => effStatus(m) === '잠금').map((m) => m.name)
+  const noFido = memberList.filter((m) => !m.fido).length
+
   const stats = [
-    { label: t('members.stat.all', '전체 회원'), value: counts.all },
-    { label: t('members.stat.active', '활성'), value: counts.active, cls: 'text-deployed-ink' },
-    { label: t('members.stat.inactive', '비활성'), value: counts.inactive, cls: 'text-ink-subtle' },
-    { label: t('members.stat.locked', '잠금'), value: counts.locked, cls: 'text-review-ink' },
+    // 전체 회원은 계정 대장 헤드카운트라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
+    {
+      label: t('members.stat.all', '전체 회원'),
+      value: counts.all,
+      // 무엇으로 이뤄졌나 — 등급 넷의 구성(대시보드 '권한별 회원 분포'와 같은 소스)
+      extra: (
+        <>
+          <MiniStackBar data={grades} />
+          <span className="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-ink-subtle">
+            {grades.map((g) => (
+              <span key={g.label} className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: g.fill }} />
+                {g.label} <b className="tabular-nums text-ink-muted">{g.value}</b>
+              </span>
+            ))}
+          </span>
+        </>
+      ),
+    },
+    {
+      label: t('members.stat.active', '활성'),
+      value: counts.active,
+      cls: 'text-deployed-ink',
+      delta: fmtDelta(activeDelta),
+      deltaGood: activeDelta >= 0,
+      caption: tf(
+        'members.stat.activeCaption',
+        { rate: activeRate, n: noFido },
+        '전체의 {rate}% · FIDO 미등록 {n}명',
+      ),
+    },
+    // 비활성은 자연 이탈·휴면 전환이 섞여 있어 늘고 주는 방향에 좋고 나쁨을 못 가른다 — 증감 없음
+    {
+      label: t('members.stat.inactive', '비활성'),
+      value: counts.inactive,
+      cls: 'text-ink-subtle',
+      // 다음 행동이 있는 숫자다 — 90일 넘게 안 들어온 계정은 파기 대상 후보(개인정보 화면)
+      caption: tf('members.stat.inactiveCaption', { n: staleCount }, '90일 이상 미접속 {n}명'),
+    },
+    {
+      label: t('members.stat.locked', '잠금'),
+      value: counts.locked,
+      cls: 'text-review-ink',
+      // 잠금 계정이 늘면 나쁘다 — 보안 위협 대응 중이라는 뜻
+      delta: fmtDelta(lockedDelta),
+      deltaGood: lockedDelta <= 0,
+      // 누가 잠겼는지까지 적는다 — 이름이 있어야 표에서 찾아 풀 수 있다
+      caption:
+        lockedNames.length > 0
+          ? tf(
+              'members.stat.lockedCaption',
+              { names: lockedNames.slice(0, 2).join(', '), rest: lockedNames.length - 2 },
+              '{names}',
+            ) + (lockedNames.length > 2 ? ` 외 ${lockedNames.length - 2}명` : '')
+          : t('members.stat.lockedNone', '잠긴 계정이 없습니다'),
+    },
   ]
 
   // 롤베이스 정합: 권한의 원천은 역할이다 — 사용자 쪽에서는 ①역할 배정을 바꾸고
@@ -143,9 +279,16 @@ function MembersPage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">{s.label}</div>
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              {s.caption && <div className="mt-1 text-xs text-ink-subtle">{s.caption}</div>}
+              {s.extra && <div className="mt-2.5">{s.extra}</div>}
+            </div>
           </div>
         ))}
       </div>
@@ -153,7 +296,7 @@ function MembersPage() {
       <div className="mt-5 flex flex-col gap-3">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
           placeholder={t('members.searchPlaceholder')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
@@ -161,15 +304,15 @@ function MembersPage() {
           {/* 상태·등급 값은 데이터 어휘라 그대로 — "전체" 칩(UI 어휘)만 언어를 입힌다.
               내부 값은 한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
           <ChipSelect
-            options={[allStatusLabel, '활성', '비활성', '잠금']}
-            value={status === '전체 상태' ? allStatusLabel : status}
-            onChange={(v) => setStatus(v === allStatusLabel ? '전체 상태' : v)}
+            options={[allStatusLabel, ...MEMBER_STATES]}
+            value={status === ALL_STATUS ? allStatusLabel : status}
+            onChange={(v) => setSearch({ status: orNone(v === allStatusLabel ? ALL_STATUS : v, ALL_STATUS) })}
           />
           <span className="hidden h-4 w-px bg-hairline pc:block" aria-hidden />
           <ChipSelect
             options={[allGradeLabel, ...GRADES]}
-            value={grade === '전체 등급' ? allGradeLabel : grade}
-            onChange={(v) => setGrade(v === allGradeLabel ? '전체 등급' : v)}
+            value={grade === ALL_GRADE ? allGradeLabel : grade}
+            onChange={(v) => setSearch({ grade: orNone(v === allGradeLabel ? ALL_GRADE : v, ALL_GRADE) })}
           />
         </div>
       </div>
@@ -194,7 +337,7 @@ function MembersPage() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <b className="font-medium text-ink">{m.name}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>
                         {st}
                       </span>
                     </span>
@@ -220,19 +363,30 @@ function MembersPage() {
                       st === '잠금' ? 'bg-review-bg text-review-ink' : 'text-ink-subtle'
                     }`}
                   >
-                    {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
+                    {st === '잠금' ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="lock" />
+                        {t('members.unlockShort')}
+                      </span>
+                    ) : (
+                      <Icon name="unlock" />
+                    )}
                   </span>
                 </span>
                 <span className="mt-2.5 flex flex-wrap items-center gap-1">
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[m.grade]}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
                     {m.grade}
                   </span>
                   {m.roles.map((r) => (
-                    <span key={r} className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
-                      {r}
+                    <span
+                      key={r}
+                      title={r}
+                      className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted"
+                    >
+                      {roleLabel(r)}
                     </span>
                   ))}
-                  <span className="ml-auto font-mono text-[11px] tabular-nums text-ink-subtle">
+                  <span className="ml-auto font-mono text-xs tabular-nums text-ink-subtle">
                     FIDO {m.fido ? 'ON' : 'OFF'} · {m.lastLogin}
                   </span>
                 </span>
@@ -247,109 +401,168 @@ function MembersPage() {
         )}
       </ol>
 
-      <div className="anim-fade-up mt-4 hidden overflow-x-auto card-spotlight rounded-2xl border border-hairline bg-surface pc:block">
-        <table className="w-full min-w-[860px] border-collapse text-[13px]">
-          <thead>
-            <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-              <th className="px-4 py-2.5 font-medium">{t('members.th.member', '회원')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.dept', '부서')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.gradeRole', '등급 · Role')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.status', '상태')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.fido', 'FIDO')}</th>
-              <th className="px-4 py-2.5 font-medium">{t('members.th.lastLogin', '최종 로그인')}</th>
-              <th className="px-4 py-2.5 text-right font-medium">{t('members.th.lock', '잠금')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((m) => {
-              const st = effStatus(m)
-              return (
-                <tr
-                  key={m.id}
-                  onClick={() => {
-                    setDetail(m)
-                    setTab('info')
-                  }}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
-                >
-                  <td className="px-4 py-3">
-                    <span className="flex items-center gap-2.5">
-                      <Avatar name={m.name} size={30} />
-                      <span className="min-w-0">
-                        <span className="block font-medium text-ink">{m.name}</span>
-                        <span className="block truncate text-xs text-ink-subtle">{m.email}</span>
-                      </span>
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-ink-muted">{m.dept}</td>
-                  <td className="px-4 py-3">
-                    <span className="flex flex-wrap items-center gap-1">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[m.grade]}`}>
-                        {m.grade}
-                      </span>
-                      {m.roles.map((r) => (
-                        <span key={r} className="rounded-full border border-hairline px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
-                          {r}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>{st}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-mono text-[11px] font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
-                      {m.fido ? 'ON' : 'OFF'}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-subtle">
-                    {m.lastLogin}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleLock(m)
-                      }}
-                      className={`rounded-lg px-2.5 py-1 text-xs transition-colors ${
-                        st === '잠금'
-                          ? 'bg-review-bg text-review-ink hover:opacity-80'
-                          : 'text-ink-subtle hover:bg-chip hover:text-ink'
-                      }`}
+      <div className="anim-fade-up card-spotlight mt-4 hidden rounded-2xl border border-hairline bg-surface p-4 pc:block">
+        <DataTable
+          rows={rows}
+          rowKey={(m) => m.id}
+          onRowClick={(m) => {
+            setDetail(m)
+            setTab('info')
+          }}
+          minWidth={860}
+          empty={{
+            title: t('members.empty', '조건에 맞는 회원이 없습니다.'),
+            hint: t('members.emptyHint', '검색어를 지우거나 상태·등급 칩을 [전체]로 바꿔 보세요'),
+          }}
+          columns={[
+            {
+              header: t('members.th.member', '회원'),
+              cell: (m) => (
+                <span className="flex items-center gap-2.5">
+                  <Avatar name={m.name} size={30} />
+                  <span className="min-w-0">
+                    <span className="block font-medium text-ink">{m.name}</span>
+                    <span className="block truncate text-xs text-ink-subtle">{m.email}</span>
+                  </span>
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.dept', '부서'),
+              cellClassName: 'whitespace-nowrap text-ink-muted',
+              cell: (m) => m.dept,
+            },
+            {
+              header: t('members.th.gradeRole', '등급 · Role'),
+              cell: (m) => (
+                <span className="flex flex-wrap items-center gap-1">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[m.grade]}`}>
+                    {m.grade}
+                  </span>
+                  {m.roles.map((r) => (
+                    <span
+                      key={r}
+                      title={r}
+                      className="whitespace-nowrap rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted"
                     >
-                      {st === '잠금' ? `🔒 ${t('members.unlockShort')}` : '🔓'}
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-subtle">
-                  {t('members.empty', '조건에 맞는 회원이 없습니다.')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      {roleLabel(r)}
+                    </span>
+                  ))}
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.status', '상태'),
+              cell: (m) => {
+                const st = effStatus(m)
+                return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+              },
+            },
+            {
+              header: t('members.th.fido', 'FIDO'),
+              cell: (m) => (
+                <span className={`font-mono text-xs font-semibold ${m.fido ? 'text-deployed-ink' : 'text-ink-subtle'}`}>
+                  {m.fido ? 'ON' : 'OFF'}
+                </span>
+              ),
+            },
+            {
+              header: t('members.th.lastLogin', '최종 로그인'),
+              cellClassName: 'whitespace-nowrap font-mono text-xs tabular-nums text-ink-subtle',
+              cell: (m) => m.lastLogin,
+            },
+            {
+              header: t('members.th.lock', '잠금'),
+              numeric: true,
+              cell: (m) => {
+                const st = effStatus(m)
+                return (
+                  <button
+                    type="button"
+                    aria-label={st === '잠금' ? t('members.unlock') : t('members.lock')}
+                    /* ⚠ 줄 전체가 서랍을 여는 자리라 이 버튼은 **전파를 끊는다** —
+                       안 끊으면 잠그면서 서랍이 함께 열린다 */
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleLock(m)
+                    }}
+                    className={`rounded-lg px-2.5 py-1 text-xs transition-colors ${
+                      st === '잠금'
+                        ? 'bg-review-bg text-review-ink hover:opacity-80'
+                        : 'text-ink-subtle hover:bg-chip hover:text-ink'
+                    }`}
+                  >
+                    {st === '잠금' ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Icon name="lock" />
+                        {t('members.unlockShort')}
+                      </span>
+                    ) : (
+                      <Icon name="unlock" />
+                    )}
+                  </button>
+                )
+              },
+            },
+          ]}
+        />
+        <ListFoot total={memberList.length} shown={rows.length} unit="명" />
       </div>
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}
       {detail && (
-        <Drawer title={tf('members.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
-          {(close) => {
+        <Drawer
+          title={tf('members.detailTitle', { name: detail.name })}
+          onClose={() => setDetail(null)}
+          /* ⚠ 권한 탭이 들어 있어 몸이 길다 — 예전에는 [상신]이 매트릭스 아래라
+             권한을 다 만지고 한참 내려가야 했고, 버튼에 붙은 **바꾼 개수**도 같이
+             안 보였다(역할 편집 모달과 같은 병. 규약 §7) */
+          footer={(close) => {
             const st = effStatus(detail)
             return (
-              <div className="flex h-full flex-col">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
+                  className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  {t('members.resetPw')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleLock(detail)}
+                  className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
+                >
+                  {st === '잠금' ? t('members.unlock') : t('members.lock')}
+                </button>
+                <button
+                  type="button"
+                  disabled={tab !== 'perm' || dirtyCount === 0}
+                  onClick={() => {
+                    close()
+                    toast(tf('members.toast.submitChanges', { name: detail.name, n: dirtyCount }))
+                    navigate({ to: '/approvals' })
+                  }}
+                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {t('members.submit')}
+                  {dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
+                </button>
+              </div>
+            )
+          }}
+        >
+          {() => {
+            const st = effStatus(detail)
+            return (
+              <div>
                 <div className="flex items-center gap-3">
                   <Avatar name={detail.name} size={44} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <b className="text-[15px] text-ink">{detail.name}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[st]}`}>{st}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${GRADE_CLS[detail.grade]}`}>
+                      <b className="text-base text-ink">{detail.name}</b>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[detail.grade]}`}>
                         {detail.grade}
                       </span>
                     </div>
@@ -396,7 +609,10 @@ function MembersPage() {
                         },
                         {
                           k: t('members.label.serviceRole', '서비스 Role'),
-                          v: detail.roles.length > 0 ? detail.roles.join(', ') : t('members.none', '— (없음)'),
+                          v:
+                            detail.roles.length > 0
+                              ? detail.roles.map(roleLabel).join(', ')
+                              : t('members.none', '— (없음)'),
                         },
                       ].map((row) => (
                         <div key={row.k} className="rounded-xl border border-hairline px-3.5 py-2.5">
@@ -430,7 +646,7 @@ function MembersPage() {
                           <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{a.at}</span>
                         </li>
                       ))}
-                      <p className="pt-1 text-[11px] text-ink-subtle">
+                      <p className="pt-1 text-xs text-ink-subtle">
                         {t(
                           'members.activity.retention',
                           '감사로그는 5년 보관됩니다 — 전체 이력은 본개발에서 별도 조회 화면으로.',
@@ -445,17 +661,22 @@ function MembersPage() {
                       <div className="rounded-xl border border-hairline p-3.5">
                         <div className="text-xs font-semibold text-ink">{t('members.perm.roleAssign', '역할 배정')}</div>
                         <div className="mt-2">
-                          <span className="text-[11px] text-ink-subtle">{t('members.perm.gradeSingle', '등급 (단일)')}</span>
+                          <span className="text-xs text-ink-subtle">{t('members.perm.gradeSingle', '등급 (단일)')}</span>
                           <div className="mt-1.5">
                             <ChipSelect options={GRADES} value={draftGrade} onChange={setDraftGrade} />
                           </div>
                         </div>
                         <div className="mt-2.5">
-                          <span className="text-[11px] text-ink-subtle">
+                          <span className="text-xs text-ink-subtle">
                             {t('members.perm.serviceRoleMulti', '서비스 Role (겸직 가능)')}
                           </span>
                           <div className="mt-1.5">
-                            <ChipMulti options={SERVICE_ROLES} values={draftRoles} onChange={setDraftRoles} mono />
+                            <ChipMulti
+                              options={SERVICE_ROLES}
+                              values={draftRoles}
+                              onChange={setDraftRoles}
+                              label={roleLabel}
+                            />
                           </div>
                         </div>
                       </div>
@@ -472,7 +693,7 @@ function MembersPage() {
                               close()
                               navigate({ to: '/roles' })
                             }}
-                            className="text-[11px] font-medium text-primary transition-opacity hover:opacity-80"
+                            className="text-xs font-medium text-primary transition-opacity hover:opacity-80"
                           >
                             {t('members.defineRoles')}
                           </button>
@@ -587,7 +808,7 @@ function MembersPage() {
                             + {t('common.add')}
                           </button>
                         </div>
-                        <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+                        <p className="mt-2 text-xs leading-relaxed text-ink-subtle">
                           {t(
                             'members.perm.exceptionNote1',
                             '예외는 감사 대상입니다 — 역할로 풀 수 있으면 역할을 고치세요. 변경은',
@@ -600,36 +821,6 @@ function MembersPage() {
                   )}
                 </div>
 
-                {/* 발 — 주 동작 오른쪽 끝 (규약 §7) */}
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-hairline pt-4">
-                  <button
-                    type="button"
-                    onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
-                    className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    {t('members.resetPw')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleLock(detail)}
-                    className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
-                  >
-                    {st === '잠금' ? t('members.unlock') : t('members.lock')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={tab !== 'perm' || dirtyCount === 0}
-                    onClick={() => {
-                      close()
-                      toast(tf('members.toast.submitChanges', { name: detail.name, n: dirtyCount }))
-                      navigate({ to: '/approvals' })
-                    }}
-                    className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
-                  >
-                    {t('members.submit')}
-                    {dirtyCount > 0 && <span className="ml-1 tabular-nums">{dirtyCount}</span>}
-                  </button>
-                </div>
               </div>
             )
           }}
@@ -638,7 +829,33 @@ function MembersPage() {
 
       {/* 회원 등록 — HMG-SSO 가 원장이라 초대 개념이다 */}
       {creating && (
-        <Modal title={t('members.add')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('members.add')}
+          onClose={() => setCreating(false)}
+          /* 발은 관문 슬롯으로 (규약 §7 "발은 붙박이") — 입력 칸이 다섯이라 좁은 화면에서
+             몸이 넘친다. 몸 안에 두면 다 채워 놓고 [등록]을 찾으러 다시 내려가야 한다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(false)
+                  toast(t('members.toast.registered', '회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다'))
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('members.register')}
+              </button>
+            </div>
+          }
+        >
           <p className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3 text-xs leading-relaxed text-ink-muted">
             {t(
               'members.create.hint',
@@ -668,25 +885,6 @@ function MembersPage() {
                 <ChipSelect options={GRADES} value={newGrade} onChange={setNewGrade} />
               </div>
             </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreating(false)
-                toast(t('members.toast.registered', '회원을 등록했습니다 — 첫 로그인은 SSO 인증 후 활성화됩니다'))
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('members.register')}
-            </button>
           </div>
         </Modal>
       )}

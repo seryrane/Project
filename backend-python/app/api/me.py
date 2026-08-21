@@ -43,23 +43,44 @@ def me(authorization: str | None = Header(default=None)) -> dict[str, Any]:
     return current_user(authorization)
 
 
+def can_view(user: dict[str, Any], menu: str) -> bool:
+    """이 사용자가 그 메뉴를 조회할 수 있나 — /me/menu 가 항목을 거르는 그 판단이다.
+    다른 목록도 **같은 저울**을 써야 화면마다 다른 답이 나오지 않는다."""
+    return "조회" in role_of(user)["matrix"].get(menu, [])
+
+
 @router.get("/me/menu")
 def my_menu(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
     """LNB — 권한 없는 항목은 아예 안 내려간다(눌러서 '권한 없음'은 나쁜 화면).
     requires 가 없는 항목은 최소 메뉴 — 모든 역할에 보인다. 빈 섹션은 안 내려간다."""
     nav = db.kv_get("nav") or []
     requires = db.kv_get("nav_requires") or {}
-    matrix = role_of(current_user(authorization))["matrix"]
+    user = current_user(authorization)
 
     sections = []
     for section in nav:
         items = [
             item for item in section["items"]
-            if item["key"] not in requires or "조회" in matrix.get(requires[item["key"]], [])
+            if item["key"] not in requires or can_view(user, requires[item["key"]])
         ]
         if items:
             sections.append({**section, "items": items})
     return sections
+
+
+@router.get("/specs")
+def spec_catalog(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+    """사양서 **카탈로그**(이름 축) — 본문이 아니라 목록이다.
+
+    ⚠⚠ 이걸 서버로 올린 이유는 본문이 필요해서가 아니라 **이름이 새기 때문**이다.
+    ⌘K 팔레트가 정적 목록을 읽고 있어서, 사양서 관리 조회 권한이 없는 사람에게도
+    사양서 이름이 그대로 떴다. 눌러서 막히는 게 아니라 **있는지조차 몰라야 할 것의
+    이름이 보이는 것**이 문제다 — LNB 와 같은 이유로 여기도 서버가 거른다.
+    못 보는 사람에게는 **빈 목록**이다(403 이 아니다 — 없는 것과 막힌 것을 가른다).
+    """
+    if not can_view(current_user(authorization), "사양서 관리"):
+        return []
+    return db.kv_get("specs") or []
 
 
 @router.get("/me/features")

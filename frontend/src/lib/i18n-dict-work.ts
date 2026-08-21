@@ -2,10 +2,202 @@
 import type { Entry } from './i18n'
 
 export const WORK_DICT: Record<string, Entry> = {
+  /* ── 사양서 상태 ───────────────────────────────────────────────────
+     ⚠ 이 키들은 **한국어 낱말 자체가 키**다 — 정본(data/dashboard.ts·specs.ts)이 상태를
+     코드가 아니라 한국어 문자열로 들고 있고, 화면이 그 값으로 맞춰 보기 때문이다
+     (i18n.tsx 의 `perm.<한국어>` 와 같은 임시 규칙. 규약 §4-2 "서버는 재료를 준다" 를
+     아직 못 지킨 자리 — 본개발에서 code+label 로 가른다). 값은 그대로, **표시만** 옮긴다. */
+  'specStatus.초안': { ko: '초안', en: 'Draft' },
+  'specStatus.검토 중': { ko: '검토 중', en: 'In review' },
+  'specStatus.승인 대기': { ko: '승인 대기', en: 'Pending approval' },
+  'specStatus.승인 완료': { ko: '승인 완료', en: 'Approved' },
+
+  /* 사양서 카테고리 — 값은 한국어 정본(엑셀 양식·서버·필터가 이 문자열로 맞물린다),
+     표시만 옮긴다. ⚠ 등록 모달의 카테고리 칩도 같은 사전을 탄다(2026-08-19). */
+  'specCategory.파워트레인': { ko: '파워트레인', en: 'Powertrain' },
+  'specCategory.전동화': { ko: '전동화', en: 'Electrification' },
+  'specCategory.자율주행': { ko: '자율주행', en: 'Autonomous driving' },
+  'specCategory.차체/안전': { ko: '차체/안전', en: 'Body & safety' },
+  'specStatus.배포 완료': { ko: '배포 완료', en: 'Deployed' },
+
+  /* 결재 종류 · 배포 상태 · 파이프라인 단계 · 검증 결과 상태 — 전부 같은 규칙이다:
+     **값은 한국어 정본, 표시만 사전이 옮긴다**(위 specStatus 절). 2026-08-18 EN 실검수에서
+     이 넷만 한국어로 남아 있었다 — 승인 화면의 종류 칩, 배포 카드의 상태 배지,
+     배포 파이프라인의 단계 이름, 검증 결과의 상태 칩. */
+  'requestKind.사양서': { ko: '사양서', en: 'Spec' },
+  'requestKind.배포': { ko: '배포', en: 'Deploy' },
+  'requestKind.메뉴': { ko: '메뉴', en: 'Menu' },
+  'requestKind.권한': { ko: '권한', en: 'Permission' },
+
+  'deployStatus.대기': { ko: '대기', en: 'Waiting' },
+  'deployStatus.진행중': { ko: '진행중', en: 'In progress' },
+  'deployStatus.완료': { ko: '완료', en: 'Done' },
+  'deployStatus.롤백': { ko: '롤백', en: 'Rolled back' },
+
+  /* ⚠ 파이프라인은 한국어 제목 + 영문 부제(개발/Development)로 서 있다 — EN 에서는 제목이
+     영문이 되면 부제와 같은 말이 두 번 선다. 그래서 EN 제목은 **부제와 다른 낱말**을 쓴다. */
+  'pipeline.dev': { ko: '개발', en: 'Build' },
+  'pipeline.staging': { ko: '검증', en: 'Verify' },
+  'pipeline.approval': { ko: '승인', en: 'Sign-off' },
+  'pipeline.prod': { ko: '운영', en: 'Release' },
+
+  'validationStatus.전체': { ko: '전체', en: 'All' },
+  'validationStatus.오류': { ko: '오류', en: 'Error' },
+  'validationStatus.재처리 중': { ko: '재처리 중', en: 'Reprocessing' },
+  'validationStatus.해결': { ko: '해결', en: 'Resolved' },
+  'validationStatus.통과': { ko: '통과', en: 'Passed' },
+
   // ── 사양서 목록 (/specs) ──────────────────────────────────────────
   'specs.register': { ko: '+ 사양서 등록', en: '+ New spec' },
+  /* 엑셀 이관 (FR-115, 2026-08-19) — 사양서가 지금 엑셀로 관리되어 최초 이관이 파일로 온다 */
+  'specs.import': { ko: '엑셀 올리기', en: 'Import Excel' },
+  'import.title': { ko: '엑셀 사양서 올리기', en: 'Import specs from Excel' },
+  'import.stepOf': { ko: '{n}/{total} · {name}', en: '{n}/{total} · {name}' },
+  'import.step.고르기': { ko: '고르기', en: 'Choose' },
+  'import.step.매핑': { ko: '매핑', en: 'Map' },
+  'import.whichWay': { ko: '어떤 파일인가요', en: 'What kind of file?' },
+  'import.mode.raw': { ko: '지금 쓰는 엑셀 (시트 = 사양서)', en: 'Existing Excel (sheet = spec)' },
+  'import.mode.template': { ko: '우리 템플릿 (한 행 = 사양서)', en: 'Our template (row = spec)' },
+  'import.rawHow': { ko: '이렇게 읽습니다', en: 'How it is read' },
+  'import.rawSheet': { ko: '시트 이름 → 사양서 명', en: 'Sheet name → spec name' },
+  'import.rawHeader': { ko: '맨 위 행 → 컬럼명(필드)', en: 'Top row → column names (fields)' },
+  'import.rawBody': { ko: '나머지 행 → 자료', en: 'Remaining rows → data' },
+  'import.rawMapHint': {
+    ko: '다음 걸음에서 시트·머리 행·열을 고칠 수 있습니다 — 목차·이력 시트는 빼면 됩니다.',
+    en: 'Next step lets you adjust sheets, header row and columns — leave out index/history sheets.',
+  },
+  'import.pickHint2': {
+    ko: '.xlsx 또는 .csv · 10MB 이하 (구형 .xls 는 xlsx 로 한 번 저장해 주세요)',
+    en: '.xlsx or .csv · 10MB or less (re-save legacy .xls as .xlsx first)',
+  },
+  'import.csvNoSheets': {
+    ko: 'CSV 에는 시트가 없어 템플릿 길로 읽었습니다 (시트 = 사양서는 xlsx 에서만 됩니다)',
+    en: 'CSV has no sheets, so it was read as a template (sheet = spec needs xlsx)',
+  },
+  'import.usedFirstSheet': { ko: "첫 시트 '{sheet}' 를 읽었습니다", en: "Read the first sheet '{sheet}'" },
+  'import.sheetsRead': { ko: '{file} — 시트 {n}개를 읽었습니다', en: '{file} — read {n} sheets' },
+  'import.categoryAll': { ko: '카테고리 일괄', en: 'Category for all' },
+  'import.choose': { ko: '고르기', en: 'Choose' },
+  'import.specName': { ko: '사양서 명', en: 'Spec name' },
+  'import.category': { ko: '카테고리', en: 'Category' },
+  'import.headerRow': { ko: '머리 행', en: 'Header row' },
+  'import.rowNo': { ko: '{n}행', en: 'Row {n}' },
+  'import.rowsOf': { ko: '자료 {n}행', en: '{n} data rows' },
+  'import.colsOf': { ko: '열 {n}개 중 {on}개', en: '{on} of {n} columns' },
+  'import.reading': { ko: '읽는 중… (큰 파일은 몇 초 걸립니다)', en: 'Reading… (large files take a few seconds)' },
+  'import.expand': { ko: '열 매핑 펼치기', en: 'Open column mapping' },
+  'import.collapse': { ko: '접기', en: 'Collapse' },
+  'import.findColumn': { ko: '열 찾기', en: 'Find column' },
+  'import.allOn': { ko: '전체 켜기', en: 'All on' },
+  'import.allOff': { ko: '전체 끄기', en: 'All off' },
+  'import.moreColumns': {
+    ko: '{total}개 중 앞 {shown}개만 보입니다 — 찾기로 좁혀 주세요',
+    en: 'Showing first {shown} of {total} — use find to narrow',
+  },
+  'import.th.include': { ko: '가져옴', en: 'Import' },
+  'import.th.source': { ko: '엑셀 열', en: 'Excel column' },
+  'import.th.field': { ko: '필드명', en: 'Field name' },
+  'import.th.type': { ko: '타입', en: 'Type' },
+  'import.th.sheet': { ko: '시트', en: 'Sheet' },
+  'import.noColumns': { ko: '읽은 열이 없습니다.', en: 'No columns were read.' },
+  'import.inferHint': {
+    ko: '타입은 값에서 짐작한 제안입니다 — 다르면 고쳐 주세요. 날짜는 엑셀이 숫자로 저장해 숫자로 보일 수 있습니다.',
+    en: 'Types are guesses from the values — correct them if wrong. Excel stores dates as numbers, so they may look numeric.',
+  },
+  'import.okSheets': { ko: '반영할 사양서 {n}건', en: '{n} specs to apply' },
+  'import.applySheets': { ko: '사양서 {n}건 반영', en: 'Apply {n} specs' },
+  'import.willApply': { ko: '들어갈 사양서(필드 수): {list}', en: 'Specs to be created (field count): {list}' },
+  'import.step.확인': { ko: '확인', en: 'Review' },
+  'import.step.검증': { ko: '검증', en: 'Validate' },
+  'import.step.반영': { ko: '반영', en: 'Apply' },
+  'import.back': { ko: '뒤로', en: 'Back' },
+  'import.toValidate': { ko: '검증 결과 보기', en: 'See validation' },
+  'import.apply': { ko: '정상 {n}건 반영', en: 'Apply {n} valid rows' },
+  'import.nothingToApply': { ko: '반영할 정상 행이 없습니다', en: 'No valid rows to apply' },
+  'import.whatKind': { ko: '무엇을 올리나요', en: 'What are you importing?' },
+  'import.kind.catalog': { ko: '사양서 대장 (한 행 = 사양서)', en: 'Spec catalog (one row = one spec)' },
+  'import.kind.fields': { ko: '필드 정의 (한 행 = 필드)', en: 'Field definitions (one row = one field)' },
+  'import.needCols': { ko: '필요한 열', en: 'Required columns' },
+  'import.optional': { ko: '선택', en: 'optional' },
+  'import.template': { ko: '표준 양식 받기 (xlsx)', en: 'Get standard form (xlsx)' },
+  'import.templateDraft': { ko: '우리 표준 양식(초안) 받기', en: 'Get our draft standard form' },
+  'import.seeResult': { ko: '들어간 것 보기', en: 'See what landed' },
+  'import.again': { ko: '다른 파일 올리기', en: 'Upload another file' },
+  'import.scoped': {
+    ko: "'{name}' 의 필드 정의를 올립니다 — 사양서명 열은 없어도 됩니다.",
+    en: "Uploading field definitions for '{name}' — the spec-name column is optional.",
+  },
+  'import.pick': { ko: '파일 고르기 (CSV)', en: 'Choose a file (CSV)' },
+  'import.pickHint': {
+    ko: '엑셀은 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 주세요 · 10MB 이하',
+    en: 'From Excel: Save As → CSV UTF-8 · 10MB or less',
+  },
+  'import.xlsxHint': {
+    ko: '지금은 CSV 만 읽습니다 — 엑셀에서 [다른 이름으로 저장 → CSV UTF-8] 로 저장해 올려 주세요',
+    en: 'CSV only for now — save the workbook as CSV UTF-8 and upload that',
+  },
+  'import.readAs': { ko: '{file} 을 이렇게 읽었습니다 — 자료 {n}행', en: 'Read {file} as follows — {n} data rows' },
+  'import.previewHint': {
+    ko: '앞 5행만 보여 줍니다 — 열이 밀렸으면 뒤로 가서 파일을 다시 고르세요',
+    en: 'First 5 rows shown — if columns look shifted, go back and pick another file',
+  },
+  'import.okCount': { ko: '정상 {n}건', en: '{n} valid' },
+  'import.warnCount': { ko: '경고 {n}건', en: '{n} warnings' },
+  'import.errCount': { ko: '오류 {n}건', en: '{n} errors' },
+  'import.report': { ko: '오류 리포트 받기', en: 'Download error report' },
+  'import.clean': { ko: '고칠 것이 없습니다 — 그대로 반영할 수 있습니다.', en: 'Nothing to fix — ready to apply.' },
+  'import.partialHint': {
+    ko: '오류 행은 빼고 정상 행만 반영합니다 — 고친 뒤 같은 파일을 다시 올려도 안전합니다.',
+    en: 'Only valid rows are applied — re-uploading the same file after fixes is safe.',
+  },
+  'import.result': {
+    ko: '{applied}건 반영했습니다 · 이미 있어 건너뜀 {skipped}건 · 오류로 빠짐 {failed}건',
+    en: 'Applied {applied} · skipped {skipped} (already exist) · {failed} left out (errors)',
+  },
+  'import.nextStep': {
+    ko: '오류 행은 리포트를 받아 고친 뒤 다시 올려 주세요 — 이미 반영된 건은 중복으로 들어가지 않습니다.',
+    en: 'Download the report, fix the rows, and upload again — applied rows will not duplicate.',
+  },
+  'import.auditHint': {
+    ko: '업로드 사실이 감사 로그에 남았습니다 — 개인정보 관리 화면에서 확인할 수 있습니다 (배치 단위 되돌리기는 본개발).',
+    en: 'The upload was recorded in the audit log — see it under Privacy (batch-level undo comes in the main build).',
+  },
+  'import.th.row': { ko: '행', en: 'Row' },
+  'import.th.column': { ko: '열', en: 'Column' },
+  'import.th.level': { ko: '수준', en: 'Level' },
+  'import.th.reason': { ko: '사유', en: 'Reason' },
+  'import.noRows': { ko: '읽은 행이 없습니다.', en: 'No rows were read.' },
+  'import.noIssues': { ko: '걸린 행이 없습니다.', en: 'No rows flagged.' },
   'specs.searchPlaceholder': { ko: '사양서 명, ID, 태그 검색...', en: 'Search name, ID, tag...' },
   'specs.allCategories': { ko: '전체 카테고리', en: 'All categories' },
+  // 등록 모달 (2026-08-18 — 죽은 CTA 를 실제 등록으로 배선하며 신설)
+  'specs.registerTitle': { ko: '사양서 등록', en: 'Register spec' },
+  'specs.registerSubmit': { ko: '등록', en: 'Register' },
+  'specs.registeredToast': {
+    ko: '{id} 로 등록했습니다 — 필드 정의를 채워 주세요',
+    en: 'Registered as {id} — now fill in the field definitions',
+  },
+  'specs.form.name': { ko: '사양서 이름', en: 'Spec name' },
+  'specs.form.namePlaceholder': {
+    ko: '예: VN9 하이브리드 파워트레인 사양서',
+    en: 'e.g. VN9 hybrid powertrain spec',
+  },
+  'specs.form.nameRequired': {
+    ko: '이름을 입력해 주세요 — 목록과 검색이 이 이름으로 찾습니다.',
+    en: 'Enter a name — lists and search find the spec by it.',
+  },
+  'specs.form.category': { ko: '카테고리', en: 'Category' },
+  'specs.form.desc': { ko: '설명', en: 'Description' },
+  'specs.form.descPlaceholder': {
+    ko: '무엇을 정의하는 문서인지 한두 문장으로',
+    en: 'One or two sentences on what this document defines',
+  },
+  'specs.form.tags': { ko: '태그 (쉼표로 구분)', en: 'Tags (comma-separated)' },
+  'specs.form.tagsPlaceholder': { ko: '예: 엔진, 하이브리드', en: 'e.g. engine, hybrid' },
+  'specs.form.hint': {
+    ko: 'v0.1 초안으로 만들어집니다. 필드 정의는 등록 후 상세 화면에서 채우고, 다 채우면 승인 요청으로 결재를 시작합니다.',
+    en: 'Created as draft v0.1. Fill in field definitions on the detail screen, then request approval to start the workflow.',
+  },
 
   // ── 사양서 상세 (/specs/$specId) ─────────────────────────────────
   'specDetail.toList': { ko: '목록으로', en: 'Back to list' },
@@ -26,7 +218,172 @@ export const WORK_DICT: Record<string, Entry> = {
   'specDetail.viewing': { ko: '보는 중', en: 'Viewing' },
   'specDetail.compare': { ko: '비교', en: 'Compare' },
   'specDetail.submit': { ko: '상신', en: 'Submit' },
+  // 결재선·결재 중 잠금 (2026-08-18 — 결재에 올라간 문서가 계속 고쳐지던 것을 막으며 신설)
+  'specDetail.approvalLineLabel': { ko: '결재선', en: 'Approval line' },
+  /* 결재 단계 이름 — 정본(data/approvals.ts)이 한국어 문자열을 들고 있어 **낱말 자체가 키**다
+     (위 specStatus.* 와 같은 임시 규칙 · 본개발에서 code+label 로 가른다). 값은 그대로, 표시만. */
+  'approvalStep.검토': { ko: '검토', en: 'Review' },
+  'approvalStep.최종 승인': { ko: '최종 승인', en: 'Final approval' },
+  'approvalStep.중간 승인': { ko: '중간 승인', en: 'Interim approval' },
+  /* 배포 워크플로우 단계·필드 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다(같은 임시 규칙).
+     ⚠ EN 화면에서 이 두 줄만 한국어로 남아 있었다(2026-08-18) — 값은 그대로, 표시만 옮긴다. */
+  'workflow.초안': { ko: '초안', en: 'Draft' },
+  'workflow.수정중': { ko: '수정중', en: 'Editing' },
+  'workflow.임시저장': { ko: '임시저장', en: 'Saved draft' },
+  'workflow.최종완료': { ko: '최종완료', en: 'Finalized' },
+  'workflow.승인요청': { ko: '승인요청', en: 'Approval requested' },
+  'workflow.배포승인': { ko: '배포승인', en: 'Deploy approved' },
+  'workflow.배포완료': { ko: '배포완료', en: 'Deployed' },
+  'fieldStatus.완료': { ko: '완료', en: 'Done' },
+  'fieldStatus.진행중': { ko: '진행중', en: 'In progress' },
+  'fieldStatus.검토중': { ko: '검토중', en: 'In review' },
+  'fieldStatus.미완료': { ko: '미완료', en: 'Not started' },
+  'specDetail.approvalWaiting': { ko: '{days}일째 대기 · 기한 {at}', en: 'Waiting {days}d · due {at}' },
+  'specDetail.lockedHint': { ko: '결재 중에는 고칠 수 없습니다', en: 'Locked while in approval' },
+  'specDetail.lockedBanner': {
+    ko: '결재 중이라 필드를 고칠 수 없습니다 — 승인자가 본 문서가 그대로 승인되어야 합니다. 반려되거나 승인이 끝나면 다시 열립니다.',
+    en: 'Fields are locked while in approval — approvers must sign off on exactly what they reviewed. Editing reopens once it is rejected or fully approved.',
+  },
   'specDetail.submitting': { ko: '상신 중…', en: 'Submitting…' },
+  /* 결재 수명주기 (FR-114, 2026-08-18) — 반려 자국·재요청·회수 */
+  'specDetail.resubmit': { ko: '재요청', en: 'Resubmit' },
+  'specDetail.goDeploy': { ko: '배포 요청하기 →', en: 'Request deployment →' },
+  'specDetail.alreadyDeployed': { ko: '배포까지 완료된 버전입니다', en: 'This version is fully deployed' },
+  'specDetail.rejectedTitle': { ko: '{by} 님이 반려했습니다 · {at}', en: 'Rejected by {by} · {at}' },
+  'specDetail.rejectedHint': {
+    ko: '고친 뒤 [재요청]을 누르면 같은 결재선으로 다시 올라갑니다.',
+    en: 'Fix the issues, then Resubmit to send it up the same approval line.',
+  },
+  'specDetail.withdraw': { ko: '요청 회수', en: 'Withdraw request' },
+  'specDetail.withdrawTitle': { ko: '요청 회수', en: 'Withdraw request' },
+  'specDetail.withdrawSubmit': { ko: '회수', en: 'Withdraw' },
+  'specDetail.withdrawing': { ko: '회수 중…', en: 'Withdrawing…' },
+  'specDetail.withdrawDesc': {
+    ko: '결재함에서 이 요청을 내리고 사양서를 초안으로 되돌립니다. 고친 뒤 다시 상신할 수 있습니다.',
+    en: 'Removes the request from the approval queue and returns the spec to draft. You can submit it again after edits.',
+  },
+  'specDetail.toast.withdrawn': {
+    ko: '요청을 회수했습니다 — 초안으로 돌아왔습니다',
+    en: 'Request withdrawn — the spec is back to draft',
+  },
+  'specDetail.toast.withdrawFailed': {
+    ko: '이미 결재가 진행되어 회수할 수 없습니다',
+    en: 'Cannot withdraw — approval has already started',
+  },
+  // 승인 관리 — 결재선 설정·회수·단계 넘김
+  'approvals.lineSettings': { ko: '결재선 설정', en: 'Approval line' },
+  'approvals.lineModalTitle': { ko: '결재선 설정', en: 'Approval line settings' },
+  'approvals.lineStepNo': { ko: '{n}차', en: 'Step {n}' },
+  'approvals.lineNoHolder': {
+    ko: '이 역할을 가진 회원이 없습니다',
+    en: 'No member holds this role',
+  },
+  'approvals.lineAdd': { ko: '+ 단계 추가', en: '+ Add step' },
+  'approvals.lineRemove': { ko: '단계 삭제', en: 'Remove step' },
+  'approvals.lineMaxHint': {
+    ko: '결재선은 최대 {n}단계입니다 (조건부 분기는 이번 범위가 아닙니다).',
+    en: 'Up to {n} steps (conditional branching is out of scope).',
+  },
+  'approvals.lineScopeHint': {
+    ko: '이미 올라간 결재는 상신 시점의 결재선을 그대로 따릅니다.',
+    en: 'Requests already in flight keep the approval line they were submitted with.',
+  },
+  'approvals.withdraw': { ko: '회수', en: 'Withdraw' },
+
+  /* ── 동일 사양 다중 수정 요청 충돌 관리 (2026-07-20 회의) ──────────────────────
+     ⚠ EN 에서 conflict 와 cancel 을 뒤섞지 않는다: 겹친 상태는 conflict, 그중 하나를
+     내리는 행위는 cancel 이다(reject 가 아니다 — 내용이 틀렸다는 뜻이 되어 버린다). */
+  'specDetail.addChangeRequest': { ko: '변경 요청 추가', en: 'Add change request' },
+  'specDetail.conflictBanner': {
+    ko: '이 사양서에 변경 요청이 {n}건 겹쳐 있습니다 — 하나를 고르고 나머지는 사유를 내고 취소해야 배포할 수 있습니다.',
+    en: '{n} change requests overlap on this spec — pick one and cancel the rest with a reason before it can be deployed.',
+  },
+  'specDetail.resolveConflict': { ko: '겹침 정리하러 가기 →', en: 'Resolve the overlap →' },
+  'specDetail.approvalOverlapWarn': {
+    ko: '이미 심사 중인 변경 요청이 {n}건 있습니다. 올릴 수는 있지만, 겹친 채로는 배포하지 못합니다 — 승인 관리에서 하나를 고르고 나머지는 사유를 내고 취소해야 합니다.',
+    en: '{n} change requests are already under review. You can still submit, but nothing deploys while they overlap — pick one in Approvals and cancel the rest with a reason.',
+  },
+  'specDetail.toast.submittedOverlap': {
+    ko: '변경 요청을 올렸습니다 — 이 사양서의 요청이 {n}건이 되었습니다. 승인 관리에서 하나를 고릅니다',
+    en: 'Change request submitted — this spec now has {n} open requests. Pick one in Approvals',
+  },
+  'approvals.conflictBadge': { ko: '겹침 {n}', en: 'Overlap {n}' },
+  'approvals.conflictTitle': {
+    ko: '같은 사양서에 변경 요청이 {n}건 겹쳐 있습니다',
+    en: '{n} change requests overlap on the same spec',
+  },
+  'approvals.conflictDesc': {
+    ko: '하나를 골라 승인하고 나머지는 사유를 내고 취소합니다. 겹친 채로는 배포 요청이 서지 않습니다.',
+    en: 'Approve one and cancel the others with a reason. No deployment request can be raised while they overlap.',
+  },
+  'approvals.cancelRequest': { ko: '이 건 취소', en: 'Cancel this one' },
+  'approvals.cancelModalTitle': { ko: '겹친 요청 취소', en: 'Cancel overlapping request' },
+  'approvals.cancelSubmit': { ko: '취소 처리', en: 'Cancel request' },
+  'approvals.cancelDesc': {
+    ko: '취소는 반려가 아닙니다 — 이 요청이 틀렸다는 뜻이 아니라, 같은 사양서의 다른 요청으로 간다는 뜻입니다. 요청자는 이 사유를 보고 이해합니다.',
+    en: 'Canceling is not rejecting — it does not mean this request was wrong, only that another request on the same spec was chosen. The requester reads this reason.',
+  },
+  'approvals.cancelReasonLabel': { ko: '취소 사유 (필수)', en: 'Reason for cancellation (required)' },
+  'approvals.cancelReasonPlaceholder': {
+    ko: '예: APR-2026-0012 로 통합해 반영합니다',
+    en: 'e.g. Merged into APR-2026-0012',
+  },
+  'approvals.toast.canceled': {
+    ko: '{title} — 취소했습니다. 요청자에게 사유가 남습니다',
+    en: '{title} — canceled. The requester can read your reason',
+  },
+  'approvals.toast.cancelFailed': { ko: '이미 처리된 요청입니다', en: 'This request was already decided' },
+  'deploys.conflictBlockTitle': {
+    ko: '{names} — 변경 요청이 겹쳐 있어 반영할 수 없습니다',
+    en: '{names} — cannot deploy while change requests overlap',
+  },
+  'deploys.conflictBlockDesc': {
+    ko: '같은 사양서에 심사 중인 요청이 둘 이상입니다. 둘 다 반영되면 어느 쪽이 최종인지 알 수 없습니다 — 승인 관리에서 하나를 고르고 나머지를 취소한 뒤 다시 요청하세요.',
+    en: 'More than one request is under review for the same spec. If both landed, no one could tell which is final — pick one in Approvals, cancel the rest, then request again.',
+  },
+  'deploys.goResolveConflict': { ko: '겹침 정리하러 가기 →', en: 'Resolve the overlap →' },
+  'deploys.toast.blockedByConflict': {
+    ko: '겹친 변경 요청이 있는 사양서가 포함되어 요청하지 못했습니다 — 승인 관리에서 하나를 고르세요',
+    en: 'Not submitted — a spec with overlapping change requests was included. Pick one in Approvals',
+  },
+  'approvals.queueRemaining': {
+    ko: '처리하면 다음 내 차례 건으로 이어집니다 (남은 {n}건)',
+    en: 'Deciding opens the next item in your queue ({n} left)',
+  },
+  'specDetail.approvalHistoryTitle': { ko: '결재 이력', en: 'Approval history' },
+  'specDetail.approvalHistoryEmpty': {
+    ko: '아직 결재에 올라간 적이 없습니다.',
+    en: 'This spec has not been submitted for approval yet.',
+  },
+  'specDetail.trailEmpty': { ko: '아직 처리된 단계가 없습니다.', en: 'No step has been decided yet.' },
+  'specDetail.trailStep': { ko: '{n}차', en: 'Step {n}' },
+  'specDetail.requestedOn': { ko: '{by} 상신 · {at}', en: 'Submitted by {by} · {at}' },
+  'approvals.toast.lineSaved': {
+    ko: '결재선을 {n}단계로 저장했습니다 — 다음 상신부터 적용됩니다',
+    en: 'Approval line saved with {n} steps — applies to new submissions',
+  },
+  'approvals.toast.lineInvalid': {
+    ko: '결재자가 비었거나 그 역할의 회원이 아닌 단계가 있습니다',
+    en: 'A step has no approver, or the approver does not hold that role',
+  },
+  'approvals.toast.needOpinion': {
+    ko: '반려 사유를 입력해 주세요 — 요청자는 이 글을 보고 고칩니다',
+    en: 'Enter a rejection reason — the requester works from this text',
+  },
+  'approvals.toast.decideFailed': { ko: '이미 처리된 요청입니다', en: 'This request was already handled' },
+  'approvals.toast.passedOn': {
+    ko: '{title} — 승인했습니다. 다음 결재자에게 넘어갔습니다',
+    en: '{title} — approved. Passed to the next approver',
+  },
+  'approvals.toast.withdrawn': { ko: '요청을 회수했습니다', en: 'Request withdrawn' },
+  'approvals.toast.withdrawFailed': {
+    ko: '이미 결재가 진행되어 회수할 수 없습니다',
+    en: 'Cannot withdraw — approval has already started',
+  },
+  'deploys.toast.requestedWithId': {
+    ko: '배포 승인 요청을 보냈습니다 ({id}) — 승인 관리에서 진행을 확인하세요',
+    en: 'Deploy approval requested ({id}) — track it in Approvals',
+  },
 
   // ── 승인 관리 (/approvals) ───────────────────────────────────────
   'approvals.tab.mine': { ko: '내 차례', en: 'My turn' },
@@ -49,13 +406,13 @@ export const WORK_DICT: Record<string, Entry> = {
 
   // ── 검증엔진 관리 (/validation-engine) ───────────────────────────
   'engine.register': { ko: '+ 엔진 등록', en: '+ Register engine' },
-  'engine.runNow': { ko: '⚡ 즉시 실행', en: '⚡ Run now' },
+  'engine.runNow': { ko: '즉시 실행', en: 'Run now' },
   'engine.editAria': { ko: '엔진 수정', en: 'Edit engine' },
   'engine.deleteAria': { ko: '엔진 삭제', en: 'Delete engine' },
   'engine.collapse': { ko: '접기', en: 'Collapse' },
   'engine.expand': { ko: '펼치기', en: 'Expand' },
   'engine.tab.code': { ko: '</> Python 함수', en: '</> Python function' },
-  'engine.tab.schedule': { ko: '📅 스케줄', en: '📅 Schedule' },
+  'engine.tab.schedule': { ko: '스케줄', en: 'Schedule' },
   'engine.addSchedule': { ko: '+ 스케줄 추가', en: '+ Add schedule' },
   'engine.schedToggleAria': { ko: '스케줄 활성화', en: 'Enable schedule' },
   'engine.namePlaceholder': { ko: '예: NULL 값 검증 엔진', en: 'e.g. NULL value check engine' },
@@ -85,8 +442,8 @@ export const WORK_DICT: Record<string, Entry> = {
   'reports.view': { ko: '보기', en: 'View' },
   'reports.publish': { ko: '발행', en: 'Publish' },
   'reports.goResults': { ko: '실행 상세는 검증 결과 조회 →', en: 'Run details in Validation Results →' },
-  'reports.print': { ko: '🖨 인쇄', en: '🖨 Print' },
-  'reports.downloadPdf': { ko: '⬇ PDF 다운로드', en: '⬇ Download PDF' },
+  'reports.print': { ko: '인쇄', en: 'Print' },
+  'reports.downloadPdf': { ko: 'PDF 다운로드', en: 'Download PDF' },
 
   // ── 사양서 목록 — 빈 상태 ────────────────────────────────────────
   'specs.empty': { ko: '조건에 맞는 사양서가 없습니다.', en: 'No specs match your filters.' },
@@ -109,14 +466,9 @@ export const WORK_DICT: Record<string, Entry> = {
     ko: '행을 누르면 우측에서 편집합니다 · 표는 자기 상자 안에서만 가로로 흐릅니다',
     en: 'Click a row to edit it on the right · the table scrolls only within its own box',
   },
-  'specDetail.toast.excelDownload': {
-    ko: 'Excel 다운로드 — 본개발에서 연결됩니다',
-    en: 'Download Excel — wired up in production build',
-  },
-  'specDetail.toast.excelUpload': {
-    ko: '엑셀 업로드(일괄 반영) — 본개발에서 연결됩니다',
-    en: 'Upload Excel (bulk apply) — wired up in production build',
-  },
+  /* ⚠ 이 둘은 "본개발에서 연결됩니다" 토스트였다 — 2026-08-20 에 **실물로 연결**했다:
+     내려받은 열 이름 = 올릴 때 읽는 열 이름(TEMPLATE.fields)이라 왕복이 성립한다. */
+  'specDetail.toast.excelDownloaded': { ko: '필드 {n}건을 엑셀로 내려받았습니다', en: 'Downloaded {n} fields as Excel' },
   'specDetail.toast.addField': {
     ko: '필드 추가 — 본개발에서 연결됩니다',
     en: 'Add field — wired up in production build',
@@ -131,6 +483,11 @@ export const WORK_DICT: Record<string, Entry> = {
   'specDetail.th.owner': { ko: '담당자', en: 'Owner' },
   'specDetail.th.status': { ko: '상태', en: 'Status' },
   'specDetail.fieldsEmpty': { ko: '조건에 맞는 필드가 없습니다.', en: 'No fields match your filters.' },
+  'specDetail.fieldsNone': { ko: '아직 필드가 없습니다.', en: 'No fields defined yet.' },
+  'specDetail.fieldsNoneHint': {
+    ko: '[+ 필드 추가]로 첫 필드를 정의하세요',
+    en: 'Use [+ Add field] to define the first one',
+  },
   'specDetail.editFieldTitle': { ko: '필드 편집 — {name}', en: 'Edit field — {name}' },
   'specDetail.historyTitle': { ko: '버전 이력 — {name}', en: 'Version history — {name}' },
   'specDetail.currentBadge': { ko: '현재', en: 'Current' },
@@ -174,6 +531,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'approvals.stat.pending': { ko: '대기 중', en: 'Pending' },
   'approvals.stat.approved': { ko: '승인 완료', en: 'Approved' },
   'approvals.stat.rejected': { ko: '반려', en: 'Rejected' },
+  'approvals.delta.caption': { ko: '지난주 대비', en: 'vs last week' },
   'approvals.waitingBadge': { ko: '대기', en: 'Waiting' },
   'approvals.reviewThenProcess': { ko: '상세 검토 후 처리', en: 'Review details, then process' },
   'approvals.emptyMine': { ko: '내 차례인 결재가 없습니다.', en: 'No approvals waiting on you.' },
@@ -250,7 +608,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'engine.activeUnit': { ko: '활성 {n}개', en: 'Active {n}' },
   'engine.timesUnit': { ko: '{n}회', en: '{n} runs' },
   'engine.casesUnit': { ko: '{n}건', en: '{n}' },
-  'engine.last7days': { ko: '최근 7일 기준', en: 'Based on last 7 days' },
+  'engine.last7days': { ko: '최근 7일 기준 · 이전 7일 대비', en: 'Last 7 days · vs prior 7 days' },
   'engine.label.target': { ko: '대상', en: 'Target' },
   'engine.totalRuns': { ko: '총 실행: {n}회', en: 'Total runs: {n}' },
   'engine.label.recent': { ko: '최근', en: 'Recent' },
@@ -305,6 +663,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'results.stat.successRate': { ko: '성공률', en: 'Success rate' },
   'results.stat.openErrors': { ko: '미해결 오류 실행', en: 'Unresolved error runs' },
   'results.stat.requeuePending': { ko: '재처리 대기', en: 'Pending reprocessing' },
+  'results.delta.caption': { ko: '전일 배치 대비', en: "vs yesterday's batch" },
   'results.chart.trendTitle': { ko: '일별 오류 · 경고 추이', en: 'Daily error & warning trend' },
   'results.chart.trendSubtitle': { ko: '최근 7일 · 단위: 건', en: 'Last 7 days · unit: count' },
   'results.chart.unit': { ko: '건', en: 'count' },
@@ -328,10 +687,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'results.detail.ofWhichErrors': { ko: ' 중 오류 ', en: ', errors ' },
   'results.noSamplesPass': { ko: '오류가 없어 샘플이 없습니다 (통과).', en: 'No samples — no errors (passed).' },
   'results.rowLabel': { ko: '행 {n}', en: 'Row {n}' },
-  'results.toast.exportExcel': {
-    ko: 'Excel 리포트 내보내기 — 본개발에서 연결됩니다',
-    en: 'Export Excel report — wired up in production build',
-  },
+  'results.toast.exported': { ko: '{n}건을 엑셀로 내보냈습니다', en: 'Exported {n} rows to Excel' },
   'results.detailDrawerTitle': { ko: '검증 상세 — {id}', en: 'Validation details — {id}' },
   'results.toast.requeued': {
     ko: '{id} 재검증을 큐에 넣었습니다 — 완료되면 알림으로 알려 드립니다',
@@ -348,6 +704,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'reports.cumulativeUnit': { ko: '누적 {n}건', en: 'Cumulative {n}' },
   'reports.stat.drafts': { ko: '임시저장', en: 'Drafts' },
   'reports.publishPending': { ko: '발행 대기 중', en: 'Awaiting publish' },
+  'reports.delta.caption': { ko: '지난주 대비', en: 'vs last week' },
   'reports.toast.create': {
     ko: '리포트 생성 — 기간·엔진을 골라 생성합니다 (본개발에서 연결)',
     en: 'Create report — choose a period and engine (wired up in production build)',

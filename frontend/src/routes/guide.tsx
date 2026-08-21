@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { m } from '#/components/portal/motion'
 import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
@@ -36,6 +37,11 @@ function GuidePage() {
   }
 
   return (
+    /* 커뮤니티 5개(공지·Q&A·FAQ·가이드·개인정보)는 **폭을 통일한다** — 사용자 결정
+       2026-08-13. 규칙상은 글 화면이라 960(doc)이 맞지만, 메뉴를 오갈 때 폭이 960↔1440 로
+       널뛰는 것이 한 섹션 안에서 더 거슬린다("본문 넓이가 QNA 는 꽉 차는데 FAQ·가이드는 좁다").
+       ⚠ 글줄이 길어지는 문제는 **페이지 폭이 아니라 안쪽 글 칸**으로 잡는다 — 본문 블록에
+       읽기 폭을 물린다. 페이지를 좁히면 목차·표 같은 옆 것들까지 같이 좁아진다. */
     <AppShell active="guide" title={t('nav.guide', '사용자 가이드')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -72,18 +78,21 @@ function GuidePage() {
           </ol>
         </nav>
 
-        {/* 본문 */}
-        <div className="min-w-0 space-y-5">
+        {/* 본문 — ⚠ **글 칸에 읽기 폭을 물린다.** 페이지를 데이터 폭(1440)으로 통일했으므로(위 주석)
+            이 칸이 그대로 펴지면 한 줄이 1400px 를 넘어 눈이 다음 줄을 못 찾는다.
+            좁히는 자리는 **페이지가 아니라 여기**다 — 페이지를 좁히면 목차·표까지 같이 좁아진다.
+            `max-w-doc`(960)은 `--container-doc` 토큰과 같은 값이라 예전 읽기 폭이 그대로 산다. */}
+        <div className="min-w-0 max-w-doc space-y-5">
           {/* 새 기능 — 정본은 data/whatsnew.ts. 기능을 배포하면 거기에 같이 적는다 */}
           <section
             id="guide-whatsnew"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-primary/30 bg-surface"
           >
-            <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="flex items-center justify-between surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 1, title: t('guide.toc.whatsnew', '새 기능') })}
               </h2>
-              <span className="text-[11px] text-ink-subtle">
+              <span className="text-xs text-ink-subtle">
                 {t('guide.newBadgeHint', '최근 배포 순 — 여기를 열면 배지가 내려갑니다')}
               </span>
             </div>
@@ -94,9 +103,9 @@ function GuidePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: i * 0.06 }}
-                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline/50 py-3 first:pt-0 last:border-0 last:pb-0"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-divider py-3 first:pt-0 last:border-0 last:pb-0"
                 >
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{e.date}</span>
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{e.date}</span>
                   <span className="min-w-0 flex-1 basis-64">
                     <span className="block text-[13px] font-semibold text-ink">{e.title}</span>
                     <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">{e.desc}</span>
@@ -104,7 +113,7 @@ function GuidePage() {
                   {/* 칸마다 갈 곳을 준다 — "생겼대요"만으로는 안내가 아니다 */}
                   <Link
                     to={e.to}
-                    className="shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1.5 text-[11px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                    className="shrink-0 rounded-lg border border-hairline bg-chip px-2.5 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                   >
                     {e.toLabel} →
                   </Link>
@@ -117,7 +126,7 @@ function GuidePage() {
             id="guide-start"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 2, title: t('guide.toc.start', '시작하기') })}
               </h2>
@@ -133,9 +142,14 @@ function GuidePage() {
                 로그인은 HMG-SSO 계정으로 합니다. 첫 화면(대시보드)은 역할에 맞는 위젯이 자동
                 배치되며, [위젯 편집]으로 크기·위치를 바꿀 수 있습니다.
               </p>
-              <p className="rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-xs">
-                💡 상단의 <b className="text-ink">⌘K</b> (또는 검색창)를 누르면 어느 화면에서든
-                메뉴·사양서를 바로 찾아 이동할 수 있습니다.
+              <p className="flex items-start gap-2 rounded-xl border border-hairline bg-canvas/40 px-3.5 py-2.5 text-xs">
+                <span className="mt-0.5 text-primary">
+                  <Icon name="info" />
+                </span>
+                <span>
+                  상단의 <b className="text-ink">⌘K</b> (또는 검색창)를 누르면 어느 화면에서든
+                  메뉴·사양서를 바로 찾아 이동할 수 있습니다.
+                </span>
               </p>
             </div>
           </section>
@@ -144,7 +158,7 @@ function GuidePage() {
             id="guide-roles"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:60ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 3, title: t('guide.toc.roles', '역할과 권한') })}
               </h2>
@@ -171,7 +185,7 @@ function GuidePage() {
                         ['Viewer', '사양서·지표 조회 전용'],
                       ] as const
                     ).map(([g, d]) => (
-                      <tr key={g} className="border-b border-hairline/50 last:border-0">
+                      <tr key={g} className="border-b border-divider last:border-0">
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{g}</td>
                         <td className="px-3 py-2">{d}</td>
                       </tr>
@@ -191,7 +205,7 @@ function GuidePage() {
             id="guide-spec-flow"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 4, title: t('guide.toc.spec-flow', '사양서 작업 흐름') })}
               </h2>
@@ -228,7 +242,7 @@ function GuidePage() {
             id="guide-approval"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 5, title: t('guide.toc.approval', '승인과 배포') })}
               </h2>
@@ -252,7 +266,7 @@ function GuidePage() {
             id="guide-validation"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:240ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 6, title: t('guide.toc.validation', '검증엔진') })}
               </h2>
@@ -274,7 +288,7 @@ function GuidePage() {
             id="guide-more"
             className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:300ms]"
           >
-            <div className="border-b border-hairline bg-canvas/50 px-5 py-3.5">
+            <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
                 {tf('guide.heading', { n: 7, title: t('guide.toc.more', '더 묻기') })}
               </h2>
@@ -303,7 +317,7 @@ function GuidePage() {
               <button
                 type="button"
                 onClick={() => toast(t('guide.toast.feedback', '가이드 개선 의견을 접수했습니다 — 감사합니다'))}
-                className="mt-3 text-[11px] text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:text-ink"
+                className="mt-3 text-xs text-ink-subtle underline decoration-dotted underline-offset-2 transition-colors hover:text-ink"
               >
                 {t('guide.feedback', '이 가이드에서 부족한 부분 알려 주기')}
               </button>

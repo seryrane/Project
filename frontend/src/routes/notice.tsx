@@ -5,6 +5,7 @@ import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { Drawer } from '#/components/portal/Drawer'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
 import { NOTICE_CATEGORIES, notices } from '#/data/community'
@@ -96,7 +97,7 @@ function NoticePage() {
               style={{ animationDelay: `${i * 60}ms` }}
               className="card-spotlight card-hover anim-fade-up rounded-2xl border border-primary/30 bg-surface p-4 text-left"
             >
-              <span className="flex items-center gap-2 text-[11px] font-semibold text-primary">
+              <span className="flex items-center gap-2 text-xs font-semibold text-primary">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                   <path d="M16 3l5 5-6 2-4 4 1 5-4-4-5 4 4-5-4-4 5 1 4-4 2-6z" />
                 </svg>
@@ -116,12 +117,12 @@ function NoticePage() {
 
       {/* 목록 — 표는 자기 상자 안에서만 흐른다 */}
       <section className="anim-fade-up card-spotlight mt-5 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
-        <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex items-center justify-between surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('notice.sectionTitle', { n: filtered.length })}</h2>
         </div>
         <ol>
           {rest.map((n) => (
-            <li key={n.id} className="border-b border-hairline/60 last:border-0">
+            <li key={n.id} className="border-b border-divider last:border-0">
               <button
                 type="button"
                 onClick={() => setReading(n)}
@@ -133,14 +134,14 @@ function NoticePage() {
                 <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
                   {n.title}
                   {isNew(n.date) && (
-                    <span className="ml-1.5 rounded bg-danger-bg px-1 py-0.5 text-[9px] font-bold text-danger-ink">
+                    <span className="ml-1.5 rounded bg-danger-bg px-1 py-0.5 text-[10px] font-bold text-danger-ink">
                       NEW
                     </span>
                   )}
                 </span>
                 <span className="hidden shrink-0 text-xs text-ink-subtle sm:block">{n.author}</span>
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-subtle">{n.date}</span>
-                <span className="hidden w-14 shrink-0 text-right text-[11px] tabular-nums text-ink-subtle sm:block">
+                <span className="shrink-0 font-mono text-xs tabular-nums text-ink-subtle">{n.date}</span>
+                <span className="hidden w-14 shrink-0 text-right text-xs tabular-nums text-ink-subtle sm:block">
                   {tf('notice.views', { n: n.views })}
                 </span>
               </button>
@@ -152,23 +153,45 @@ function NoticePage() {
             </li>
           )}
         </ol>
+        {/* ⚠ 고정/나머지로 나뉘어 그려지지만 **셈은 하나다** — 화면 사정으로 목록을 갈랐다고
+            발이 둘이 되면 "6건 중 2건 · 6건 중 3건"처럼 읽는 사람이 더해야 한다 (규약 §9) */}
+        {filtered.length > 0 && (
+          <ListFoot className="px-5 pb-4" total={noticeList.length} shown={filtered.length} />
+        )}
       </section>
 
       {/* 상세 — 읽고 닫는 것이라 우측 서랍 (본문 목록을 유지한 채) */}
       {reading && (
-        <Drawer title={tf('notice.drawerTitle', { id: reading.id })} onClose={() => setReading(null)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1">
+        <Drawer
+          title={tf('notice.drawerTitle', { id: reading.id })}
+          onClose={() => setReading(null)}
+          /* 발은 관문 슬롯으로 (규약 §7). 예전에는 몸 안에서 `flex h-full flex-col` 로
+             바닥에 붙이려 했는데, 그러면 **본문이 길 때 같이 밀려 올라간다** — 붙박이가
+             아니라 "내용이 짧을 때만 바닥에 있는 것"이었다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${CAT_CLS[reading.category]}`}>
                     {reading.category}
                   </span>
                   {reading.pinned && (
-                    <span className="text-[11px] font-semibold text-primary">{t('notice.pinned', '고정 공지')}</span>
+                    <span className="text-xs font-semibold text-primary">{t('notice.pinned', '고정 공지')}</span>
                   )}
                 </div>
-                <h3 className="mt-2 text-[15px] font-bold leading-snug text-ink">{reading.title}</h3>
+                <h3 className="mt-2 text-base font-bold leading-snug text-ink">{reading.title}</h3>
                 <p className="mt-1.5 text-xs text-ink-subtle">
                   {reading.author} · {reading.date} · {tf('notice.views', { n: reading.views })}
                 </p>
@@ -180,15 +203,6 @@ function NoticePage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-4 flex justify-end gap-2 border-t border-hairline pt-3.5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  {t('common.close')}
-                </button>
-              </div>
             </div>
           )}
         </Drawer>
@@ -196,7 +210,46 @@ function NoticePage() {
 
       {/* 작성 — 짧게 적고 닫는 일이라 모달 */}
       {writing && (
-        <Modal title={t('notice.write', '공지 작성')} onClose={() => setWriting(false)}>
+        <Modal
+          title={t('notice.write', '공지 작성')}
+          onClose={() => setWriting(false)}
+          /* 발은 **몸 밖**에 붙박이로 둔다 (규약 §7). 예전에는 이 줄이 내용 맨 끝에
+             있어서, 본문을 길게 쓰면 [등록]이 스크롤에 밀려 화면 밖으로 나갔다 —
+             다 채워 놓고 저장 버튼을 찾으러 다시 내려가야 했다.
+             주 동작은 오른쪽 끝(엄지 자리), 취소는 그 왼쪽 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setWriting(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
+              <CtaButton
+                disabled={newTitle.trim() === ''}
+                busyLabel={t('notice.submitting', '등록 중…')}
+                onAction={async () => {
+                  const ok = await apiSend('POST', '/notices', {
+                    title: newTitle,
+                    category: newCat,
+                    body: newBody,
+                    pinned: newPinned,
+                  })
+                  if (!ok) await simulate() // 서버 없는 시연 모드 — 버튼 로딩 감각만 유지
+                  setWriting(false)
+                  setNewTitle('')
+                  setNewBody('')
+                  reload()
+                  toast(t('notice.toast.posted', '공지를 등록했습니다 — 전체 알림으로도 발송됩니다'))
+                }}
+              >
+                {t('notice.submit', '등록')}
+              </CtaButton>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('notice.label.title', '제목')} <b className="text-danger-ink">*</b>
@@ -229,41 +282,11 @@ function NoticePage() {
           <div className="mt-3 flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">
             <span className="text-[13px]">
               <b className="font-medium text-ink">{t('notice.label.pinToTop', '상단 고정')}</b>
-              <span className="block text-[11px] text-ink-subtle">
+              <span className="block text-xs text-ink-subtle">
                 {t('notice.pinToTopDesc', '목록 위 고정 카드로 노출됩니다')}
               </span>
             </span>
             <Switch checked={newPinned} onChange={setNewPinned} label={t('notice.label.pinToTop', '상단 고정')} />
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setWriting(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3) */}
-            <CtaButton
-              disabled={newTitle.trim() === ''}
-              busyLabel={t('notice.submitting', '등록 중…')}
-              onAction={async () => {
-                const ok = await apiSend('POST', '/notices', {
-                  title: newTitle,
-                  category: newCat,
-                  body: newBody,
-                  pinned: newPinned,
-                })
-                if (!ok) await simulate() // 서버 없는 시연 모드 — 버튼 로딩 감각만 유지
-                setWriting(false)
-                setNewTitle('')
-                setNewBody('')
-                reload()
-                toast(t('notice.toast.posted', '공지를 등록했습니다 — 전체 알림으로도 발송됩니다'))
-              }}
-            >
-              {t('notice.submit', '등록')}
-            </CtaButton>
           </div>
         </Modal>
       )}

@@ -4,7 +4,7 @@
   "name": "Super Admin",
   "desc": "전체 시스템 관리 권한 — 회원·권한·메뉴 관리 포함",
   "system": true,
-  "assigned": 2,
+  "assigned": 1,
   "matrix": {
    "대시보드": [
     "조회"
@@ -67,10 +67,6 @@
    {
     "name": "김현대",
     "scopeLabel": "전체"
-   },
-   {
-    "name": "박서준",
-    "scopeLabel": "전체"
    }
   ],
   "features": [
@@ -92,7 +88,7 @@
   "name": "Admin",
   "desc": "서비스 운영 및 모니터링 권한 — 배포·검증 운영",
   "system": true,
-  "assigned": 5,
+  "assigned": 1,
   "matrix": {
    "대시보드": [
     "조회"
@@ -141,14 +137,6 @@
    {
     "name": "박준혁",
     "scopeLabel": "플랫폼운영팀"
-   },
-   {
-    "name": "이수진",
-    "scopeLabel": "전동화기술팀"
-   },
-   {
-    "name": "정민호",
-    "scopeLabel": "IT 전략팀"
    }
   ],
   "features": [
@@ -165,7 +153,7 @@
   "name": "Editor",
   "desc": "사양서 작성·수정 권한, 승인 요청 가능",
   "system": true,
-  "assigned": 18,
+  "assigned": 4,
   "matrix": {
    "대시보드": [
     "조회"
@@ -226,7 +214,7 @@
   "name": "Viewer",
   "desc": "사양서·지표 조회 전용 권한",
   "system": true,
-  "assigned": 41,
+  "assigned": 4,
   "matrix": {
    "대시보드": [
     "조회"

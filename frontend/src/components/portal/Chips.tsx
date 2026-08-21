@@ -7,11 +7,14 @@ export function ChipSelect<T extends string>({
   options,
   value,
   onChange,
+  label,
   mono,
 }: {
   options: ReadonlyArray<T>
   value: T
   onChange: (v: T) => void
+  /** 표시만 갈아끼운다 — 값은 옵션 그대로 (규약 §4-7) */
+  label?: (o: T) => string
   /** 코드성 값(타입 등)은 모노로 */
   mono?: boolean
 }) {
@@ -26,16 +29,16 @@ export function ChipSelect<T extends string>({
             aria-pressed={on}
             onClick={() => onChange(o)}
             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-              mono ? 'font-mono text-[11px]' : ''
+              mono ? 'font-mono text-xs' : ''
             } ${
               on
-                ? 'border-primary/50 bg-primary/15 text-primary'
+                ? 'border-primary/50 bg-primary/8 text-primary'
                 : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
             }`}
           >
             {/* 규약 16절 — 고른 것은 색만으로 말하지 않는다. 글자로도 남긴다 */}
             {on ? '✓ ' : ''}
-            {o}
+            {label ? label(o) : o}
           </button>
         )
       })}
@@ -48,12 +51,16 @@ export function ChipMulti<T extends string>({
   values,
   onChange,
   mono,
+  label,
 }: {
   options: ReadonlyArray<T>
   values: Array<T>
   onChange: (v: Array<T>) => void
   /** 코드성 값(Role 등)은 모노로 */
   mono?: boolean
+  /** 표시만 갈아끼운다 — 값은 언제나 옵션 그대로다 (규약 §4-7 번역은 라벨에만).
+   *  라벨을 주면 코드는 title 로 남아, 코드를 아는 사람도 확인할 수 있다. */
+  label?: (o: T) => string
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -64,17 +71,18 @@ export function ChipMulti<T extends string>({
             key={o}
             type="button"
             aria-pressed={on}
+            title={label ? o : undefined}
             onClick={() => onChange(on ? values.filter((x) => x !== o) : [...values, o])}
             className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95 ${
               mono ? 'font-mono text-[10px]' : ''
             } ${
               on
-                ? 'border-primary/50 bg-primary/15 text-primary'
+                ? 'border-primary/50 bg-primary/8 text-primary'
                 : 'border-hairline text-ink-subtle hover:border-primary/30 hover:text-ink'
             }`}
           >
             {on ? '✓ ' : ''}
-            {o}
+            {label ? label(o) : o}
           </button>
         )
       })}

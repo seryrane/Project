@@ -17,7 +17,9 @@ ROLES = [
         "name": "Super Admin",
         "desc": "전체 시스템 관리 권한 — 회원·권한·메뉴 관리 포함",
         "system": True,
-        "assigned": 2,
+        # ⚠ assigned 는 회원 명단(MEMBERS)에서 센 값이다 — 2/5/18/41 로 손으로 적혀 있던
+        #   동안 회원 관리(10명)와 권한 카드(합 66명)가 서로 다른 조직을 말했다(2026-08-18).
+        "assigned": 1,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회", "다운로드"],
@@ -33,7 +35,6 @@ ROLES = [
         "scope": {},
         "holders": [
             {"name": "김현대", "scopeLabel": "전체"},
-            {"name": "박서준", "scopeLabel": "전체"},
         ],
         # 대시보드 프리셋 파생용 기능 키 (frontend dashboardLayout ROLE_DEFS 대응)
         "features": [
@@ -47,7 +48,7 @@ ROLES = [
         "name": "Admin",
         "desc": "서비스 운영 및 모니터링 권한 — 배포·검증 운영",
         "system": True,
-        "assigned": 5,
+        "assigned": 1,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회", "다운로드"],
@@ -62,9 +63,8 @@ ROLES = [
         },
         "scope": {},
         "holders": [
+            # 이수진·정민호는 회원 명단에 없는 이름이었다 — 명단 밖 보유자는 유령이다
             {"name": "박준혁", "scopeLabel": "플랫폼운영팀"},
-            {"name": "이수진", "scopeLabel": "전동화기술팀"},
-            {"name": "정민호", "scopeLabel": "IT 전략팀"},
         ],
         "features": [
             "dashboard.read", "approval.read", "spec.read", "activity.read",
@@ -76,7 +76,7 @@ ROLES = [
         "name": "Editor",
         "desc": "사양서 작성·수정 권한, 승인 요청 가능",
         "system": True,
-        "assigned": 18,
+        "assigned": 4,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회"],
@@ -107,7 +107,7 @@ ROLES = [
         "name": "Viewer",
         "desc": "사양서·지표 조회 전용 권한",
         "system": True,
-        "assigned": 41,
+        "assigned": 4,
         "matrix": {
             "대시보드": ["조회"],
             "통계 & 분석": ["조회"],
@@ -160,8 +160,11 @@ NAV = [
         {"key": "faq", "label": "FAQ", "labelEn": "FAQ", "icon": "help", "to": "/faq"},
         {"key": "guide", "label": "사용자 가이드", "labelEn": "User Guide", "icon": "book", "to": "/guide"},
     ]},
-    # '시스템 알림'은 뺐다 — 갈 화면이 없는 메뉴였다(알림은 GNB 종 하나로 모은다)
+    # '시스템 알림'은 한 번 뺐다가 되살렸다 — 뺀 이유는 기능이 불필요해서가 아니라
+    # **갈 화면이 없어서**였다(규약 15·17절). /alerts 가 생겨 그 이유가 사라졌다.
+    # GNB 종은 "안 본 것"을 모으고, 이 메뉴는 "지금 상태 + 지난 이력"을 보러 오는 자리다.
     {"id": "system", "title": "시스템", "items": [
+        {"key": "alerts", "label": "시스템 알림", "labelEn": "System Alerts", "icon": "bell", "to": "/alerts"},
         {"key": "privacy", "label": "개인정보보호", "labelEn": "Privacy", "icon": "lock", "to": "/privacy"},
     ]},
 ]
@@ -174,7 +177,11 @@ NAV_REQUIRES = {
     "members": "회원 관리", "roles": "권한 관리", "menus": "메뉴 관리",
     "specs": "사양서 관리", "approvals": "승인 관리", "deploys": "배포 관리",
     "engine": "검증엔진", "results": "검증엔진", "reports": "검증엔진",
-    # 커뮤니티·가이드·알림은 최소 메뉴 — 권한으로 가리면 LNB 가 텅 빈다
+    # 커뮤니티·가이드는 최소 메뉴 — 권한으로 가리면 LNB 가 텅 빈다
+    # ⚠ 시스템 알림·개인정보보호는 관리자 자리인데 **매트릭스에 '시스템 운영' 낱말이 없다** —
+    # 지금은 '권한 관리' 조회를 대리 관문으로 쓴다(Super Admin·Admin 만 통과, 화면의
+    # roles 목록과 같은 결과). 본개발에서 권한 낱말이 늘면 여기부터 고친다.
+    "alerts": "권한 관리",
     "privacy": "권한 관리",
 }
 
@@ -244,6 +251,23 @@ FAQS = [
      "a": "검증 결과 조회에서 해당 실행을 열면 오류 상세가 보입니다.", "helpful": 12},
 ]
 
+# ── 사양서 카탈로그 (frontend/src/data/specs.ts 의 목록 축) ────────────────
+# ⚠⚠ 이름만 담는 **카탈로그**다. 본문(버전 이력·필드)은 아직 화면 mock 에 있다.
+# 이걸 서버로 올린 이유는 본문이 필요해서가 아니라 **권한 때문**이다: ⌘K 팔레트가
+# 정적 목록을 읽고 있어서, 사양서 관리 조회 권한이 없는 사람에게도 **사양서 이름이
+# 그대로 떴다.** 눌러서 막히는 게 아니라 있는지조차 몰라야 할 것의 이름이 새는 게
+# 문제다 — LNB 를 서버가 걸러 주는 것과 같은 이유로 여기도 서버가 거른다.
+SPECS = [
+    {"id": "SP-001", "name": "VN7 엔진 사양서", "category": "파워트레인",
+     "updated": "2026.07.15"},
+    {"id": "SP-002", "name": "전기차 배터리 규격서", "category": "전동화",
+     "updated": "2026.07.14"},
+    {"id": "SP-003", "name": "자율주행 센서 통합 규격", "category": "자율주행",
+     "updated": "2026.07.10"},
+    {"id": "SP-004", "name": "차체 구조 안전 기준서", "category": "차체/안전",
+     "updated": "2026.07.12"},
+]
+
 MEMBERS = [
     {"id": "u-01", "name": "김현대", "email": "hyundae.kim@hmg.com", "dept": "IT 전략팀",
      "grade": "Super Admin", "roles": ["KPI_ADMIN", "IBD_ADMIN"], "status": "활성",
@@ -269,12 +293,17 @@ MEMBERS = [
     {"id": "u-08", "name": "오지원", "email": "jiwon.oh@hmg.com", "dept": "디자인팀",
      "grade": "Viewer", "roles": [], "status": "잠금",
      "fido": False, "lastLogin": "2026.07.10 16:45"},
-    {"id": "u-09", "name": "윤성민", "email": "seongmin.yun@hmg.com", "dept": "플랫폼운영팀",
-     "grade": "Admin", "roles": ["DEPLOY_MANAGER"], "status": "활성",
-     "fido": True, "lastLogin": "2026.08.04 15:30"},
-    {"id": "u-10", "name": "박서준", "email": "seojun.park@hmg.com", "dept": "IT 전략팀",
-     "grade": "Super Admin", "roles": ["KPI_ADMIN"], "status": "활성",
-     "fido": True, "lastLogin": "2026.08.05 08:12"},
+    # ⚠ u-09·u-10 은 프런트 mock(data/members.ts U-009·U-010)과 **다른 사람**이었다
+    #   (윤성민 Admin/플랫폼운영팀 vs Editor/연구개발팀 · 박서준 vs 한지민) — 같은 화면이
+    #   서버 유무에 따라 다른 명단과 다른 권한 분포(SA 2 vs 1)를 보여 줬다(2026-08-18).
+    #   로스터 정본은 프런트 mock 쪽이다: 한지민은 지표 관리·검증엔진 화면이 담당자로
+    #   부르는 사람이라 명단에서 빠지면 유령 담당자가 된다.
+    {"id": "u-09", "name": "윤성민", "email": "sungmin.yoon@hmg.com", "dept": "연구개발팀",
+     "grade": "Editor", "roles": ["IBD_EDITOR"], "status": "활성",
+     "fido": True, "lastLogin": "2026.08.05 09:00"},
+    {"id": "u-10", "name": "한지민", "email": "jimin.han@hmg.com", "dept": "검증기술팀",
+     "grade": "Editor", "roles": ["VALIDATION_MANAGER"], "status": "활성",
+     "fido": True, "lastLogin": "2026.08.05 06:30"},
 ]
 
 AUDIT = [
@@ -320,6 +349,67 @@ EMBEDS = [
 ]
 
 
+# ── 챗봇이 셀 재료 (docs/챗봇_표준질의_설계.md 6절: "실제 CRUD 없다 — 지금은 시드를 센다") ──
+# frontend/src/data/{specs,approvals,kpi}.ts 의 mock 과 같은 값으로 맞춘다.
+# 검증 월별 실적(VALIDATION_MONTHLY)만 프런트에 대응 mock 이 없어 새로 만든 결정적 값이다
+# (난수 금지 — 서버 재기동마다 값이 바뀌면 "왜 어제와 다르냐"는 질문에 답할 수 없다).
+CHATBOT_SPEC_SUMMARY = [
+    {"id": "SP-001", "name": "VN7 엔진 사양서", "status": "승인 대기", "version": "v2.3",
+     "owner": "김민준", "updated": "2026.07.15"},
+    {"id": "SP-002", "name": "전기차 배터리 규격서", "status": "검토 중", "version": "v1.5",
+     "owner": "이서연", "updated": "2026.07.14"},
+    {"id": "SP-003", "name": "자율주행 센서 통합 규격", "status": "배포 완료", "version": "v3.1",
+     "owner": "박준혁", "updated": "2026.07.10"},
+    {"id": "SP-004", "name": "차체 구조 안전 기준서", "status": "초안", "version": "v4.0",
+     "owner": "최수진", "updated": "2026.07.12"},
+]
+
+CHATBOT_APPROVAL_QUEUE = [
+    {"id": "APR-2026-0115", "title": "VN7 엔진 사양서 v2.3", "specId": "SP-001", "version": "v2.3",
+     "requester": "김민준", "waitingDays": 3},
+    {"id": "APR-2026-0114", "title": "Release v3.1.1 운영 배포", "specId": None, "version": None,
+     "requester": "박준혁", "waitingDays": 2},
+    {"id": "APR-2026-0113", "title": "전기차 배터리 규격서 v1.5", "specId": "SP-002", "version": "v1.5",
+     "requester": "이서연", "waitingDays": 2},
+    {"id": "APR-2026-0112", "title": "정다은 편집 권한 상향", "specId": None, "version": None,
+     "requester": "윤성민", "waitingDays": 1},
+]
+
+# 최근 12개월(2025-09 ~ 2026-08) — 2026-04 는 일부러 넣은 이상치(챗봇 anomalies 검증용),
+# 2026-03~08 합계 3,804,000 · 평균 634,000 은 설계 문서 4절의 답 칸 예시와 맞춘 값이다.
+CHATBOT_VALIDATION_MONTHLY = [
+    {"month": "2025-09", "volume": 540000, "errors": 1150},
+    {"month": "2025-10", "volume": 558000, "errors": 1080},
+    {"month": "2025-11", "volume": 575000, "errors": 1240},
+    {"month": "2025-12", "volume": 590000, "errors": 1190},
+    {"month": "2026-01", "volume": 600000, "errors": 1210},
+    {"month": "2026-02", "volume": 610000, "errors": 1170},
+    {"month": "2026-03", "volume": 690000, "errors": 1210},
+    {"month": "2026-04", "volume": 301000, "errors": 2400},
+    {"month": "2026-05", "volume": 712000, "errors": 980},
+    {"month": "2026-06", "volume": 697000, "errors": 1050},
+    {"month": "2026-07", "volume": 700000, "errors": 1120},
+    {"month": "2026-08", "volume": 704000, "errors": 1090},
+]
+
+CHATBOT_KPI_METRICS = [
+    {"id": "K-001", "name": "경로탐색 성공률", "area": "경로탐색", "status": "승인", "cycle": "일 1회"},
+    {"id": "K-002", "name": "경로탐색 평균 응답시간", "area": "경로탐색", "status": "승인", "cycle": "일 1회"},
+    {"id": "K-003", "name": "CCS 연결 성공률", "area": "CCS", "status": "승인", "cycle": "일 1회"},
+    {"id": "K-004", "name": "CCS 세션 유지율", "area": "CCS", "status": "검토 중", "cycle": "일 1회"},
+    {"id": "K-005", "name": "검색 응답 정확도", "area": "검색", "status": "승인", "cycle": "일 1회"},
+    {"id": "K-006", "name": "검색 무결과율", "area": "검색", "status": "검토 중", "cycle": "일 1회"},
+    {"id": "K-007", "name": "IVI 앱 일 실행 수", "area": "IVI", "status": "승인", "cycle": "일 1회"},
+    {"id": "K-008", "name": "IVI OTA 업데이트 완료율", "area": "IVI", "status": "초안", "cycle": "주 1회"},
+]
+
+CHATBOT_MY_TODO = [
+    {"title": "VN7 엔진 사양서 v2.3 승인 검토", "context": "승인 대기 · 내 차례", "hint": "3일 경과"},
+    {"title": "전기차 배터리 규격서 v1.5 승인 검토", "context": "승인 대기 · 내 차례", "hint": "2일 경과"},
+    {"title": "8월 정기 점검 공지 확인", "context": "공지사항 N-021", "hint": "8/9(토) 예정"},
+]
+
+
 def now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -342,6 +432,18 @@ def seed_if_empty() -> None:
         db.kv_put("whatsnew", WHATSNEW)
     if db.kv_get("embeds") is None:
         db.kv_put("embeds", EMBEDS)
+    # 사양서 카탈로그 — 사양서 CRUD 가 아직 없어 **코드가 정본**이다(화면에서 못 고친다).
+    # nav 와 같은 이유로 항상 덮는다: 비어 있을 때만 채우면 목록을 고쳐도 옛 값이 계속 나온다.
+    db.kv_put("specs", SPECS)
+
+    # 챗봇 재료 — nav/nav_requires 와 같은 이유로 항상 덮는다: 화면에서 편집하는 값이 아니라
+    # 코드가 정본이고(사양서·검증 CRUD 가 아직 없어 이 시드 자체가 "셀 재료" 다), 비어 있을 때만
+    # 채우면 코드에서 값을 고쳐도 기존 DB 가 재기동 후에도 옛 값을 계속 낸다.
+    db.kv_put("chatbot_spec_summary", CHATBOT_SPEC_SUMMARY)
+    db.kv_put("chatbot_approval_queue", CHATBOT_APPROVAL_QUEUE)
+    db.kv_put("chatbot_validation_monthly", CHATBOT_VALIDATION_MONTHLY)
+    db.kv_put("chatbot_kpi_metrics", CHATBOT_KPI_METRICS)
+    db.kv_put("chatbot_my_todo", CHATBOT_MY_TODO)
 
     with db.connect() as conn:
         if conn.execute("SELECT COUNT(*) c FROM notices").fetchone()["c"] == 0:

@@ -102,27 +102,27 @@
  {
   "id": "u-09",
   "name": "윤성민",
-  "email": "seongmin.yun@hmg.com",
-  "dept": "플랫폼운영팀",
-  "grade": "Admin",
+  "email": "sungmin.yoon@hmg.com",
+  "dept": "연구개발팀",
+  "grade": "Editor",
   "roles": [
-   "DEPLOY_MANAGER"
+   "IBD_EDITOR"
   ],
   "status": "활성",
   "fido": true,
-  "lastLogin": "2026.08.04 15:30"
+  "lastLogin": "2026.08.05 09:00"
  },
  {
   "id": "u-10",
-  "name": "박서준",
-  "email": "seojun.park@hmg.com",
-  "dept": "IT 전략팀",
-  "grade": "Super Admin",
+  "name": "한지민",
+  "email": "jimin.han@hmg.com",
+  "dept": "검증기술팀",
+  "grade": "Editor",
   "roles": [
-   "KPI_ADMIN"
+   "VALIDATION_MANAGER"
   ],
   "status": "활성",
   "fido": true,
-  "lastLogin": "2026.08.05 08:12"
+  "lastLogin": "2026.08.05 06:30"
  }
 ]

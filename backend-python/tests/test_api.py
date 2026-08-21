@@ -2,6 +2,7 @@
 
 from fastapi.testclient import TestClient
 
+from app import db
 from app.main import app
 
 client = TestClient(app)
@@ -69,6 +70,14 @@ def test_member_lock_toggle_and_audit() -> None:
     # 잠금 처리 전 건이 감사 로그에 남는다 — 화면이 아니라 서버가 남긴다
     audit = client.get("/api/audit").json()
     assert any(locked["name"] in a["target"] for a in audit)
+
+
+def test_audit_sorted_newest_first() -> None:
+    """⚠ 시드(최신순 INSERT)와 서버 기록분이 한 목록에 섞인다 — seq DESC 는 시드를
+    뒤집어 위는 최신순·꼬리는 오래된순인 목록을 내보냈다(2026-08-18 화면 실측)."""
+    audit = client.get("/api/audit").json()
+    ats = [a["at"] for a in audit]
+    assert ats == sorted(ats, reverse=True)
 
 
 def test_login_direct_and_me_switches() -> None:
@@ -152,6 +161,32 @@ def test_self_lock_submission_rejected() -> None:
         },
     )
     assert ok.json()["status"] == "접수"
+
+
+def test_spec_catalog_follows_permission() -> None:
+    """사양서 카탈로그도 권한을 탄다 — ⌘K 팔레트가 정적 목록을 읽던 시절에는 사양서
+    관리 조회 권한이 없어도 **이름이 그대로 보였다.** 메뉴와 같은 저울(can_view)을 쓴다.
+
+    ⚠ `/submissions` 는 **접수만** 한다(매트릭스를 적용하지 않는다) — 권한을 바꾸려면
+    역할 정본을 직접 건드려야 한다. 상신으로 바꾸려다 한 번 헛짚었다.
+    """
+    assert any(s["name"] == "VN7 엔진 사양서" for s in client.get("/api/specs").json())
+
+    before = db.kv_get("roles")
+    stripped = [
+        {**r, "matrix": {**r["matrix"], "사양서 관리": []}} if r["key"] == "super" else r
+        for r in before
+    ]
+    db.kv_put("roles", stripped)
+    try:
+        blocked = client.get("/api/specs")
+        # 못 보는 사람에게는 **빈 목록** — 403 이 아니다(없는 것과 막힌 것을 가른다)
+        assert blocked.status_code == 200
+        assert blocked.json() == []
+    finally:
+        db.kv_put("roles", before)  # 뒤 테스트의 전제를 바꾸지 않는다
+
+    assert any(s["name"] == "VN7 엔진 사양서" for s in client.get("/api/specs").json())
 
 
 def test_prefs_roundtrip() -> None:

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
@@ -19,6 +20,27 @@ export const Route = createFileRoute('/validation-engine')({ component: Validati
 /* 셀렉트 칩의 내부 값은 키 — 화면에 보일 때만 사전을 입힌다 (언어를 바꿔도 선택이 안 깨진다) */
 const STATUS_KEYS = ['active', 'inactive'] as const
 const FREQ_KEYS = ['daily', 'weekly', 'hourly'] as const
+
+/* 증감 칩 — charts.tsx StatTile 의 DeltaChip 과 같은 모양. 관문(components/**) 은 고칠 수
+   없고 비공개 함수라 가져올 수도 없어, 라우트 안에 같은 모양을 그대로 옮겨 쓴다 (규약 §10) */
+function DeltaChip({ delta, good }: { delta: string; good: boolean }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
+        good ? 'bg-deployed-bg text-deployed-ink' : 'bg-danger-bg text-danger-ink'
+      }`}
+    >
+      <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+        {delta.startsWith('-') ? (
+          <path d="M1 2.5h6L4 6.5z" fill="currentColor" />
+        ) : (
+          <path d="M1 5.5h6L4 1.5z" fill="currentColor" />
+        )}
+      </svg>
+      {delta}
+    </span>
+  )
+}
 
 function ResultBadge({ result }: { result: ValidationEngine['lastResult'] }) {
   return (
@@ -82,11 +104,19 @@ function ValidationEnginePage() {
     }, 350)
   }
 
+  // 지난 7일 누적 오류 — 실 이력이 없는 프로토타입이라 라우트 안 결정적 상수로 둔다
+  // (난수 금지, 규약 §10). 오류는 늘면 나쁘다.
+  const cumulativeErrors = 56
+  const PREV_7D_ERRORS = 45
+  const errorsDelta = cumulativeErrors - PREV_7D_ERRORS
+  const fmtDelta = (n: number) => `${n >= 0 ? '+' : ''}${n}`
+
   const stats = [
     {
       label: t('engine.stat.total', '전체 엔진'),
       value: tf('engine.countUnit', { n: engines.length }, '{n}개'),
       sub: tf('engine.activeUnit', { n: engines.filter((e) => e.active).length }, '활성 {n}개'),
+      // 등록 엔진 수는 관리 대장 헤드카운트라 전과 견줘도 뜻이 서지 않는다 — 면(①)만 적용
     },
     {
       label: t('engine.stat.schedules', '등록 스케줄'),
@@ -96,14 +126,22 @@ function ValidationEnginePage() {
         { n: Object.values(engineSchedules).flat().filter((s) => s.active).length },
         '활성 {n}개',
       ),
+      // 등록 스케줄 수도 관리 대장 헤드카운트 — 증감 없음
     },
-    // '성공'/'부분성공'은 엔진 실행 결과 상태값이라 그대로 둔다 (규약)
-    { label: t('engine.stat.todayRuns', '오늘 실행'), value: tf('engine.timesUnit', { n: 2 }, '{n}회'), sub: '성공 1 / 부분성공 1' },
+    {
+      // '성공'/'부분성공'은 엔진 실행 결과 상태값이라 그대로 둔다 (규약)
+      // 오늘 실행 횟수는 늘고 주는 방향이 좋고 나쁨을 가르지 않는다 — 증감 없음
+      label: t('engine.stat.todayRuns', '오늘 실행'),
+      value: tf('engine.timesUnit', { n: 2 }, '{n}회'),
+      sub: '성공 1 / 부분성공 1',
+    },
     {
       label: t('engine.stat.cumulativeErrors', '누적 오류'),
-      value: tf('engine.casesUnit', { n: 56 }, '{n}건'),
-      sub: t('engine.last7days', '최근 7일 기준'),
+      value: tf('engine.casesUnit', { n: cumulativeErrors }, '{n}건'),
+      sub: t('engine.last7days', '최근 7일 기준 · 이전 7일 대비'),
       cls: 'text-danger-ink',
+      delta: fmtDelta(errorsDelta),
+      deltaGood: errorsDelta <= 0,
     },
   ]
 
@@ -130,10 +168,14 @@ function ValidationEnginePage() {
 
       <div className="anim-fade-up mt-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="card-spotlight rounded-2xl border border-hairline bg-surface px-5 py-4">
-            <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-subtle">
-              {s.label} · {s.sub}
+          <div key={s.label} className="card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface">
+            <div className="flex items-center justify-between gap-2 surface-head px-4 py-2">
+              <span className="truncate text-xs text-ink-subtle">{s.label}</span>
+              {s.delta && <DeltaChip delta={s.delta} good={s.deltaGood} />}
+            </div>
+            <div className="px-4 py-3.5">
+              <div className={`text-2xl font-semibold tabular-nums ${s.cls ?? 'text-ink'}`}>{s.value}</div>
+              <div className="mt-1 text-xs text-ink-subtle">{s.sub}</div>
             </div>
           </div>
         ))}
@@ -148,24 +190,25 @@ function ValidationEnginePage() {
             <li
               key={e.id}
               style={{ animationDelay: `${i * 60}ms` }}
-              className={`card-hover card-spotlight anim-fade-up rounded-2xl border bg-surface ${
+              className={`card-hover card-spotlight anim-fade-up overflow-hidden rounded-2xl border bg-surface ${
                 open ? 'border-primary/40' : 'border-hairline'
               } ${running != null ? 'card-loading' : ''}`}
             >
-              <div className="flex flex-wrap items-center gap-3 p-5">
+              {/* 머리 — 엔진이 무엇이고 지금 어떤 상태인가. 펼쳤을 때만 면으로 가른다:
+                  ⚠ **접힌 카드는 머리만 있는 물건이라 가를 것이 없다** — 그때도 면을 깔면
+                  카드가 통째로 회색이 되어 "일하는 면"이 사라진다. 아래를 가르는 선은
+                  펼친 몸이 이미 border-t 로 갖고 있다 (규약 §7) */}
+              <div className={`flex flex-wrap items-center gap-3 px-5 py-4 ${open ? 'bg-canvas/50' : ''}`}>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <rect x="7" y="7" width="10" height="10" rx="2" />
-                    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
-                  </svg>
+                  <Icon name="engine" size="lg" />
                 </span>
                 {/* basis 가 없으면 flex-wrap 줄에서 이 블록이 줄바꿈 대신 최소폭까지
                     짓눌린다 — 한 글자 세로줄(실기기 실증). 좁으면 액션이 다음 줄로 간다 */}
                 <button type="button" onClick={() => setExpanded(open ? null : e.id)} className="min-w-0 flex-1 basis-64 text-left">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-[15px] font-semibold text-ink">{e.name}</span>
+                    <span className="text-base font-semibold text-ink">{e.name}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         e.active ? 'bg-deployed-bg text-deployed-ink' : 'bg-chip text-ink-subtle'
                       }`}
                     >
@@ -177,7 +220,7 @@ function ValidationEnginePage() {
                   <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-subtle">
                     <span>
                       {t('engine.label.target', '대상')}:{' '}
-                      <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-[11px]">{e.targetTable}</code>
+                      <code className="rounded bg-chip px-1.5 py-0.5 font-mono text-xs">{e.targetTable}</code>
                     </span>
                     <span className="tabular-nums">{tf('engine.totalRuns', { n: e.runs }, '총 실행: {n}회')}</span>
                     <span className="tabular-nums">
@@ -210,7 +253,10 @@ function ValidationEnginePage() {
                       onClick={() => run(e)}
                       className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                     >
-                      {t('engine.runNow', '⚡ 즉시 실행')}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon name="bolt" />
+                        {t('engine.runNow', '즉시 실행')}
+                      </span>
                     </button>
                   )}
                   <button
@@ -219,7 +265,7 @@ function ValidationEnginePage() {
                     onClick={() => setEditing(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
                   >
-                    ✎
+                    <Icon name="edit" />
                   </button>
                   <button
                     type="button"
@@ -227,7 +273,7 @@ function ValidationEnginePage() {
                     onClick={() => setDeleting(e)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
-                    🗑
+                    <Icon name="trash" />
                   </button>
                   <button
                     type="button"
@@ -235,9 +281,12 @@ function ValidationEnginePage() {
                     onClick={() => setExpanded(open ? null : e.id)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-chip hover:text-ink"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? 'rotate-90' : ''}`} aria-hidden>
-                      <path d="m9 6 6 6-6 6" />
-                    </svg>
+                    <span
+                      className={`transition-transform ${open ? 'rotate-0' : '-rotate-90'}`}
+                      aria-hidden
+                    >
+                      <Icon name="chevronDown" size="sm" />
+                    </span>
                   </button>
                 </span>
               </div>
@@ -247,8 +296,12 @@ function ValidationEnginePage() {
                   <div className="mt-4 flex gap-1 rounded-lg border border-hairline bg-canvas/50 p-1 text-xs w-fit">
                     {(
                       [
-                        { key: 'code', label: t('engine.tab.code', '</> Python 함수') },
-                        { key: 'schedule', label: `${t('engine.tab.schedule', '📅 스케줄')} (${schedules.length})` },
+                        { key: 'code', label: t('engine.tab.code', '</> Python 함수'), icon: null },
+                        {
+                          key: 'schedule',
+                          label: `${t('engine.tab.schedule', '스케줄')} (${schedules.length})`,
+                          icon: <Icon name="calendar" />,
+                        },
                       ] as const
                     ).map((tb) => (
                       <button
@@ -259,7 +312,10 @@ function ValidationEnginePage() {
                           tab === tb.key ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'
                         }`}
                       >
-                        {tb.label}
+                        <span className="inline-flex items-center gap-1.5">
+                          {tb.icon}
+                          {tb.label}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -288,7 +344,7 @@ function ValidationEnginePage() {
                             key={s3.id}
                             className="flex flex-wrap items-center gap-3 rounded-xl border border-hairline px-4 py-3 text-[13px]"
                           >
-                            <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                            <span className="rounded-full bg-primary/12 px-2 py-0.5 text-xs font-semibold text-primary">
                               {s3.freq}
                             </span>
                             <span className="font-medium text-ink">{s3.time}</span>
@@ -357,6 +413,34 @@ function ValidationEnginePage() {
           }
           onClose={() => setEditing(null)}
           wide
+          /* ⚠ 발이 특히 절실한 자리 — 안에 **12줄짜리 코드 편집기**가 있다. Python 함수를
+             다 쓰고 나면 [등록]이 화면 밖으로 나가 있어서, 저장하려고 코드를 지나 한참
+             내려가야 했다(규약 §7 "발은 붙박이. 몸에 두면 밀려서 사라진다") */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(null)
+                  toast(
+                    editing === 'new'
+                      ? t('engine.toast.registered', '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요')
+                      : t('engine.toast.editSaved', '엔진 수정을 저장했습니다'),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {editing === 'new' ? t('engine.submitNew', '엔진 등록') : t('engine.submitEdit', '수정 저장')}
+              </button>
+            </div>
+          }
         >
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[1fr_180px]">
             <label className="block">
@@ -434,35 +518,41 @@ function ValidationEnginePage() {
               '⚠ 함수는 반드시 def validate_*(records) 형태이고 list를 반환해야 합니다.',
             )}
           </p>
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(null)
-                toast(
-                  editing === 'new'
-                    ? t('engine.toast.registered', '엔진을 등록했습니다 — 스케줄을 추가해 자동 실행하세요')
-                    : t('engine.toast.editSaved', '엔진 수정을 저장했습니다'),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {editing === 'new' ? t('engine.submitNew', '엔진 등록') : t('engine.submitEdit', '수정 저장')}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* 스케줄 추가 */}
       {scheduling && (
-        <Modal title={t('engine.modal.addSchedule', '스케줄 추가')} onClose={() => setScheduling(false)}>
+        <Modal
+          title={t('engine.modal.addSchedule', '스케줄 추가')}
+          onClose={() => setScheduling(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setScheduling(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduling(false)
+                  toast(
+                    t(
+                      'engine.toast.scheduleRegistered',
+                      '스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('engine.submitSchedule', '스케줄 등록')}
+              </button>
+            </div>
+          }
+        >
           <div>
             <span className="text-xs font-medium text-ink-subtle">
               {t('engine.label.engine', '검증 엔진')} <b className="text-danger-ink">*</b>
@@ -505,36 +595,37 @@ function ValidationEnginePage() {
             </span>
             <Switch checked={schedOn} onChange={setSchedOn} label={t('engine.schedToggleAria', '스케줄 활성화')} />
           </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setScheduling(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setScheduling(false)
-                toast(
-                  t(
-                    'engine.toast.scheduleRegistered',
-                    '스케줄을 등록했습니다 — 다음 실행 시각에 자동으로 검증합니다',
-                  ),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('engine.submitSchedule', '스케줄 등록')}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* 삭제 확인 — 되돌릴 수 없는 것에만 묻는다 (규약 §2) */}
       {deleting && (
-        <Modal title={t('engine.modal.delete', '엔진 삭제')} onClose={() => setDeleting(null)}>
+        <Modal
+          title={t('engine.modal.delete', '엔진 삭제')}
+          onClose={() => setDeleting(null)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleting(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEngines((list) => list.filter((x) => x.id !== deleting.id))
+                  setDeleting(null)
+                  toast(tf('engine.toast.deleted', { name: deleting.name }, '{name}을 삭제했습니다'))
+                }}
+                className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                {t('common.delete', '삭제')}
+              </button>
+            </div>
+          }
+        >
           <p className="text-[13px] leading-relaxed text-ink-muted">
             {tf(
               'engine.deleteConfirm',
@@ -542,26 +633,6 @@ function ValidationEnginePage() {
               '{name}을 삭제합니다. 연결된 스케줄 {n}개도 함께 삭제되고, 되돌릴 수 없습니다. 지난 검증 결과·리포트는 남습니다.',
             )}
           </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeleting(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel', '취소')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEngines((list) => list.filter((x) => x.id !== deleting.id))
-                setDeleting(null)
-                toast(tf('engine.toast.deleted', { name: deleting.name }, '{name}을 삭제했습니다'))
-              }}
-              className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              {t('common.delete', '삭제')}
-            </button>
-          </div>
         </Modal>
       )}
     </AppShell>

@@ -87,7 +87,7 @@ function SignupPage() {
                 emailHint ? 'border-danger-ink/50' : 'border-hairline'
               }`}
             />
-            {emailHint && <span className="mt-1 block text-[11px] text-danger-ink">{emailHint}</span>}
+            {emailHint && <span className="mt-1 block text-xs text-danger-ink">{emailHint}</span>}
           </label>
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">{t('signup.dept')}</span>
@@ -111,7 +111,7 @@ function SignupPage() {
                   pwHint ? 'border-danger-ink/50' : 'border-hairline'
                 }`}
               />
-              {pwHint && <span className="mt-1 block text-[11px] text-danger-ink">{pwHint}</span>}
+              {pwHint && <span className="mt-1 block text-xs text-danger-ink">{pwHint}</span>}
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">{t('signup.pw2')} <b className="text-danger-ink">*</b></span>
@@ -125,12 +125,12 @@ function SignupPage() {
                   pw2Hint ? 'border-danger-ink/50' : 'border-hairline'
                 }`}
               />
-              {pw2Hint && <span className="mt-1 block text-[11px] text-danger-ink">{pw2Hint}</span>}
+              {pw2Hint && <span className="mt-1 block text-xs text-danger-ink">{pw2Hint}</span>}
             </label>
           </div>
 
           {error && (
-            <p className="rounded-xl border border-danger-ink/30 bg-danger-bg px-3.5 py-2.5 text-[12px] leading-relaxed text-danger-ink">
+            <p className="rounded-xl border border-danger-ink/30 bg-danger-bg px-3.5 py-2.5 text-xs leading-relaxed text-danger-ink">
               {error}
             </p>
           )}
@@ -159,7 +159,7 @@ function SignupPage() {
           </CtaButton>
         </form>
 
-        <p className="mt-4 text-center text-[12px] text-ink-subtle">
+        <p className="mt-4 text-center text-xs text-ink-subtle">
           {t('signup.haveAccount')}{' '}
           <Link to="/login" className="font-medium text-primary hover:underline">
             {t('login.title')}

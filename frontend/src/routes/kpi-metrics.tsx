@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
+import { DataTable } from '#/components/portal/DataTable'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Drawer } from '#/components/portal/Drawer'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { useToast } from '#/components/portal/toast'
@@ -10,8 +12,21 @@ import { KPI_AREAS, METRIC_STATUS_CLS, kpiMetrics } from '#/data/kpi'
 import type { KpiMetric } from '#/data/kpi'
 import { apiSend } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
+import { orNone, pickOne } from '#/lib/urlState'
 
-export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage })
+const ALL_AREA = '전체'
+
+/** 보고 있는 상태는 주소에 둔다 (lib/urlState.ts) */
+interface KpiSearch {
+  area?: string
+}
+
+export const Route = createFileRoute('/kpi-metrics')({
+  component: KpiMetricsPage,
+  validateSearch: (search: Record<string, unknown>): KpiSearch => ({
+    area: pickOne(search.area, KPI_AREAS),
+  }),
+})
 
 /**
  * 지표 관리 (FR-070) — 지표 정의서가 정본이다: 정의·산식·원천 테이블·갱신 주기.
@@ -21,11 +36,14 @@ export const Route = createFileRoute('/kpi-metrics')({ component: KpiMetricsPage
 function KpiMetricsPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
-  const [area, setArea] = useState('전체')
+  const { area = ALL_AREA } = Route.useSearch()
+  const navigate = useNavigate()
+  const setArea = (v: string) =>
+    void navigate({ to: '/kpi-metrics', search: { area: orNone(v, ALL_AREA) } })
   const [detail, setDetail] = useState<KpiMetric | null>(null)
 
   const rows = useMemo(
-    () => kpiMetrics.filter((m) => area === '전체' || m.area === area),
+    () => kpiMetrics.filter((m) => area === ALL_AREA || m.area === area),
     [area],
   )
   const approved = kpiMetrics.filter((m) => m.status === '승인').length
@@ -58,82 +76,132 @@ function KpiMetricsPage() {
             한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
         <ChipSelect
           options={[allLabel, ...KPI_AREAS]}
-          value={area === '전체' ? allLabel : area}
-          onChange={(v) => setArea(v === allLabel ? '전체' : v)}
+          value={area === ALL_AREA ? allLabel : area}
+          onChange={(v) => setArea(v === allLabel ? ALL_AREA : v)}
         />
       </div>
 
       {/* 시트성 표 — 산식·원천을 나란히 비교하는 화면이라 카드로 펴지 않는다 */}
       <section className="anim-fade-up card-spotlight mt-4 rounded-2xl border border-hairline bg-surface">
-        <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3.5">
+        <div className="flex items-center justify-between surface-head px-5 py-3.5">
           <h2 className="text-sm font-semibold text-ink">{tf('kpi-metrics.sectionTitle', { n: rows.length })}</h2>
-          <span className="text-[11px] text-ink-subtle">
+          <span className="text-xs text-ink-subtle">
             {t('kpi-metrics.sectionHint', '행을 누르면 정의 상세 · 미승인 지표는 대시보드 비표출')}
           </span>
         </div>
-        <div className="table-scroll">
-          <table className="w-full min-w-[760px] border-collapse text-[13px]">
-            <thead>
-              <tr className="border-b border-hairline bg-canvas/60 text-left text-xs text-ink-subtle">
-                <th className="px-4 py-2.5 font-medium">{t('kpi-metrics.th.metric', '지표')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.area', '영역')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.formula', '산식')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.sourceTable', '원천 테이블')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.cycle', '주기')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.owner', '담당')}</th>
-                <th className="px-3 py-2.5 font-medium">{t('kpi-metrics.th.approval', '승인')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((m) => (
-                <tr
-                  key={m.id}
-                  onClick={() => setDetail(m)}
-                  className="cursor-pointer border-b border-hairline/60 transition-colors last:border-0 hover:bg-chip"
-                >
-                  <td className="px-4 py-2.5">
+        {/* ⚠ 이 표에는 **빈 상태 행이 없었다** — 영역 칩으로 걸러 0건이 되면 머리줄만
+            남고 아무 말이 없었다(2026-08-13 실측). 관문으로 옮기면 그런 빠짐이 화면마다
+            생기지 않는다 (규약 §9). */}
+        <div className="p-4 pc:px-5">
+          <DataTable
+            rows={rows}
+            rowKey={(m) => m.id}
+            onRowClick={setDetail}
+            minWidth={760}
+            empty={{
+              title: t('kpi-metrics.empty', '이 영역에 등록된 지표가 없습니다'),
+              hint: t('kpi-metrics.emptyHint', '영역 칩을 [전체]로 바꾸면 모든 지표를 봅니다'),
+            }}
+            columns={[
+              {
+                header: t('kpi-metrics.th.metric', '지표'),
+                cell: (m) => (
+                  <>
                     <span className="block font-medium text-ink">{m.name}</span>
                     <span className="block font-mono text-[10px] text-ink-subtle">{m.id}</span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5">
-                    <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted">
-                      {m.area}
-                    </span>
-                  </td>
-                  <td className="max-w-56 truncate px-3 py-2.5 font-mono text-[11px] text-ink-muted">
-                    {m.formula}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-[11px] text-ink-subtle">
-                    {m.sourceTable}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.cycle}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-ink-muted">{m.owner}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
-                      {m.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </>
+                ),
+              },
+              {
+                header: t('kpi-metrics.th.area', '영역'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (m) => (
+                  <span className="rounded-full border border-hairline px-1.5 py-0.5 text-[10px] text-ink-muted">
+                    {m.area}
+                  </span>
+                ),
+              },
+              {
+                header: t('kpi-metrics.th.formula', '산식'),
+                cellClassName: 'max-w-56 truncate font-mono text-xs text-ink-muted',
+                cell: (m) => m.formula,
+              },
+              {
+                header: t('kpi-metrics.th.sourceTable', '원천 테이블'),
+                cellClassName: 'whitespace-nowrap font-mono text-xs text-ink-subtle',
+                cell: (m) => m.sourceTable,
+              },
+              {
+                header: t('kpi-metrics.th.cycle', '주기'),
+                cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+                cell: (m) => m.cycle,
+              },
+              {
+                header: t('kpi-metrics.th.owner', '담당'),
+                cellClassName: 'whitespace-nowrap text-xs text-ink-muted',
+                cell: (m) => m.owner,
+              },
+              {
+                header: t('kpi-metrics.th.approval', '승인'),
+                cellClassName: 'whitespace-nowrap',
+                cell: (m) => (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[m.status]}`}>
+                    {m.status}
+                  </span>
+                ),
+              },
+            ]}
+          />
+          <ListFoot total={kpiMetrics.length} shown={rows.length} />
         </div>
       </section>
 
       {/* 정의 상세 — 목록을 훑으며 보는 상세라 서랍 (규약 §1) */}
       {detail && (
-        <Drawer title={tf('kpi-metrics.detailTitle', { name: detail.name })} onClose={() => setDetail(null)}>
-          {(close) => (
-            <div className="flex h-full flex-col">
-              <div className="flex-1 space-y-3">
+        <Drawer
+          title={tf('kpi-metrics.detailTitle', { name: detail.name })}
+          onClose={() => setDetail(null)}
+          /* 발은 관문 슬롯으로 (규약 §7) — 몸 안에서 `flex h-full flex-col` 로 바닥에
+             붙이던 것은 내용이 길어지면 같이 밀려 올라갔다 */
+          footer={(close) => (
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+              {detail.status === '검토 중' && (
+                <CtaButton
+                  busyLabel={t('kpi-metrics.submitting')}
+                  onAction={async () => {
+                    const ok = await apiSend('POST', '/submissions', {
+                      kind: 'kpi-metric-approval',
+                      payload: { metricId: detail.id, name: detail.name },
+                    })
+                    if (!ok) await simulate()
+                    close()
+                    toast(tf('kpi-metrics.toast.submitted', { name: detail.name }))
+                  }}
+                >
+                  {t('kpi-metrics.submitApproval')}
+                </CtaButton>
+              )}
+            </div>
+          )}
+        >
+          {() => (
+            <div>
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] text-ink-muted">
                     {detail.area}
                   </span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${METRIC_STATUS_CLS[detail.status]}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${METRIC_STATUS_CLS[detail.status]}`}>
                     {detail.status}
                   </span>
-                  <span className="ml-auto font-mono text-[11px] text-ink-subtle">{detail.id}</span>
+                  <span className="ml-auto font-mono text-xs text-ink-subtle">{detail.id}</span>
                 </div>
                 <p className="text-[13px] leading-relaxed text-ink-muted">{detail.desc}</p>
                 {(
@@ -145,7 +213,8 @@ function KpiMetricsPage() {
                   ] as const
                 ).map(([label, value, mono]) => (
                   <div key={label} className="rounded-xl border border-hairline/70 bg-canvas/40 px-3.5 py-2.5">
-                    <span className="block text-[11px] text-ink-subtle">{label}</span>
+                    {/* 값 위의 이름표 — 정본은 styles.css `.section-label` (덮개마다 손대중 금지) */}
+                    <span className="section-label block">{label}</span>
                     <span className={`mt-0.5 block text-[13px] text-ink ${mono ? 'font-mono text-xs' : ''}`}>
                       {value}
                     </span>
@@ -162,7 +231,7 @@ function KpiMetricsPage() {
                       <b className="block font-semibold text-ink">
                         {tf('kpi-metrics.linkedSpec', { id: detail.linkedSpec })}
                       </b>
-                      <span className="block text-[11px] text-ink-subtle">
+                      <span className="block text-xs text-ink-subtle">
                         {t('kpi-metrics.linkedSpecDesc', '이 지표의 원천 필드를 정의하는 IDMS 사양서로 이동')}
                       </span>
                     </span>
@@ -170,37 +239,12 @@ function KpiMetricsPage() {
                   </Link>
                 )}
                 {detail.status !== '승인' && (
-                  <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-[11px] leading-relaxed text-ink-subtle">
+                  <p className="rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">
                     {t(
                       'kpi-metrics.notApprovedNotice',
                       '미승인 지표는 대시보드에 표출되지 않습니다 — 산식 확정 후 현업 승인 절차를 거칩니다 (FR-070 AC②).',
                     )}
                   </p>
-                )}
-              </div>
-              <div className="mt-4 flex justify-end gap-2 border-t border-hairline pt-3.5">
-                <button
-                  type="button"
-                  onClick={close}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  {t('common.close')}
-                </button>
-                {detail.status === '검토 중' && (
-                  <CtaButton
-                    busyLabel={t('kpi-metrics.submitting')}
-                    onAction={async () => {
-                      const ok = await apiSend('POST', '/submissions', {
-                        kind: 'kpi-metric-approval',
-                        payload: { metricId: detail.id, name: detail.name },
-                      })
-                      if (!ok) await simulate()
-                      close()
-                      toast(tf('kpi-metrics.toast.submitted', { name: detail.name }))
-                    }}
-                  >
-                    {t('kpi-metrics.submitApproval')}
-                  </CtaButton>
                 )}
               </div>
             </div>

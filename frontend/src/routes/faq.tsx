@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect } from '#/components/portal/Chips'
+import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { useToast } from '#/components/portal/toast'
@@ -41,6 +43,7 @@ function FaqPage() {
   )
 
   return (
+    // 커뮤니티 5개는 폭을 통일한다 (사용자 결정 2026-08-13 — guide.tsx 주석 참고)
     <AppShell active="faq" title="FAQ">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -98,26 +101,18 @@ function FaqPage() {
                   {f.category}
                 </span>
                 <span className="min-w-0 flex-1 text-[13px] font-medium text-ink">{f.q}</span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <span
                   aria-hidden
                   className={`shrink-0 text-ink-subtle transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
                 >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
+                  <Icon name="chevronDown" size="sm" />
+                </span>
               </button>
               <div className={`reveal-grid ${isOpen ? 'open' : ''}`}>
                 <div>
                   <div className="reveal-inner border-t border-hairline/60 px-5 py-4">
                     <p className="text-[13px] leading-relaxed text-ink-muted">{f.a}</p>
-                    <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-subtle">
+                    <div className="mt-3 flex items-center gap-2 text-xs text-ink-subtle">
                       {t('faq.helpfulQuestion', '도움이 되었나요?')}
                       <button
                         type="button"
@@ -133,7 +128,10 @@ function FaqPage() {
                             : 'border-hairline text-ink-muted hover:border-primary/30 hover:text-ink'
                         }`}
                       >
-                        👍 {t('faq.helpful', '도움됨')} {f.helpful + (voted[f.id] ? 1 : 0)}
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="thumbsUp" />
+                          {t('faq.helpful', '도움됨')} {f.helpful + (voted[f.id] ? 1 : 0)}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -151,11 +149,41 @@ function FaqPage() {
             .
           </p>
         )}
+        {/* 접혀 있어도 목록은 목록이다 — 거르면 몇 건 중 몇 건인지 말한다 (규약 §9) */}
+        {filtered.length > 0 && <ListFoot total={faqList.length} shown={filtered.length} />}
       </div>
 
       {/* FAQ 추가 — 운영진용. 짧게 적고 닫는 일이라 모달 */}
       {adding && (
-        <Modal title={t('faq.add', 'FAQ 추가')} onClose={() => setAdding(false)}>
+        <Modal
+          title={t('faq.add', 'FAQ 추가')}
+          onClose={() => setAdding(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setAdding(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <CtaButton
+                disabled={newQ.trim() === '' || newA.trim() === ''}
+                busyLabel={t('faq.adding', '추가 중…')}
+                onAction={async () => {
+                  await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
+                  setAdding(false)
+                  setNewQ('')
+                  setNewA('')
+                  reload()
+                  toast(t('faq.toast.added', 'FAQ 를 추가했습니다'))
+                }}
+              >
+                {t('common.add')}
+              </CtaButton>
+            </div>
+          }
+        >
           <div>
             <span className="text-xs font-medium text-ink-subtle">{t('faq.label.category', '카테고리')}</span>
             <div className="mt-1.5">
@@ -185,29 +213,6 @@ function FaqPage() {
               className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setAdding(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <CtaButton
-              disabled={newQ.trim() === '' || newA.trim() === ''}
-              busyLabel={t('faq.adding', '추가 중…')}
-              onAction={async () => {
-                await apiSend('POST', '/faqs', { q: newQ, a: newA, category: newCat })
-                setAdding(false)
-                setNewQ('')
-                setNewA('')
-                reload()
-                toast(t('faq.toast.added', 'FAQ 를 추가했습니다'))
-              }}
-            >
-              {t('common.add')}
-            </CtaButton>
-          </div>
         </Modal>
       )}
     </AppShell>

@@ -6,6 +6,20 @@
   /* 좁은/넓은 화면 경계 720px — docs/화면_공통규칙.md §8, DESIGN.md Mobile 절 */
   --breakpoint-pc: 45rem;
 
+  /* 본문 폭 두 가지 — **화면 종류가 고른다**(AppShell 의 `width` prop).
+     한 값(max-w-7xl=1280)이 두 일을 하고 있어서 1920 에서 표는 좁고 글은 넓었다.
+     data = 표·매트릭스·대시보드, doc = 가이드·방침처럼 글을 읽는 화면.
+
+     ⚠⚠ **1680 → 1440 으로 줄였다**(2026-08-18 사용자 지적: "본문이 너무 꽉 찬다 ·
+     좌우 폭을 축소"). 1920 에서 사이드바 240 을 빼면 남는 자리가 1680 이라, 설계서 폭을
+     그대로 쓰면 **좌우에 남는 것이 패딩 32px 뿐**이었다 — 본문이 화면 끝에 붙어 선다.
+     1440 이면 좌우로 120px 씩 숨 쉴 자리가 생긴다.
+     ⚠ Figma 설계서(02 화면·웹)는 여전히 1680 기준이다(2026-08-21 사용자 결정 — 20장 재작업이라
+     뒤로 미뤘다. 산출물 레이아웃설계서.docx 는 1440 으로 맞췄다) — 화면이 설계서보다 좁아진 것이라,
+     설계서를 고칠 때 이 값도 함께 본다(둘이 어긋난 채로 두면 표 열 폭 계산이 갈린다). */
+  --container-data: 90rem; /* 1440px */
+  --container-doc: 60rem; /* 960px — 한글 본문 글줄이 길어지지 않는 선 */
+
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Segoe UI', sans-serif;
@@ -22,9 +36,18 @@
   --color-surface: #141722;
   --color-raised: #1a1e2c;
   --color-hairline: #242938;
+  /* 나누는 선(표의 행·목록 구분)과 감싸는 선(카드 테두리)을 가른다 — 한 값이 두 일을
+     하면 카드는 흐리고 표는 시끄럽다. 다크는 둘이 거의 같아도 되지만 라이트는 갈린다 */
+  --color-divider: #1e2231;
   --color-ink: #eef0f6;
   --color-ink-muted: #9aa1b5;
-  --color-ink-subtle: #676e84;
+  /* ⚠ 보조 글자는 **읽히는 선까지만 옅게 한다.** 예전 값(#676e84)은 카드 면에서 3.52:1 로
+     WCAG 본문 기준(4.5:1)에 못 미쳤다 — 부제·설명·placeholder 가 전부 이 색이라
+     화면 절반이 기준 아래였다(2026-08-06 전수 감사에서 계산으로 잡음).
+     ⚠ 덮개(모달·서랍)는 카드보다 **한 단계 더 밝은 면**(raised)이라 같은 글자도 대비가
+     더 낮다 — 덮개 기준으로 잡는다(감사에서 모달 안 설명글이 4.15 로 걸렸다).
+     지금 값: 카드 5.4 · 덮개 4.7 · 캔버스 5.8. "옅다"와 "안 읽힌다"는 다르다. */
+  --color-ink-subtle: #868ea4;
   /* 기본 포인트 색 = 현대 남색. 브랜드 원색(#002C5F)은 어두운 캔버스에 묻히므로
      다크에서는 같은 색조를 밝혀 쓰고, 라이트에서 원색을 쓴다 */
   --color-primary: #5a90d2;
@@ -32,6 +55,23 @@
   --color-accent2: #82aee0;
   --color-sidebar: #090b11;
   --color-sidebar-ink: #a7adc0;
+  /* 사이드바 안쪽 면·선·강한 글자.
+     ⚠⚠ 예전에는 이 셋을 `white/5` · `white/8` · `text-white` 유틸로 마크업에 박아 뒀다.
+     "사이드바는 두 테마 모두 어두우니 흰색을 섞어도 된다"는 전제였는데, **라이트에서
+     사이드바를 밝게 바꾸는 순간 전부 안 보이게 된다**(흰 면 위 흰색 6%). 전제가 바뀔 수
+     있는 값은 토큰으로 둔다 — 그래야 테마가 늘어도 마크업을 안 고친다(2026-08-13). */
+  --color-sidebar-strong: #ffffff;
+  --color-sidebar-hover: rgb(255 255 255 / 6%);
+  /* 상위 메뉴(섹션 머리)가 앉는 면 — 2026-08-19 사용자 요청으로 4% → **7%** 로 올리고
+     높이도 키웠다(py-1.5 → py-2.5). 면이 옅으면 묶음 경계가 훑을 때 안 잡힌다.
+     ⚠ 대신 **호버에서 면을 더 밝히지 않는다** — 머리는 누르는 것이 아니라 묶음의 표시라,
+     글자 색만 또렷해진다(면까지 움직이면 항목처럼 보인다).
+     ⚠⚠ 마크업에서는 **`bg-[var(--color-sidebar-section)]` 로만** 쓴다 — 이름 유틸
+     (`bg-sidebar-section`)로 쓰면 Tailwind v4 가 **값을 그 자리에 박아** 라이트에서
+     다크 값(흰 4%)이 그대로 나온다. 흰 사이드바에 흰 4% 는 아무 일도 안 한다
+     (위 --shadow-topbar 주석과 같은 함정 — 실제로 여기서 또 밟았다). */
+  --color-sidebar-section: rgb(255 255 255 / 7%);
+  --color-sidebar-line: rgb(255 255 255 / 8%);
   --color-chip: rgb(255 255 255 / 6%);
   --color-chip-strong: rgb(255 255 255 / 11%);
   --color-glow: rgb(90 144 210 / 25%);
@@ -42,6 +82,13 @@
   --color-review-ink: #f2b65a;
   --color-pending-bg: #262047;
   --color-pending-ink: #b3a4ff;
+  /* '승인 완료' — 결재는 끝났고 배포는 아직인 자리(2026-08-18 신설).
+     ⚠ 이웃과 **뜻이 붙어 있어** 색을 고르기 까다롭다: 배포 완료(초록)와 헷갈리면
+     "배포된 줄" 알고, 승인 대기(보라)와 헷갈리면 "아직 결재 중인 줄" 안다.
+     그래서 초록도 보라도 아닌 파랑(h 230)으로 두되, 회청색 draft(h 250·C 0.05)와는
+     채도로 가른다 — draft 는 거의 무채색이다. */
+  --color-approved-bg: #10283f;
+  --color-approved-ink: #7cc0f5;
   --color-deployed-bg: #12301f;
   --color-deployed-ink: #57dd92;
   --color-danger-bg: #391b1f;
@@ -49,28 +96,250 @@
   --color-added-bg: #123023;
   --color-added-ink: #4fd38a;
 
-  /* chart-only status fills — CVD-validated against each theme's surface */
-  --color-fill-draft: #4e7de0;
-  --color-fill-review: #bd831e;
-  --color-fill-pending: #8b7cff;
-  --color-fill-deployed: #2fae6b;
+  /* 고도(elevation) — 테마마다 **다른 물리**를 쓴다.
+     다크에서 깊이는 "빛"이다(어두운 배경 위의 글로우), 라이트에서 깊이는 "그림자"다.
+     같은 값을 두 테마에 쓰면 한쪽은 반드시 안 보인다 — 라이트가 밋밋했던 진짜 이유다
+     (2026-08-06 사용자 지적 → 진단: 라이트에는 그림자가 0개였고 전부 글로우였다).
+     색은 primary 에서 섞어 만든다 — 포인트 색을 바꾸면 그림자도 따라온다. */
+  /* 유리판 세 겹 — 윗변 하이라이트(유리의 잘린 모서리) · 접지 그림자(1~2px, 판이
+     바닥에 닿은 자국) · 환경 그림자(멀리 번지는 것). 셋이 있어야 "떠 있다"로 읽힌다.
+     ⚠ 예전 다크는 `none` 이었다 — 깊이를 전부 글로우로만 냈더니 층이 아니라 발광이었다. */
+  /* ⚠ 2026-08-18 사용자 지적("그림자도 살짝 줄여줘")으로 한 단 낮췄다. 층은 **접지 그림자**
+     (1~2px)가 이미 만든다 — 멀리 번지는 환경 그림자를 키우면 깊이가 아니라 무게가 는다.
+     예전 값: 45%/70% · shadow-2 는 80% + 글로우 24px. */
+  --shadow-1:
+    inset 0 1px 0 rgb(255 255 255 / 6%), 0 1px 2px rgb(0 0 0 / 32%),
+    0 8px 22px -16px rgb(0 0 0 / 52%);
+  --shadow-2:
+    inset 0 1px 0 rgb(255 255 255 / 9%), 0 2px 5px rgb(0 0 0 / 34%),
+    0 14px 32px -20px rgb(0 0 0 / 58%), 0 4px 16px var(--color-glow);
+  --shadow-cta: inset 0 1px 0 rgb(255 255 255 / 18%), 0 2px 10px var(--color-glow);
+
+  /* 조작(검색칸·아이콘 버튼·칩)이 앉는 면. 다크는 표면과 같아도 테두리가 충분히 갈라
+     주므로 그대로 두고, 라이트에서만 한 단계 누른다 — 아래 [data-theme='light'] 참고 */
+  --color-field: var(--color-surface);
+
+  /* ⚠⚠ **사이드바는 두 테마 모두 어둡다** — 그래서 사이드바 안에서 `primary` 를 그대로
+     쓰면 라이트 테마에서 사고가 난다: 라이트의 primary 는 아주 어두운 남색(#002C5F)이라
+     **어두운 면 위에 어두운 글자**가 된다(2026-08-06 사용자: PoC 배지·승인 배지가 식별 불가).
+     사이드바 안에서는 반드시 이 토큰을 쓴다 — 라이트에서는 흰색을 섞어 밝혀 준다. */
+  --color-sidebar-accent: var(--color-primary);
+
+  /* 카드·덮개 머리가 앉는 면 (.surface-head) */
+  --color-head: rgb(255 255 255 / 5%);
+
+  /* 포커스 링 — 포인트 색을 따라간다(강조색을 바꾸면 링도 같이 바뀐다).
+     ⚠ 사이드바 안에서는 이 값을 쓰지 않는다 — 아래 `aside :focus-visible` 참고 */
+  --color-ring: var(--color-primary);
+
+  /* 덮개(Modal·Drawer)의 유리 면 — 여기는 backdrop-blur 를 실제로 건다(뒤가 겹치는
+     자리이고, 덮개가 떠 있는 동안 뒤는 멈춰 있어 블러를 다시 계산할 일이 없다).
+     카드보다 **덜 투명하다** — 글을 읽고 입력하는 자리라 뒤가 비치면 눈이 피로하다. */
+  /* 카드 유리 면 — 뒤의 바탕 빛이 은은히 비친다 (아래 body::before) */
+  --color-card-glass: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  --color-cover-glass: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  --shadow-cover:
+    inset 0 1px 0 rgb(255 255 255 / 8%), 0 2px 8px rgb(0 0 0 / 40%),
+    0 32px 80px -24px rgb(0 0 0 / 75%);
+
+  /* 사이드바 윗머리에 도는 브랜드 빛 — 어두운 기둥이 그냥 검은 판이 아니라
+     '빛을 받는 면'이 된다. 세기는 아주 낮게(로고 주변만 살짝 밝다) */
+  --sidebar-sheen: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-sidebar-accent) 14%, transparent),
+    transparent 32%
+  );
+
+  /* ⚠ **앱 헤더(GNB)는 캔버스와 같은 색이면 안 된다** (2026-08-11 사용자 지적: 라이트에서
+     헤더와 본문이 구분이 안 된다). 예전에는 `bg-canvas/75` 였는데, 라이트 캔버스가
+     밝아지자(C안) 헤더·본문이 1.0:1 이 되어 1px 헤어라인 하나만 남았다.
+     GNB 는 콘텐츠가 아니라 **크롬**이다 — 사이드바가 두 테마 모두 어두운 것과 같은 이유로,
+     헤더도 캔버스와 다른 층에 둔다. 다크는 캔버스보다 한 단계 들고, 라이트는 흰 면으로
+     띄운 뒤 아래로 그림자를 깐다(테마마다 깊이의 물리가 다르다 — 위 elevation 절). */
+  --color-topbar: rgb(18 21 31 / 82%);
+  --color-topbar-line: var(--color-hairline);
+  /* ⚠⚠ 그림자 토큰은 마크업에서 **`shadow-[var(--shadow-topbar)]` 로만** 쓴다.
+     Tailwind v4 는 `shadow-topbar` 같은 이름 유틸을 만들 때 토큰 **값을 그 자리에 박아**
+     버려서, `[data-theme='light']` 이 값을 갈아도 유틸은 다크 값을 그대로 들고 있다
+     (2026-08-11 실측: 라이트인데 검은 그림자). 색 유틸(bg-·border-)은 var() 로 나가므로
+     테마를 탄다 — 그림자만 다르다. shadow-1/2/cta 가 CSS 안에서만 쓰이는 이유가 이것이다. */
+  --shadow-topbar: 0 10px 24px -18px rgb(0 0 0 / 80%);
+
+  /* 차트 전용 상태 필 — `node scripts/validate-palette.mjs` 가 재는 값이다.
+     ⚠⚠ **색상(hue)만으로 네 갈래를 가르면 색맹에서 무너진다.** 예전 값(파랑 #4e7de0 ·
+     머스터드 #bd831e · 보라 #8b7cff · 초록 #2fae6b)은 검사에서 9건이 걸렸다 — 녹색맹에서
+     파랑↔보라가 ΔE 9.8 로 붙고 청색맹에서는 세 쌍이 붙었다. 눈으로도 채도만 높은
+     무지개라 촌스러웠다(2026-08-11 사용자 지적).
+     지금은 **밝기 사다리**로 가른다: 초안(중립 슬레이트) → 승인대기 → 배포 → 검토.
+     색이 사라져도 밝기가 남으니 흑백으로 인쇄해도 읽힌다. 채도는 한 단계 낮췄다.
+     oklch 로 적는 이유 — L 을 눈에 보이는 밝기로 직접 잡을 수 있어서 사다리를 설계할 수 있다. */
+  /* 밝기 순서에도 뜻이 있다 — 다크에서 **밝을수록 앞으로 나온다**.
+     끝난 것(배포·초안)은 조용히 두고, 사람 손이 필요한 것(검토·승인 대기)을 앞세운다.
+     예전에는 62% 를 차지하는 '배포 완료'가 가장 밝아 화면 전체가 초록 덩어리였다. */
+  /* ⚠ **채도를 한 단계 올렸다** (2026-08-13 사용자 지적: "칙칙한 색상을 쓰니 전체적으로
+     느낌도 별로가 된다"). 밝기 사다리는 그대로 두되 — 그게 색맹에서 갈리는 근거다 —
+     C 를 0.04~0.15 → 0.07~0.17 로 올렸다. 특히 `draft` 는 C 0.04 라 **사실상 회색**이어서
+     네 조각짜리 누적 막대에서 한 칸이 죽어 보였다. 중립이되 무채색은 아니게 잡았다.
+     ⚠ 값을 바꾸면 반드시 `node scripts/validate-palette.mjs` 를 돌려 통과시킨다. */
+  --color-fill-draft: oklch(0.5 0.05 250);
+  --color-fill-approved: oklch(0.68 0.13 230);
+  --color-fill-deployed: oklch(0.63 0.14 158);
+  --color-fill-pending: oklch(0.72 0.17 295);
+  --color-fill-review: oklch(0.84 0.15 82);
+
+  /* ═══ 계열 색 (차트에서 **누구인지**를 말하는 색) ═══
+     ⚠⚠ **상태색을 계열색으로 쓰지 않는다** (dataviz 규칙 · 2026-08-13 적발).
+     예전에는 차트 3계열이 `fill-draft`·`fill-deployed`·`fill-review` 를 빌려 썼다 —
+     "API 서버 / DB / 파일 스토리지"처럼 **좋고 나쁨이 없는 자리**에도 초록(=배포 완료)이
+     붙었다. 상태색은 뜻을 나르는 색이라, 뜻 없는 것에 붙이면 읽는 사람이 없는 뜻을 읽는다.
+
+     값은 **눈으로 고르지 않고 검증기로 골랐다** (`dataviz/scripts/validate_palette.js`,
+     우리 면 기준 — 라이트 #ffffff · 다크 #141722, `--pairs all`):
+       밝기 대역 · 채도 바닥 · 색맹 3종 분리 · 정상시야 분리 · 면 대비  → 전부 PASS
+     ⚠ **셋까지다.** 네 번째(황색)를 넣으면 주황과 정상시야 ΔE 13.7 로 FAIL 한다 —
+     색을 더 만들어서 풀 수 있는 문제가 아니다. 계열이 넷 이상이면 접거나 나눈다.
+     ⚠ 순서가 곧 안전장치다 — 계열이 줄어도 살아남은 것은 자기 색을 지킨다(색은 순위가
+     아니라 **누구**를 따라간다). */
+  --color-series-1: #3987e5;
+  --color-series-2: #d95926;
+  --color-series-3: #199e70;
+
+  /* **맥락 색** — 강조되지 않은 마크가 입는 중립.
+     ⚠⚠ 여기서 색은 상태가 아니라 '주인공이 아님'을 뜻한다. 예전엔 미달 막대에
+     `fill-draft`(회청색 C 0.05)를 썼는데, 색조가 남아 있으니 파랑도 회색도 아닌
+     탁한 색으로 읽혔다 (2026-08-13 사용자 지적: "칙칙한 색상을 쓰니 느낌도 별로").
+     맥락은 **완전한 중립**이어야 강조가 산다 — 채도를 0.01 까지 내린다.
+     (상태 필 --color-fill-* 은 뜻을 지는 색이라 그대로 둔다) */
+  --color-chart-muted: oklch(0.62 0.012 265);
+
+  /* ═══ 층 사다리 (규약 §8) — 정본은 **여기 한 곳**이다 ═══
+     `z-nav` `z-modal` 처럼 이름으로만 고른다. `z-50` 같은 숫자를 마크업에 적지 않는다.
+
+     ⚠⚠ **떠 있는 버튼은 서랍 가림막보다 아래다.** 예전에는 둘 다 `z-30` 이라 DOM 순서로
+     버튼이 가림막 위에 있었다 — 좁은 화면에서 **서랍이 열려 있는데 [물어보기]가 눌리고**,
+     누르면 서랍 위에 우측패널이 쌓였다(규약 §8 "덮개는 쌓지 않는다"를 스스로 깨고 있었다).
+     규약이 "하단 시트가 떠 있는 버튼 뒤로 들어가는 날이 온다"고 예고한 사고가, 실제로는
+     이 조합으로 이미 나 있었다(2026-08-13 발견).
+
+     ⚠ 배경막을 **자기 안에** 갖는 덮개(모달·우측패널·팔레트)는 바깥 상자에 `z-modal`
+     하나만 준다. `z-backdrop` 은 가림막이 **형제로 떨어져 있을 때만**(좁은 화면 서랍).
+     ⚠ 사다리에 없는 층이 필요해 보이면 여기에 칸을 먼저 만든다 — 마크업에서 즉석으로
+     정하는 순간 그 화면만 아는 규칙이 하나 생긴다. */
+  --z-index-nav: 10; /* 붙박이 내비 — GNB 헤더 */
+  /* 본문 **위로 펼쳐지는** 붙박이 — 넓은 화면 LNB(레일은 호버하면 본문 위로 펴진다) ·
+     앞으로 생길 BOTTOM 콘솔.
+     ⚠⚠ **사이드바를 헤더와 같은 층에 두면 안 된다** (2026-08-13 사용자 지적: "LNB가 헤더에
+     가려짐"). 핀을 풀면 사이드바는 64px 레일이 되고 본문 컬럼도 그만큼만 비켜서는데,
+     호버로 240px 로 펴질 때 **그 펴진 부분이 본문 위로 넘어간다.** 헤더도 본문 컬럼 안에
+     있어서 x=64 부터 시작하므로, 같은 층이면 DOM 순서상 헤더가 위로 올라와 펴진 메뉴를
+     덮는다. 층 사다리를 넣으면서 사이드바를 nav 로 내렸다가 그대로 밟았다. */
+  --z-index-panel: 20;
+  --z-index-fab: 30; /* 떠 있는 버튼(물어보기) */
+  --z-index-popover: 40; /* 팝오버 — 투명막과 몸통이 같은 층(DOM 순서로 몸통이 위) */
+  --z-index-backdrop: 50; /* 덮개 배경막 — 몸통과 떨어져 있는 것 */
+  --z-index-modal: 60; /* 덮개 몸통 — 모달 · 우측패널 · 팔레트 · 좁은 화면 서랍 */
+  --z-index-dialog: 70; /* 덮개 위에 서는 확인창 — 덮개를 쌓는 유일한 예외 */
+  --z-index-toast: 80; /* 토스트 — 무엇에도 가리지 않는다 */
 }
 
 /* Light theme — overrides the same tokens; the sidebar stays dark in both themes */
+/* 라이트 = C안 "브랜드 톤" (2026-08-06 사용자 채택).
+   ⚠ 밋밋함의 원인은 취향이 아니라 **층이 없다**는 것이었다 — 바탕과 카드가 1.09:1,
+   테두리가 1.24:1, 그림자 0개. 셋을 함께 고친다:
+   ① 바탕을 한 단계 낮춰 흰 카드가 종이처럼 뜨게 하고
+   ② 선을 두 단계(감싸는 선·나누는 선)로 가르고
+   ③ 남색이 아주 옅게 도는 회색 + 남색 그림자로 브랜드가 배경에도 흐르게 한다. */
 [data-theme='light'] {
-  --color-canvas: #f4f5f9;
+  color-scheme: light;
+  --color-canvas: #e8eef7;
   --color-surface: #ffffff;
-  --color-raised: #eef0f6;
-  --color-hairline: #e3e7f0;
-  --color-ink: #1b2033;
-  --color-ink-muted: #4d566e;
-  --color-ink-subtle: #8791a5;
+  --color-raised: #f1f6fd;
+  --color-hairline: #d9e3f1;
+  --color-divider: #e9eff8;
+  --color-ink: #0f1727;
+  --color-ink-muted: #48546f;
+  /* 다크와 같은 이유로 올린다 — 예전 #7a879f 는 흰 카드에서 3.62:1, 캔버스에서 3.11:1.
+     ⚠ 라이트는 **카드(흰 면)와 캔버스(옅은 남색) 두 바닥** 위에 같은 글자가 앉는다 —
+     흰 면만 보고 맞추면 캔버스에 앉은 부제·breadcrumb 가 기준 아래로 남는다(감사 재실행에서
+     4.14 로 걸렸다). 캔버스 기준으로 잡는다: 카드 5.26 · 캔버스 4.51 · 머리 면 4.86 */
+  --color-ink-subtle: #616c85;
   --color-primary: #002c5f;
   --color-primary-deep: #001e42;
-  --color-accent2: #1c4e8a;
-  --color-chip: rgb(27 32 51 / 6%);
-  --color-chip-strong: rgb(27 32 51 / 11%);
+  /* 보조색을 밝은 파랑으로 올린다 — 원색(#002C5F)끼리의 그라디언트는 흰 배경에서
+     검은 덩어리로 읽힌다. 차트 선·CTA 가 여기서 살아난다 */
+  --color-accent2: #1f5fae;
+  --color-chip: rgb(15 23 39 / 5%);
+  --color-chip-strong: rgb(15 23 39 / 9%);
   --color-glow: rgb(0 44 95 / 20%);
+
+  /* 카드 윗변의 1px 흰 하이라이트가 유리처럼 또렷하게 만든다(안쪽 그림자). */
+  /* ⚠ 라이트는 그림자에 **브랜드 색이 섞여 있어** 진해지면 화면이 통째로 푸르스름해진다.
+     2026-08-18 에 한 단 낮췄다(예전: 14/18/38% · shadow-2 는 16/24/50%). */
+  --shadow-1:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 1px 2px color-mix(in oklab, var(--color-primary) 10%, transparent),
+    0 3px 8px -6px color-mix(in oklab, var(--color-primary) 12%, transparent),
+    0 10px 22px -18px color-mix(in oklab, var(--color-primary) 24%, transparent);
+  --shadow-2:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 2px 4px color-mix(in oklab, var(--color-primary) 11%, transparent),
+    0 6px 14px -8px color-mix(in oklab, var(--color-primary) 16%, transparent),
+    0 18px 36px -20px color-mix(in oklab, var(--color-primary) 30%, transparent);
+  --shadow-cta:
+    0 1px 2px color-mix(in oklab, var(--color-primary) 30%, transparent),
+    0 8px 18px -8px color-mix(in oklab, var(--color-primary) 50%, transparent);
+
+  /* 조작은 흰 면과 같은 색이면 안 된다 (2026-08-06 사용자 지적:
+     "검색창이나 버튼이 전부 하얀색이라 밋밋하다") */
+  --color-field: #eef3fa;
+
+  /* ⚠⚠ **라이트에서는 사이드바도 밝다** (2026-08-13 사용자 지시: "LNB 영역도 라이트 모드
+     색상 별도 필요할 듯"). 예전 방침은 "사이드바는 두 테마 모두 어둡게 — 브랜드 아이덴티티"
+     였는데, 밝은 캔버스 옆에 검은 기둥이 서면 그 기둥만 딴 앱처럼 남는다. 라이트에서는
+     **흰 기둥이 옅은 남색 캔버스 위에 종이처럼 뜨는** 쪽이 한 벌로 읽힌다(헤더와 같은 논리).
+     흰 기둥이므로 강조색을 밝힐 이유도 사라진다 — 원색을 그대로 쓴다. */
+  --color-sidebar: #ffffff;
+  /* ⚠ 라이트에서는 사이드바가 **흰 면**이라 흰색을 더 깔면 아무 일도 안 일어난다 —
+     반대로 한 단 눌러야 묶음이 보인다(같은 뜻, 반대 방향) */
+  --color-sidebar-section: rgb(15 27 46 / 7%);
+  --color-sidebar-ink: #5b667e; /* 캔버스·흰 면 둘 다에서 읽히는 보조 글자 */
+  --color-sidebar-strong: #0f1b2e; /* 활성·호버의 강한 글자 */
+  --color-sidebar-hover: #eef3fa; /* 호버 면 — 조작은 면보다 한 단계 눌린다(field 와 같은 계열) */
+  --color-sidebar-line: #dde5f1; /* 경계선 */
+  --color-sidebar-accent: var(--color-primary);
+
+  /* 머리 면 — **아주 옅게**(D안, 2026-08-06 사용자 채택).
+     이 자리는 세 번 고쳤다: 너무 비슷하다 → 진하게 → 선까지 있어 촌스럽다 → 선을 빼고
+     채도를 낮춤 → 그래도 띠의 인상이 남는다. 결론은 **띠를 거의 지우고 머리 자리는
+     글자가 지킨다** — 면은 "여기가 머리다"라는 힌트만 하고, 경계는 카드 테두리·그림자와
+     머리의 라벨 타이포(아래 .surface-head .font-mono)가 만든다. */
+  --color-head: #f4f6fa;
+
+  /* ⚠⚠ **라이트에서는 카드를 불투명하게 둔다** (2026-08-12 실측). 유리는 어두운 면에서
+     성립한다 — 흰 카드가 옅은 캔버스 위에 있는 라이트에서 투명도를 주면 카드가 바탕을
+     빨아들여 **층이 오히려 죽는다**(KPI 타일이 배경에 녹아 붙었다). 라이트의 '유리'는
+     윗변 하이라이트 + 다층 그림자가 대신한다 — 두 테마는 깊이의 물리가 다르다(위 elevation 절).
+     덮개는 뒤가 실제로 겹치므로 라이트에서도 살짝 투명하게 둔다. */
+  --color-card-glass: var(--color-surface);
+  /* ⚠⚠ **덮개도 불투명하다** (2026-08-13 사용자 지적: "모달창 본문 배경 ... 탁하고
+     누리끼리한데"). 바로 위 카드 규칙과 **같은 이유인데 덮개만 예외로 두고 있었다** —
+     "덮개는 뒤가 실제로 겹치니 살짝 투명하게"라고 적어 뒀지만, 덮개 뒤에 있는 것은
+     본문이 아니라 **70% 검정 배경막**이다. 카드의 6% 는 밝은 캔버스를 비쳐 무해한데,
+     덮개의 6% 는 거의 검정을 비쳐 흰 면을 **때 낀 회색으로** 만든다
+     (실측: 흰색이어야 할 몸통이 #e8e8ec 로 그려졌다).
+     라이트의 유리는 투명도가 아니라 **블러 + 윗변 하이라이트 + 그림자**가 만든다
+     (테마마다 깊이의 물리가 다르다 — 위 elevation 절). */
+  --color-cover-glass: var(--color-surface);
+
+  /* 헤더는 흰 면 — 옅은 남색 캔버스(#e8eef7) 위에 종이처럼 뜬다.
+     ⚠ 캔버스보다 **어둡게** 눌러 크롬처럼 만드는 안은 버렸다: 보조 글자(ink-subtle)가
+     캔버스 기준 4.51:1 로 겨우 서 있어서, 헤더 면을 더 어둡게 하면 헤더 안 글자가
+     WCAG 아래로 떨어진다(2026-08-06 감사 기준). 흰 면은 반대로 5.26:1 로 올라간다.
+     ⚠ 흰 헤더 위의 조작(검색칸·아이콘 버튼)은 `bg-surface` 로 두면 면과 같은 색이라
+     사라진다 — GNB 조작은 `bg-field` 를 쓴다(AppShell). */
+  --color-topbar: rgb(255 255 255 / 88%);
+  --color-topbar-line: #c7d5e9;
+  --shadow-topbar: 0 6px 18px -10px color-mix(in oklab, var(--color-primary) 45%, transparent);
 
   --color-draft-bg: #e9edf4;
   --color-draft-ink: #5b6472;
@@ -78,6 +347,8 @@
   --color-review-ink: #96570a;
   --color-pending-bg: #ece7ff;
   --color-pending-ink: #5f43d6;
+  --color-approved-bg: #e2eefb;
+  --color-approved-ink: #10538f;
   --color-deployed-bg: #dff3e8;
   --color-deployed-ink: #177245;
   --color-danger-bg: #fcebeb;
@@ -85,10 +356,24 @@
   --color-added-bg: #dff3e8;
   --color-added-ink: #12703f;
 
-  --color-fill-draft: #3f6ad0;
-  --color-fill-review: #b8770a;
-  --color-fill-pending: #6d5cf0;
-  --color-fill-deployed: #1d9d5f;
+  /* 흰 면 위라 사다리가 반대로 선다 — 어두운 쪽이 진하게 읽힌다.
+     라이트는 폭이 좁다(너무 밝으면 흰 면에서 사라진다) → L 0.46~0.78 안에서 네 칸. */
+  /* 라이트도 같은 이유로 채도를 올린다 — 흰 면 위라 사다리는 반대(어두울수록 앞) */
+  --color-fill-pending: oklch(0.46 0.18 295);
+  --color-fill-deployed: oklch(0.58 0.14 158);
+  --color-fill-review: oklch(0.7 0.16 82);
+  --color-fill-draft: oklch(0.74 0.05 250);
+  --color-fill-approved: oklch(0.55 0.13 230);
+
+  /* 계열 색 — 라이트 면(#ffffff)에서 다시 검증한 값. 다크와 색상은 같고 명도만 다르다.
+     ⚠ 청록은 다크 값(#199e70)을 그대로 쓴다 — 밝은 쪽(#1baf7a)은 흰 면에서 대비 2.82 로
+     3:1 을 못 넘어 "보이는 라벨이나 표 보기"를 의무로 달게 된다. 어둡게 잡아 그 빚을 없앴다. */
+  --color-series-1: #2a78d6;
+  --color-series-2: #eb6834;
+  --color-series-3: #199e70;
+
+  /* 맥락 색 — 라이트에서는 흰 면 위라 한 단계 밝게(강조가 앞, 맥락이 뒤) */
+  --color-chart-muted: oklch(0.78 0.012 265);
 }
 
 /* ── 포인트 색상 (개인 설정) ─────────────────────────────────────────
@@ -96,74 +381,193 @@
    그라디언트·CTA·스포트라이트·차트가 전부 토큰을 보므로 이 블록이 전체를 바꾼다.
    navy(기본 — 현대 남색)는 :root/[data-theme='light'] 값 그대로라 블록이 없다.
    ⚠ 라이트 조합 선택자는 반드시 이 자리(라이트 테마 블록 뒤)에 — 순서가 명세다.
-   선택지 정본은 lib/accent.ts (여기와 1:1). */
+   선택지 정본은 lib/accent.ts (여기와 1:1).
+
+   ⚠⚠ **다섯 색을 oklch 로 다시 잡았다** (2026-08-13 "색감톤" 판). 예전에는 손으로 고른
+   hex 였는데, 재 보니 두 가지가 함께 틀어져 있었다:
+
+     accent   라이트 카드 위   캔버스 위      ← 라이트는 바닥이 둘이라 캔버스로 잰다
+     violet    4.73           4.06
+     blue      5.17           4.43
+     green     3.30           2.83
+     amber     3.19           2.73
+     rose      4.60           3.94
+                              └─ **다섯 다 WCAG AA(4.5) 미달**
+
+   원인은 하나다 — **채도만 높고 명도가 부족했다.** 강조색은 글자로도 쓰이는데(링크·활성
+   칩·다음 행동) 밝은 캔버스 위에서 4.5 를 못 넘었다. 그리고 같은 이유로 화면에서 "톤이
+   튄다"는 인상을 줬다: 눈에 들어오는 것은 명도 차이가 아니라 채도였다.
+
+   **채도를 내리고 명도로 대비를 세운다** — 톤을 낮추는 일과 대비를 세우는 일이 같은
+   방향이다. 라이트 L .45 / C .12, 다크 L .74 / C .11 로 통일하고 색상(H)만 바꾼다.
+   oklch 로 적는 이유가 이것이다 — L·C 를 눈에 보이는 값으로 직접 잡아야 다섯 색의
+   **무게를 맞출** 수 있다. hex 로는 그게 손대중이 된다(차트 필에서 이미 배운 것).
+
+   ⚠ green·amber 는 명도를 낮추면 숲색·황동색이 된다. 밝은 초록·주황을 **글자로 쓰면서**
+   AA 를 넘길 방법은 없다 — 이름이 주는 인상보다 읽히는 것이 먼저다.
+   ⚠ 기본 navy(현대 남색)는 브랜드라 그대로 둔다. 이미 11.8:1 로 여유가 있다. */
 [data-accent='violet'] {
-  --color-primary: #8b7cff;
-  --color-primary-deep: #7463f2;
-  --color-accent2: #a08cff;
-  --color-glow: rgb(139 124 255 / 25%);
+  --color-primary: oklch(0.74 0.11 288);
+  --color-primary-deep: oklch(0.66 0.11 288);
+  --color-accent2: oklch(0.81 0.09 288);
+  --color-glow: oklch(0.74 0.11 288 / 22%);
 }
 [data-theme='light'][data-accent='violet'] {
-  --color-primary: #6d5cf0;
-  --color-primary-deep: #5a49dd;
-  --color-accent2: #8a76ff;
-  --color-glow: rgb(109 92 240 / 20%);
+  --color-primary: oklch(0.45 0.12 288);
+  --color-primary-deep: oklch(0.38 0.12 288);
+  --color-accent2: oklch(0.55 0.12 288);
+  --color-glow: oklch(0.45 0.12 288 / 18%);
 }
-/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 명도·채도를 벌려 구별한다
-   (남색은 어둡고 차분, 파랑은 밝고 선명). 청록은 초록과 너무 닮아 뺐다. */
+/* 밝은 파랑 — 현대 남색과 같은 파랑 계열이지만 색상(H)을 벌려 구별한다.
+   청록은 초록과 너무 닮아 뺐다. */
 [data-accent='blue'] {
-  --color-primary: #63a3ff;
-  --color-primary-deep: #4a8bf5;
-  --color-accent2: #8ab9ff;
-  --color-glow: rgb(99 163 255 / 25%);
+  --color-primary: oklch(0.74 0.11 250);
+  --color-primary-deep: oklch(0.66 0.11 250);
+  --color-accent2: oklch(0.81 0.09 250);
+  --color-glow: oklch(0.74 0.11 250 / 22%);
 }
 [data-theme='light'][data-accent='blue'] {
-  --color-primary: #2563eb;
-  --color-primary-deep: #1d4ed8;
-  --color-accent2: #60a5fa;
-  --color-glow: rgb(37 99 235 / 20%);
+  --color-primary: oklch(0.45 0.12 250);
+  --color-primary-deep: oklch(0.38 0.12 250);
+  --color-accent2: oklch(0.55 0.12 250);
+  --color-glow: oklch(0.45 0.12 250 / 18%);
 }
 [data-accent='green'] {
-  --color-primary: #55cf85;
-  --color-primary-deep: #38b46c;
-  --color-accent2: #7fdfa5;
-  --color-glow: rgb(85 207 133 / 25%);
+  --color-primary: oklch(0.74 0.11 158);
+  --color-primary-deep: oklch(0.66 0.11 158);
+  --color-accent2: oklch(0.81 0.09 158);
+  --color-glow: oklch(0.74 0.11 158 / 22%);
 }
 [data-theme='light'][data-accent='green'] {
-  --color-primary: #16a34a;
-  --color-primary-deep: #15803d;
-  --color-accent2: #22c55e;
-  --color-glow: rgb(22 163 74 / 20%);
+  --color-primary: oklch(0.45 0.12 158);
+  --color-primary-deep: oklch(0.38 0.12 158);
+  --color-accent2: oklch(0.55 0.12 158);
+  --color-glow: oklch(0.45 0.12 158 / 18%);
 }
 [data-accent='amber'] {
-  --color-primary: #f0a84e;
-  --color-primary-deep: #dd9032;
-  --color-accent2: #f8c078;
-  --color-glow: rgb(240 168 78 / 25%);
+  --color-primary: oklch(0.74 0.11 72);
+  --color-primary-deep: oklch(0.66 0.11 72);
+  --color-accent2: oklch(0.81 0.09 72);
+  --color-glow: oklch(0.74 0.11 72 / 22%);
 }
 [data-theme='light'][data-accent='amber'] {
-  --color-primary: #d97706;
-  --color-primary-deep: #b45309;
-  --color-accent2: #f59e0b;
-  --color-glow: rgb(217 119 6 / 20%);
+  --color-primary: oklch(0.45 0.12 72);
+  --color-primary-deep: oklch(0.38 0.12 72);
+  --color-accent2: oklch(0.55 0.12 72);
+  --color-glow: oklch(0.45 0.12 72 / 18%);
 }
 [data-accent='rose'] {
-  --color-primary: #f27a9d;
-  --color-primary-deep: #e25a83;
-  --color-accent2: #f79cb6;
-  --color-glow: rgb(242 122 157 / 25%);
+  --color-primary: oklch(0.74 0.11 18);
+  --color-primary-deep: oklch(0.66 0.11 18);
+  --color-accent2: oklch(0.81 0.09 18);
+  --color-glow: oklch(0.74 0.11 18 / 22%);
 }
 [data-theme='light'][data-accent='rose'] {
-  --color-primary: #db2777;
-  --color-primary-deep: #be185d;
-  --color-accent2: #ec4899;
-  --color-glow: rgb(219 39 119 / 20%);
+  --color-primary: oklch(0.45 0.12 18);
+  --color-primary-deep: oklch(0.38 0.12 18);
+  --color-accent2: oklch(0.55 0.12 18);
+  --color-glow: oklch(0.45 0.12 18 / 18%);
+}
+
+:root {
+  /* 떠 있는 [물어보기] 버튼의 크기 — 토스트가 이 값만큼 위로 비켜선다(toast.tsx) */
+  --fab-size: 52px;
+
+  /* ⚠⚠ **테마를 브라우저에도 말해 준다.** 이게 없으면 브라우저는 **OS 설정**으로
+     시스템 색(buttontext 등)과 기본 스크롤바·폼 컨트롤을 정한다 — OS 가 다크인데 앱이
+     라이트면 **버튼 글자가 흰색으로 상속되어 흰 배경에서 사라진다**(2026-08-06 전수 감사에서
+     GNB 계정 버튼이 1.02:1 로 걸렸다. 색 클래스가 하나도 없는데 흰 글자였다).
+     테마 토글이 이 값도 함께 바꾼다. */
+  color-scheme: dark;
+}
+/* ⚠ 선택자 무게를 :root 보다 무겁게 잡는다(0,2,0 vs 0,1,0) — 토큰 블록보다 뒤에 있는
+   `:root` 가 이겨서 라이트인데 dark 로 남는 사고를 한 번 겪었다 */
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
 }
+
+/* ⚠ **유리는 뒤에 비칠 것이 있어야 유리다.** 반투명 카드만 만들고 바탕이 단색이면
+   그냥 조금 흐린 단색이 된다 — 층이 안 생긴다. 바탕에 브랜드 색 빛 세 덩이를 아주
+   옅게 깔아 카드마다 비치는 정도가 달라지게 한다(2026-08-12 '유리와 깊이' 방향).
+   ⚠ `position: fixed` — 스크롤해도 빛은 화면에 붙어 있다. 함께 흐르면 배경이
+   움직이는 물건처럼 읽혀 어지럽다. z-index 는 음수라 본문 아래로 깔린다. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* ⚠ 세기는 **아주 낮게**. 처음에 22%/14%/12% 로 깔았더니 어두운 캔버스가 통째로
+     라벤더 안개가 되어 '깊은 다크'라는 정체성이 날아갔다(2026-08-12 실측) — 유리에
+     비치는 것은 *빛의 기미*지 색면이 아니다. 카드가 뜨려면 바탕이 카드보다 어두워야 한다. */
+  background:
+    radial-gradient(
+      55rem 38rem at 12% -8%,
+      color-mix(in oklab, var(--color-primary) 9%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45rem 32rem at 92% 2%,
+      color-mix(in oklab, var(--color-accent2) 6%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      38rem 28rem at 65% 108%,
+      color-mix(in oklab, var(--color-primary) 5%, transparent),
+      transparent 70%
+    );
+}
+/* 라이트는 같은 세기로 깔면 배경이 물든 것처럼 보인다 — 4분의 1로 낮춘다.
+   흰 카드가 뜨려면 바탕이 **카드보다 어두워야** 하는데, 빛이 세면 바탕이 밝아져
+   카드가 도로 배경에 붙는다 */
+[data-theme='light'] body::before {
+  opacity: 0.25;
+}
+
+/* ---- 포커스 ----------------------------------------------------------
+   ⚠⚠ **지금 어디 있는지는 화면이 말해야 한다.** 2026-08-11 검토에서 잰 상태:
+   `outline-none` 58곳 · `focus-visible` 2곳 · 전역 규칙 0개 — 키보드로 쓰면 커서가
+   어디 있는지 보이지 않았다. 입력칸은 `focus:border-primary/60` 로 대신했는데 테두리
+   한 겹은 신호가 약하고, 나머지 조작은 브라우저 기본 링이라 테마와 따로 놀았다.
+   여기 한 줄이 정본이다 — 화면마다 링을 그리지 않는다 (WCAG 2.4.7·2.4.11).
+
+   ⚠ 이 규칙은 **레이어 밖**에 있어서 `@layer utilities` 의 `.outline-none` 을 이긴다
+   (특정도는 같지만 레이어 없는 쪽이 이긴다). 그래서 58곳을 손대지 않아도 링이 산다 —
+   `outline-none` 은 마우스 클릭 자국을 지우는 제 일을 계속한다(:focus-visible 만 링). */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+/* 사이드바는 두 테마 모두 어둡다 — 라이트의 primary(원색 남색 #002C5F)로 링을 그리면
+   어두운 면 위 어두운 선이 된다. 배지·활성 표시와 같은 이유로 밝힌 색을 쓴다 */
+aside :focus-visible {
+  outline-color: var(--color-sidebar-accent);
+}
+/* 덮개 몸통은 **조작이 아니다.** 열릴 때 포커스를 여기로 옮기는데(useCover — 스크린리더가
+   제목부터 읽게), 520px 짜리 패널을 통째로 두른 링은 "여기를 누르라"가 아니라 "오류"로
+   읽힌다. 다음 Tab 이 안쪽 첫 조작으로 가면서 링은 거기서부터 다시 보인다. */
+[data-cover]:focus-visible {
+  outline: none;
+}
+/* ⚠⚠ **상자를 꽉 채운 입력칸에는 링을 그리지 않는다** (2026-08-13 사용자 지적 두 번:
+   "인풋창 활성화 표현이 어색하다" → "라인도 벗어나고 어색함").
+   커맨드 팔레트 검색칸은 `overflow-hidden` 인 덮개의 가장자리까지 꽉 차 있어서,
+   `outline-offset: 2px` 짜리 링이 **둥근 모서리를 넘어 각지게 삐져나온다** — 화면에는
+   네모 상자 하나가 덧그려진 것처럼 보인다. 대신 **머리 줄 전체가 focus-within 으로**
+   반응한다(면이 밝아지고 아래 선·아이콘이 포인트 색). 그래야 잘릴 여지가 없다.
+
+   ⚠ 이 예외는 **여기(레이어 밖)에 적어야 한다.** 마크업에 `focus-visible:outline-none`
+   유틸을 붙여도 소용없다 — 위 전역 규칙이 레이어 밖이라 `@layer utilities` 를 이긴다.
+   실제로 유틸로 먼저 고쳤다가 링이 그대로 남아 사용자가 다시 지적했다. */
+[data-ring-none]:focus-visible {
+  outline: none;
+}
+
 
 /* 스크롤바도 앱의 물건이다 (DESIGN.md Rules 8) — 브라우저 기본 회색 스크롤바가
    남으면 그 줄만 딴 앱처럼 보인다. 전역으로 얇은 테마 스크롤바를 입힌다.
@@ -172,6 +576,39 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-chip-strong) transparent;
+}
+
+/* ⚠⚠ **스크롤바 자리를 늘 비워 둔다** (2026-08-13 사용자 지적: "메뉴 이동할 때마다 화면이
+   미세하게 좁아졌다가 다시 펴지는 느낌"). 화면마다 내용 높이가 달라 세로 스크롤바가
+   생겼다 없어졌다 하는데, 그때마다 뷰포트 폭이 **스크롤바 폭(여기선 10px)만큼** 달라져
+   본문·헤더·차트가 통째로 움찔한다. 페이지 전환 애니메이션이 있으면 그 움찔이 전환에
+   섞여 "꿈틀댄다"로 보인다 — 전환을 아무리 다듬어도 안 없어지는 부류다.
+
+   덮개도 같은 원인을 만든다: 열릴 때 `overflow: hidden` 으로 뒤를 잠그면(useCover)
+   스크롤바가 사라지면서 뒤 화면이 그 폭만큼 넓어진다. gutter 를 잡아 두면 둘 다 멎는다.
+
+   ⚠⚠ **`scrollbar-gutter: stable` 만으로는 안 멎는다** (2026-08-13 실측). 루트의 overflow 가
+   `visible`/`auto` 일 때 크롬은 자리를 안 잡아 준다 — `overflow-y: scroll` 로 **스크롤바를
+   늘 세워야** 폭이 고정된다. 재 본 값:
+     gutter + overflow auto   → /faq 1920 · /dashboard 1910 · /login 1920  (흔들림)
+     gutter + overflow scroll → 1910 · 1910 · 1910                        (멎음)
+   gutter 는 안쪽 스크롤 상자를 위해 함께 남긴다.
+
+   ⚠ `html` 에만 준다 — `*` 에 주면 안쪽 스크롤 상자마다 빈 띠가 생겨 표·목록이 어긋난다.
+   ⚠ 덮개가 열릴 때의 밀림은 여기서 못 막는다(`overflow: hidden` 이 자리를 도로 가져간다) —
+   그쪽은 useCover 가 잠글 때 스크롤바 폭만큼 여백을 채워 막는다. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  /* ⚠⚠ **바탕색은 `html` 에도 칠한다** (2026-08-13 사용자 지적: "메뉴 클릭할 때마다
+     배경이 밝은색으로 반짝인다").
+     평소에는 `body` 의 배경이 캔버스로 올라가므로 html 이 비어 있어도 문제가 없다.
+     그런데 **페이지 전환(View Transition) 동안에는 루트의 그리기가 스냅샷 의사요소로
+     대체되어 body 가 캔버스에 배경을 못 올린다** — 그 순간 뒤에 남는 것은 브라우저
+     기본 캔버스, 즉 **흰색**이다. 스냅샷 둘이 서로 페이드하는 동안 그 흰색이 비쳐
+     다크 테마에서 화면이 번쩍인다.
+     같은 토큰이라 평소 화면은 하나도 안 변한다 — 전환 중에만 값을 한다. */
+  background-color: var(--color-canvas);
 }
 ::-webkit-scrollbar {
   width: 8px;
@@ -231,6 +668,17 @@ select option {
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(12px) scale(0.97); }
 }
+/* 넓은 화면에서 토스트는 헤더 아래(우측 상단)에 서므로 **위에서 내려온다** —
+   자리는 위인데 아래에서 올라오면 어디서 온 물건인지 눈이 못 따라간다 (toast.tsx) */
+@keyframes toast-in-top {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+}
+/* 좁은 화면에서 팝오버는 **아래에서 올라오는 시트**다(규약 §1 팝오버 절) — 그러면
+   등장도 아래에서 와야 한다. scale-in(위에서 눌러앉기)을 그대로 쓰면 시트가 제자리에서
+   뿅 나타나 "어디서 온 물건인지"를 눈이 못 따라간다 (Popover.tsx) */
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+}
 
 /* 부드러운 펼침 — height:auto 를 그리드 행 전환으로 푼다 (최신 CSS 관용구).
    내용은 함께 살짝 떠오른다. 닫힘도 같은 곡선으로 되감긴다. */
@@ -267,52 +715,204 @@ select option {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  /* 은은해야 한다 — 세게 하면 카드가 손전등을 따라다니는 것처럼 보인다
-     ("너무 과해" 피드백으로 240px/100% → 320px/35% 로 낮춤: 넓고 옅게) */
+  /* 은은해야 한다 — 세게 하면 카드가 손전등을 따라다니는 것처럼 보인다.
+     두 번 낮췄다: 240px/100% → 320px/35%(2026-08-05) → **420px/0.18**(2026-08-18
+     사용자 지적 "스포트라이트도 더 죽여"). 넓힐수록·옅을수록 "빛이 지나간다"가 아니라
+     "면이 살짝 밝다"로 읽힌다 — 카드 여럿이 늘어선 목록에서 그 차이가 크다. */
   background: radial-gradient(
-    320px circle at var(--mx, 50%) var(--my, 50%),
+    420px circle at var(--mx, 50%) var(--my, 50%),
     var(--color-glow),
-    transparent 70%
+    transparent 72%
   );
   opacity: 0;
   transition: opacity 280ms ease;
 }
 .card-spotlight:hover::before {
-  opacity: 0.35;
+  opacity: 0.18;
 }
 
-/* 클릭형 카드 공통 호버 — 살짝 떠오르고 테두리·글로우가 켜진다 (사양서 카드와 동일 감).
+/* ⚠ 손이 덜 닿는 기기에서는 아예 끈다 — 터치는 커서가 없어 좌표(--mx/--my)가 안 따라오고,
+   그러면 마지막으로 만진 자리에 빛이 **남아 붙는다** */
+@media (hover: none) {
+  .card-spotlight::before {
+    display: none;
+  }
+}
+
+/* 클릭형 카드 공통 호버 — **눌러도 되는 물건이라는 것만 말한다**.
    ⚠ transform 이 아니라 translate 속성이다 — 등장 애니메이션(fill: both)이 transform 을
-   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음). */
+   고정해 버려서 transform 호버는 조용히 죽는다(실측으로 잡음).
+
+   ⚠⚠ **리프트를 죽였다**(2026-08-18 사용자 지적: "카드 리프트 효과 좀 죽여줘").
+   예전에는 3px 를 스프링 곡선(linear(), 1.116 까지 넘었다 돌아옴)으로 띄웠다 — 카드 한 장
+   위에서는 손맛이지만, 목록이 카드로 그려지는 화면에서는 **커서가 지나가는 자리마다 줄이
+   출렁였다.** 호버는 "여기를 누를 수 있다"만 말하면 된다: 1px + 튕김 없는 감쇠. */
 .card-hover {
-  /* translate 만 CSS 스프링(linear() 곡선) — 살짝 넘었다 눌러앉는 손맛.
-     linear() 는 기계 곡선(cubic-bezier)로는 못 그리는 감쇠 진동을 표로 편 것 */
   transition:
-    translate 380ms
-      linear(
-        0, 0.322 5.2%, 0.646 10.6%, 0.876 15.9%, 1.021 21.3%, 1.098 27%, 1.116 33.2%,
-        1.098 39.9%, 1.062 47.5%, 1.024 56.2%, 1.001 66.4%, 0.994 78.4%, 1
-      ),
+    translate 160ms ease-out,
     border-color 200ms ease,
     box-shadow 200ms ease;
 }
 .card-hover:hover {
-  translate: 0 -2px;
-  border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
-  box-shadow: 0 6px 20px var(--color-glow);
+  /* 1px — 뜬 것을 **알아채되 쳐다보지 않는** 정도. 깊이는 그림자와 테두리가 진다.
+     ⚠ 카드는 평소에도 shadow-1 을 지고 있다 — 호버에서 같은 값을 주면 **그림자가 하나도
+     안 변한다**(리프트를 죽인 판에서 잠깐 그랬다). 한 단 위(shadow-2)로 올리되, 그 값
+     자체를 낮춰 두었으므로 무겁지 않다. */
+  translate: 0 -1px;
+  border-color: color-mix(in oklab, var(--color-primary) 28%, transparent);
+  box-shadow: var(--shadow-2);
 }
+
+/* 손이 덜 닿는 기기에서는 **아예 뜨지 않는다** — 터치는 호버가 없어서, 눌렀다 뗀 뒤
+   리프트가 남아 "선택된 것처럼" 보이는 자리가 생긴다 */
+@media (hover: none) {
+  .card-hover:hover {
+    translate: none;
+    box-shadow: none;
+  }
+}
+
+/* ── 유리와 깊이 (2026-08-12 사용자 채택 방향) ────────────────────────────
+   **카드는 판이다** — 조합 선택자가 곧 "카드" 표식이다(CTA 셴과 같은 방식:
+   35곳 마크업에 클래스를 새로 달지 않는다). rounded-lg 이하(버튼·입력·칩)는 일부러
+   뺐다 — 작은 조작에까지 그림자를 걸면 화면이 통째로 무거워진다.
+
+   층은 세 가지가 함께 만든다:
+   ① **반투명 면** — 뒤의 바탕(body::before 의 브랜드 빛)이 은은히 비친다
+   ② **윗변 1px 하이라이트** — 유리판의 잘린 모서리. 이것 하나가 "면"을 "판"으로 바꾼다
+   ③ **다층 그림자** — 접지(1px)·주(중거리)·환경(멀리) 셋을 겹쳐 거리감을 만든다
+
+   ⚠⚠ **카드에는 `backdrop-filter` 를 걸지 않는다.** 유리라고 전부 흐리면 스크롤할 때마다
+   카드 수만큼 블러를 다시 계산한다 — 표·차트가 20개씩 얹히는 화면에서 프레임이 무너진다.
+   흐림은 **덮개·헤더·팝오버처럼 정말 뒤가 겹치는 몇 곳**만 쓴다(그쪽은 정지 화면이다).
+   반투명 + 하이라이트만으로도 눈은 "유리"로 읽는다. */
+/* ⚠ 표식에서 **테두리 조건을 뺐다** (2026-08-13). 예전에는 `bg-surface + border-hairline +
+   rounded` 셋이 모여야 카드로 쳤는데, 그러면 **테두리를 걷는 순간 그림자까지 사라진다** —
+   "선을 빼고 면과 그림자로 띄운다"를 할 수가 없었다. 카드를 카드로 만드는 것은 면과
+   높이(그림자)이지 선이 아니다. 선은 그 위에 얹는 선택지로 남긴다. */
+.bg-surface:is([class*='rounded-2xl'], [class*='rounded-xl']) {
+  background-color: var(--color-card-glass);
+  box-shadow: var(--shadow-1);
+}
+
+/* 투명도를 줄여 달라고 한 사람에게는 유리를 걷는다 — 층은 그림자만으로 남는다 */
+@media (prefers-reduced-transparency: reduce) {
+  .bg-surface:is([class*='rounded-2xl'], [class*='rounded-xl']) {
+    background-color: var(--color-surface);
+  }
+  .bg-cover-glass,
+  header {
+    background-color: var(--color-surface);
+    backdrop-filter: none;
+  }
+}
+
+/* 사이드바 — 기둥에 빛과 모서리를 준다.
+   ⚠ 예전 주석은 "두 테마 모두 다크라 값이 하나다"였다. 라이트에서 기둥을 밝히면서
+   그 전제가 깨졌다(2026-08-13) — **흰 기둥 위 흰색 6% 하이라이트는 아무것도 안 한다.**
+   라이트에서는 기둥이 캔버스보다 밝으므로, 모서리는 하이라이트가 아니라 **그림자**가 만든다
+   (고도는 테마마다 다른 물리를 쓴다 — DESIGN.md 테마 시스템 절과 같은 이유). */
+aside {
+  background-image: var(--sidebar-sheen);
+  box-shadow: inset -1px 0 0 rgb(255 255 255 / 6%);
+}
+[data-theme='light'] aside {
+  box-shadow: 1px 0 0 var(--color-sidebar-line), 6px 0 18px -12px rgb(15 23 39 / 18%);
+}
+
+/* 주 버튼(그라디언트)의 그림자도 라이트에서는 글로우가 아니라 그림자다.
+   마크업 33곳을 고치는 대신 CTA 표식(조합 선택자)에 한 번 건다 */
+[data-theme='light'] button[class*='from-primary'][class*='to-accent2'],
+[data-theme='light'] a[class*='from-primary'][class*='to-accent2'] {
+  box-shadow: var(--shadow-cta);
+}
+
+/* 표의 행 구분은 **나누는 선**으로 — 카드 테두리와 같은 굵기로 그으면 표가 시끄럽다.
+   카드는 또렷하게, 표는 조용하게. 선이 두 단계인 이유가 이것이다.
+
+   ⚠⚠ 예전에는 이 규칙이 **라이트 테마의 `td`·`th` 에만** 걸려 있었다(2026-08-18 감사):
+   ① 다크에서는 표의 행이 카드 테두리와 같은 무게로 그어졌고
+   ② 목록의 `<li>` 행은 셀이 아니라서 규칙 밖이었다 — 그래서 화면마다 `border-hairline/50`,
+      `/60` 처럼 **손으로 농도를 깎아** 썼다(열 자리, 농도 두 종류).
+   지금은 행이 `border-divider` 를 **직접** 쓴다. 규칙을 CSS 가 멀리서 바꿔치기하는 대신
+   마크업이 자기 뜻(감싸는 선/나누는 선)을 말한다 — 멀리서 바꾸면 다음 사람은 왜 색이
+   다른지 못 찾는다. 아래 선택자는 남은 자리(옛 마크업)를 위한 **안전판**으로만 둔다. */
+:is(td, th)[class*='border-hairline'] {
+  border-color: var(--color-divider);
+}
+
+/* 카드·덮개의 **머리 면** — 한 곳에서 정한다.
+   ⚠ 예전에는 각 화면이 `bg-canvas/50` 을 손으로 적었는데, 라이트 캔버스가 밝아지자
+   흰 카드 위에서 거의 흰색이 되어 머리·몸이 안 갈렸다(2026-08-06 사용자 지적).
+   톤을 여기서 한 번에 조절한다 — 다음에 "머리가 진하다/연하다"는 말이 나오면 이 줄이다. */
+/* 아이콘 획을 **화면 픽셀로 고정한다** (Icon.tsx 주석 참고).
+   `vector-effect` 는 도형 요소에 걸려야 하고 상속이 보장되지 않아, 그리는 조각들에 직접 건다.
+   이게 없으면 아이콘을 크게 그릴수록 획이 굵어져 같은 세트가 자리마다 다른 펜으로 보인다. */
+[data-icon] * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* 갈래 머리표 — "이 아래는 이 갈래" 를 말하는 작은 라벨 (덮개 안 목록·팔레트 그룹·
+   챗봇 질의 갈래). 자간을 조금 벌려 **값이 아니라 머리표로** 읽히게 한다(규약 §7 머리 절의
+   같은 수법). 카드 제목과는 다른 물건이다 — 제목은 `text-ink` 로 진하고 크다.
+
+   ⚠⚠ **문자열로 반복하지 않는다.** 이 규칙을 세 화면에 손으로 적었더니 하루도 안 돼
+   `tracking-wide` · `tracking-[0.06em]` · `tracking-[0.08em]` 세 가지로 갈렸다(2026-08-13).
+   작업 규율 1 — 판단은 한 곳에서 하고 그 한 곳을 지나가게 한다.
+
+   ⚠ `uppercase` 는 **쓰지 않는다.** 한글에는 아무 효과가 없고 영문에서만 갑자기 대문자가
+   되어, 언어를 바꾸면 같은 자리가 다른 물건으로 보인다(규약 §4 다국어). */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-subtle);
+}
+
+.surface-head {
+  /* ⚠ **선을 긋지 않는다.** 면+선을 함께 쓰면 옛날 관리자 화면의 패널 머리가 된다
+     (2026-08-06 사용자: "라인이 있어서 촌스러워 보여"). 면도 아주 옅다 — 띠로 읽히면
+     그 순간 다시 패널이 된다. */
+  background-color: var(--color-head);
+}
+
+/* 머리 안의 **작은 고정폭 글자(ID·버전)를 라벨처럼** 만든다 — 면을 지운 만큼 여기가
+   머리라는 신호를 글자가 진다. 자간을 조금 벌리면 같은 크기라도 "값"이 아니라
+   "머리표"로 읽힌다(D안의 핵심). 제목·본문은 건드리지 않는다: 자간은 상속되므로
+   컨테이너가 아니라 고정폭 글자에만 건다. */
+.surface-head .font-mono {
+  letter-spacing: 0.055em;
+}
+
+/* **조작은 면보다 한 단계 눌린다.**
+   흰 헤더 위의 흰 검색칸, 흰 카드 위의 흰 칩은 "누를 수 있는 것"으로 안 읽힌다.
+   ⚠ 덮개(팝오버·드로어)와 카드는 흰 면 그대로 둔다 — 여기서 button/a/입력 계열만
+   고르는 이유가 그것이다(`div.bg-surface` 인 알림 팝오버는 흰색을 지킨다).
+   다크는 배경이 어두워 같은 값도 테두리로 충분히 갈리므로 라이트에서만 건다. */
+[data-theme='light']
+  :is(button, a, input, textarea, select).bg-surface:not([class*='rounded-xl']):not([class*='rounded-2xl']) {
+  background-color: var(--color-field);
+}
+/* ⚠ **카드 전체가 버튼인 화면이 있다**(승인·배포의 목록 카드는 누르면 상세가 열린다).
+   요소 종류만 보고 조작이라 판단하면 그 카드가 통째로 회색이 된다 — 실제로 그렇게 됐고
+   "승인·배포만 본문 색이 다르다"로 나타났다(2026-08-06 사용자 발견).
+   **모서리가 크면 카드, 작으면 조작**이라는 같은 기준을 쓴다(그림자 규칙과 동일). */
 
 /* CTA 셴 — 그라디언트 주 버튼에 호버 시 빛이 한 번 스치고 지나간다.
    정본은 이 조합 선택자 하나: from-primary+to-accent2 유틸 조합이 곧 CTA 표식이라
-   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋 */
+   35곳 마크업에 클래스를 따로 달지 않는다. 스침은 들어올 때만, 나갈 때는 즉시 리셋.
+
+   ⚠ **자리를 정하는 유틸을 덮지 않는다** — `position: relative` 가 `.fixed` 를 이겨
+   떠 있는 [물어보기] 버튼이 우측 하단이 아니라 글의 흐름 자리에 그려졌다
+   (2026-08-06 실측: 화면 위쪽 구석에 떴다). 효과가 배치를 이기면 안 된다. */
 @media (hover: hover) {
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled),
-  a[class*='from-primary'][class*='to-accent2'] {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute),
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute) {
     position: relative;
     overflow: hidden;
   }
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled)::after,
-  a[class*='from-primary'][class*='to-accent2']::after {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute)::after,
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute)::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -320,8 +920,8 @@ select option {
     transform: translateX(-130%);
     pointer-events: none;
   }
-  button[class*='from-primary'][class*='to-accent2']:not(:disabled):hover::after,
-  a[class*='from-primary'][class*='to-accent2']:hover::after {
+  button[class*='from-primary'][class*='to-accent2']:not(:disabled):not(.fixed):not(.absolute):hover::after,
+  a[class*='from-primary'][class*='to-accent2']:not(.fixed):not(.absolute):hover::after {
     transform: translateX(130%);
     transition: transform 600ms ease;
   }
@@ -439,13 +1039,72 @@ h1, h2, h3 {
 .anim-slide-out { animation: slide-out-right 200ms ease both; }
 .anim-fade-up { animation: fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-toast-in { animation: toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-sheet-in { animation: sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-/* Cross-page View Transitions (TanStack Router defaultViewTransition) */
+/* 막대가 **바닥에서 자란다** — 값이 0 에서 제자리까지 올라오는 것이 곧 "얼마"라는 말이다.
+   ⚠ 원점(transform-origin)을 바닥에 두는 것은 마크업이 한다(막대마다 baseline y 가 다르다).
+   ⚠ 계열마다 조금씩 늦게 시작해 한 덩어리로 튀어오르지 않게 한다 — 눈이 하나씩 따라간다. */
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+}
+.chart-bar {
+  animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 선이 **왼쪽에서 그려진다** — 시간이 흐르는 방향으로 손이 지나간다.
+   ⚠ `pathLength="1"` 을 path 에 붙여 길이를 정규화한다 — 실제 경로 길이를 재지 않아도
+   대시로 그릴 수 있고, 데이터가 바뀌어 경로가 길어져도 속도가 그대로다. */
+@keyframes line-draw {
+  from { stroke-dashoffset: 1; }
+}
+.chart-line {
+  stroke-dasharray: 1;
+  animation: line-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 도넛 조각이 **살짝 부풀며 든다** — 합계에서 각자의 몫으로 갈라지는 모양 */
+@keyframes donut-fill {
+  from { opacity: 0; transform: scale(0.92); }
+}
+.donut-seg {
+  transform-origin: 64px 64px;
+  animation: donut-fill 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 45rem = --breakpoint-pc. @theme 토큰은 미디어 쿼리 안에서 못 쓰므로 값을 적는다 */
+@media (min-width: 45rem) {
+  .anim-toast-in { animation-name: toast-in-top; }
+}
+
+/* Cross-page View Transitions (TanStack Router defaultViewTransition)
+
+   ⚠⚠ **페이지 전환은 크로스페이드만 한다. 확대·이동을 얹지 않는다** (2026-08-13 사용자
+   지적: "메뉴 이동할 때마다 미세하게 좁아졌다가 다시 펴지는 느낌", "계속 꿈틀거려").
+
+   원인은 여기였다 — `::view-transition-new(root)` 에 `scale-in` 을 걸어 뒀는데 그 keyframe 은
+   `transform: translateY(10px) scale(0.97)` 에서 시작한다. 카드 하나에 걸면 "눌러앉는" 느낌이지만
+   **root 는 화면 전체의 스냅샷**이라, 사이드바·헤더·본문·차트가 통째로 97% 로 줄었다 펴진다.
+   가운데에서 멀수록 더 많이 움직여서, 화면 가장자리가 매번 출렁이는 것으로 보인다.
+   전환마다 그러니 "자연스럽게 넘어가는" 대신 "꿈틀대는" 인상이 된다.
+
+   ⚠ 이 자리는 **크기·위치를 건드리면 안 되는 자리**다. 층·리듬을 주는 모션은 카드·덮개처럼
+   *경계가 있는 물건*에만 건다 — 화면 전체에는 밝기(투명도)만 쓴다.
+   ⚠ 세로 스크롤바가 생겼다 없어지며 폭이 널뛰던 문제는 **별개**였고, 루트에
+   `overflow-y: scroll` 로 따로 잡았다(위 스크롤바 절). 둘이 겹쳐 있어서 하나만 고쳤을 때
+   "아직도 꿈틀거린다"가 됐다. */
+@keyframes page-in {
+  from { opacity: 0; }
+}
+/* ⚠⚠ **옛 화면은 안 지운다. 새 화면을 그 위에 덮기만 한다.**
+   예전에는 옛 것이 110ms 에 걸쳐 사라지고 새 것이 190ms 에 걸쳐 나타났다 — 그 사이
+   **둘 다 반투명한 구간**이 생겨 뒤가 비친다. 위 `html` 배경으로 흰색은 막았지만,
+   두 겹이 겹쳐 흐려지는 순간 자체가 "번쩍"으로 읽힌다.
+   새 스냅샷이 위에 있으므로, 옛 것을 불투명하게 둔 채 새 것만 덮어 오면 빈틈이 없다. */
 ::view-transition-old(root) {
-  animation: fade-out 110ms ease both;
+  animation: none;
 }
 ::view-transition-new(root) {
-  animation: scale-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: page-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -14,6 +14,8 @@ export interface ApprovalRequest {
   kind: RequestKind
   /** 사양서 결재일 때만 — 누르면 그 사양서로 간다 */
   specId?: string
+  /** 배포 결재일 때만 — 승인되면 이 배포가 시작된다 (FR-114 뒷단) */
+  deployId?: string
   title: string
   version?: string
   type: RequestType
@@ -28,6 +30,37 @@ export interface ApprovalRequest {
   myTurn: boolean
   summary: string
   changes: Array<ChangeRow>
+}
+
+/**
+ * 사양서 결재선 **정본** — 검토(1차) → 최종 승인.
+ *
+ * ⚠ 결재선이 상신 모달 안에 '한동현 (1차) → 김현대 (최종)' 글자로 박혀 있었다.
+ * 상세 화면은 결재선을 아예 안 보여 줬고, 승인 관리는 자기 mock 의 approver 를
+ * 따로 들고 있었다 — 같은 결재선을 세 화면이 제각기 말할 수 있는 모양이었다
+ * (규약 §10 같은 것은 한 곳에서 · 2026-08-18).
+ *
+ * 본개발에서는 조직·문서 종류로 파생된다(결재선 엔진). 지금은 한 벌 고정이라
+ * 이 배열이 정본이고, 화면은 여기만 읽는다.
+ */
+export interface ApprovalStep {
+  /** 몇 번째 결재인가 — 화면의 단계 점이 이 순서로 선다 */
+  seq: number
+  name: string
+  /** 결재자의 서비스 Role 코드 — 라벨은 화면이 사전으로 입힌다 (규약 §4-7) */
+  role: string
+  /** 이 단계가 하는 일 */
+  label: string
+}
+
+export const SPEC_APPROVAL_LINE: Array<ApprovalStep> = [
+  { seq: 1, name: '한동현', role: 'IBD_APPROVER', label: '검토' },
+  { seq: 2, name: '김현대', role: 'IBD_ADMIN', label: '최종 승인' },
+]
+
+/** 지금 이 사양서가 결재 어디까지 왔나 — 결재함에서 찾는다(없으면 아직 안 올라간 것). */
+export function approvalOf(specId: string): ApprovalRequest | undefined {
+  return approvalRequests.find((r) => r.specId === specId)
 }
 
 export const approvalRequests: Array<ApprovalRequest> = [
@@ -53,9 +86,39 @@ export const approvalRequests: Array<ApprovalRequest> = [
       { item: '복합 연비', before: '10.8 km/L', after: '11.2 km/L' },
     ],
   },
+  /* ⚠⚠ **겹침 시드** — 위 APR-2026-0115 와 **같은 사양서(SP-001)** 를 본다.
+     고객이 회의에서 "이런 케이스가 지금 바로 있긴 했어요 — 이미 누군가 수정 요청을 했는데
+     사용 담당자가 또 수정해"라고 말한 그 상황이다(2026-07-20). 시드로 세워 두지 않으면
+     겹침 화면을 보려고 리뷰어가 상신을 두 번 해야 한다 — 안 보이는 기능은 없는 기능이다.
+     ⚠ 내용이 서로 **부딪히게** 잡았다: 같은 '최대 출력'을 한쪽은 290, 다른 쪽은 295 로
+     올린다. 둘 다 반영되면 어느 쪽이 최종인지 알 수 없다 — 그것이 막는 이유다. */
+  {
+    id: 'APR-2026-0116',
+    kind: '사양서',
+    specId: 'SP-001',
+    title: 'VN7 엔진 사양서 v2.3 (출력 재조정)',
+    version: 'v2.3',
+    type: '수정',
+    urgent: false,
+    requester: '박서준',
+    requesterTeam: '파워트레인개발팀',
+    approver: '김현대',
+    requestedAt: '2026.08.04',
+    deadline: '2026.08.09',
+    waitingDays: 1,
+    step: [1, 3],
+    myTurn: true,
+    summary: '동일 사양서에 대한 별건 변경 요청입니다 — 최대 출력 295hp 및 최대 토크 상향(38.5→39.2 kgf·m).',
+    changes: [
+      { item: '최대 출력', before: '285 hp @ 5,800 rpm', after: '295 hp @ 6,000 rpm' },
+      { item: '최대 토크', before: '38.5 kgf·m', after: '39.2 kgf·m' },
+    ],
+  },
   {
     id: 'APR-2026-0114',
     kind: '배포',
+    // ⚠ 매달지 않으면 승인해도 배포 목록은 '대기' 그대로다 — 결재와 대상은 짝이 있어야 한다
+    deployId: 'DEP-2026-0115',
     title: 'Release v3.1.1 운영 배포',
     type: '신규',
     urgent: true,

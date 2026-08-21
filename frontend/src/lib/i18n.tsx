@@ -39,8 +39,53 @@ const CORE_DICT: Record<string, Entry> = {
   'common.edit': { ko: '편집', en: 'Edit' },
   'common.search': { ko: '검색', en: 'Search' },
   'common.all': { ko: '전체', en: 'All' },
+  /* 목록의 발 (관문 ListFoot) — 세는 단위(건·명)는 한국어 문장에만 붙는다.
+     EN 은 "3 of 6" 이 자연스럽고 단위를 붙이면 오히려 어색하다. */
+  'listFoot.total': { ko: '전체 {n}{unit}', en: '{n} total' },
+  'listFoot.filtered': { ko: '전체 {n}{unit} 중 {m}{unit}', en: '{m} of {n}' },
+  'common.prevPage': { ko: '이전', en: 'Previous' },
+  'common.nextPage': { ko: '다음', en: 'Next' },
+  /* 저장 필터 (관문 SavedFilters) — 화면마다 상자를 가르되 말은 하나다 */
+  'savedFilters.save': { ko: '+ 지금 조건 저장', en: '+ Save current filters' },
+  'savedFilters.namePlaceholder': { ko: '조건 이름 (예: 내 팀 승인 대기)', en: 'Name (e.g. My team, pending)' },
+  'savedFilters.remove': { ko: '{name} 저장 조건 삭제', en: 'Delete saved filter {name}' },
+  'savedFilters.toast.saved': { ko: '[{name}] 조건을 저장했습니다', en: 'Saved filters as [{name}]' },
+  'savedFilters.toast.removed': { ko: '[{name}] 을 지웠습니다', en: 'Deleted [{name}]' },
+  /* 차트 관문이 스스로 쓰는 말 (components/portal/charts.tsx) — 부르는 쪽이 주는
+     말(열 이름·도넛 캡션)은 이미 번역돼 온다. EN 대시보드에서 차트 글자만 통째로
+     한국어로 남아 있던 자리다(2026-08-18 EN 실검수). */
+  'chart.legend.current': { ko: '현재 기간', en: 'Current period' },
+  'chart.legend.previous': { ko: '이전 기간', en: 'Previous period' },
+  'chart.unit.count': { ko: '건', en: '' },
+  'chart.heatmap.hint': { ko: '칸에 올리면 값이 보입니다 · 짙을수록 많음', en: 'Hover a cell for its value · darker = more' },
+  'chart.heatmap.dayHint': { ko: '칸에 올리면 일자별 처리량이 보입니다', en: 'Hover a cell for that day’s volume' },
+  'chart.heatmap.less': { ko: '적음', en: 'Less' },
+  'chart.heatmap.more': { ko: '많음', en: 'More' },
+  'chart.weekday.mon': { ko: '월', en: 'Mon' },
+  'chart.weekday.wed': { ko: '수', en: 'Wed' },
+  'chart.weekday.fri': { ko: '금', en: 'Fri' },
+
+  /* 그림·조작의 **읽어 주는 이름**(aria-label) — 화면 글자가 아니라서 눈에 안 띄지만,
+     화면 낭독기에는 이것이 전부다. EN 로 바꿔도 한국어로 남아 있었다(2026-08-18 감사).
+     ⚠ 차트는 "무엇을 그린 그림인지"를 말한다 — 값은 아래 범례·표가 이미 말한다. */
+  'chart.aria.donut': { ko: '구성비', en: 'Composition' },
+  'chart.aria.trend': { ko: '검증 처리량 추이', en: 'Validation volume trend' },
+  'chart.aria.bars': { ko: '계열 비교', en: 'Series comparison' },
+  'chart.aria.multiTrend': { ko: '다계열 추이', en: 'Multi-series trend' },
+  'chart.aria.timeHeatmap': { ko: '요일·시간 분포', en: 'Weekday and hour distribution' },
+  'chart.aria.dayHeatmap': { ko: '일별 검증 실행 히트맵', en: 'Daily validation run heatmap' },
+  'gnb.openMenu': { ko: '메뉴 열기', en: 'Open menu' },
+  'gnb.closeMenu': { ko: '메뉴 닫기', en: 'Close menu' },
+  'gnb.accountMenu': { ko: '계정 메뉴', en: 'Account menu' },
+  'gnb.toggleTheme': { ko: '테마 전환', en: 'Toggle theme' },
   'common.approve': { ko: '승인', en: 'Approve' },
   'common.reject': { ko: '반려', en: 'Reject' },
+  /* 결재 자국의 **값**은 한국어 정본이고 표시만 여기서 옮긴다 (규약 §4-7 — Role 코드와 같은 규칙).
+     ⚠ 승인·반려만 있던 자리에 '취소'가 늘었다(2026-08-21 겹침 정리) — 네 낱말이 한 벌이다. */
+  'trailAction.승인': { ko: '승인', en: 'Approved' },
+  'trailAction.반려': { ko: '반려', en: 'Rejected' },
+  'trailAction.취소': { ko: '취소', en: 'Canceled' },
+  'trailAction.회수': { ko: '회수', en: 'Withdrawn' },
   'common.reset': { ko: '초기화', en: 'Reset' },
   'common.apply': { ko: '적용', en: 'Apply' },
   'common.create': { ko: '만들기', en: 'Create' },
@@ -48,14 +93,18 @@ const CORE_DICT: Record<string, Entry> = {
   'common.download': { ko: '내려받기', en: 'Download' },
   'common.copy': { ko: '복사', en: 'Copy' },
 
+  // 같은 토스트가 연달아 올 때 접는 꼬리표 (규약 §2 겹침·모임)
+  'toast.more': { ko: '외 {n}건', en: '+{n} more' },
+  'common.undo': { ko: '되돌리기', en: 'Undo' },
+
   // ── 사양서 카드 (공용 컴포넌트라 화면 사전이 아니라 여기) ──────────
   'specCard.detail': { ko: '상세 보기', en: 'View detail' },
   'specCard.compare': { ko: '버전 비교', en: 'Compare versions' },
   'specCard.request': { ko: '승인 요청', en: 'Request approval' },
   'specCard.updated': { ko: '{date} 수정', en: 'Updated {date}' },
-  'specCard.requestedToast': {
-    ko: '{name} 승인 요청이 전송되었습니다',
-    en: 'Approval request sent for {name}',
+  'specCard.noFields': {
+    ko: '아직 필드가 없습니다 — [상세 보기]에서 필드 정의를 채웁니다.',
+    en: 'No fields yet — fill in field definitions from [View detail].',
   },
 
   /* ── 권한 매트릭스의 메뉴·액션 이름 ────────────────────────────────
@@ -91,6 +140,41 @@ const CORE_DICT: Record<string, Entry> = {
   'palette.pages': { ko: '페이지', en: 'Pages' },
   'palette.go': { ko: '이동', en: 'Go' },
   'palette.specs': { ko: '사양서', en: 'Specs' },
+  'palette.actions': { ko: '기능', en: 'Actions' },
+  'palette.open': { ko: '열기', en: 'Open' },
+  // ⚠ 이 두 줄은 팔레트 안에 **한국어로 박혀 있었다** — 화면 대부분이 사전을 타는데
+  //   여기만 안 타서, EN 으로 돌리면 검색창과 빈 결과 안내만 한국어로 남았다
+  //   (2026-08-13 §4 다국어 위반으로 잡음). 사전에 없는 낱말은 화면에서 티가 안 난다.
+  'palette.placeholder': { ko: '페이지, 사양서 검색...', en: 'Search pages and specs...' },
+  'palette.empty': { ko: '검색 결과가 없습니다.', en: 'No results.' },
+  // 발의 키 안내 — 넓은 화면에만 나온다(좁은 화면엔 물리 키가 없다)
+  'palette.hint.move': { ko: '이동', en: 'Move' },
+  'palette.hint.run': { ko: '열기', en: 'Open' },
+  'palette.hint.close': { ko: '닫기', en: 'Close' },
+
+  // ── 대화형 챗봇 (정본: docs/챗봇_표준질의_설계.md) ───────────────────
+  // ⚠ 답 본문(understood·headline·evidence 등)은 서버가 언어별로 만든다(정본 §5) —
+  //   여기는 패널 껍데기 문구만.
+  'ask.title': { ko: '물어보기', en: 'Ask' },
+  'ask.placeholder': { ko: '무엇이든 물어보세요…', en: 'Ask anything…' },
+  'ask.inputLabel': { ko: '질문 입력', en: 'Question' },
+  'ask.send': { ko: '보내기', en: 'Send' },
+  'ask.sending': { ko: '답변 준비 중…', en: 'Thinking…' },
+  'ask.suggested': { ko: '표준 질의', en: 'Suggested questions' },
+  'ask.catalogError': {
+    ko: '표준 질의를 불러오지 못했습니다 — 아래에 직접 물어보셔도 됩니다.',
+    en: 'Could not load suggested questions — you can still type your own below.',
+  },
+  'ask.catalogEmpty': { ko: '아직 표준 질의가 없습니다.', en: 'No suggested questions yet.' },
+  'ask.askError': {
+    ko: '답을 받아오지 못했습니다 — 네트워크를 확인해 주세요.',
+    en: 'Could not get an answer — check your connection.',
+  },
+  'ask.understood': { ko: '이렇게 알아들었어요', en: "Here's what I understood" },
+  'ask.totalLine': { ko: '총 {total}{unit}', en: 'Total {total}{unit}' },
+  'ask.evidence': { ko: '근거', en: 'Evidence' },
+  'ask.anomalies': { ko: '특이사항', en: 'Anomalies' },
+  'ask.openScreen': { ko: '그 화면 열기', en: 'Open this screen' },
 
   // ── 개인 설정 ────────────────────────────────────────────────────
   'prefs.accent': { ko: '포인트 색상', en: 'Accent color' },

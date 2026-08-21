@@ -25,6 +25,31 @@ export type IconName =
   | 'user'
   | 'settings'
   | 'logout'
+  | 'chat'
+  // 조작 아이콘 — 이모지를 걷어내고 같은 세트의 획으로 그린다 (규약 §22 선 아이콘)
+  | 'unlock'
+  | 'trash'
+  | 'edit'
+  | 'bolt'
+  | 'calendar'
+  | 'print'
+  | 'download'
+  | 'upload'
+  | 'thumbsUp'
+  | 'info'
+  // 관문 밖에서 손으로 그려지던 모양들 — 화면마다 굵기가 1.5~2.2 로 갈렸다(2026-08-18)
+  | 'close'
+  | 'chevronDown'
+  | 'eye'
+  | 'eyeOff'
+  | 'sun'
+  | 'moon'
+  /* 상태를 말하는 모양 — ⚠ **색만으로 가르지 않는다**(규약 §16): 완료·대기·되돌림은
+     색이 아니라 **모양**이 먼저 다르다. 그래서 뜻마다 이름이 따로 있다. */
+  | 'check'
+  | 'clock'
+  | 'undo'
+  | 'alert'
 
 export interface NavItem {
   key: string
@@ -103,8 +128,10 @@ export const nav: Array<NavSection> = [
     id: 'system',
     title: '시스템',
     items: [
-      // ⚠ '시스템 알림'은 뺐다 — 갈 화면이 없어 눌러도 아무 일이 없었다(규약 15·17절:
-      // 이름이 어긋나면 있는 것도 없는 것이 된다). 알림은 GNB 의 종 하나로 모은다(규약 2절)
+      // 2026-08-06 되살림: 실제 화면(/alerts)이 생겨 규약 15·17절 위반(갈 곳 없는 메뉴)이
+      // 풀렸다 — 서버 자원 리포팅·알림 이력·알림 규칙을 보여준다. GNB 종은 "안 본 것"만
+      // 모으고, 이 메뉴는 "지금 상태 + 지난 이력"을 보러 오는 자리라 역할이 다르다.
+      { key: 'alerts', label: '시스템 알림', labelEn: 'System Alerts', icon: 'bell', to: '/alerts' },
       { key: 'privacy', label: '개인정보보호', icon: 'lock', to: '/privacy' },
     ],
   },

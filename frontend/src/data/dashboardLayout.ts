@@ -38,7 +38,7 @@ export const WIDGET_META: Record<
   trend: { title: '일별 검증 처리량', feature: 'validation.stats', defaultSize: 2 },
   status: { title: '사양서 상태 분포', feature: 'spec.read', defaultSize: 1 },
   heatmap: { title: '검증 실행 히트맵', feature: 'validation.history', defaultSize: 2 },
-  queue: { title: '승인 대기 큐', feature: 'approval.read', defaultSize: 1 },
+  queue: { title: '결재 대기 큐', feature: 'approval.read', defaultSize: 1 },
   errors: { title: '오류 유형별 검출', feature: 'validation.errors', defaultSize: 2 },
   activity: { title: '최근 활동', feature: 'activity.read', defaultSize: 1 },
   system: { title: '시스템 현황', feature: 'monitoring.read', defaultSize: 2 },

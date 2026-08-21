@@ -3,6 +3,9 @@
  * 기본 화살표(OS 모양)를 없애고 앱의 선 아이콘 체브론을 얹는다.
  * option 배경은 styles.css 가 surface 로 강제한다(다크에서 흰 목록이 뜨지 않게).
  */
+
+import { Icon } from './Icon'
+
 export function Select({
   className = '',
   children,
@@ -16,20 +19,9 @@ export function Select({
       >
         {children}
       </select>
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-subtle"
-      >
-        <path d="m6 9 6 6 6-6" />
-      </svg>
+      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-subtle">
+        <Icon name="chevronDown" />
+      </span>
     </span>
   )
 }

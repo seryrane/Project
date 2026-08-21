@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { Icon } from '#/components/portal/Icon'
 import { ChipSelect } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { apiSend } from '#/lib/api'
@@ -113,7 +114,7 @@ function RolesPage() {
               }`}
             >
               {/* 머리 — 면으로 가른다 (규약 §5: 선 하나로는 약하다) */}
-              <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-canvas/50 px-5 py-3.5">
+              <div className="flex flex-wrap items-center gap-2 surface-head px-5 py-3.5">
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${ROLE_BADGE[r.key] ?? 'bg-primary/12 text-primary'}`}>
                   {r.name}
                 </span>
@@ -145,7 +146,7 @@ function RolesPage() {
                     onClick={() => setDeleting(r)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-danger-bg hover:text-danger-ink"
                   >
-                    🗑
+                    <Icon name="trash" />
                   </button>
                 </span>
               </div>
@@ -159,20 +160,20 @@ function RolesPage() {
                     {r.holders.map((h) => (
                       <span
                         key={h.name}
-                        className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-[11px]"
+                        className="inline-flex items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-xs"
                       >
                         <b className="font-medium text-ink">{h.name}</b>
                         <span className="text-ink-subtle">· {h.scopeLabel}</span>
                       </span>
                     ))}
                     {r.assigned > r.holders.length && (
-                      <span className="text-[11px] text-ink-subtle">
+                      <span className="text-xs text-ink-subtle">
                         {tf('roles.moreHolders', { n: r.assigned - r.holders.length })}
                       </span>
                     )}
                     <Link
                       to="/members"
-                      className="ml-auto text-[11px] font-medium text-primary hover:underline"
+                      className="ml-auto text-xs font-medium text-primary hover:underline"
                     >
                       {t('roles.viewMembers')}
                     </Link>
@@ -224,9 +225,9 @@ function RolesPage() {
                 className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-hairline py-2 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
               >
                 {open ? t('roles.matrixHide') : t('roles.matrixShow')}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} aria-hidden>
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
+                <span className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} aria-hidden>
+                  <Icon name="chevronDown" size="sm" />
+                </span>
               </button>
 
               {/* 펼침 — grid-rows 0fr→1fr 전환, 내용은 살짝 떠오른다 */}
@@ -246,7 +247,7 @@ function RolesPage() {
                       </thead>
                       <tbody>
                         {MENUS.map((m) => (
-                          <tr key={m} className="border-b border-hairline/50 last:border-0">
+                          <tr key={m} className="border-b border-divider last:border-0">
                             <td className="whitespace-nowrap px-3 py-1.5 text-ink-muted">
                               {t(`perm.${m}`, m)}
                             </td>
@@ -287,7 +288,51 @@ function RolesPage() {
 
       {/* 권한 편집 — 메뉴 × 액션 7종 풀 매트릭스 (저장은 상신으로 끝난다) */}
       {editing && (
-        <Modal title={tf('roles.editTitle', { name: editing.name })} onClose={() => setEditing(null)} wide>
+        <Modal
+          title={tf('roles.editTitle', { name: editing.name })}
+          onClose={() => setEditing(null)}
+          wide
+          /* ⚠ 발이 가장 절실한 자리다 — 메뉴 × 액션 7종 **풀 매트릭스**라 몸이 늘 넘친다.
+             예전에는 [상신]이 매트릭스 아래에 있어서, 권한을 다 만지고 나서 **한참 내려가야**
+             저장할 수 있었다. 게다가 바꾼 개수(dirtyCount)가 버튼에 붙어 있는데 그 숫자가
+             안 보이니 "몇 개 바꿨더라"를 확인할 길도 같이 사라졌다 (규약 §7) */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
+              <CtaButton
+                disabled={dirtyCount === 0 || selfLock}
+                busyLabel={t('roles.submitting')}
+                onAction={async () => {
+                  // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
+                  // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
+                  const matrix: Record<string, Array<string>> = {}
+                  for (const menu of MENUS) {
+                    matrix[menu] = ACTIONS.filter((a) => draft[`${menu}.${a}`])
+                  }
+                  const ok = await apiSend('POST', '/submissions', {
+                    kind: 'role-change',
+                    payload: { roleKey: editing.key, matrix, scope: draftScope },
+                  })
+                  if (!ok) await simulate() // 서버 없는 시연 모드
+                  setEditing(null)
+                  toast(
+                    tf('roles.toast.submitted', { name: editing.name, n: dirtyCount, assigned: editing.assigned }),
+                  )
+                }}
+              >
+                {t('roles.submit')}
+                {dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
+              </CtaButton>
+            </div>
+          }
+        >
           {/* 권한명·설명도 여기서 고친다 — 이름 변경 역시 상신 대상이다 */}
           <div className="grid grid-cols-1 gap-3 pc:grid-cols-[220px_1fr]">
             <label className="block">
@@ -340,7 +385,7 @@ function RolesPage() {
               </thead>
               <tbody>
                 {MENUS.map((m) => (
-                  <tr key={m} className="perm-row border-b border-hairline/60 transition-colors last:border-0">
+                  <tr key={m} className="perm-row border-b border-divider transition-colors last:border-0">
                     <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
                       {t(`perm.${m}`, m)}
                     </td>
@@ -355,7 +400,7 @@ function RolesPage() {
                             title={ACTION_SPECS[a].hint}
                             aria-pressed={on}
                             onClick={() => setDraft((d) => ({ ...d, [`${m}.${a}`]: !on }))}
-                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] leading-none transition-all active:scale-90 ${
+                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs leading-none transition-all active:scale-90 ${
                               on
                                 ? 'border-primary/50 bg-primary/15 text-primary'
                                 : 'border-hairline/70 text-ink-subtle/50 hover:border-primary/30 hover:text-ink-muted'
@@ -400,7 +445,7 @@ function RolesPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-ink-subtle">
+          <p className="mt-2 text-xs leading-relaxed text-ink-subtle">
             {t(
               'roles.footnote.scopeHelp',
               '⚠ 표시는 되돌리기 어렵거나 밖으로 나가는 액션입니다 — 머리글에 마우스를 올리면 설명이 보입니다. 조회 범위는 내 것만 ⊂ 우리 팀 ⊂ 전체 — 넓은 범위가 좁은 범위를 포함하므로 하나만 고릅니다.',
@@ -415,46 +460,54 @@ function RolesPage() {
               )}
             </p>
           )}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            {/* 누른 그 버튼이 변한다 + 두 번 안 눌린다 (규약 §3 — 권한 변경은 결재로 간다) */}
-            <CtaButton
-              disabled={dirtyCount === 0 || selfLock}
-              busyLabel={t('roles.submitting')}
-              onAction={async () => {
-                // 결재 엔진 미확정 — 서버 접수함에 상신 사실만 남긴다.
-                // 자기 잠금 방지는 서버가 최종으로 한 번 더 막는다
-                const matrix: Record<string, Array<string>> = {}
-                for (const menu of MENUS) {
-                  matrix[menu] = ACTIONS.filter((a) => draft[`${menu}.${a}`])
-                }
-                const ok = await apiSend('POST', '/submissions', {
-                  kind: 'role-change',
-                  payload: { roleKey: editing.key, matrix, scope: draftScope },
-                })
-                if (!ok) await simulate() // 서버 없는 시연 모드
-                setEditing(null)
-                toast(
-                  tf('roles.toast.submitted', { name: editing.name, n: dirtyCount, assigned: editing.assigned }),
-                )
-              }}
-            >
-              {t('roles.submit')}
-              {dirtyCount > 0 && <span className="tabular-nums">{dirtyCount}</span>}
-            </CtaButton>
-          </div>
         </Modal>
       )}
 
       {/* 새 역할 — 기반 역할 복사로 시작한다 (시안 2 채택) */}
       {creating && (
-        <Modal title={t('roles.newTitle', '새 역할 추가')} onClose={() => setCreating(false)}>
+        <Modal
+          title={t('roles.newTitle', '새 역할 추가')}
+          onClose={() => setCreating(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreating(false)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(false)
+                  setRoles((rs) => [
+                    ...rs,
+                    {
+                      key: `custom-${rs.length}`,
+                      name: '시니어 편집자',
+                      desc: '편집자 + 승인 요청 없이 배포 요청 가능 (시연용)',
+                      system: false,
+                      assigned: 0,
+                      matrix: roles.find((r) => r.key === 'editor')?.matrix ?? {},
+                      holders: [],
+                    },
+                  ])
+                  toast(
+                    tf(
+                      'roles.toast.created',
+                      { editLabel: t('roles.editPerms') },
+                      '역할을 생성했습니다 — [{editLabel}]에서 매트릭스를 다듬으세요',
+                    ),
+                  )
+                }}
+                className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+              >
+                {t('roles.create')}
+              </button>
+            </div>
+          }
+        >
           <label className="block">
             <span className="text-xs font-medium text-ink-subtle">
               {t('roles.label.roleName', '역할 이름')} <b className="text-danger-ink">*</b>
@@ -475,56 +528,48 @@ function RolesPage() {
               />
             </div>
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-ink-subtle">
+          <p className="mt-3 text-xs leading-relaxed text-ink-subtle">
             {tf(
               'roles.newRoleHint',
               { editLabel: t('roles.editPerms') },
               '기존 역할을 복사해 시작하면 매트릭스를 처음부터 채우지 않아도 됩니다 — 생성 후 [{editLabel}]에서 다듬으세요.',
             )}
           </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreating(false)
-                setRoles((rs) => [
-                  ...rs,
-                  {
-                    key: `custom-${rs.length}`,
-                    name: '시니어 편집자',
-                    desc: '편집자 + 승인 요청 없이 배포 요청 가능 (시연용)',
-                    system: false,
-                    assigned: 0,
-                    matrix: roles.find((r) => r.key === 'editor')?.matrix ?? {},
-                    holders: [],
-                  },
-                ])
-                toast(
-                  tf(
-                    'roles.toast.created',
-                    { editLabel: t('roles.editPerms') },
-                    '역할을 생성했습니다 — [{editLabel}]에서 매트릭스를 다듬으세요',
-                  ),
-                )
-              }}
-              className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-            >
-              {t('roles.create')}
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* 삭제 — 배정 인원이 있으면 막는다 (유령 권한을 만들지 않는다) */}
       {deleting && (
-        <Modal title={t('roles.deleteTitle', '역할 삭제')} onClose={() => setDeleting(null)}>
+        <Modal
+          title={t('roles.deleteTitle', '역할 삭제')}
+          onClose={() => setDeleting(null)}
+          /* 발은 관문 슬롯으로 (규약 §7) — 몸 안의 마지막 줄로 두면 내용이 길어질 때
+             마무리 조작이 스크롤에 밀려 사라진다 */
+          footer={
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleting(null)}
+                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              >
+                {t('common.close')}
+              </button>
+              {!deleting.system && deleting.assigned === 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRoles((rs) => rs.filter((r) => r.key !== deleting.key))
+                    setDeleting(null)
+                    toast(tf('roles.toast.deleted', { name: deleting.name }))
+                  }}
+                  className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  {t('common.delete')}
+                </button>
+              )}
+            </div>
+          }
+        >
           {deleting.system ? (
             <p className="text-[13px] leading-relaxed text-ink-muted">
               {tf(
@@ -551,28 +596,6 @@ function RolesPage() {
               <b className="text-danger-ink">{t('roles.delete.irreversible', '되돌릴 수 없습니다.')}</b>
             </p>
           )}
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeleting(null)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-            >
-              {t('common.close')}
-            </button>
-            {!deleting.system && deleting.assigned === 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setRoles((rs) => rs.filter((r) => r.key !== deleting.key))
-                  setDeleting(null)
-                  toast(tf('roles.toast.deleted', { name: deleting.name }))
-                }}
-                className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                {t('common.delete')}
-              </button>
-            )}
-          </div>
         </Modal>
       )}
     </AppShell>

@@ -3,31 +3,36 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { ListFoot } from '#/components/portal/ListFoot'
+import { Icon } from '#/components/portal/Icon'
+import type { IconName } from '#/data/nav'
 import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
-import { apiGet, apiSend } from '#/lib/api'
+import { apiGet, apiSend, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 import {
   ActivityHeatmap,
   ChartCard,
+  DonutChart,
   ErrorBarChart,
   StatTile,
   StatusStackBar,
   TrendLineChart,
 } from '#/components/portal/charts'
 import {
-  approvalQueue,
   errorTypes,
   heatmapDays,
   kpiSparks,
-  memberRoles,
   pipelines,
   recentActivity,
   serverResources,
-  statusDistribution,
   validationSeries,
 } from '#/data/dashboard'
 import type { ActivityKind, ServerHealth } from '#/data/dashboard'
+import { useApprovalList } from '#/data/approvalStore'
+import { gradeDistribution, members } from '#/data/members'
+import type { Member } from '#/data/members'
+import { specStatusDistribution, useSpecList } from '#/data/specStore'
 import { notices } from '#/data/community'
 import {
   ROLE_PRESETS,
@@ -51,58 +56,21 @@ function compactSum(kValues: Array<number>): string {
 }
 
 /* 활동 종류별 아이콘 — 같은 뜻은 같은 그림 하나로 (규약 §12) */
-const ACTIVITY_ICON: Record<ActivityKind, { path: React.ReactNode; cls: string }> = {
-  approve: {
-    path: (
-      <>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M8.5 12.2l2.4 2.4 4.6-5.2" />
-      </>
-    ),
-    cls: 'bg-pending-bg text-pending-ink',
-  },
-  review: {
-    path: <path d="M4 5.5h16v10.5H9.5L4 20z" />,
-    cls: 'bg-review-bg text-review-ink',
-  },
-  validate: {
-    path: (
-      <>
-        <rect x="7" y="7" width="10" height="10" rx="2" />
-        <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
-      </>
-    ),
-    cls: 'bg-draft-bg text-draft-ink',
-  },
-  deploy: {
-    path: (
-      <>
-        <path d="M12 19V6" />
-        <path d="M6.5 11.5L12 6l5.5 5.5" />
-        <path d="M5 20.5h14" />
-      </>
-    ),
-    cls: 'bg-deployed-bg text-deployed-ink',
-  },
+/* 활동 종류 — ⚠ 여기서 네 모양을 **손으로 다시 그리고 있었다**: 승인·검토 의견·검증·배포는
+   LNB 가 이미 쓰는 뜻이라 관문에 같은 모양이 있었는데도(approve·message·engine·deploy)
+   화면이 자기 path 를 들고 굵기 1.7 로 그렸다(2026-08-18). 이름만 고르고 그림은 관문이 그린다. */
+const ACTIVITY_ICON: Record<ActivityKind, { icon: IconName; cls: string }> = {
+  approve: { icon: 'approve', cls: 'bg-pending-bg text-pending-ink' },
+  review: { icon: 'message', cls: 'bg-review-bg text-review-ink' },
+  validate: { icon: 'engine', cls: 'bg-draft-bg text-draft-ink' },
+  deploy: { icon: 'deploy', cls: 'bg-deployed-bg text-deployed-ink' },
 }
 
 function ActivityIcon({ kind }: { kind: ActivityKind }) {
   const icon = ACTIVITY_ICON[kind]
   return (
     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${icon.cls}`}>
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {icon.path}
-      </svg>
+      <Icon name={icon.icon} />
     </span>
   )
 }
@@ -135,6 +103,19 @@ const SPAN: Record<WidgetSize, string> = {
 }
 const SIZE_LABEL: Record<WidgetSize, string> = { 1: '1칸', 2: '2칸', 3: '전체' }
 
+/**
+ * 사양서 상태 카드의 **한마디** (dataviz hero number — ChartCard 주석의 처방).
+ *
+ * ⚠⚠ 이 카드는 몸통이 도넛 하나뿐이라 `justify-between` 이 가를 자식이 없었다 —
+ * 격자가 옆 카드(2칸 선 그래프)에 키를 맞추는 동안 **밑이 270px 빈 흰 면**으로 남았다
+ * (2026-08-14 사용자 지적 "도넛 차트 공백 문제"). 2026-08-13 에 /analytics 에만
+ * 들어간 처방을 여기에도 들인다: 결론은 위, 그림은 바닥, 남는 자리는 그 사이가 먹는다.
+ *
+ * ⚠ 숫자는 코드가 센다 — 62·79·128 을 손으로 적으면 mock 이 바뀔 때 카드가 거짓말을 한다.
+ * 라벨('배포 완료')은 데이터의 정본 키다(사전은 표시만 옮긴다).
+ */
+const DEPLOYED = '배포 완료'
+
 function DashboardPage() {
   const { t, tf } = useI18n()
   const [range, setRange] = useState(30)
@@ -144,6 +125,31 @@ function DashboardPage() {
   const goReports = () => navigate({ to: '/validation-reports' })
   const goApprovals = () => navigate({ to: '/approvals' })
   const openSpec = (id: string) => navigate({ to: '/specs', search: { open: id } })
+
+  /* ── 숫자는 정본에서 센다 (규약 §10 "같은 이름의 숫자는 한 곳에서") ──
+     사양서는 specStore(등록·상신이 일어나면 여기 숫자도 같이 움직인다),
+     결재 대기는 결재함(approvals), 회원 분포는 회원 화면과 **같은 소스**
+     (서버 있으면 서버, 없으면 mock — 다르게 읽으면 두 화면이 갈라진다). */
+  const specList = useSpecList()
+  const statusDistribution = specStatusDistribution(specList)
+  /* 결재함이 정본 — 승인/반려/회수가 일어나면 대시보드 숫자도 함께 움직인다.
+     ⚠ 예전엔 고정 mock 배열을 세어서, 결재를 다 처리해도 대시보드는 그대로였다. */
+  const approvals = useApprovalList().filter((r) => r.state === '진행 중')
+  const pendingApprovals = approvals.length
+  /* 내 차례를 **맨 위로**. 위젯을 하나 더 만들지 않는 이유: 같은 목록을 두 카드가 말하면
+     "둘이 왜 다르지"를 먼저 묻게 된다(규약 §18 과적). 한 카드가 순서와 칩으로 가른다. */
+  const myTurnCount = approvals.filter((r) => r.myTurn).length
+  const queueRows = [...approvals].sort((a, b) => Number(b.myTurn) - Number(a.myTurn))
+  const { data: memberList } = useApi<Array<Member>>('/members', members)
+  const memberRoles = gradeDistribution(memberList)
+
+  const statusTotal = statusDistribution.reduce((s, d) => s + d.value, 0)
+  const statusPrevTotal = statusDistribution.reduce((s, d) => s + d.prev, 0)
+  const deployedNow = statusDistribution.find((d) => d.label === DEPLOYED)?.value ?? 0
+  const deployedPrev = statusDistribution.find((d) => d.label === DEPLOYED)?.prev ?? 0
+  const deployedPct = statusTotal ? Math.round((deployedNow / statusTotal) * 100) : 0
+  const deployedPctPrev = statusPrevTotal ? Math.round((deployedPrev / statusPrevTotal) * 100) : 0
+  const deployedDelta = deployedPct - deployedPctPrev
 
   // 위젯 배치 — 처음엔 관리자 프리셋, 이후엔 저장된 내 배치 (즉시 저장)
   const [layout, setLayout] = useState<Array<WidgetSlot>>(ROLE_PRESETS[0].layout)
@@ -214,28 +220,33 @@ function DashboardPage() {
   // 오류 유형도 기간을 따른다 — 30일 기준값을 기간 비율로 편 결정적 mock
   const scaledErrors = errorTypes.map((e) => ({
     ...e,
+    // 값(정본 키)은 그대로 두고 표시만 옮긴다 — specStatus 절과 같은 규칙
+    label: t(`errorType.${e.label}`, e.label),
     value: Math.round((e.value * range) / 30),
     prev: Math.round((e.prev * range) / 30),
   }))
 
   const widgetBody: Record<WidgetId, React.ReactNode> = {
     kpi: (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      // 칸이 정한다 (위 @container): 1칸(≈530)이면 2열, 전체 칸(≈1600)이면 4열.
+      // 예전 `sm:grid-cols-2 xl:grid-cols-4` 는 1칸으로 줄여 놔도 4열을 고집했다
+      <div className="grid grid-cols-1 gap-5 @sm:grid-cols-2 @3xl:grid-cols-4">
+        {/* ⚠ value="128"·"7" 손글씨였다 — 바로 위 주석이 "숫자는 코드가 센다"라고
+            경고하면서도 이 두 칸은 그대로였다(사양서 관리는 4건·결재함은 4건이었다).
+            증감은 prev mock 과의 차 — 0이면 배지를 안 단다(±0 은 아무 말도 아니다). */}
         <StatTile
           label={t('dash.stat.totalSpecs', '총 사양서')}
-          value="128"
-          delta="+6"
-          deltaGood
+          value={String(specList.length)}
+          delta={specList.length === statusPrevTotal ? undefined : `${specList.length > statusPrevTotal ? '+' : ''}${specList.length - statusPrevTotal}`}
+          deltaGood={specList.length >= statusPrevTotal}
           spark={kpiSparks.specs}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
-          label={t('dash.stat.pending', '승인 대기')}
-          value="7"
-          delta="+2"
+          label={t('dash.stat.pending', '결재 대기')}
+          value={String(pendingApprovals)}
+          delta="+1"
           deltaGood={false}
           spark={kpiSparks.pending}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
           label={t('dash.stat.successRate', '검증 성공률')}
@@ -243,7 +254,6 @@ function DashboardPage() {
           delta="+1.2%p"
           deltaGood
           spark={kpiSparks.successRate}
-          caption={t('dash.caption.trend14', '최근 14일 추이')}
         />
         <StatTile
           label={t('dash.stat.periodProcessed', '기간 검증 처리')}
@@ -271,10 +281,31 @@ function DashboardPage() {
     status: (
       <ChartCard
         title={t('widget.status', '사양서 상태 분포')}
-        subtitle={t('dash.status.subtitle', '전체 128건 기준')}
+        subtitle={tf('dash.status.subtitle', { total: statusTotal }, '전체 {total}건 기준')}
         action={{ label: t('nav.specs'), onClick: goSpecs }}
+        hero={{
+          value: String(deployedPct),
+          unit: '%',
+          delta: `${deployedDelta > 0 ? '+' : ''}${deployedDelta}%p`,
+          deltaGood: deployedDelta >= 0,
+          note: tf('dash.status.hero', { n: deployedNow }, '배포 완료 {n}건 · 이전 동일 기간 대비'),
+        }}
       >
-        <StatusStackBar data={statusDistribution} />
+        {/* ⚠ 누적 막대 → **도넛** (2026-08-13). 79/24/18/7 은 한 조각이 확실히 커서
+            "대부분 배포 완료"가 한눈에 읽힌다 — dataviz 가 도넛을 허용하는 조건
+            ("part-to-whole at a glance only, ≤6 segments")에 맞는 자리다.
+            ⚠ 값이 비슷한 데이터에는 쓰지 않는다 — 각도는 길이보다 견주기 어렵다.
+            그래서 범례가 값과 비율을 함께 말한다(각도로 못 읽는 것을 글이 맡는다). */}
+        {/* ⚠ 범례 라벨은 **표시만** 옮긴다 — 값(정본 키)은 그대로 둔다(i18n-dict-work 의
+            specStatus 절). EN 으로 바꿔도 범례만 한국어로 남던 자리였다. */}
+        <DonutChart
+          data={statusDistribution.map(({ label, value, fill }) => ({
+            label: t(`specStatus.${label}`, label),
+            value,
+            fill,
+          }))}
+          centerLabel={t('dash.status.center', '전체 사양서')}
+        />
       </ChartCard>
     ),
     heatmap: (
@@ -288,32 +319,54 @@ function DashboardPage() {
     ),
     queue: (
       <ChartCard
-        title={t('widget.queue', '승인 대기 큐')}
-        subtitle={tf('dash.queue.subtitle', { n: approvalQueue.length }, '{n}건이 결재를 기다립니다')}
+        title={t('widget.queue', '결재 대기 큐')}
+        subtitle={tf(
+          'dash.queue.subtitleMine',
+          { mine: myTurnCount, n: pendingApprovals },
+          '내 차례 {mine}건 · 전체 {n}건이 결재를 기다립니다',
+        )}
         action={{ label: t('nav.approvals'), onClick: goApprovals }}
       >
+        {/* ⚠⚠ 이 큐의 정본은 **결재함**(approvals.ts)이다. 예전 mock 은 사양서 네 장을
+            상태와 무관하게 늘어놔서, 배포 완료인 SP-003 도 "결재를 기다린다"고 말했다 —
+            승인 관리로 넘어가면 다른 목록이 나오는 카드였다(2026-08-18).
+            누르면 사양서 결재는 그 사양서로, 배포·권한 결재는 결재함으로 간다. */}
         <ol className="space-y-1.5">
-          {approvalQueue.map((q) => (
+          {queueRows.map((q) => (
             <li key={q.id}>
               <button
                 type="button"
-                onClick={() => openSpec(q.id)}
+                onClick={() => (q.specId ? openSpec(q.specId) : goApprovals())}
                 className="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-chip"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] text-ink">{q.name}</span>
+                  <span className="block truncate text-[13px] text-ink">{q.title}</span>
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-subtle">
+                    {/* 내 차례는 **색만으로 말하지 않는다**(규약 §16) — 낱말로 적고 맨 위에 둔다 */}
+                    {q.myTurn && (
+                      <span className="rounded-full bg-primary/15 px-1.5 py-0.5 font-semibold text-primary">
+                        {t('approvals.tab.mine', '내 차례')}
+                      </span>
+                    )}
                     <span className="font-mono">{q.id}</span>
-                    <span className="rounded-full bg-primary/12 px-1.5 font-mono text-primary">{q.version}</span>
-                    {q.owner}
+                    {q.requester}
                   </span>
                 </span>
+                {/* ⚠ **하나의 양에 두 색조를 쓰지 않는다** (DESIGN.md 차트 규칙과 같은 이유).
+                    경과일은 1일이든 3일이든 같은 양인데 보라↔빨강으로 갈려 있어서, 화면에
+                    색이 두 갈래로 늘고 "무엇이 급한가"는 오히려 흐려졌다.
+                    **기준(3일)을 넘긴 것만 색을 얻고 나머지는 중립으로 물러선다** —
+                    급한 것 하나가 진짜로 튀어 보인다. 판단은 숫자가 이미 하고 있다. */}
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
-                    q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-pending-bg text-pending-ink'
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                    q.waitingDays >= 3 ? 'bg-danger-bg text-danger-ink' : 'bg-chip text-ink-muted'
                   }`}
                 >
-                  {tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}
+                  {/* ⚠ EN 에서 "1 days waiting" 이 나왔다 — 하나일 때는 낱말이 바뀐다.
+                      한국어는 갈리지 않으므로 사전에 단수 키를 따로 두고 수로 고른다. */}
+                  {q.waitingDays === 1
+                    ? tf('dash.queue.waitingDay', { n: q.waitingDays }, '{n}일 경과')
+                    : tf('dash.queue.waitingDays', { n: q.waitingDays }, '{n}일 경과')}
                 </span>
               </button>
             </li>
@@ -340,7 +393,10 @@ function DashboardPage() {
         subtitle={t('dash.system.subtitle', '서버 리소스 · 30초마다 갱신 (Mock)')}
         action={{ label: t('nav.alerts') }}
       >
-        <div className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2">
+        {/* 서버 한 줄에 게이지 3개 + 배지가 들어간다 — 칸이 넉넉할 때만 2열 (위 @container) */}
+        {/* ⚠ 남는 세로는 줄 사이가 먹는다 (charts.tsx StatusStackBar 주석) — `content-between`
+            이 격자의 행들을 벌린다(flex 의 justify-between 에 해당하는 격자 쪽 낱말이다) */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 content-between gap-x-6 gap-y-2.5 @3xl:grid-cols-2">
           {serverResources.map((s) => (
             <div key={s.name} className="flex items-center gap-3">
               <span className="w-16 shrink-0 font-mono text-xs font-semibold text-ink">{s.name}</span>
@@ -383,7 +439,7 @@ function DashboardPage() {
                 </span>
               </span>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
                   p.status === '성공'
                     ? 'bg-deployed-bg text-deployed-ink'
                     : p.status === '실행중'
@@ -391,7 +447,7 @@ function DashboardPage() {
                       : 'bg-danger-bg text-danger-ink'
                 }`}
               >
-                {p.status}
+                {t(`pipelineStatus.${p.status}`, p.status)}
               </span>
             </li>
           ))}
@@ -401,7 +457,7 @@ function DashboardPage() {
     members: (
       <ChartCard
         title={t('widget.members', '권한별 회원 분포')}
-        subtitle={t('dash.members.subtitle', '전체 66명 기준')}
+        subtitle={tf('dash.members.subtitle', { n: memberList.length }, '전체 {n}명 기준')}
         action={{ label: t('nav.members'), onClick: () => navigate({ to: '/members' }) }}
       >
         <StatusStackBar data={memberRoles} />
@@ -419,11 +475,13 @@ function DashboardPage() {
             .map((n) => (
               <li key={n.id} className="flex items-start gap-2 text-[13px]">
                 <span
-                  className={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                  className={`mt-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                     n.pinned ? 'bg-primary/15 text-primary' : 'bg-chip text-ink-subtle'
                   }`}
                 >
-                  {n.pinned ? t('dash.notice.pinnedBadge', '고정') : n.category}
+                  {n.pinned
+                    ? t('dash.notice.pinnedBadge', '고정')
+                    : t(`noticeCategory.${n.category}`, n.category)}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-ink">{n.title}</span>
@@ -432,6 +490,14 @@ function DashboardPage() {
               </li>
             ))}
         </ol>
+        {/* ⚠ 카드가 `slice(0, 3)` 으로 자르는 순간 조용히 거짓말을 한다 — 6건 중 3건만
+            보여 주면서 아무 표시가 없었다(2026-08-13 실측). 위젯은 쪽을 나누지 않고
+            **전체로 가는 길**을 발에 둔다 (규약 §9). */}
+        <ListFoot
+          total={notices.length}
+          shown={Math.min(3, notices.length)}
+          more={{ label: t('dash.action.viewAll', '전체 보기'), onClick: () => navigate({ to: '/notice' }) }}
+        />
       </ChartCard>
     ),
     activity: (
@@ -586,7 +652,12 @@ function DashboardPage() {
               setDragIdx(null)
               setDropIdx(null)
             }}
-            className={`relative ${SPAN[slot.size]} ${
+            /* ⚠⚠ `@container` — **위젯 안은 뷰포트가 아니라 자기 칸 폭을 본다.**
+               이 화면의 칸은 사람이 바꾼다(1칸·2칸·전체). 뷰포트 브레이크포인트(sm:·xl:)로
+               접으면 1920 에서 1칸(≈530px)짜리 위젯이 "넓은 화면"인 줄 알고 4열로 펴져
+               글자가 짓눌린다 — 뷰포트로는 영영 못 맞추는 부류다.
+               안쪽은 @lg:·@3xl: 같은 컨테이너 변형으로 쓴다 (2026-08-11 시범 채택). */
+            className={`relative @container ${SPAN[slot.size]} ${
               editing ? 'cursor-grab rounded-2xl ring-2 active:cursor-grabbing' : ''
             } ${
               editing
@@ -620,7 +691,7 @@ function DashboardPage() {
                   type="button"
                   onClick={() => resize(idx)}
                   title={t('dash.resizeTitle', '크기 바꾸기')}
-                  className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+                  className="rounded-full px-2 py-0.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-chip hover:text-ink"
                 >
                   {t(`dash.size.${slot.size}`, SIZE_LABEL[slot.size])}
                 </button>
