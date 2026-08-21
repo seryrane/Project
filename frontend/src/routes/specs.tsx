@@ -73,6 +73,32 @@ export const Route = createFileRoute('/specs')({
   }),
 })
 
+/**
+ * 거르는 축 한 줄 — **왼쪽에 이름표, 오른쪽에 칩**.
+ *
+ * ⚠⚠ 바깥은 `flex`(줄바꿈 없음)이고 칩 칸만 `flex-wrap` 이다. 바깥까지 wrap 이면
+ * `flex-1` 인 칩 칸이 줄을 바꾸지 않고 남은 폭만 쥐어, 이름표에 밀려 폭을 잃는다
+ * (규약 §23-1 에서 알림 줄로 한 번 밟은 함정 — 같은 병이다).
+ */
+function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-3 flex items-start gap-3">
+      <span className="mt-2 w-12 shrink-0 text-xs text-ink-subtle">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  )
+}
+
+/** 상태 축 — 칩이 여럿이라 안쪽에서 접힌다 (카테고리는 관문 ChipSelect 가 스스로 접는다) */
+function FilterRowStatus({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-3 flex items-start gap-3">
+      <span className="mt-2 w-12 shrink-0 text-xs text-ink-subtle">{label}</span>
+      <div className="flex min-w-0 flex-1 flex-wrap gap-2">{children}</div>
+    </div>
+  )
+}
+
 /** 카테고리 표시 — 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 (2026-08-19) */
 function useCategoryLabel() {
   const { t } = useI18n()
@@ -181,31 +207,34 @@ function SpecsPage() {
         </div>
       </div>
 
-      {/* 좁은 화면: 검색 한 줄 + 필터 한 줄로 접힌다 (규약 §8 — 가로 스크롤 금지) */}
-      <div className="mt-6 flex flex-col gap-3 pc:flex-row">
-        <input
-          value={query}
-          onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
-          placeholder={t('specs.searchPlaceholder', '사양서 명, ID, 태그 검색...')}
-          className="h-10 rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary pc:flex-1"
+      <input
+        value={query}
+        onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
+        placeholder={t('specs.searchPlaceholder', '사양서 명, ID, 태그 검색...')}
+        className="mt-6 h-10 w-full rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
+      />
+
+      {/* ⚠⚠ **거르는 축이 둘인데 칩이 한 덩어리로 흘렀다**(2026-08-21 393px 실측: 세 줄로
+          접혀 카테고리와 상태의 경계가 사라졌다). 축마다 **이름표**를 달아 자기 줄에 세운다 —
+          어느 것이 무엇을 거르는지 보이지 않으면 필터는 있어도 없는 것이다(§15).
+          ⚠ 바깥은 `flex`(줄바꿈 없음)이고 안쪽만 `flex-wrap` 이다 — 바깥까지 wrap 이면
+          `flex-1` 인 칩 칸이 이름표에 밀려 폭을 잃는다(§23-1 에서 밟은 함정). */}
+      <FilterRow label={t('specs.filter.category', '카테고리')}>
+        {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
+        <ChipSelect
+          options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
+          label={(c) => (c === t('specs.allCategories', ALL_CATEGORY) ? c : catLabel(c))}
+          value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
+          onChange={(v) =>
+            setSearch({
+              cat: orNone(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v, ALL_CATEGORY),
+            })
+          }
         />
-        <div className="flex items-center">
-          {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
-          <ChipSelect
-            options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
-            label={(c) => (c === t('specs.allCategories', ALL_CATEGORY) ? c : catLabel(c))}
-            value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
-            onChange={(v) =>
-              setSearch({
-                cat: orNone(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v, ALL_CATEGORY),
-              })
-            }
-          />
-        </div>
-      </div>
+      </FilterRow>
 
       {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
-      <div className="mt-3 flex flex-wrap gap-2">
+      <FilterRowStatus label={t('specs.filter.status', '상태')}>
         {[ALL_STATUS, ...allStatuses].map((st) => {
           const count =
             st === ALL_STATUS
@@ -230,16 +259,18 @@ function SpecsPage() {
             </button>
           )
         })}
-        {/* 보기 전환 — 거르는 칩과 **같은 줄 반대쪽**에 둔다. 거르는 것과 보는 방식은 다른
-            축이라 섞으면 "표도 필터인가"로 읽힌다. 고른 것은 면으로 말한다(규약 §16). */}
-        <span className="ml-auto">
-          <ChipSelect
-            options={VIEWS}
-            value={view}
-            onChange={(v) => setSearch({ view: orNone(v, DEFAULT_VIEW) })}
-            label={(v) => t(`specs.view.${v}`, v)}
-          />
-        </span>
+      </FilterRowStatus>
+
+      {/* ⚠ 보기 전환은 **필터가 아니다** — 거르는 칩 사이에 섞어 두면 "표도 필터인가"로
+          읽힌다(내가 처음에 그렇게 뒀다). 거르는 블록에서 빼내 **목록 바로 위**에 세운다:
+          이 자리에 있으면 "아래 목록을 어떻게 볼지"라는 뜻이 자리로 드러난다. */}
+      <div className="mt-4 flex justify-end">
+        <ChipSelect
+          options={VIEWS}
+          value={view}
+          onChange={(v) => setSearch({ view: orNone(v, DEFAULT_VIEW) })}
+          label={(v) => t(`specs.view.${v}`, v)}
+        />
       </div>
 
       {/* 저장 필터 — 자주 쓰는 조합에 이름을 붙여 둔다(관문 SavedFilters).
