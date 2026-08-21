@@ -264,7 +264,12 @@ function SpecsPage() {
            **훑을 때 쓰는 것만** 열로 세운다: 설명·태그·스펙 미리보기는 상세가 맡는다.
            ⚠ 열 폭 합은 코드의 본문 폭(1360)을 넘지 않게 잡는다 — 넘으면 마지막 열이
            화면에서 조용히 잘린다(DESIGN.md 폭 표 참고). */
-        <div className="mt-6">
+        /* ⚠⚠ **표는 카드 안에 있어야 한다.** 관문의 가장자리 그림자(`.table-scroll`)는
+           양 끝 36px 에 **카드 면색(`--color-surface`)** 을 칠해 "여기서 끝"을 가린다 —
+           캔버스 위에 맨몸으로 두면 그 띠가 배경과 달라 **흰 조각**으로 보인다(2026-08-21
+           라이트 테마 실사에서 사용자 지적). 머리줄의 `bg-canvas` 도 같은 이유로 카드
+           안에서만 층이 선다. 사양서 상세의 필드 표와 같은 상자를 쓴다. */
+        <section className="anim-fade-up mt-6 card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface p-4">
           <DataTable
             rows={filtered}
             rowKey={(sp) => sp.id}
@@ -312,7 +317,7 @@ function SpecsPage() {
               },
             ]}
           />
-        </div>
+        </section>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">

@@ -71,7 +71,12 @@ export function DataTable<T>({
       <div className="table-scroll max-h-[70vh]">
         <table className="w-full border-collapse text-[13px]" style={{ minWidth }}>
           <thead className="sticky top-0 z-[1]">
-            <tr className="border-b border-hairline bg-canvas text-left text-xs text-ink-subtle">
+            {/* ⚠⚠ 머리 면은 **카드 머리 전용 색**(`.surface-head` = `--color-head`)이다.
+                예전엔 `bg-canvas` 였는데, `.table-scroll` 의 가장자리 띠는 양 끝 36px 에
+                **카드 면색**을 칠하므로 머리줄만 색이 어긋나 **오른쪽 끝에 흰 조각**이
+                남았다(2026-08-21 라이트 테마 실사에서 사용자 지적). 머리도 카드 면 계열이면
+                띠가 섞여 사라진다 — 게다가 캔버스색은 카드 안에서 너무 무겁다(§7). */}
+            <tr className="surface-head border-b border-hairline text-left text-xs text-ink-subtle">
               {columns.map((c) => (
                 <th key={c.header} className={`whitespace-nowrap px-3 py-2.5 font-medium first:pl-4 ${num(c)}`}>
                   {c.header}
