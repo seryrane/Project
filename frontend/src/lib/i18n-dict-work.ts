@@ -297,6 +297,9 @@ export const WORK_DICT: Record<string, Entry> = {
   'specDetail.noticeLockedLabel': { ko: '잠김', en: 'Locked' }, // ⚠ 본문이 "결재 중이라…"로 시작한다 — 머리표까지 '결재 중'이면 같은 말이 두 번 선다
   'specDetail.noticeConflictLabel': { ko: '겹침', en: 'Overlap' },
   /* 목록 보기 축 — 값은 한국어 정본('카드'·'표')이고 표시만 옮긴다 (규약 §4-7) */
+  /* 거르는 축의 이름표 — 어느 칩이 무엇을 거르는지 자리로 말한다 (2026-08-21) */
+  'specs.filter.category': { ko: '카테고리', en: 'Category' },
+  'specs.filter.status': { ko: '상태', en: 'Status' },
   'specs.view.카드': { ko: '카드', en: 'Cards' },
   'specs.view.표': { ko: '표', en: 'Table' },
   'specs.th.id': { ko: 'ID', en: 'ID' },
