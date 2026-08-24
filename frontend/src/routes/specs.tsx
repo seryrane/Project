@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
 import { DataTable } from '#/components/portal/DataTable'
+import { FilterAxes, FilterAxis } from '#/components/portal/FilterAxis'
 import { StatusBadge } from '#/components/portal/StatusBadge'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
@@ -72,32 +73,6 @@ export const Route = createFileRoute('/specs')({
     view: pickOne(search.view, VIEWS),
   }),
 })
-
-/**
- * 거르는 축 한 줄 — **왼쪽에 이름표, 오른쪽에 칩**.
- *
- * ⚠⚠ 바깥은 `flex`(줄바꿈 없음)이고 칩 칸만 `flex-wrap` 이다. 바깥까지 wrap 이면
- * `flex-1` 인 칩 칸이 줄을 바꾸지 않고 남은 폭만 쥐어, 이름표에 밀려 폭을 잃는다
- * (규약 §23-1 에서 알림 줄로 한 번 밟은 함정 — 같은 병이다).
- */
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-3 flex items-start gap-3">
-      <span className="mt-2 w-12 shrink-0 text-xs text-ink-subtle">{label}</span>
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  )
-}
-
-/** 상태 축 — 칩이 여럿이라 안쪽에서 접힌다 (카테고리는 관문 ChipSelect 가 스스로 접는다) */
-function FilterRowStatus({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-3 flex items-start gap-3">
-      <span className="mt-2 w-12 shrink-0 text-xs text-ink-subtle">{label}</span>
-      <div className="flex min-w-0 flex-1 flex-wrap gap-2">{children}</div>
-    </div>
-  )
-}
 
 /** 카테고리 표시 — 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 (2026-08-19) */
 function useCategoryLabel() {
@@ -214,52 +189,51 @@ function SpecsPage() {
         className="mt-6 h-10 w-full rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
       />
 
-      {/* ⚠⚠ **거르는 축이 둘인데 칩이 한 덩어리로 흘렀다**(2026-08-21 393px 실측: 세 줄로
-          접혀 카테고리와 상태의 경계가 사라졌다). 축마다 **이름표**를 달아 자기 줄에 세운다 —
-          어느 것이 무엇을 거르는지 보이지 않으면 필터는 있어도 없는 것이다(§15).
-          ⚠ 바깥은 `flex`(줄바꿈 없음)이고 안쪽만 `flex-wrap` 이다 — 바깥까지 wrap 이면
-          `flex-1` 인 칩 칸이 이름표에 밀려 폭을 잃는다(§23-1 에서 밟은 함정). */}
-      <FilterRow label={t('specs.filter.category', '카테고리')}>
-        {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
-        <ChipSelect
-          options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
-          label={(c) => (c === t('specs.allCategories', ALL_CATEGORY) ? c : catLabel(c))}
-          value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
-          onChange={(v) =>
-            setSearch({
-              cat: orNone(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v, ALL_CATEGORY),
-            })
-          }
-        />
-      </FilterRow>
+      {/* 거르는 축이 둘(카테고리·상태) — 관문 FilterAxes 가 축마다 이름표를 달아
+          자기 줄에 세운다 (규약 §23-10, 왜 그런지는 관문 주석에). */}
+      <FilterAxes className="mt-3">
+        <FilterAxis label={t('specs.filter.category', '카테고리')}>
+          {/* 표시만 번역한다 — 내부 값은 sentinel 유지 (언어를 바꿔도 필터가 안 깨진다) */}
+          <ChipSelect
+            options={[t('specs.allCategories', ALL_CATEGORY), ...categories]}
+            label={(c) => (c === t('specs.allCategories', ALL_CATEGORY) ? c : catLabel(c))}
+            value={category === ALL_CATEGORY ? t('specs.allCategories', ALL_CATEGORY) : category}
+            onChange={(v) =>
+              setSearch({
+                cat: orNone(v === t('specs.allCategories', ALL_CATEGORY) ? ALL_CATEGORY : v, ALL_CATEGORY),
+              })
+            }
+          />
+        </FilterAxis>
 
-      {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
-      <FilterRowStatus label={t('specs.filter.status', '상태')}>
-        {[ALL_STATUS, ...allStatuses].map((st) => {
-          const count =
-            st === ALL_STATUS
-              ? specList.length
-              : specList.filter((sp) => currentVersion(sp).status === st).length
-          const selected = status === st
-          return (
-            <button
-              key={st}
-              type="button"
-              onClick={() => setSearch({ status: orNone(st as SpecStatus, ALL_STATUS as SpecStatus) })}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-                selected
-                  ? 'border-primary/50 bg-primary/15 text-primary'
-                  : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
-              }`}
-            >
-              {/* 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 — 배지는 EN 인데 칩만
-                  한국어면 같은 낱말이 한 화면에서 두 말을 한다 (규약 §15, 2026-08-18) */}
-              {st === ALL_STATUS ? t('common.all', '전체') : t(`specStatus.${st}`, st)}
-              <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
-            </button>
-          )
-        })}
-      </FilterRowStatus>
+        {/* 상태 필터: 셀렉트 대신 카운트 칩 — 좁은 화면에서는 줄바꿈으로 접힌다 */}
+        <FilterAxis label={t('specs.filter.status', '상태')} wrap>
+          {[ALL_STATUS, ...allStatuses].map((st) => {
+            const count =
+              st === ALL_STATUS
+                ? specList.length
+                : specList.filter((sp) => currentVersion(sp).status === st).length
+            const selected = status === st
+            return (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setSearch({ status: orNone(st as SpecStatus, ALL_STATUS as SpecStatus) })}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                  selected
+                    ? 'border-primary/50 bg-primary/15 text-primary'
+                    : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
+                }`}
+              >
+                {/* 값은 한국어 정본 그대로, 표시만 사전이 옮긴다 — 배지는 EN 인데 칩만
+                    한국어면 같은 낱말이 한 화면에서 두 말을 한다 (규약 §15, 2026-08-18) */}
+                {st === ALL_STATUS ? t('common.all', '전체') : t(`specStatus.${st}`, st)}
+                <span className={selected ? 'text-primary/80' : 'text-ink-subtle'}>{count}</span>
+              </button>
+            )
+          })}
+        </FilterAxis>
+      </FilterAxes>
 
       {/* ⚠ 보기 전환은 **필터가 아니다** — 거르는 칩 사이에 섞어 두면 "표도 필터인가"로
           읽힌다(내가 처음에 그렇게 뒀다). 거르는 블록에서 빼내 **목록 바로 위**에 세운다:
