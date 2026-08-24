@@ -14,6 +14,9 @@ export const ADMIN_DICT: Record<string, Entry> = {
   // ── 회원 관리 (members) ──────────────────────────────────────────
   'members.add': { ko: '회원 등록', en: 'Add member' },
   'members.searchPlaceholder': { ko: '이름, 이메일, 부서 검색...', en: 'Search name, email, dept...' },
+  // 거르는 축 이름표 (규약 §23-10 · 관문 FilterAxis)
+  'members.filter.status': { ko: '상태', en: 'Status' },
+  'members.filter.grade': { ko: '등급', en: 'Grade' },
   'members.filter.allStatus': { ko: '전체 상태', en: 'All statuses' },
   'members.filter.allGrades': { ko: '전체 등급', en: 'All grades' },
   'members.tab.info': { ko: '기본 정보', en: 'Profile' },
@@ -585,6 +588,9 @@ export const ADMIN_DICT: Record<string, Entry> = {
   // 알림 이력
   'alerts.section.history.title': { ko: '알림 이력', en: 'Alert history' },
   'alerts.section.history.hint': { ko: '행을 누르면 상세가 열립니다', en: 'Click a row to see details' },
+  // 거르는 축 이름표 (규약 §23-10 · 관문 FilterAxis)
+  'alerts.filter.severity': { ko: '심각도', en: 'Severity' },
+  'alerts.filter.resolution': { ko: '해결 여부', en: 'Resolution' },
   'alerts.filter.openOnly': { ko: '미해결만 보기', en: 'Unresolved only' },
   'alerts.th.at': { ko: '발생 시각', en: 'Occurred' },
   'alerts.th.severity': { ko: '등급', en: 'Severity' },

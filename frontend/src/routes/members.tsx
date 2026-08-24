@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
 import { ChipMulti, ChipSelect } from '#/components/portal/Chips'
+import { FilterAxes, FilterAxis } from '#/components/portal/FilterAxis'
 import { DataTable } from '#/components/portal/DataTable'
 import { Icon } from '#/components/portal/Icon'
 import { ListFoot } from '#/components/portal/ListFoot'
@@ -300,21 +301,27 @@ function MembersPage() {
           placeholder={t('members.searchPlaceholder')}
           className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        {/* ⚠ 거르는 축이 둘(상태·등급)인데 예전에는 세로선 하나로만 갈랐고, 그 선이
+            `hidden pc:block` 이라 **좁은 화면에서는 경계가 아예 없었다**. 축마다 이름표를
+            달아 자기 줄에 세운다 — 관문 FilterAxes (규약 §23-10). */}
+        <FilterAxes>
           {/* 상태·등급 값은 데이터 어휘라 그대로 — "전체" 칩(UI 어휘)만 언어를 입힌다.
               내부 값은 한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
-          <ChipSelect
-            options={[allStatusLabel, ...MEMBER_STATES]}
-            value={status === ALL_STATUS ? allStatusLabel : status}
-            onChange={(v) => setSearch({ status: orNone(v === allStatusLabel ? ALL_STATUS : v, ALL_STATUS) })}
-          />
-          <span className="hidden h-4 w-px bg-hairline pc:block" aria-hidden />
-          <ChipSelect
-            options={[allGradeLabel, ...GRADES]}
-            value={grade === ALL_GRADE ? allGradeLabel : grade}
-            onChange={(v) => setSearch({ grade: orNone(v === allGradeLabel ? ALL_GRADE : v, ALL_GRADE) })}
-          />
-        </div>
+          <FilterAxis label={t('members.filter.status', '상태')}>
+            <ChipSelect
+              options={[allStatusLabel, ...MEMBER_STATES]}
+              value={status === ALL_STATUS ? allStatusLabel : status}
+              onChange={(v) => setSearch({ status: orNone(v === allStatusLabel ? ALL_STATUS : v, ALL_STATUS) })}
+            />
+          </FilterAxis>
+          <FilterAxis label={t('members.filter.grade', '등급')}>
+            <ChipSelect
+              options={[allGradeLabel, ...GRADES]}
+              value={grade === ALL_GRADE ? allGradeLabel : grade}
+              onChange={(v) => setSearch({ grade: orNone(v === allGradeLabel ? ALL_GRADE : v, ALL_GRADE) })}
+            />
+          </FilterAxis>
+        </FilterAxes>
       </div>
 
       {/* 좁은 화면: 표 대신 카드 — 회원은 행마다 독립 개체라 열 비교가 필요 없다.

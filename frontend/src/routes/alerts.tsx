@@ -6,6 +6,7 @@ import { ChartCard, MultiLineChart } from '#/components/portal/charts'
 import { DataTable } from '#/components/portal/DataTable'
 import { ListFoot, usePaged } from '#/components/portal/ListFoot'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
+import { FilterAxes, FilterAxis } from '#/components/portal/FilterAxis'
 import { Drawer } from '#/components/portal/Drawer'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
@@ -488,18 +489,28 @@ function AlertsPage() {
           <h2 className="text-sm font-semibold text-ink">{t('alerts.section.history.title', '알림 이력')}</h2>
           <span className="text-xs text-ink-subtle">{t('alerts.section.history.hint', '행을 누르면 상세가 열립니다')}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-3 border-b border-hairline px-5 py-3">
-          <ChipSelect
-            options={SEVERITY_FILTERS.map(severityLabel)}
-            value={severityLabel(severityFilter)}
-            onChange={(v) => {
-              const raw = SEVERITY_FILTERS.find((s) => severityLabel(s) === v) ?? '전체'
-              setSeverityFilter(raw)
-            }}
-          />
-          <span className="h-4 w-px bg-hairline" />
-          <Switch checked={openOnly} onChange={setOpenOnly} label={t('alerts.filter.openOnly', '미해결만 보기')} />
-          <span className="text-xs text-ink-subtle">{t('alerts.filter.openOnly', '미해결만 보기')}</span>
+        {/* ⚠ 거르는 축이 둘(심각도·해결 여부)인데 예전에는 세로선 하나로 이어 붙어 있었다 —
+            `flex-wrap` 이라 좁은 화면에서 줄이 접히면 선이 줄 끝에 남아 경계가 흐려진다.
+            축마다 이름표를 달아 자기 줄에 세운다 — 관문 FilterAxes (규약 §23-10). */}
+        <div className="border-b border-hairline px-5 py-3">
+          <FilterAxes>
+            <FilterAxis label={t('alerts.filter.severity', '심각도')}>
+              <ChipSelect
+                options={SEVERITY_FILTERS.map(severityLabel)}
+                value={severityLabel(severityFilter)}
+                onChange={(v) => {
+                  const raw = SEVERITY_FILTERS.find((s) => severityLabel(s) === v) ?? '전체'
+                  setSeverityFilter(raw)
+                }}
+              />
+            </FilterAxis>
+            <FilterAxis label={t('alerts.filter.resolution', '해결 여부')}>
+              <div className="flex items-center gap-2">
+                <Switch checked={openOnly} onChange={setOpenOnly} label={t('alerts.filter.openOnly', '미해결만 보기')} />
+                <span className="text-xs text-ink-subtle">{t('alerts.filter.openOnly', '미해결만 보기')}</span>
+              </div>
+            </FilterAxis>
+          </FilterAxes>
         </div>
 
         {/* 좁은 화면: 카드 — 행 하나가 독립 개체라 열 비교가 필요 없다 */}
