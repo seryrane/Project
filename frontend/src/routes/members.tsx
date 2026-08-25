@@ -305,11 +305,14 @@ function MembersPage() {
             `hidden pc:block` 이라 **좁은 화면에서는 경계가 아예 없었다**. 축마다 이름표를
             달아 자기 줄에 세운다 — 관문 FilterAxes (규약 §23-10). */}
         <FilterAxes>
-          {/* 상태·등급 값은 데이터 어휘라 그대로 — "전체" 칩(UI 어휘)만 언어를 입힌다.
-              내부 값은 한국어 원문으로 고정해 필터 비교·언어 전환에 안전하다 (규약 §4-4) */}
+          {/* 값은 한국어 정본 그대로, **표시만** 사전이 옮긴다(§4-7) — 예전 주석은 "데이터
+              어휘라 그대로"였지만, 상태는 사양서·알림·검증과 같은 부류라 화면마다 규칙이
+              갈렸다(2026-08-25 EN 전수: 알림은 Resolved, 회원은 활성). 등급(Super Admin 등)은
+              Role 코드 규칙이라 그대로. */}
           <FilterAxis label={t('members.filter.status', '상태')}>
             <ChipSelect
               options={[allStatusLabel, ...MEMBER_STATES]}
+              label={(v) => (v === allStatusLabel ? v : t(`memberStatus.${v}`, v))}
               value={status === ALL_STATUS ? allStatusLabel : status}
               onChange={(v) => setSearch({ status: orNone(v === allStatusLabel ? ALL_STATUS : v, ALL_STATUS) })}
             />
@@ -345,7 +348,7 @@ function MembersPage() {
                     <span className="flex items-center gap-2">
                       <b className="font-medium text-ink">{m.name}</b>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>
-                        {st}
+                        {t(`memberStatus.${st}`, st)}
                       </span>
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-ink-subtle">
@@ -462,7 +465,7 @@ function MembersPage() {
               header: t('members.th.status', '상태'),
               cell: (m) => {
                 const st = effStatus(m)
-                return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+                return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{t(`memberStatus.${st}`, st)}</span>
               },
             },
             {
@@ -571,7 +574,7 @@ function MembersPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <b className="text-base text-ink">{detail.name}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{st}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLS[st]}`}>{t(`memberStatus.${st}`, st)}</span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${GRADE_CLS[detail.grade]}`}>
                         {detail.grade}
                       </span>

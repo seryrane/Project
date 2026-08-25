@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '#/components/portal/AppShell'
 import { Icon } from '#/components/portal/Icon'
 import { ChipMulti, ChipSelect, Switch } from '#/components/portal/Chips'
+import { setMenuActive } from '#/data/menuStore'
 // 이 파일은 `m` 이 메뉴 항목 변수라 모션 관문을 fx 로 별칭한다
 import { layoutSpring, m as fx } from '#/components/portal/motion'
 import { Modal } from '#/components/portal/Modal'
@@ -119,8 +120,13 @@ function MenusPage() {
     })
   }
 
-  const setActive = (id: string, active: boolean) =>
+  const setActive = (id: string, active: boolean) => {
     setItems((list) => list.map((x) => (x.id === id ? { ...x, active } : x)))
+    // 정본 관문에도 알린다 — LNB·팔레트가 **정말** 이 목록을 본다(FR-032, menuStore 주석).
+    // 화면 상태만 바꾸면 "정본은 이 목록"이라는 부제가 거짓이 된다.
+    const target = items.find((x) => x.id === id)
+    if (target) setMenuActive(target.path, active)
+  }
 
   const toggleActive = (m: MenuItem) => {
     const before = m.active

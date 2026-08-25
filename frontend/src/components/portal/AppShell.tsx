@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { nav } from '#/data/nav'
+import { useInactiveMenuPaths } from '#/data/menuStore'
 import { useApprovalList } from '#/data/approvalStore'
 import type { IconName, NavItem, NavSection } from '#/data/nav'
 import { unseenCount } from '#/data/whatsnew'
@@ -158,6 +159,12 @@ function Shell({
   }, [])
   // 메뉴는 권한의 파생물 — 서버(/api/me/menu)가 걸러서 준다. 없으면 정적 정본(시연 모드)
   const { data: serverNav } = useApi<Array<NavSection>>('/me/menu', nav)
+  /* 메뉴 관리(정본 menuStore)에서 끈 메뉴는 LNB·팔레트에서 정말 사라진다 — "정본은 이
+     목록이다"라는 메뉴 관리 화면의 말을 지키는 자리(FR-032). 빈 섹션은 제목도 걷는다(§17). */
+  const offMenus = useInactiveMenuPaths()
+  const visibleNav = serverNav
+    .map((s) => ({ ...s, items: s.items.filter((it) => !it.to || !offMenus.has(it.to)) }))
+    .filter((s) => s.items.length > 0)
   // 내 정보도 서버에서 — SSO 확정 전엔 서버가 김현대로 고정해 준다
   const { data: meInfo } = useApi('/me', {
     name: '김현대',
@@ -167,7 +174,7 @@ function Shell({
   })
   // 라벨은 언어별로 입힌다 — 서버 재료는 key(규약 §4-2). EN 은 관리자가 메뉴 관리에서
   // 넣은 영문명(labelEn)이 우선이고, 없으면 사전, 그것도 없으면 한국어 라벨 그대로.
-  const displayNav = serverNav.map((s) => ({
+  const displayNav = visibleNav.map((s) => ({
     ...s,
     title: s.title ? t(`nav.section.${s.id}`, s.title) : undefined,
     items: s.items.map((it) => ({
@@ -333,8 +340,8 @@ function Shell({
           <button
             type="button"
             onClick={togglePin}
-            aria-label={pinned ? '메뉴 접기' : '메뉴 고정'}
-            title={pinned ? '메뉴 접기' : '메뉴 고정'}
+            aria-label={pinned ? t('gnb.collapseMenu', '메뉴 접기') : t('gnb.pinMenu', '메뉴 고정')}
+            title={pinned ? t('gnb.collapseMenu', '메뉴 접기') : t('gnb.pinMenu', '메뉴 고정')}
             className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-ink transition-colors hover:bg-sidebar-hover hover:text-sidebar-strong pc:flex ${railHide}`}
           >
             <span className={pinned ? '' : 'rotate-45'}>
@@ -477,7 +484,7 @@ function Shell({
             </Link>
             <button
               type="button"
-              aria-label="검색"
+              aria-label={t('gnb.search', '검색')}
               onClick={() => setPaletteOpen(true)}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink pc:hidden"
             >
@@ -521,7 +528,7 @@ function Shell({
             <button
               ref={bellRef}
               type="button"
-              aria-label={`알림 ${unread}건`}
+              aria-label={tf('gnb.alertsCount', { n: unread }, '알림 {n}건')}
               aria-expanded={menu === 'bell'}
               aria-haspopup="dialog"
               onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
@@ -741,7 +748,7 @@ function Shell({
           그대로 나왔다(2026-08-13). 정본은 하나여야 한다 */}
       {paletteOpen && (
         <CommandPalette
-          nav={serverNav}
+          nav={visibleNav}
           onClose={() => setPaletteOpen(false)}
           onAsk={() => setAskOpen(true)}
         />

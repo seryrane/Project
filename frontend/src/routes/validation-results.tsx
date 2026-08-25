@@ -226,8 +226,10 @@ function ValidationResultsPage() {
                     : 'border-hairline bg-surface text-ink-muted hover:border-primary/30 hover:text-ink'
                 }`}
               >
-                {/* '전체'만 UI 어휘 — 나머지는 데이터 상태값이라 번역하지 않는다 */}
-                {s === '전체' ? t('common.all', '전체') : s}
+                {/* ⚠ "데이터 상태값이라 번역하지 않는다"던 자리 — 바로 아래 표 배지는
+                    validationStatus 사전을 타서 같은 화면에서 '해결'과 'Resolved'가 갈렸다
+                    (2026-08-25 EN 전수). 규칙은 하나다: 값은 정본, 표시만 사전(§4-7). */}
+                {t(`validationStatus.${s}`, s)}
               </button>
             )
           })}
