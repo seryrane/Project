@@ -136,6 +136,10 @@
      자리이고, 덮개가 떠 있는 동안 뒤는 멈춰 있어 블러를 다시 계산할 일이 없다).
      카드보다 **덜 투명하다** — 글을 읽고 입력하는 자리라 뒤가 비치면 눈이 피로하다. */
   /* 카드 유리 면 — 뒤의 바탕 빛이 은은히 비친다 (아래 body::before) */
+  /* 칸반 레인 트랙 — 본문(canvas)에 잉크를 5% 섞는다. 라이트에서 bg-canvas/40 은 본문과
+     같은 색이라 레인이 묻혔다(2026-08-26 사용자 지적 "구분이 안 가"). ink 를 섞으면
+     라이트=회색 트랙, 다크=살짝 뜬 패널로 **두 테마 모두** 본문과 갈라진다. */
+  --color-lane: color-mix(in oklab, var(--color-ink) 5%, var(--color-canvas));
   --color-card-glass: color-mix(in oklab, var(--color-surface) 88%, transparent);
   --color-cover-glass: color-mix(in oklab, var(--color-surface) 92%, transparent);
   --shadow-cover:

@@ -141,7 +141,7 @@ function BoardPage() {
                "왼쪽에서 오른쪽" 부제가 거짓말이 된다 */
             <section
               key={st}
-              className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline/60 bg-canvas/40 pc:min-h-[440px]"
+              className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline/60 bg-[var(--color-lane)] pc:min-h-[440px]"
               style={{ borderTop: `2px solid ${DOT[st]}` }}
             >
               <header
