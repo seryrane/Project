@@ -555,7 +555,7 @@ function RegisterSpecModal({
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder={t('specs.form.descPlaceholder', '무엇을 정의하는 문서인지 한두 문장으로')}
-            className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="min-h-20 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
         </label>
         <label className="block">

@@ -73,16 +73,18 @@ export const menuItems: Array<MenuItem> = [
   { id: 'm-specs', order: 8, name: '사양서 관리', nameEn: 'Specifications', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'] , template: 'list-detail' },
   { id: 'm-specs-list', order: 9, name: '사양서 목록', nameEn: 'Spec List', path: '/specs', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'list-detail' },
   { id: 'm-specs-detail', order: 10, name: '사양서 상세', nameEn: 'Spec Detail', path: '/specs/:id', icon: 'doc', active: true, roles: ['Super Admin', 'Admin', 'Editor', 'Viewer'], parent: 'm-specs' , template: 'document' },
-  { id: 'm-approvals', order: 11, name: '승인 관리', nameEn: 'Approvals', path: '/approvals', icon: 'approve', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
-  { id: 'm-deploys', order: 12, name: '배포 관리', nameEn: 'Deployments', path: '/deploys', icon: 'deploy', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
-  { id: 'm-engine', order: 13, name: '검증엔진 관리', nameEn: 'Validation Engines', path: '/validation-engine', icon: 'engine', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
-  { id: 'm-results', order: 14, name: '검증 결과 조회', nameEn: 'Validation Results', path: '/validation-results', icon: 'search', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
-  { id: 'm-reports', order: 15, name: '검증 리포트', nameEn: 'Validation Reports', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
-  { id: 'm-notice', order: 16, name: '공지사항', nameEn: 'Notices', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
-  { id: 'm-qna', order: 17, name: 'Q&A', nameEn: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
+  // 상태 보드 — 정의서 밖 **제안**(칸반 보기, 2026-08-26 사용자 요청). 채택되면 추적표에 확장으로.
+  { id: 'm-board', order: 11, name: '상태 보드', nameEn: 'Status board', path: '/board', icon: 'board', active: true, roles: [], template: 'dashboard' },
+  { id: 'm-approvals', order: 12, name: '승인 관리', nameEn: 'Approvals', path: '/approvals', icon: 'approve', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
+  { id: 'm-deploys', order: 13, name: '배포 관리', nameEn: 'Deployments', path: '/deploys', icon: 'deploy', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  { id: 'm-engine', order: 14, name: '검증엔진 관리', nameEn: 'Validation Engines', path: '/validation-engine', icon: 'engine', active: true, roles: ['Super Admin', 'Admin'] , template: 'list-detail' },
+  { id: 'm-results', order: 15, name: '검증 결과 조회', nameEn: 'Validation Results', path: '/validation-results', icon: 'search', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'list-detail' },
+  { id: 'm-reports', order: 16, name: '검증 리포트', nameEn: 'Validation Reports', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
+  { id: 'm-notice', order: 17, name: '공지사항', nameEn: 'Notices', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
+  { id: 'm-qna', order: 18, name: 'Q&A', nameEn: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
   {
     id: 'm-faq',
-    order: 18,
+    order: 19,
     name: 'FAQ',
     nameEn: 'FAQ',
     path: '/faq',
@@ -94,11 +96,11 @@ export const menuItems: Array<MenuItem> = [
     minimal: true,
     template: 'board',
   },
-  { id: 'm-guide', order: 19, name: '사용자 가이드', nameEn: 'User Guide', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
-  { id: 'm-privacy', order: 20, name: '개인정보보호', nameEn: 'Privacy', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
+  { id: 'm-guide', order: 20, name: '사용자 가이드', nameEn: 'User Guide', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
+  { id: 'm-privacy', order: 21, name: '개인정보보호', nameEn: 'Privacy', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
   // 2026-08-06: LNB(nav.ts)에 되살린 '시스템 알림'도 메뉴 관리에 실어야 한다 — LNB 에는
   // 있는데 여기 없으면 관리자가 "있는 메뉴를 못 찾는" 화면이 된다 (m-kpi-ivi 와 같은 이유)
-  { id: 'm-alerts', order: 21, name: '시스템 알림', nameEn: 'System Alerts', path: '/alerts', icon: 'bell', active: true, roles: ['Super Admin', 'Admin'] , template: 'dashboard' },
+  { id: 'm-alerts', order: 22, name: '시스템 알림', nameEn: 'System Alerts', path: '/alerts', icon: 'bell', active: true, roles: ['Super Admin', 'Admin'] , template: 'dashboard' },
 ]
 
 // 접근 역할 목록은 여기 두지 않는다 — 권한 관리 정본(data/roles.ts)에서 파생한다

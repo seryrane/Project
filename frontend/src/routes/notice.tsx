@@ -276,7 +276,7 @@ function NoticePage() {
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
               placeholder={t('notice.bodyPh', '공지 내용을 입력하세요')}
-              className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              className="min-h-28 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">

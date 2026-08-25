@@ -42,7 +42,15 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
 
       {/* 몸 */}
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
-      <h3 className="text-base font-semibold text-ink">{spec.name}</h3>
+      {/* 상세 화면의 <h1> 과 같은 view-transition-name — [상세 보기]로 들어갈 때 제목이
+          카드에서 상세 머리로 **이어져 간다**(돌아올 때도 되돌아온다). 이름은 카드마다
+          고유해야 morph 짝이 성립한다. */}
+      <h3
+        className="text-base font-semibold text-ink"
+        style={{ viewTransitionName: `spec-title-${spec.id}` }}
+      >
+        {spec.name}
+      </h3>
       {/* 카테고리도 표시만 옮긴다 — 값은 정본(한국어) 그대로 */}
       <div className="mt-0.5 text-xs text-ink-subtle">{t(`specCategory.${spec.category}`, spec.category)}</div>
       <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-muted">

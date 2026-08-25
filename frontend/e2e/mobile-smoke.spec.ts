@@ -14,6 +14,7 @@ import type { Page } from '@playwright/test'
 
 const PAGES = [
   '/specs',
+  '/board',
   '/dashboard',
   '/analytics',
   '/approvals',

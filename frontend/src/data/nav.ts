@@ -4,6 +4,7 @@
 
 /** 그림 이름 — 무엇으로 그릴지는 AppShell 의 iconPaths 가 정한다 */
 export type IconName =
+  | 'board'
   | 'dashboard'
   | 'stats'
   | 'users'
@@ -101,6 +102,8 @@ export const nav: Array<NavSection> = [
     title: '사양서 (IDMS)',
     items: [
       { key: 'specs', label: '사양서 관리', icon: 'doc', to: '/specs' },
+      // 상태 보드 — 정의서 밖 **제안** 화면(칸반 보기, 2026-08-26 사용자 요청). 채택되면 추적표에 확장으로.
+      { key: 'board', label: '상태 보드', icon: 'board', to: '/board' },
       { key: 'approvals', label: '승인 관리', icon: 'approve', badge: 3, to: '/approvals' },
       { key: 'deploys', label: '배포 관리', icon: 'deploy', to: '/deploys' },
     ],

@@ -662,6 +662,20 @@ select option {
 @keyframes slide-out-right {
   to { transform: translateX(100%); }
 }
+/* 스크롤 연동 등장 — 화면 아래에 깔린 목록 카드가 **스크롤로 들어올 때** 떠오른다.
+   .anim-fade-up 은 로드 때 1회뿐이라 접힌 화면 밑 카드는 이미 끝나 있었다.
+   ⚠ @supports 밖(미지원)에서는 아무 일도 없다 — 그냥 보인다.
+   ⚠ 전역 reduced-motion 스위치(맨 아래 0.01ms)가 이것도 죽인다 — 따로 안 가려도 된다.
+   ⚠ fullPage 스크린샷 도구는 스크롤 없이 찍어서 접힌 밑이 투명하게 나올 수 있다 —
+   실사 때 "카드가 안 보인다"로 오진하지 말 것(뷰포트 캡처는 정상). */
+@supports (animation-timeline: view()) {
+  .scroll-in {
+    animation: fade-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(14px); }
 }
@@ -704,10 +718,24 @@ select option {
   transform: translateY(0);
 }
 
+/* --mx/--my 를 타입 있는 속성으로 등록 — 등록해야 transition 이 걸려, 빛이 커서를
+   즉시 따라붙지 않고 **살짝 뒤따라** 흐른다(120ms). 미등록 변수는 이산값이라 못 만진다. */
+@property --mx {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+@property --my {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
 /* 포인터 추적 스포트라이트 — 커서 좌표(--mx/--my, AppShell 위임 리스너가 채움)를
    따라 은은한 빛이 카드 위를 흐른다. 호버가 끝나면 잦아든다. */
 .card-spotlight {
   position: relative;
+  transition: --mx 120ms linear, --my 120ms linear;
 }
 .card-spotlight::before {
   content: '';
@@ -975,6 +1003,21 @@ h1, h2, h3 {
 @keyframes skeleton-sweep {
   to { transform: translateX(100%); }
 }
+/* 문단의 마지막 줄 고아 낱말을 줄인다 — 카드 설명·안내문이 조금 더 단정해진다 */
+@supports (text-wrap: pretty) {
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* 입력한 만큼 자라는 textarea — rows 는 미지원 브라우저 대비 겸 초기 높이.
+   min-height 는 각 자리의 rows 에 맞춰 클래스로 준다(입력 전엔 지금 크기 유지). */
+@supports (field-sizing: content) {
+  textarea {
+    field-sizing: content;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after { animation: none; }
 }
@@ -1100,6 +1143,31 @@ h1, h2, h3 {
    **둘 다 반투명한 구간**이 생겨 뒤가 비친다. 위 `html` 배경으로 흰색은 막았지만,
    두 겹이 겹쳐 흐려지는 순간 자체가 "번쩍"으로 읽힌다.
    새 스냅샷이 위에 있으므로, 옛 것을 불투명하게 둔 채 새 것만 덮어 오면 빈틈이 없다. */
+/* 이름 붙은 조각(view-transition-name)의 morph — LNB 활성 pill · 사양서 카드↔상세 제목.
+   root 그룹도 이 곡선을 타지만 root 는 크기·자리가 안 변해 시각 효과가 없다(무해). */
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* morph 조각의 전/후 스냅샷 크기가 다르면 기본값은 늘려 맞춘다 — 글자가 찌그러진다.
+   높이만 맞추고 폭은 자르는 쪽이 글자에 안전하다. */
+::view-transition-old(lnb-active),
+::view-transition-new(lnb-active) {
+  height: 100%;
+  width: auto;
+  object-fit: none;
+  overflow: clip;
+}
+
+/* 테마 전환 — 🌙 버튼에서 원이 퍼지며 새 테마가 드러난다 (useTheme 가 clip-path 를 몬다).
+   기본 page-in 페이드가 끼면 원형 리빌이 흐려지므로 이 동안만 둘 다 끈다. */
+html.theme-vt::view-transition-old(root) {
+  animation: none;
+}
+html.theme-vt::view-transition-new(root) {
+  animation: none;
+}
+
 ::view-transition-old(root) {
   animation: none;
 }

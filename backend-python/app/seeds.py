@@ -146,6 +146,8 @@ NAV = [
     ]},
     {"id": "idms", "title": "사양서 (IDMS)", "items": [
         {"key": "specs", "label": "사양서 관리", "labelEn": "Specifications", "icon": "doc", "to": "/specs"},
+        # 상태 보드 — 정의서 밖 **제안**(칸반 보기, 2026-08-26). 채택되면 추적표에 확장으로.
+        {"key": "board", "label": "상태 보드", "labelEn": "Status board", "icon": "board", "to": "/board"},
         {"key": "approvals", "label": "승인 관리", "labelEn": "Approvals", "icon": "approve", "badge": 3, "to": "/approvals"},
         {"key": "deploys", "label": "배포 관리", "labelEn": "Deployments", "icon": "deploy", "to": "/deploys"},
     ]},
@@ -176,6 +178,8 @@ NAV_REQUIRES = {
     "kpi-ivi": "통계 & 분석", "kpi-metrics": "통계 & 분석",
     "members": "회원 관리", "roles": "권한 관리", "menus": "메뉴 관리",
     "specs": "사양서 관리", "approvals": "승인 관리", "deploys": "배포 관리",
+    # 상태 보드는 사양서를 보는 다른 창 — 같은 권한 낱말을 따른다
+    "board": "사양서 관리",
     "engine": "검증엔진", "results": "검증엔진", "reports": "검증엔진",
     # 커뮤니티·가이드는 최소 메뉴 — 권한으로 가리면 LNB 가 텅 빈다
     # ⚠ 시스템 알림·개인정보보호는 관리자 자리인데 **매트릭스에 '시스템 운영' 낱말이 없다** —
