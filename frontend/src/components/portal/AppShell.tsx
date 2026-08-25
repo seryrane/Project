@@ -69,12 +69,16 @@ function NavRow({
       )}
     </>
   )
+  /* 활성 pill 에만 view-transition-name — 화면을 옮기면 하이라이트가 **미끄러져** 다음
+     항목으로 간다(전/후 화면에 같은 이름이 하나씩 있어야 morph 가 성립한다). 이름은 문서에
+     한 번만 존재해야 하므로 활성 항목에만 단다. 미지원 브라우저는 지금처럼 즉시 전환. */
+  const vtStyle = active ? { viewTransitionName: 'lnb-active' } : undefined
   return item.to ? (
-    <Link to={item.to} className={className} onClick={onSelect} title={tip}>
+    <Link to={item.to} className={className} style={vtStyle} onClick={onSelect} title={tip}>
       {inner}
     </Link>
   ) : (
-    <button type="button" className={className} onClick={onSelect} title={tip}>
+    <button type="button" className={className} style={vtStyle} onClick={onSelect} title={tip}>
       {inner}
     </button>
   )
@@ -518,7 +522,7 @@ function Shell({
             </button>
             <button
               type="button"
-              onClick={toggle}
+              onClick={(e) => toggle(e)}
               aria-label={t('gnb.toggleTheme', '테마 전환')}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
             >

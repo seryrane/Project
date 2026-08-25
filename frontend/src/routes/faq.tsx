@@ -81,13 +81,14 @@ function FaqPage() {
 
       {/* 아코디언 — 펼침은 reveal-grid, 답 끝은 도움됨 투표로 끝난다 */}
       <div className="mt-5 space-y-2.5">
-        {filtered.map((f, i) => {
+        {filtered.map((f) => {
           const isOpen = open === f.id
+          /* scroll-in — 로드 stagger 는 접힌 화면 밑 카드에서 이미 끝나 있었다. 스크롤로
+             들어올 때 떠오른다(위쪽 카드는 즉시 보인다 — §23 강도 절약과도 맞다). */
           return (
             <section
               key={f.id}
-              style={{ animationDelay: `${i * 50}ms` }}
-              className={`card-spotlight anim-fade-up rounded-2xl border bg-surface transition-colors ${
+              className={`card-spotlight scroll-in rounded-2xl border bg-surface transition-colors ${
                 isOpen ? 'border-primary/40' : 'border-hairline hover:border-primary/30'
               }`}
             >
@@ -210,7 +211,7 @@ function FaqPage() {
               value={newA}
               onChange={(e) => setNewA(e.target.value)}
               placeholder={t('faq.aPh', '해결 순서대로 — 어디를 눌러 무엇을 하는지')}
-              className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              className="min-h-24 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
         </Modal>

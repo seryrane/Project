@@ -122,9 +122,11 @@ function GuidePage() {
             </ol>
           </section>
 
+          {/* 아래 섹션들은 scroll-in — 로드 1회 fade-up 은 접힌 화면 밑에서 이미 끝나 있었다.
+              스크롤로 들어올 때 떠오른다(styles.css, 미지원이면 그냥 보인다). */}
           <section
             id="guide-start"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
@@ -156,7 +158,7 @@ function GuidePage() {
 
           <section
             id="guide-roles"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:60ms]"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
@@ -203,7 +205,7 @@ function GuidePage() {
 
           <section
             id="guide-spec-flow"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:120ms]"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
@@ -240,7 +242,7 @@ function GuidePage() {
 
           <section
             id="guide-approval"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:180ms]"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
@@ -264,7 +266,7 @@ function GuidePage() {
 
           <section
             id="guide-validation"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:240ms]"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">
@@ -286,7 +288,7 @@ function GuidePage() {
 
           <section
             id="guide-more"
-            className="anim-fade-up card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface [animation-delay:300ms]"
+            className="scroll-in card-spotlight scroll-mt-6 rounded-2xl border border-hairline bg-surface"
           >
             <div className="surface-head px-5 py-3.5">
               <h2 className="text-sm font-semibold text-ink">

@@ -149,7 +149,7 @@ function QnaPage() {
                 value={answerDraft}
                 onChange={(e) => setAnswerDraft(e.target.value)}
                 placeholder={t('qna.answerPh', '답변을 입력하세요 (운영진)')}
-                className="w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+                className="min-h-14 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
               />
               <div className="mt-2 flex justify-end">
                 <CtaButton
@@ -294,7 +294,7 @@ function QnaPage() {
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
               placeholder={t('qna.bodyPh', '상황을 구체적으로 적을수록 답이 빨라집니다 — 화면·시각·메시지')}
-              className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              className="min-h-24 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <p className="mt-3 rounded-xl border border-hairline bg-canvas/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-subtle">

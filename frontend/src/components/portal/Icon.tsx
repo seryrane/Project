@@ -3,6 +3,13 @@
 import type { IconName } from '#/data/nav'
 
 const iconPaths: Record<IconName, React.ReactNode> = {
+  board: (
+    <>
+      <rect x="4" y="4.5" width="4.6" height="15" rx="1.2" />
+      <rect x="9.7" y="4.5" width="4.6" height="10.5" rx="1.2" />
+      <rect x="15.4" y="4.5" width="4.6" height="7" rx="1.2" />
+    </>
+  ),
   dashboard: (
     <>
       <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />

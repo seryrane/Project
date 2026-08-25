@@ -194,6 +194,7 @@ const CORE_DICT: Record<string, Entry> = {
   'prefs.theme.light': { ko: '라이트', en: 'Light' },
   // ── LNB (key 가 서버 재료 — nav.<item.key>) ──────────────────────
   'nav.dashboard': { ko: '대시보드', en: 'Dashboard' },
+  'nav.board': { ko: '상태 보드', en: 'Status board' },
   'nav.analytics': { ko: '센터 KPI 대시보드', en: 'Center KPI Dashboard' },
   'nav.kpi-ivi': { ko: '인포 IVI KPI', en: 'Info IVI KPI' },
   'nav.kpi-metrics': { ko: '지표 관리', en: 'KPI Metrics' },

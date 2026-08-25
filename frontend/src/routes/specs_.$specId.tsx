@@ -359,7 +359,11 @@ function SpecDetailPage() {
           >
             {t('specDetail.backToList', '← 사양서 목록')}
           </Link>
-          <h1 className="mt-1 flex flex-wrap items-center gap-2.5 text-2xl font-bold">
+          {/* 목록 카드의 <h3> 와 같은 view-transition-name — 카드 제목이 이 자리로 이어져 온다 */}
+          <h1
+            className="mt-1 flex flex-wrap items-center gap-2.5 text-2xl font-bold"
+            style={{ viewTransitionName: `spec-title-${spec.id}` }}
+          >
             {spec.name}
             <StatusBadge status={cur.status} />
           </h1>

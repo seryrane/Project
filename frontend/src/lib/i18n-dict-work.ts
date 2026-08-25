@@ -42,6 +42,14 @@ export const WORK_DICT: Record<string, Entry> = {
   'pipeline.prod': { ko: '운영', en: 'Release' },
 
   'chart.aria.gaugeTrend': { ko: '{name} 추이', en: '{name} trend' },
+  // 상태 보드 (정의서 밖 제안 — 칸반 보기)
+  'board.subtitle': { ko: '사양서가 결재를 따라 왼쪽에서 오른쪽으로 흐릅니다 — 카드는 끌지 않습니다. 상태는 결재가 바꿉니다.', en: 'Specs flow left to right with approvals — cards are not draggable. Status changes only through approval.' },
+  'board.toApprovals': { ko: '결재함으로 →', en: 'To approvals →' },
+  'board.myTurn': { ko: '내 차례', en: 'My turn' },
+  'board.nowTurn': { ko: '지금 {name} 차례', en: 'Now with {name}' },
+  'board.conflict': { ko: '겹침 {n}', en: 'Overlap {n}' },
+  'board.emptyColumn': { ko: '이 상태의 사양서가 없습니다', en: 'No specs in this state' },
+  'board.unit': { ko: '개', en: '' },
   'validationStatus.전체': { ko: '전체', en: 'All' },
   'validationStatus.오류': { ko: '오류', en: 'Error' },
   'validationStatus.재처리 중': { ko: '재처리 중', en: 'Reprocessing' },

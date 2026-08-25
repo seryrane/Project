@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as BoardRouteImport } from './routes/board'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeploysRouteImport } from './routes/deploys'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -51,6 +52,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const ApprovalsRoute = ApprovalsRouteImport.update({
   id: '/approvals',
   path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoardRoute = BoardRouteImport.update({
+  id: '/board',
+  path: '/board',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
+  '/board': typeof BoardRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
+  '/board': typeof BoardRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
+  '/board': typeof BoardRoute
   '/dashboard': typeof DashboardRoute
   '/deploys': typeof DeploysRoute
   '/faq': typeof FaqRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/approvals'
+    | '/board'
     | '/dashboard'
     | '/deploys'
     | '/faq'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/approvals'
+    | '/board'
     | '/dashboard'
     | '/deploys'
     | '/faq'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/approvals'
+    | '/board'
     | '/dashboard'
     | '/deploys'
     | '/faq'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   ApprovalsRoute: typeof ApprovalsRoute
+  BoardRoute: typeof BoardRoute
   DashboardRoute: typeof DashboardRoute
   DeploysRoute: typeof DeploysRoute
   FaqRoute: typeof FaqRoute
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/approvals'
       fullPath: '/approvals'
       preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/board': {
+      id: '/board'
+      path: '/board'
+      fullPath: '/board'
+      preLoaderRoute: typeof BoardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -500,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsRoute: AlertsRoute,
   AnalyticsRoute: AnalyticsRoute,
   ApprovalsRoute: ApprovalsRoute,
+  BoardRoute: BoardRoute,
   DashboardRoute: DashboardRoute,
   DeploysRoute: DeploysRoute,
   FaqRoute: FaqRoute,

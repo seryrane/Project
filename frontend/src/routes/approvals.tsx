@@ -757,7 +757,7 @@ function ApprovalsPage() {
                   onChange={(e) => setOpinion(e.target.value)}
                   rows={3}
                   placeholder={t('approvals.opinionPlaceholder', '승인/반려 의견을 입력하세요...')}
-                  className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
+                  className="min-h-20 mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
                 />
               </div>
             </div>
@@ -839,7 +839,7 @@ function ApprovalsPage() {
             onChange={(e) => setCancelReason(e.target.value)}
             rows={3}
             placeholder={t('approvals.cancelReasonPlaceholder', '예: APR-2026-0012 로 통합해 반영합니다')}
-            className="mt-1.5 w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="min-h-20 mt-1.5 w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
         </Modal>
       )}
