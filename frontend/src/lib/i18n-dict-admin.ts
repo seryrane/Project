@@ -15,6 +15,10 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'members.add': { ko: '회원 등록', en: 'Add member' },
   'members.searchPlaceholder': { ko: '이름, 이메일, 부서 검색...', en: 'Search name, email, dept...' },
   // 거르는 축 이름표 (규약 §23-10 · 관문 FilterAxis)
+  // 회원 상태 — 값은 한국어 정본, 표시만 옮긴다 (specStatus·validationStatus 와 같은 규칙)
+  'memberStatus.활성': { ko: '활성', en: 'Active' },
+  'memberStatus.비활성': { ko: '비활성', en: 'Inactive' },
+  'memberStatus.잠금': { ko: '잠금', en: 'Locked' },
   'members.filter.status': { ko: '상태', en: 'Status' },
   'members.filter.grade': { ko: '등급', en: 'Grade' },
   'members.filter.allStatus': { ko: '전체 상태', en: 'All statuses' },
@@ -589,6 +593,11 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'alerts.section.history.title': { ko: '알림 이력', en: 'Alert history' },
   'alerts.section.history.hint': { ko: '행을 누르면 상세가 열립니다', en: 'Click a row to see details' },
   // 거르는 축 이름표 (규약 §23-10 · 관문 FilterAxis)
+  // 눈에 안 보여 08-18 EN 소탕에서 빠졌던 aria 들 (2026-08-25 EN 전수)
+  'gnb.collapseMenu': { ko: '메뉴 접기', en: 'Collapse menu' },
+  'gnb.pinMenu': { ko: '메뉴 고정', en: 'Pin menu' },
+  'gnb.search': { ko: '검색', en: 'Search' },
+  'gnb.alertsCount': { ko: '알림 {n}건', en: '{n} notifications' },
   'alerts.filter.severity': { ko: '심각도', en: 'Severity' },
   'alerts.filter.resolution': { ko: '해결 여부', en: 'Resolution' },
   'alerts.filter.openOnly': { ko: '미해결만 보기', en: 'Unresolved only' },

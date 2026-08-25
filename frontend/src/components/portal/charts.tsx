@@ -817,6 +817,7 @@ export function SmallMultiples({
   unit?: string
   lowerIsBetter?: boolean
 }) {
+  const gaugeI18n = useI18n()
   const plotRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<number | null>(null)
   const n = series[0].data.length
@@ -882,7 +883,7 @@ export function SmallMultiples({
                 preserveAspectRatio="none"
                 className="absolute inset-0 block h-full w-full"
                 role="img"
-                aria-label={`${s.name} 추이`}
+                aria-label={gaugeI18n.tf('chart.aria.gaugeTrend', { name: s.name }, '{name} 추이')}
               >
                 <path d={area} fill={s.color} opacity="0.12" />
                 <path

@@ -80,7 +80,20 @@ export const menuItems: Array<MenuItem> = [
   { id: 'm-reports', order: 15, name: '검증 리포트', nameEn: 'Validation Reports', path: '/validation-reports', icon: 'report', active: true, roles: ['Super Admin', 'Admin', 'Editor'] , template: 'board' },
   { id: 'm-notice', order: 16, name: '공지사항', nameEn: 'Notices', path: '/notice', icon: 'bell', active: true, roles: [], minimal: true, template: 'board' },
   { id: 'm-qna', order: 17, name: 'Q&A', nameEn: 'Q&A', path: '/qna', icon: 'message', active: true, roles: [], minimal: true, template: 'board' },
-  { id: 'm-faq', order: 18, name: 'FAQ', nameEn: 'FAQ', path: '/faq', icon: 'help', active: false, roles: [], minimal: true, template: 'board' },
+  {
+    id: 'm-faq',
+    order: 18,
+    name: 'FAQ',
+    nameEn: 'FAQ',
+    path: '/faq',
+    icon: 'help',
+    // ⚠ active:false 시드였다 — minimal(최소 메뉴: 권한 없이 모두에게)과 모순인 데다,
+    // 관문(menuStore)이 생기면서 LNB 에서 FAQ 가 정말 사라진다. 끄기 시연은 화면 토글로.
+    active: true,
+    roles: [],
+    minimal: true,
+    template: 'board',
+  },
   { id: 'm-guide', order: 19, name: '사용자 가이드', nameEn: 'User Guide', path: '/guide', icon: 'book', active: true, roles: [], minimal: true, template: 'document' },
   { id: 'm-privacy', order: 20, name: '개인정보보호', nameEn: 'Privacy', path: '/privacy', icon: 'lock', active: true, roles: ['Super Admin'] , template: 'document' },
   // 2026-08-06: LNB(nav.ts)에 되살린 '시스템 알림'도 메뉴 관리에 실어야 한다 — LNB 에는

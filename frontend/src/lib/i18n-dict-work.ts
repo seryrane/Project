@@ -41,6 +41,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'pipeline.approval': { ko: '승인', en: 'Sign-off' },
   'pipeline.prod': { ko: '운영', en: 'Release' },
 
+  'chart.aria.gaugeTrend': { ko: '{name} 추이', en: '{name} trend' },
   'validationStatus.전체': { ko: '전체', en: 'All' },
   'validationStatus.오류': { ko: '오류', en: 'Error' },
   'validationStatus.재처리 중': { ko: '재처리 중', en: 'Reprocessing' },
