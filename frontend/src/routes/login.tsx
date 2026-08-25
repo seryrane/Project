@@ -220,8 +220,10 @@ function LoginPage() {
                 )}
               </label>
 
-              <div className="flex items-center justify-between text-xs">
-                <label className="flex cursor-pointer items-center gap-1.5 text-ink-muted">
+              {/* ⚠ 체크박스 24px·링크 18px 는 손가락 크기(규약 §8, 40px) 미달이었다
+                  (2026-08-25 모바일 실사) — 줄 높이로 히트 영역을 늘린다(칸은 그대로). */}
+              <div className="flex min-h-10 items-center justify-between text-xs">
+                <label className="flex min-h-10 cursor-pointer items-center gap-1.5 text-ink-muted">
                   <input
                     type="checkbox"
                     checked={remember}
@@ -233,7 +235,7 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setForgotOpen(true)}
-                  className="text-primary hover:underline"
+                  className="flex min-h-10 items-center text-primary hover:underline"
                 >
                   {t('login.forgot')}
                 </button>

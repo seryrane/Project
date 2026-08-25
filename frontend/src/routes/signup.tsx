@@ -161,7 +161,7 @@ function SignupPage() {
 
         <p className="mt-4 text-center text-xs text-ink-subtle">
           {t('signup.haveAccount')}{' '}
-          <Link to="/login" className="font-medium text-primary hover:underline">
+          <Link to="/login" className="inline-flex min-h-10 items-center px-2 font-medium text-primary hover:underline">
             {t('login.title')}
           </Link>
         </p>

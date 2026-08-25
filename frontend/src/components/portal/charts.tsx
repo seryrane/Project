@@ -321,8 +321,11 @@ export function DonutChart({
           {hover != null ? data[hover].label : (centerLabel ?? t('common.all', '전체'))}
         </text>
       </svg>
-      {/* 범례가 값을 말한다 — 각도로 못 읽는 것을 툴팁에만 가두지 않는다 */}
-      <ul className="min-w-0 flex-1 space-y-1.5">
+      {/* 범례가 값을 말한다 — 각도로 못 읽는 것을 툴팁에만 가두지 않는다.
+          ⚠ min-w-0 이면 좁은 카드에서 flex-1 이 0 까지 짜부돼 라벨이 전부 truncate 로
+          사라진다(2026-08-25 모바일 실사: 숫자·%만 남았다). 최소 폭을 줘 자리가 모자라면
+          부모 flex-wrap 을 타고 도넛 아래로 내려선다. */}
+      <ul className="min-w-44 flex-1 space-y-1.5">
         {data.map((d, i) => (
           <li
             key={d.label}
