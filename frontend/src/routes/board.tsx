@@ -1,24 +1,32 @@
+import { useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
+import { ChipSelect } from '#/components/portal/Chips'
 import { ListFoot } from '#/components/portal/ListFoot'
+import { Modal } from '#/components/portal/Modal'
+import { useToast } from '#/components/portal/toast'
 import { useI18n } from '#/lib/i18n'
-import { unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
+import { SPEC_APPROVAL_LINE } from '#/data/approvals'
+import { activeRequestOfSpec, activeRequestsOfSpec, unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
 import { currentVersion } from '#/data/specs'
 import { useSpecList } from '#/data/specStore'
+import { requestDeploy, submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { Spec, SpecStatus } from '#/data/specs'
 
 export const Route = createFileRoute('/board')({ component: BoardPage })
 
 /**
- * 상태 보드 — 사양서 수명주기를 칸반으로 **본다** (정의서 밖 제안, 2026-08-26 사용자 요청.
+ * 상태 보드 — 사양서 수명주기를 칸반으로 본다 (정의서 밖 제안, 2026-08-26 사용자 요청.
  * 채택되면 요구사항추적표에 확장으로 적는다).
  *
- * ⚠⚠ **카드를 끌어서 옮기지 않는다.** 상태 전이의 정본은 결재(workflow.ts 한 자리)다 —
- * 보드에서 끌어 상태가 바뀌면 결재선·이력·알림을 전부 우회한 전이가 생긴다(상세에서
- * 상신하면 남고 보드에서 끌면 안 남는, "화면마다 딴 규칙"의 병). 그래서 이 화면은
- * ① 흐름을 한눈에 보이고 ② 카드가 **다음 행동이 있는 곳**(상세·결재함)으로 안내한다.
+ * ⚠⚠ **끌기는 상태를 바꾸지 않는다 — 그 걸음의 결재 패널을 연다.** 처음엔 끌기를 아예
+ * 뺐는데("끌면 결재를 우회한다"), 사용자가 짚었다(2026-08-26): 패널을 다리로 쓰면 된다.
+ * 끌기 = **의도**, 패널 = **관문**. 놓는 자리에 따라 상신·회수·배포 요청 패널이 열리고,
+ * 패널에서 확정해야 workflow(정본 한 자리)를 지나 상태가 움직인다. 흐름에 없는 걸음은
+ * 놓아도 토스트가 이유를 말한다(§17) — 조용히 무시되는 드롭이 제일 나쁘다.
  *
  * 열 = 사양서 상태 5종(정본 specStore 가 센다). 겹침·결재 단계는 결재함이 센 것을 그대로
  * 받는다 — 보드가 다시 세면 두 화면이 딴 숫자를 말한다.
@@ -34,12 +42,80 @@ const DOT: Record<SpecStatus, string> = {
   '배포 완료': 'var(--color-fill-deployed)',
 }
 
+/** 지금 사용자 — SSO 확정 전 관례(상세·결재함과 같은 값) */
+const ME = '김현대'
+
+/** 끌어 놓기가 여는 패널의 종류 */
+type IntentKind = 'submit' | 'withdraw' | 'deploy'
+
+/**
+ * 이 걸음이 결재 흐름의 어느 문인가 — 없으면 왜 없는지를 말한다.
+ * 문 셋: 상신(초안·검토 중→승인 대기) · 회수(승인 대기→뒤로) · 배포 요청(승인 완료→배포).
+ */
+function intentOf(from: SpecStatus, to: SpecStatus): { kind: IntentKind } | { block: string } | null {
+  if (from === to) return null
+  if ((from === '초안' || from === '검토 중') && to === '승인 대기') return { kind: 'submit' }
+  // 회수의 정본(workflow→specStore.withdrawSpec)은 **초안**으로 돌린다 — 검토 중에 놓아도
+  // 카드는 초안으로 간다. 문은 하나고, 어디로 가는지는 패널이 말한다.
+  if (from === '승인 대기' && (to === '검토 중' || to === '초안')) return { kind: 'withdraw' }
+  if (from === '승인 완료' && to === '배포 완료') return { kind: 'deploy' }
+  if (from === '초안' && to === '검토 중')
+    return { block: '검토 중은 상세에서 문서를 저장하며 도달하는 상태입니다 — 카드를 눌러 상세에서 진행하세요.' }
+  if (from === '배포 완료')
+    return { block: '배포된 버전은 보드에서 되돌리지 않습니다 — 고칠 것이 있으면 상세에서 새 버전을 상신하세요.' }
+  return { block: `${from} → ${to} 걸음은 결재 흐름에 없습니다.` }
+}
+
+/** 상태 전이를 View Transition 으로 감싼다 — 카드가 옛 열에서 새 열로 **미끄러져 간다**
+ *  (spec-title 이름이 전·후 화면에 다 있어 morph 짝이 성립한다). flushSync 로 스토어
+ *  갱신을 스냅샷 안에서 강제로 그린다 — 안 그러면 전환이 빈손으로 끝난다. */
+function withCardTransition(apply: () => void) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!('startViewTransition' in document) || reduce) {
+    apply()
+    return
+  }
+  document.startViewTransition(() => {
+    flushSync(apply)
+  })
+}
+
 function BoardPage() {
   const { t, tf } = useI18n()
+  const toast = useToast()
   const specs = useSpecList()
   const approvals = useApprovalList()
 
+  /* 끌리는 카드는 **ref 로** 든다 — 빠른 손짓은 state 리렌더를 앞지른다
+     (끌기를 state 로 재다 손짓이 통째로 사라지는 버그를 겪은 규칙). 레인 하이라이트만 state. */
+  const dragging = useRef<Spec | null>(null)
+  const [overLane, setOverLane] = useState<SpecStatus | null>(null)
+  const [intent, setIntent] = useState<{ kind: IntentKind; spec: Spec } | null>(null)
+
   const byStatus = (st: SpecStatus) => specs.filter((sp) => currentVersion(sp).status === st)
+
+  function dropOn(to: SpecStatus) {
+    const spec = dragging.current
+    dragging.current = null
+    setOverLane(null)
+    if (!spec) return
+    const it = intentOf(currentVersion(spec).status, to)
+    if (!it) return
+    if ('block' in it) {
+      toast(it.block)
+      return
+    }
+    if (it.kind === 'withdraw') {
+      /* 회수는 **요청자만** 할 수 있다(approvalStore 관문 규칙) — 남의 건은 패널을 열어 봤자
+         확정에서 막힌다. 미리 이유를 말하는 쪽이 §17 이다. */
+      const rec = activeRequestOfSpec(spec.id)
+      if (rec && rec.requester !== ME) {
+        toast(tf('board.toast.notRequester', { name: rec.requester }, '회수는 요청자만 할 수 있습니다 — 이 건은 {name} 님이 올렸습니다.'))
+        return
+      }
+    }
+    setIntent({ kind: it.kind, spec })
+  }
 
   function Card({ spec }: { spec: Spec }) {
     const cur = currentVersion(spec)
@@ -51,7 +127,17 @@ function BoardPage() {
         <Link
           to="/specs/$specId"
           params={{ specId: spec.id }}
-          className="card-hover card-spotlight block rounded-xl border border-hairline bg-surface p-3.5 transition-colors hover:border-primary/40"
+          draggable
+          onDragStart={(e) => {
+            dragging.current = spec
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', spec.id)
+          }}
+          onDragEnd={() => {
+            dragging.current = null
+            setOverLane(null)
+          }}
+          className="card-hover card-spotlight block cursor-grab rounded-xl border border-hairline bg-surface p-3.5 transition-colors hover:border-primary/40 active:cursor-grabbing"
           /* 좌측 상태색 보더 — 카드가 레인 밖(검색 결과 등)에 혼자 서도 상태를 말한다.
              border-l 은 라운드 모서리를 깎아서 inset 그림자로 긋는다 (§16 색+글자 이중 표시 —
              글자는 열 머리가 맡는다) */
@@ -61,8 +147,8 @@ function BoardPage() {
             <span className="font-mono text-[11px] text-ink-subtle">{spec.id}</span>
             <span className="rounded bg-chip px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">{cur.version}</span>
           </div>
-          {/* 카드 제목 — 사양서 목록·상세와 같은 view-transition-name: 보드에서 상세로
-              들어갈 때 제목이 **이어져 간다**(칸반의 손맛이 여기서 난다) */}
+          {/* 카드 제목 — 사양서 목록·상세와 같은 view-transition-name: 상세로 들어갈 때도,
+              끌어 놓아 열이 바뀔 때도 제목이 **이어져 간다** */}
           <div
             className="mt-1.5 text-[13px] font-semibold leading-snug text-ink"
             style={{ viewTransitionName: `spec-title-${spec.id}` }}
@@ -118,10 +204,10 @@ function BoardPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t('nav.board', '상태 보드')}</h1>
-          {/* 끌 수 없는 이유를 화면이 스스로 말한다(§17 빈 자리에 이유를) — 안 적으면
-              "왜 드래그가 안 되지"가 문의로 돌아온다 */}
+          {/* 끌기가 무엇을 하는지 화면이 먼저 말한다(§17) — "왜 바로 안 옮겨지지"가
+              문의로 돌아오지 않게 */}
           <p className="mt-1.5 text-[13px] text-ink-muted">
-            {t('board.subtitle', '사양서가 결재를 따라 왼쪽에서 오른쪽으로 흐릅니다 — 카드는 끌지 않습니다. 상태는 결재가 바꿉니다.')}
+            {t('board.subtitle', '카드를 다음 열에 끌어 놓으면 그 걸음의 결재 패널이 열립니다 — 상태는 결재가 바꿉니다.')}
           </p>
         </div>
         <Link
@@ -135,14 +221,41 @@ function BoardPage() {
       <div className="mt-5 grid grid-cols-1 gap-4 pc:grid-cols-5">
         {COLUMNS.map((st) => {
           const cards = byStatus(st)
+          const isOver = overLane === st
           return (
             /* 레인 — 상단 2px 이 상태색을 물고, 머리·카드가 한 트랙 안에 산다(칸반 문법).
                넓은 화면은 트랙을 세워(min-h) 흐름의 모양을 유지한다 — 빈 열이 접히면
                "왼쪽에서 오른쪽" 부제가 거짓말이 된다 */
             <section
               key={st}
-              className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline/60 bg-[var(--color-lane)] pc:min-h-[440px]"
-              style={{ borderTop: `2px solid ${DOT[st]}` }}
+              onDragOver={(e) => {
+                const d = dragging.current
+                if (!d) return
+                const it = intentOf(currentVersion(d).status, st)
+                if (!it) return // 같은 열 — 아무 일도 없다
+                /* 막힌 걸음도 드롭은 받는다 — 받아야 "왜 안 되는지"를 토스트로 말할 수 있다.
+                   preventDefault 를 안 하면 drop 이 아예 안 떨어져 **조용한 무시**가 된다
+                   (§17 의 반대 — 판이 잡았다). 하이라이트는 성립하는 걸음에만. */
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+                if ('kind' in it) {
+                  if (overLane !== st) setOverLane(st)
+                } else if (overLane !== null) setOverLane(null)
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node) && overLane === st) setOverLane(null)
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                dropOn(st)
+              }}
+              className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline/60 bg-[var(--color-lane)] transition-colors pc:min-h-[440px]"
+              style={{
+                borderTop: `2px solid ${DOT[st]}`,
+                /* 받을 수 있는 레인 위에 끌고 오면 레인이 제 색으로 답한다 (§16) */
+                borderColor: isOver ? DOT[st] : undefined,
+                backgroundColor: isOver ? `color-mix(in oklab, ${DOT[st]} 8%, var(--color-lane))` : undefined,
+              }}
             >
               <header
                 className="flex items-center gap-2 px-3.5 py-2.5"
@@ -174,6 +287,218 @@ function BoardPage() {
       </div>
 
       <ListFoot total={specs.length} shown={specs.length} unit={t('board.unit', '개')} />
+
+      {intent?.kind === 'submit' && (
+        <SubmitPanel
+          spec={intent.spec}
+          onClose={() => setIntent(null)}
+          onDone={() => {
+            withCardTransition(() => {
+              submitSpec(intent.spec, ME)
+            })
+            toast(tf('board.toast.submitted', { name: intent.spec.name }, '{name} — 결재에 올렸습니다'))
+          }}
+        />
+      )}
+      {intent?.kind === 'withdraw' && (
+        <WithdrawPanel
+          spec={intent.spec}
+          onClose={() => setIntent(null)}
+          onDone={() => {
+            // 클로저 안 대입이라 TS 가 좁히지 못하게 boolean 으로 넓혀 둔다
+            let ok = false as boolean
+            withCardTransition(() => {
+              ok = withdrawSpecRequest(intent.spec.id, ME)
+            })
+            toast(
+              ok
+                ? tf('board.toast.withdrawn', { name: intent.spec.name }, '{name} — 회수했습니다')
+                : t('board.toast.withdrawBlocked', '회수할 수 없습니다 — 이미 한 단계 이상 승인이 찍혔습니다. 반려·재요청으로 진행하세요.'),
+            )
+          }}
+        />
+      )}
+      {intent?.kind === 'deploy' && (
+        <DeployPanel
+          spec={intent.spec}
+          onClose={() => setIntent(null)}
+          onDone={(version, env) => {
+            const rec = requestDeploy({
+              version,
+              env,
+              owner: ME,
+              specs: [{ id: intent.spec.id, name: intent.spec.name, version: currentVersion(intent.spec).version }],
+              changes: [`${intent.spec.name} ${currentVersion(intent.spec).version} 반영`],
+            })
+            toast(
+              rec
+                ? t('board.toast.deployRequested', '배포 요청이 결재함으로 갔습니다 — 배포 승인이 나면 배포 완료로 옮겨집니다.')
+                : t('board.toast.deployBlocked', '반영이 막혀 있습니다 — 이 사양서에 반영 안 된 요청이 겹쳐 있습니다.'),
+            )
+          }}
+        />
+      )}
     </AppShell>
+  )
+}
+
+/* ── 끌어 놓기가 여는 패널 셋 — 확정 없이는 아무것도 움직이지 않는다 ────────── */
+
+/** 상신 — 결재선을 보여 주고 올린다 (상세의 상신과 같은 workflow 문을 지난다) */
+function SubmitPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => void; onDone: () => void }) {
+  const { t, tf } = useI18n()
+  const overlapped = activeRequestsOfSpec(spec.id).length
+  return (
+    <Modal
+      title={t('board.panel.submitTitle', '결재 상신')}
+      onClose={onClose}
+      footer={(close) => (
+        <>
+          <button
+            type="button"
+            onClick={close}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onDone()
+              close()
+            }}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-xs font-semibold text-white hover:opacity-90"
+          >
+            {t('board.panel.submit', '상신')}
+          </button>
+        </>
+      )}
+    >
+      <p className="text-[13px] text-ink">
+        <b>{spec.name}</b> {currentVersion(spec).version}
+      </p>
+      <p className="mt-1 text-xs text-ink-subtle">
+        {t('board.panel.submitHint', '상신하면 아래 결재선을 차례로 지납니다 — 결재 중에는 편집이 잠깁니다.')}
+      </p>
+      {/* 결재선 정본(SPEC_APPROVAL_LINE)을 그대로 보여 준다 — 상신 뒤 "지금 누구 차례"의 근거 */}
+      <ol className="mt-3 space-y-1.5">
+        {SPEC_APPROVAL_LINE.map((s) => (
+          <li key={s.seq} className="flex items-center gap-2 rounded-lg bg-canvas/60 px-3 py-2 text-xs">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-chip font-semibold text-ink-muted">
+              {s.seq}
+            </span>
+            <span className="font-medium text-ink">{s.name}</span>
+            <span className="ml-auto text-ink-subtle">{s.label}</span>
+          </li>
+        ))}
+      </ol>
+      {overlapped > 0 && (
+        <p className="mt-3 rounded-lg bg-[var(--color-fill-pending)]/10 px-3 py-2 text-xs text-[var(--color-fill-pending)]">
+          {tf('board.panel.overlapWarn', { n: overlapped }, '⚠ 이 사양서에 이미 심사 중인 요청이 {n}건 있습니다 — 신청은 막지 않지만, 반영은 하나로 정리될 때까지 막힙니다.')}
+        </p>
+      )}
+    </Modal>
+  )
+}
+
+/** 회수 — 아무도 판단하지 않았을 때만 내릴 수 있다 (FR-114 확장) */
+function WithdrawPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => void; onDone: () => void }) {
+  const { t } = useI18n()
+  return (
+    <Modal
+      title={t('board.panel.withdrawTitle', '결재 회수')}
+      onClose={onClose}
+      footer={(close) => (
+        <>
+          <button
+            type="button"
+            onClick={close}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onDone()
+              close()
+            }}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-xs font-semibold text-white hover:opacity-90"
+          >
+            {t('board.panel.withdraw', '회수')}
+          </button>
+        </>
+      )}
+    >
+      <p className="text-[13px] text-ink">
+        <b>{spec.name}</b> {currentVersion(spec).version}
+      </p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+        {t('board.panel.withdrawHint', '올린 결재를 거두어 오면 카드는 초안으로 돌아갑니다. 아무도 판단하지 않았을 때만 가능합니다 — 한 단계라도 승인이 찍혔다면 반려를 받아 재요청하는 것이 이력에 남는 길입니다.')}
+      </p>
+    </Modal>
+  )
+}
+
+/** 배포 요청 — 배포는 결재를 거친다. 카드는 배포 **승인**이 나야 옮겨간다(정직한 지연) */
+function DeployPanel({
+  spec,
+  onClose,
+  onDone,
+}: {
+  spec: Spec
+  onClose: () => void
+  onDone: (version: string, env: 'Production' | 'Staging') => void
+}) {
+  const { t } = useI18n()
+  const [version, setVersion] = useState('v3.1.3')
+  const [env, setEnv] = useState<'Production' | 'Staging'>('Production')
+  return (
+    <Modal
+      title={t('board.panel.deployTitle', '배포 요청')}
+      onClose={onClose}
+      footer={(close) => (
+        <>
+          <button
+            type="button"
+            onClick={close}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onDone(version, env)
+              close()
+            }}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-xs font-semibold text-white hover:opacity-90"
+          >
+            {t('board.panel.deploy', '배포 요청')}
+          </button>
+        </>
+      )}
+    >
+      <p className="text-[13px] text-ink">
+        <b>{spec.name}</b> {currentVersion(spec).version}
+      </p>
+      <p className="mt-1 text-xs text-ink-subtle">
+        {t('board.panel.deployHint', '배포도 결재를 거칩니다 — 요청이 결재함으로 가고, 배포 승인이 나면 카드가 배포 완료로 옮겨집니다.')}
+      </p>
+      <label className="mt-3 block text-xs font-medium text-ink-subtle">
+        {t('board.panel.releaseVersion', '릴리즈 버전')}
+        <input
+          value={version}
+          onChange={(e) => setVersion(e.target.value)}
+          className="mt-1.5 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] text-ink outline-none focus:border-primary/60"
+        />
+      </label>
+      <div className="mt-3">
+        <span className="text-xs font-medium text-ink-subtle">{t('board.panel.env', '환경')}</span>
+        <div className="mt-1.5">
+          <ChipSelect options={['Production', 'Staging'] as const} value={env} onChange={setEnv} mono />
+        </div>
+      </div>
+    </Modal>
   )
 }
