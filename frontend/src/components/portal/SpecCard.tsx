@@ -76,14 +76,18 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
         </p>
       )}
 
-      <div className="mt-4 flex items-center justify-between border-t border-hairline pt-4">
-        <div className="flex items-center gap-2 text-xs text-ink-subtle">
+      {/* ⚠ 초안 카드는 [승인 요청]까지 붙어 393px 에서 다섯 요소가 짜부됐다 — 이름·날짜·
+          버튼 라벨이 두 줄로 꺾였다(2026-08-25 모바일 실사). 줄 단위로 wrap: 자리가 모자라면
+          버튼 묶음이 통째로 다음 줄 오른쪽에 선다(§23-1 바깥 wrap 함정은 여기선 없다 —
+          flex-1 인 칸이 없고 묶음 둘뿐이라 밀려도 폭을 잃지 않는다). */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-hairline pt-4">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
           <Avatar name={cur.author} />
           <span className="font-medium text-ink-muted">{cur.author}</span>
           <span>·</span>
           <span>{tf('specCard.updated', { date: spec.updated })}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
           <button
             type="button"
             onClick={onDetail}

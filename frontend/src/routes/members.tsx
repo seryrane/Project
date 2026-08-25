@@ -513,8 +513,11 @@ function MembersPage() {
             },
           ]}
         />
-        <ListFoot total={memberList.length} shown={rows.length} unit="명" />
       </div>
+      {/* ⚠ 발이 표 래퍼(hidden pc:block) 안에 있었다 — 좁은 화면 카드 목록은 몇 명인지
+          말 안 하고 끝났다(2026-08-25 모바일 실사). 발 하나를 카드·표가 함께 쓴다(규약 §9,
+          알림 화면과 같은 골격 — specs 가 08-18 에 고친 병의 재발). */}
+      <ListFoot total={memberList.length} shown={rows.length} unit="명" />
 
       {/* 회원 상세 — 목록을 훑으며 보는 상세라 드로어 (규약 §1) */}
       {detail && (

@@ -150,8 +150,11 @@ function PrivacyPage() {
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_340px]">
-        {/* 감사 로그 — 표는 자기 상자 안에서만 흐른다 */}
-        <section className="anim-fade-up card-spotlight rounded-2xl border border-hairline bg-surface [animation-delay:120ms]">
+        {/* 감사 로그 — 표는 자기 상자 안에서만 흐른다.
+            ⚠ 좁은 화면은 order 로 정책 카드를 앞세운다 — 로그 20건 아래(6천px)에 토글이
+            묻히면 Super Admin 이 마스킹 하나 바꾸러 끝까지 긁어야 한다(2026-08-25 모바일
+            실사). 넓은 화면은 우측 열이라 원래 순서 그대로. */}
+        <section className="anim-fade-up card-spotlight order-2 rounded-2xl border border-hairline bg-surface [animation-delay:120ms] xl:order-1">
           <div className="flex flex-wrap items-center justify-between gap-2 surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('privacy.auditLogTitle', '감사 로그')}</h2>
             <ChipSelect
@@ -263,7 +266,7 @@ function PrivacyPage() {
         </section>
 
         {/* 마스킹·보존 정책 — 되돌릴 수 있는 것은 묻지 않고 즉시 저장 */}
-        <section className="anim-fade-up card-spotlight self-start rounded-2xl border border-hairline bg-surface [animation-delay:180ms]">
+        <section className="anim-fade-up card-spotlight order-1 self-start rounded-2xl border border-hairline bg-surface [animation-delay:180ms] xl:order-2">
           <div className="surface-head px-5 py-3.5">
             <h2 className="text-sm font-semibold text-ink">{t('privacy.maskPolicyTitle', '마스킹 · 보존 정책')}</h2>
           </div>
