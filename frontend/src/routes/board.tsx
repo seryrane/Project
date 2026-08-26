@@ -12,7 +12,7 @@ import { useI18n } from '#/lib/i18n'
 import { SPEC_APPROVAL_LINE } from '#/data/approvals'
 import { activeRequestOfSpec, activeRequestsOfSpec, unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
 import { currentVersion } from '#/data/specs'
-import { useSpecList } from '#/data/specStore'
+import { SPEC_STATUS_FILL, useSpecList } from '#/data/specStore'
 import { requestDeploy, submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { Spec, SpecStatus } from '#/data/specs'
 
@@ -33,14 +33,8 @@ export const Route = createFileRoute('/board')({ component: BoardPage })
  */
 const COLUMNS: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '승인 완료', '배포 완료']
 
-/** 상태별 점 색 — styles.css 의 상태색 사다리를 그대로 쓴다(§16 고른 것은 면으로) */
-const DOT: Record<SpecStatus, string> = {
-  초안: 'var(--color-fill-draft)',
-  '검토 중': 'var(--color-fill-review)',
-  '승인 대기': 'var(--color-fill-pending)',
-  '승인 완료': 'var(--color-fill-approved)',
-  '배포 완료': 'var(--color-fill-deployed)',
-}
+/** 상태색은 정본 하나(specStore.SPEC_STATUS_FILL) — 보드가 사본을 들면 화면마다 색이 갈린다(§9) */
+const DOT = SPEC_STATUS_FILL
 
 /** 지금 사용자 — SSO 확정 전 관례(상세·결재함과 같은 값) */
 const ME = '김현대'
@@ -257,15 +251,18 @@ function BoardPage() {
                 backgroundColor: isOver ? `color-mix(in oklab, ${DOT[st]} 8%, var(--color-lane))` : undefined,
               }}
             >
-              <header
-                className="flex items-center gap-2 px-3.5 py-2.5"
-                style={{ backgroundColor: `color-mix(in oklab, ${DOT[st]} 7%, transparent)` }}
-              >
+              {/* ⚠ 머리의 전체 틴트(7%)를 걷었다 — 회색 트랙 위에 저채도 상태색을 얇게 깔면
+                  탁해진다(2026-08-26 사용자 지적). 색은 스트립·점·수 배지 세 점만 말하고,
+                  배지는 투명 위가 아니라 **surface 에 섞어** 맑은 파스텔로 만든다. */}
+              <header className="flex items-center gap-2 px-3.5 pb-1.5 pt-3">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: DOT[st] }} />
                 <h2 className="text-[13px] font-semibold text-ink">{t(`specStatus.${st}`, st)}</h2>
                 <span
-                  className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums"
-                  style={{ backgroundColor: `color-mix(in oklab, ${DOT[st]} 15%, transparent)`, color: DOT[st] }}
+                  className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+                  style={{
+                    backgroundColor: `color-mix(in oklab, ${DOT[st]} 14%, var(--color-surface))`,
+                    color: DOT[st],
+                  }}
                 >
                   {cards.length}
                 </span>

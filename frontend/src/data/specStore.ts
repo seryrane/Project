@@ -241,7 +241,9 @@ export function countByStatus(list: Array<Spec>): Record<SpecStatus, number> {
 /** 도넛·상태 칩용 분포. prev 는 "이전 동일 기간" mock — 실 이력이 없는 프로토타입이라
  *  결정적 상수다(난수 금지). ⚠ 현재 값(value)만은 반드시 목록에서 센다. */
 const STATUS_PREV: Record<SpecStatus, number> = { 초안: 1, '검토 중': 2, '승인 대기': 1, '승인 완료': 0, '배포 완료': 1 }
-const STATUS_FILL: Record<SpecStatus, string> = {
+/** 상태색 사다리 — 보드 레인·흐름 스트립·분포 도넛이 **한 정본**을 쓴다(§9).
+ *  화면이 제 사본을 들면 색이 화면마다 갈린다. */
+export const SPEC_STATUS_FILL: Record<SpecStatus, string> = {
   초안: 'var(--color-fill-draft)',
   '검토 중': 'var(--color-fill-review)',
   '승인 대기': 'var(--color-fill-pending)',
@@ -255,6 +257,6 @@ export function specStatusDistribution(list: Array<Spec>) {
     label,
     value: counts[label],
     prev: STATUS_PREV[label],
-    fill: STATUS_FILL[label],
+    fill: SPEC_STATUS_FILL[label],
   }))
 }

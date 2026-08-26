@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { FlowStrip } from '#/components/portal/FlowStrip'
 import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
 import { DataTable } from '#/components/portal/DataTable'
@@ -33,8 +34,6 @@ import {
   FIELD_CATEGORIES,
   FIELD_STATUS_CLS,
   FIELD_STATUS_DOT,
-  WORKFLOW_STEPS,
-  workflowIndex,
 } from '#/data/specFields'
 import type { FieldDef, FieldStatus, FieldType } from '#/data/specFields'
 
@@ -92,39 +91,6 @@ export const Route = createFileRoute('/specs_/$specId')({
     request: search.request === '1' || search.request === 1 || search.request === true ? '1' : undefined,
   }),
 })
-
-/* 배포 워크플로우 스테퍼 — 지금 어디까지 왔는지가 헤더에서 한눈에 보인다 */
-function WorkflowStepper({
-  current,
-  label,
-}: {
-  current: number
-  /** 단계 이름은 값(한국어 정본)을 그대로 두고 표시만 옮긴다 (규약 §4-7) */
-  label: (s: string) => string
-}) {
-  return (
-    <div className="overflow-x-auto">
-      <ol className="flex min-w-max items-center gap-1 text-xs">
-        {WORKFLOW_STEPS.map((s, i) => (
-          <li key={s} className="flex items-center gap-1">
-            {i > 0 && <span className="text-ink-subtle">→</span>}
-            <span
-              className={`rounded-full px-2 py-0.5 font-medium ${
-                i < current
-                  ? 'bg-chip text-ink-muted'
-                  : i === current
-                    ? 'bg-primary/15 font-semibold text-primary ring-1 ring-primary/40'
-                    : 'text-ink-subtle'
-              }`}
-            >
-              {label(s)}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  )
-}
 
 /* 결재선 — 누가 · 몇 번째 · 지금 누구 차례. 정본은 data/approvals.ts 한 곳이다.
    ⚠ 예전엔 상신 모달 안에만, 그것도 글자로 박혀 있었다 — 결재에 올라간 뒤에는
@@ -517,9 +483,11 @@ function SpecDetailPage() {
       <div className="mt-4 rounded-xl border border-hairline bg-surface px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="text-xs font-medium text-ink-subtle">
-            {t('specDetail.workflowLabel', '배포 워크플로우')}
+            {t('specDetail.workflowLabel', '진행 흐름')}
           </span>
-          <WorkflowStepper current={workflowIndex(cur.status)} label={(w) => t(`workflow.${w}`, w)} />
+          {/* 흐름 스트립 관문 — 보드·목록과 **같은 5상태 언어**(예전 7단계 스테퍼는
+              수정중·임시저장·최종완료 등 절반이 도달 불가능한 레퍼런스 유산이었다, §15) */}
+          <FlowStrip current={cur.status} />
         </div>
 
         {/* 결재 중일 때만 — 지금 누구 차례인지가 이 화면에서 보여야 한다 (⑦) */}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { CtaButton, simulate } from '#/components/portal/Skeleton'
@@ -125,13 +125,22 @@ function DeploysPage() {
             {t('page.deploys.subtitle', '사양서 통합 배포 · 승인 기반 릴리즈 관리 (Mock 데이터)')}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
-        >
-          {t('deploys.newRequest', '→ 새 배포 요청')}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* 흐름 허브로 가는 다리 — 무엇이 배포를 기다리는지는 보드가 한눈에 말한다 */}
+          <Link
+            to="/board"
+            className="flex h-9 items-center rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('flow.toBoard', '상태 보드 →')}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+          >
+            {t('deploys.newRequest', '→ 새 배포 요청')}
+          </button>
+        </div>
       </div>
 
       <div className="anim-fade-up mt-5">
