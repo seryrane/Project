@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { ChipSelect } from '#/components/portal/Chips'
@@ -163,6 +163,13 @@ function SpecsPage() {
             엑셀 버튼이 제목과 등록 사이 허공으로 밀려난다(2026-08-19 실측 — 화면 가운데에
             혼자 떠 있었다). 조작은 오른쪽 끝에 모이고, **주 행동이 바깥쪽**에 선다. */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* 흐름 허브로 가는 다리 — 목록·보드·결재함이 서로를 안다(사양서→승인→배포 여정) */}
+          <Link
+            to="/board"
+            className="flex h-9 items-center rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('flow.toBoard', '상태 보드 →')}
+          </Link>
           {/* 엑셀 이관(FR-115) — 최초 대량 이관은 여기서 시작한다. 등록 옆에 두는 이유:
               "한 건 만들기"와 "여러 건 가져오기"는 같은 자리에서 고르는 일이다 */}
           <button

@@ -75,34 +75,9 @@ export const specFieldDefs: Array<FieldDef> = [
   F(32, '보안/감사', '보안', '접근등급', 'select', true, null, '조회 가능 최소 권한 등급', null, '박선우', '미완료'),
 ]
 
-/* 배포 워크플로우 — 레퍼런스 기획을 그대로 채택 */
-export const WORKFLOW_STEPS = [
-  '초안',
-  '수정중',
-  '임시저장',
-  '최종완료',
-  '승인요청',
-  '배포승인',
-  '배포완료',
-] as const
-
-/** 사양서 상태 → 워크플로우 현재 단계 index */
-export function workflowIndex(status: string): number {
-  switch (status) {
-    case '초안':
-      return 0
-    case '검토 중':
-      return 1
-    case '승인 대기':
-      return 4
-    case '승인 완료':
-      return 5
-    case '배포 완료':
-      return 6
-    default:
-      return 0
-  }
-}
+/* 배포 워크플로우 7단계(레퍼런스 기획)는 걷었다(2026-08-26) — 수정중·임시저장·최종완료
+   등 절반이 실제 상태로 도달 불가능했고, 보드·목록의 5상태와 낱말이 갈렸다(§15).
+   흐름 표기는 components/portal/FlowStrip(정본 specStore.SPEC_STATUSES)이 맡는다. */
 
 export const FIELD_STATUS_CLS: Record<FieldStatus, string> = {
   완료: 'bg-deployed-bg text-deployed-ink',

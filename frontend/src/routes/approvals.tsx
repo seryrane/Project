@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
 import { Avatar } from '#/components/portal/Avatar'
@@ -305,15 +305,24 @@ function ApprovalsPage() {
             )}
           </p>
         </div>
-        {/* FR-114 ② "승인선을 설정으로 변경할 수 있다" — 설정은 결재를 보는 자리 옆에 둔다
-            (별도 메뉴로 빼면 결재선을 고치러 어디로 가야 하는지 아무도 모른다) */}
-        <button
-          type="button"
-          onClick={() => setLineOpen(true)}
-          className="h-9 shrink-0 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
-        >
-          {t('approvals.lineSettings', '결재선 설정')}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* 흐름 허브로 가는 다리 — 결재하다 전체 흐름이 궁금하면 보드로 */}
+          <Link
+            to="/board"
+            className="flex h-9 items-center rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('flow.toBoard', '상태 보드 →')}
+          </Link>
+          {/* FR-114 ② "승인선을 설정으로 변경할 수 있다" — 설정은 결재를 보는 자리 옆에 둔다
+              (별도 메뉴로 빼면 결재선을 고치러 어디로 가야 하는지 아무도 모른다) */}
+          <button
+            type="button"
+            onClick={() => setLineOpen(true)}
+            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('approvals.lineSettings', '결재선 설정')}
+          </button>
+        </div>
       </div>
 
       {/* 요약 — 라벨 줄은 머리(옅은 면), 숫자는 몸 (규약 §7·§10) */}

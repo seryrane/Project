@@ -63,6 +63,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'board.toast.deployRequested': { ko: '배포 요청이 결재함으로 갔습니다 — 배포 승인이 나면 배포 완료로 옮겨집니다.', en: 'Deployment request sent to approvals — the card moves once approved.' },
   'board.toast.deployBlocked': { ko: '반영이 막혀 있습니다 — 이 사양서에 반영 안 된 요청이 겹쳐 있습니다.', en: 'Deployment blocked — unresolved overlapping requests exist for this spec.' },
   'board.toApprovals': { ko: '결재함으로 →', en: 'To approvals →' },
+  'flow.toBoard': { ko: '상태 보드 →', en: 'Status board →' },
   'board.myTurn': { ko: '내 차례', en: 'My turn' },
   'board.nowTurn': { ko: '지금 {name} 차례', en: 'Now with {name}' },
   'board.conflict': { ko: '겹침 {n}', en: 'Overlap {n}' },
@@ -254,13 +255,6 @@ export const WORK_DICT: Record<string, Entry> = {
   'approvalStep.중간 승인': { ko: '중간 승인', en: 'Interim approval' },
   /* 배포 워크플로우 단계·필드 상태 — 정본이 한국어 문자열이라 낱말이 곧 키다(같은 임시 규칙).
      ⚠ EN 화면에서 이 두 줄만 한국어로 남아 있었다(2026-08-18) — 값은 그대로, 표시만 옮긴다. */
-  'workflow.초안': { ko: '초안', en: 'Draft' },
-  'workflow.수정중': { ko: '수정중', en: 'Editing' },
-  'workflow.임시저장': { ko: '임시저장', en: 'Saved draft' },
-  'workflow.최종완료': { ko: '최종완료', en: 'Finalized' },
-  'workflow.승인요청': { ko: '승인요청', en: 'Approval requested' },
-  'workflow.배포승인': { ko: '배포승인', en: 'Deploy approved' },
-  'workflow.배포완료': { ko: '배포완료', en: 'Deployed' },
   'fieldStatus.완료': { ko: '완료', en: 'Done' },
   'fieldStatus.진행중': { ko: '진행중', en: 'In progress' },
   'fieldStatus.검토중': { ko: '검토중', en: 'In review' },
@@ -503,7 +497,7 @@ export const WORK_DICT: Record<string, Entry> = {
     ko: '임시저장본이 있습니다 ({at}). 이어서 작업할까요? 지금 화면은 마지막 반영본입니다.',
     en: 'A draft exists ({at}). Resume it? The current screen shows the last applied version.',
   },
-  'specDetail.workflowLabel': { ko: '배포 워크플로우', en: 'Deploy workflow' },
+  'specDetail.workflowLabel': { ko: '진행 흐름', en: 'Flow' },
   'specDetail.fieldListTitle': { ko: '필드 목록 ({n}개)', en: 'Field list ({n})' },
   'specDetail.fieldListHint': {
     ko: '행을 누르면 우측에서 편집합니다 · 표는 자기 상자 안에서만 가로로 흐릅니다',
