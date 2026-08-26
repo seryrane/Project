@@ -132,6 +132,9 @@ function ApprovalsPage() {
   const [cooldown, setCooldown] = useState(false)
   /** 이 자리에서(모달을 연 뒤로) 몇 건을 처리했나 — 진행 점 ●●○○ 의 채움 */
   const [doneThisRun, setDoneThisRun] = useState(0)
+  /** 처리 순간 **모달 몸이 날아가는** 연출 — 판단이 몸에 남는다(2026-08-26 요청).
+   *  다음 건은 오른쪽에서 밀려 들어온다(deal-in). 값은 처리 종류(승인/반려). */
+  const [flying, setFlying] = useState<'승인' | '반려' | null>(null)
   const [lineOpen, setLineOpen] = useState(false)
   /* 겹침 정리 — 취소는 **남의 요청을 내리는 일**이라 사유 없이는 못 누른다 (workflow 가 막지만
      화면이 먼저 말해 준다). 대상 건을 들고 있는 상태 하나로 모달을 연다. */
@@ -204,6 +207,9 @@ function ApprovalsPage() {
     setDoneThisRun((n) => n + 1)
     setCooldown(true)
     window.setTimeout(() => setCooldown(false), 700)
+    // 날아가는 동안 잠금이 걸려 있다(위 cooldown) — 연출이 끝나면 다음 건이 자리에 선다
+    setFlying(action)
+    window.setTimeout(() => setFlying(null), 340)
     /* ── 연속 처리 ─────────────────────────────────────────────────────
        ⚠ 결재는 **한 건씩 오지 않는다**: 내 차례가 넷이면 [상세]→[승인]→닫기→[상세]…
        를 네 번 반복해야 했다(2026-08-18). 처리하고 나면 **다음 내 차례 건을 그 자리에
@@ -698,7 +704,12 @@ function ApprovalsPage() {
               </span>
             </div>
           )}
-          <div key={detail.id} className="anim-fade-up rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
+          <div
+            key={detail.id}
+            className={`rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5 ${
+              flying ? (flying === '승인' ? 'anim-decide-approve' : 'anim-decide-reject') : 'anim-deal-in'
+            }`}
+          >
             <div className="flex flex-wrap items-center gap-2">
               {detail.urgent && <UrgentChip />}
               <KindChip kind={detail.kind} />

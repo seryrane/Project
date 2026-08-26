@@ -680,6 +680,38 @@ select option {
   }
 }
 
+/* 결재 처리 연출 — 판단이 **몸에 남게** 한다(2026-08-26 "느낌있게 처리된 형태로").
+   승인: 카드가 오른쪽 위로 날아가며 사라진다(다음 단계로 넘어간다는 은유).
+   반려: 왼쪽 아래로 되돌아간다(요청자에게 돌아간다). 다음 건은 오른쪽에서 밀려 들어온다.
+   ⚠ 전역 reduced-motion 스위치(맨 아래 0.01ms)가 이것도 죽인다 — 따로 안 가려도 된다. */
+@keyframes decide-approve {
+  to {
+    opacity: 0;
+    transform: translate3d(46px, -34px, 0) rotate(4deg) scale(0.94);
+  }
+}
+@keyframes decide-reject {
+  to {
+    opacity: 0;
+    transform: translate3d(-46px, 26px, 0) rotate(-4deg) scale(0.94);
+  }
+}
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(40px, 0, 0) scale(0.98);
+  }
+}
+.anim-decide-approve {
+  animation: decide-approve 340ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
+}
+.anim-decide-reject {
+  animation: decide-reject 340ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
+}
+.anim-deal-in {
+  animation: deal-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(14px); }
 }

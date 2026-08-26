@@ -49,6 +49,51 @@ test.describe('상태 보드 끌어 놓기', () => {
     await expect(page.getByRole('dialog').getByText('결재 상신')).toBeVisible()
   })
 
+  test('레인 상한 — 넘치면 카드 대신 "외 N건" 링크가 목록으로 보낸다', async ({ page }) => {
+    await page.goto('/specs')
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    // 초안을 7건으로 만든다(시드 1 + 등록 6) — ⚠ goto 는 스토어를 초기화하므로 등록 후
+    // 보드는 **앱 안 링크**로 간다
+    for (let i = 1; i <= 6; i++) {
+      await page.getByRole('button', { name: '+ 사양서 등록' }).click()
+      const modal = page.getByRole('dialog')
+      await modal.getByPlaceholder(/VN9 하이브리드/).fill(`상한 검증용 사양서 ${i}`)
+      await modal.getByRole('button', { name: '등록', exact: true }).click()
+      // ⚠ 등록은 **새 사양서 상세로 이동**한다(전환 중 html 이 클릭을 막는다) —
+      // 상세가 선 것을 확인하고 목록으로 돌아와 다음 등록 (goto 는 스토어를 지우므로 금지)
+      await expect(page.getByRole('heading', { name: `상한 검증용 사양서 ${i}` })).toBeVisible()
+      await page.getByRole('link', { name: '← 사양서 목록' }).click()
+      await expect(page.getByRole('heading', { name: '사양서 관리' })).toBeVisible()
+    }
+    await page.locator('nav').getByRole('link', { name: '상태 보드' }).click()
+    const draftLane = lane(page, '초안')
+    /* ⚠ 전체 판에서는 앞 판들이 시드를 옮겨 놓아 초안 수가 달라진다(격리로만 통과하던
+       순서 의존을 이렇게 잡았다) — **고정 수를 재지 말고** 상한(6)과 넘침 링크의
+       존재만 잰다. 카드는 6장에서 멈추고 나머지는 링크가 받는다. */
+    // ⚠ `[href^="/specs/"]` 는 넘침 링크(/specs)까지 문다 — 카드만 세려면 상세 경로(SP-…)로
+    await expect(draftLane.locator('li a[href*="/specs/SP-"]')).toHaveCount(6)
+    const overflow = draftLane.getByRole('link', { name: /외 \d+건/ })
+    await expect(overflow, '넘친 것은 숨기지 않고 목록으로 보낸다').toBeVisible()
+    await overflow.click()
+    // 상태 필터가 걸린 목록으로 — 보드가 페이징을 재발명하지 않는다
+    await expect(page).toHaveURL(/status=/)
+    await expect(page.getByRole('heading', { name: '사양서 관리' })).toBeVisible()
+  })
+
+  test('필터 — 카테고리 축·내 차례만 스위치가 걸러 세고, 발이 말한다', async ({ page }) => {
+    await page.goto('/board')
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    // 카테고리 축 (§23-10 관문 재사용 — specs 와 같은 그림)
+    await page.getByRole('group', { name: '카테고리' }).getByRole('button', { name: /파워트레인/ }).click()
+    await expect(lane(page, '승인 대기').getByText('VN7 엔진 사양서')).toBeVisible()
+    await expect(page.getByText('전체 4개 중 1개'), '발이 거른 결과를 말한다').toBeVisible()
+    // 조건은 주소에 산다 — 새로고침에서 살아남는다
+    await expect(page).toHaveURL(/cat=/)
+    // 내 차례만 — 결재자의 눈
+    await page.getByRole('group', { name: '범위' }).getByRole('switch').click()
+    await expect(page).toHaveURL(/mine=/)
+  })
+
   test('빈 레인은 "언제 이 상태가 되는지"를 말한다', async ({ page }) => {
     await page.goto('/board')
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})

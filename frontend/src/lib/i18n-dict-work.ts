@@ -73,6 +73,9 @@ export const WORK_DICT: Record<string, Entry> = {
   'board.toast.deployRequested': { ko: '배포 요청이 결재함으로 갔습니다 — 배포 승인이 나면 배포 완료로 옮겨집니다.', en: 'Deployment request sent to approvals — the card moves once approved.' },
   'board.toast.deployBlocked': { ko: '반영이 막혀 있습니다 — 이 사양서에 반영 안 된 요청이 겹쳐 있습니다.', en: 'Deployment blocked — unresolved overlapping requests exist for this spec.' },
   'board.toApprovals': { ko: '결재함으로 →', en: 'To approvals →' },
+  'board.filter.scope': { ko: '범위', en: 'Scope' },
+  'board.filter.mineOnly': { ko: '내 차례만 보기', en: 'My turn only' },
+  'board.laneOverflow': { ko: '외 {n}건 — 사양서 관리에서 보기 →', en: '+{n} more — view in Specifications →' },
   'flow.toBoard': { ko: '상태 보드 →', en: 'Status board →' },
   // 처리 직후의 자국 — 연속 처리에서 "안 됐나?" 연타를 막는다 (2026-08-26)
   'approvals.nextUp': { ko: '다음 ▸', en: 'Next ▸' },
