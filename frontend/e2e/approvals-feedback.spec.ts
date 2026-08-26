@@ -38,8 +38,8 @@ test.describe('결재 연속 처리 피드백', () => {
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeDisabled()
     // 잠금은 풀린다 — 다음 판단을 막는 물건이 아니다
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeEnabled({ timeout: 2000 })
-    // 진행이 배지에 쌓인다 — 처리 수가 글자로도 남는다 (점 ●●○○ 은 시각 전용)
-    await expect(modal.getByText('· 1 처리')).toBeVisible()
+    // 진행이 배지에 분수로 남는다 — 바만으로는 뜻이 안 읽힌다("저 점이 뭔지 불분명")
+    await expect(modal.getByText('1/4 처리 · 3건 남음')).toBeVisible()
   })
 
   test('롤링 — 다음 칩을 누르면 그 건이 앞으로 오고, 지금 건은 큐에 남는다', async ({ page }) => {
