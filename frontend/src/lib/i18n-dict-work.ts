@@ -44,6 +44,16 @@ export const WORK_DICT: Record<string, Entry> = {
   'chart.aria.gaugeTrend': { ko: '{name} 추이', en: '{name} trend' },
   // 상태 보드 (정의서 밖 제안 — 칸반 보기)
   'board.subtitle': { ko: '카드를 다음 열에 끌어 놓으면 그 걸음의 결재 패널이 열립니다 — 상태는 결재가 바꿉니다.', en: 'Drop a card on the next lane to open the approval panel for that step — status changes only through approval.' },
+  'board.panel.reviewTitle': { ko: '검토 시작', en: 'Start review' },
+  'board.panel.review': { ko: '검토 시작', en: 'Start review' },
+  'board.panel.reviewHint': { ko: '문서를 다듬는 동안 검토 중으로 표시합니다 — 결재 전 상태라 결재선을 타지 않고, 준비되면 승인 대기로 끌어 상신합니다.', en: 'Marks the spec as in review while you refine it — a pre-approval state with no approval line. Drag to Pending when ready to submit.' },
+  'board.toast.reviewStarted': { ko: '{name} — 검토를 시작했습니다', en: '{name} — review started' },
+  // 빈 레인 힌트 — 언제 이 상태가 되나
+  'board.empty.초안': { ko: '새 사양서가 등록되면 여기서 시작합니다 — 반려·회수된 문서도 여기로 돌아옵니다', en: 'New specs start here — rejected or withdrawn ones return here too' },
+  'board.empty.검토 중': { ko: '초안 카드를 이 열로 끌면 검토가 시작됩니다', en: 'Drag a draft card here to start review' },
+  'board.empty.승인 대기': { ko: '카드를 이 열로 끌어 상신하면 결재가 시작됩니다', en: 'Drag a card here to submit for approval' },
+  'board.empty.승인 완료': { ko: '결재 마지막 단계가 승인되면 옵니다 — 배포 요청을 기다리는 자리입니다', en: 'Arrives when the final approval step passes — waiting for a deployment request' },
+  'board.empty.배포 완료': { ko: '배포 결재까지 승인되면 옵니다', en: 'Arrives once deployment is approved' },
   'board.panel.submitTitle': { ko: '결재 상신', en: 'Submit for approval' },
   'board.panel.submit': { ko: '상신', en: 'Submit' },
   'board.panel.submitHint': { ko: '상신하면 아래 결재선을 차례로 지납니다 — 결재 중에는 편집이 잠깁니다.', en: 'Submitting routes it through the approval line below — editing locks while in review.' },

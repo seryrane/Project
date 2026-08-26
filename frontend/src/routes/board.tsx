@@ -12,7 +12,7 @@ import { useI18n } from '#/lib/i18n'
 import { SPEC_APPROVAL_LINE } from '#/data/approvals'
 import { activeRequestOfSpec, activeRequestsOfSpec, unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
 import { currentVersion } from '#/data/specs'
-import { SPEC_STATUS_FILL, useSpecList } from '#/data/specStore'
+import { SPEC_STATUS_FILL, startSpecReview, useSpecList } from '#/data/specStore'
 import { requestDeploy, submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { Spec, SpecStatus } from '#/data/specs'
 
@@ -36,11 +36,20 @@ const COLUMNS: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '�
 /** 상태색은 정본 하나(specStore.SPEC_STATUS_FILL) — 보드가 사본을 들면 화면마다 색이 갈린다(§9) */
 const DOT = SPEC_STATUS_FILL
 
+/** 빈 레인이 말하는 "언제 이 상태가 되나" — 흐름의 문을 자리에서 가르쳐 준다 */
+const EMPTY_HINT: Record<SpecStatus, string> = {
+  초안: '새 사양서가 등록되면 여기서 시작합니다 — 반려·회수된 문서도 여기로 돌아옵니다',
+  '검토 중': '초안 카드를 이 열로 끌면 검토가 시작됩니다',
+  '승인 대기': '카드를 이 열로 끌어 상신하면 결재가 시작됩니다',
+  '승인 완료': '결재 마지막 단계가 승인되면 옵니다 — 배포 요청을 기다리는 자리입니다',
+  '배포 완료': '배포 결재까지 승인되면 옵니다',
+}
+
 /** 지금 사용자 — SSO 확정 전 관례(상세·결재함과 같은 값) */
 const ME = '김현대'
 
 /** 끌어 놓기가 여는 패널의 종류 */
-type IntentKind = 'submit' | 'withdraw' | 'deploy'
+type IntentKind = 'review' | 'submit' | 'withdraw' | 'deploy'
 
 /**
  * 이 걸음이 결재 흐름의 어느 문인가 — 없으면 왜 없는지를 말한다.
@@ -48,13 +57,17 @@ type IntentKind = 'submit' | 'withdraw' | 'deploy'
  */
 function intentOf(from: SpecStatus, to: SpecStatus): { kind: IntentKind } | { block: string } | null {
   if (from === to) return null
+  /* ⚠ 예전엔 초안→검토 중을 막고 "상세에서 저장하며 도달한다"고 안내했다 — **거짓말**이었다:
+     그 전이는 어디에도 없었고 '검토 중'은 시드 전용 상태였다(2026-08-26 사용자 질문으로
+     드러남). 이제 이 끌기가 검토 시작의 문이다(결재 전 전이라 결재를 안 탄다). */
+  if (from === '초안' && to === '검토 중') return { kind: 'review' }
   if ((from === '초안' || from === '검토 중') && to === '승인 대기') return { kind: 'submit' }
   // 회수의 정본(workflow→specStore.withdrawSpec)은 **초안**으로 돌린다 — 검토 중에 놓아도
   // 카드는 초안으로 간다. 문은 하나고, 어디로 가는지는 패널이 말한다.
   if (from === '승인 대기' && (to === '검토 중' || to === '초안')) return { kind: 'withdraw' }
   if (from === '승인 완료' && to === '배포 완료') return { kind: 'deploy' }
-  if (from === '초안' && to === '검토 중')
-    return { block: '검토 중은 상세에서 문서를 저장하며 도달하는 상태입니다 — 카드를 눌러 상세에서 진행하세요.' }
+  if (from === '검토 중' && to === '초안')
+    return { block: '검토 중과 초안은 둘 다 결재 전입니다 — 되돌릴 것 없이 어느 쪽에서든 상신할 수 있습니다.' }
   if (from === '배포 완료')
     return { block: '배포된 버전은 보드에서 되돌리지 않습니다 — 고칠 것이 있으면 상세에서 새 버전을 상신하세요.' }
   return { block: `${from} → ${to} 걸음은 결재 흐름에 없습니다.` }
@@ -272,11 +285,10 @@ function BoardPage() {
                   <Card key={sp.id} spec={sp} />
                 ))}
                 {cards.length === 0 && (
-                  /* 빈 열도 이유를 말한다(§17) — 접으면 흐름의 모양이 사라진다 */
-                  <li /* 점선은 잉크 기반 — hairline/70 은 라이트의 회색 트랙 위에서 묻혀 글자만 떠
-                        보였다(2026-08-26). ink 를 섞으면 두 테마 모두 트랙과 갈라진다. */
-                    className="grid h-full min-h-24 place-items-center rounded-xl border border-dashed border-ink/20 px-2 text-center text-[11px] text-ink-subtle">
-                    {t('board.emptyColumn', '이 상태의 사양서가 없습니다')}
+                  /* 빈 열은 **언제 이 상태가 되는지**를 말한다(§17 강화, 2026-08-26 사용자
+                     질문 "초안·검토 중·승인 완료는 언제?") — "없습니다"만으로는 흐름이 안 보인다 */
+                  <li className="grid h-full min-h-24 place-items-center rounded-xl border border-dashed border-ink/20 px-4 text-center text-[11px] leading-relaxed text-ink-subtle">
+                    {t(`board.empty.${st}`, EMPTY_HINT[st])}
                   </li>
                 )}
               </ol>
@@ -287,6 +299,18 @@ function BoardPage() {
 
       <ListFoot total={specs.length} shown={specs.length} unit={t('board.unit', '개')} />
 
+      {intent?.kind === 'review' && (
+        <ReviewPanel
+          spec={intent.spec}
+          onClose={() => setIntent(null)}
+          onDone={() => {
+            withCardTransition(() => {
+              startSpecReview(intent.spec.id)
+            })
+            toast(tf('board.toast.reviewStarted', { name: intent.spec.name }, '{name} — 검토를 시작했습니다'))
+          }}
+        />
+      )}
       {intent?.kind === 'submit' && (
         <SubmitPanel
           spec={intent.spec}
@@ -342,6 +366,45 @@ function BoardPage() {
 }
 
 /* ── 끌어 놓기가 여는 패널 셋 — 확정 없이는 아무것도 움직이지 않는다 ────────── */
+
+/** 검토 시작 — 초안을 검토 중으로 (결재 전 전이라 결재선이 없다 · 가벼운 확인만) */
+function ReviewPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => void; onDone: () => void }) {
+  const { t } = useI18n()
+  return (
+    <Modal
+      title={t('board.panel.reviewTitle', '검토 시작')}
+      onClose={onClose}
+      footer={(close) => (
+        <>
+          <button
+            type="button"
+            onClick={close}
+            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('common.cancel', '취소')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onDone()
+              close()
+            }}
+            className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-4 text-xs font-semibold text-white hover:opacity-90"
+          >
+            {t('board.panel.review', '검토 시작')}
+          </button>
+        </>
+      )}
+    >
+      <p className="text-[13px] text-ink">
+        <b>{spec.name}</b> {currentVersion(spec).version}
+      </p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+        {t('board.panel.reviewHint', '문서를 다듬는 동안 검토 중으로 표시합니다 — 결재 전 상태라 결재선을 타지 않고, 준비되면 승인 대기로 끌어 상신합니다.')}
+      </p>
+    </Modal>
+  )
+}
 
 /** 상신 — 결재선을 보여 주고 올린다 (상세의 상신과 같은 workflow 문을 지난다) */
 function SubmitPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => void; onDone: () => void }) {
