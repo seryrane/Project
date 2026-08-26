@@ -18,6 +18,7 @@ export function Modal({
   children,
   footer,
   wide,
+  stack = 0,
 }: {
   title: React.ReactNode
   onClose: () => void
@@ -37,6 +38,13 @@ export function Modal({
    */
   footer?: React.ReactNode | ((close: () => void) => React.ReactNode)
   wide?: boolean
+  /**
+   * 뒤에 겹쳐 보일 장수(0~2) — 연속 처리처럼 **이 건 뒤에 더 남아 있다**를 물리적으로
+   * 말해야 할 때 쓴다. 글자 카운터는 읽어야 아는 신호라 약하다(2026-08-26 사용자 지적).
+   * 패널 아래로 종이 가장자리(lip)만 내민다 — 패널은 유리(반투명)라 **뒤에 통째로 깔면**
+   * 비쳐서 탁해진다. 좁은 화면 시트는 바닥에 붙어 보일 자리가 없으므로 pc 에서만.
+   */
+  stack?: number
 }) {
   const { t } = useI18n()
   const [closing, setClosing] = useState(false)
@@ -57,27 +65,34 @@ export function Modal({
       onClick={close}
     >
       <m.div
+        className={`relative w-full ${wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'}`}
+        initial={{ opacity: 0, y: 32, scale: 0.97 }}
+        animate={closing ? { opacity: 0, y: 20, scale: 0.98 } : { opacity: 1, y: 0, scale: 1 }}
+        transition={closing ? { duration: 0.15 } : { type: 'spring', stiffness: 460, damping: 36 }}
+        onAnimationComplete={() => {
+          if (closing) onClose()
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 겹침 lip — 패널 **밖** 아래로만 내민다(위는 유리에 비쳐 탁해진다). 그림이지
+            조작이 아니므로 보조기기에는 숨긴다 — 수는 글자 카운터가 이미 말한다. */}
+        {Array.from({ length: Math.min(Math.max(stack, 0), 2) }, (_, i) => (
+          <div
+            key={i}
+            aria-hidden
+            data-stack-lip
+            className="absolute hidden rounded-b-xl border border-t-0 border-hairline bg-surface pc:block"
+            style={{ left: 14 + i * 12, right: 14 + i * 12, bottom: -7 * (i + 1), height: 14, zIndex: -1 - i, opacity: 1 - i * 0.35 }}
+          />
+        ))}
+      <div
         ref={panelRef}
         {...coverProps(titleId)}
         /* ⚠ **`overflow-hidden` 이 없었다.** 규약 §7 이 못박은 것 — 머리·발에 면을 깔면
            그 면이 둥근 모서리를 넘어 **각지게 삐져나온다.** 머리에 `rounded-t-2xl` 을
            따로 붙여 위쪽만 가리고 있었는데, 발에도 면이 생기면서 아래쪽이 드러났다.
            상자 하나가 모서리를 책임지면 안쪽 조각들은 모서리를 몰라도 된다. */
-        className={`flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
-          wide ? 'pc:max-w-4xl' : 'pc:max-w-2xl'
-        }`}
-        // 데스크톱은 살짝 떠오르며 눌러앉고, 모바일 시트도 같은 값으로 자연스럽다.
-        // 등장 스프링 · 퇴장은 짧은 트윈 (퇴장 스프링은 굼떠 보인다)
-        initial={{ opacity: 0, y: 32, scale: 0.97 }}
-        animate={closing ? { opacity: 0, y: 20, scale: 0.98 } : { opacity: 1, y: 0, scale: 1 }}
-        transition={
-          closing ? { duration: 0.15 } : { type: 'spring', stiffness: 460, damping: 36 }
-        }
-        // 퇴장이 끝난 뒤 언마운트 — setTimeout 으로 어림잡지 않는다
-        onAnimationComplete={() => {
-          if (closing) onClose()
-        }}
-        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl"
       >
         {/* 머리는 **면 + 아래 선** 둘 다다 (규약 §7 해부 그림). 면만 있으면 스크롤 중에
             내용 첫 줄처럼 읽히고, 선만 있으면 옛날 관리자 화면의 패널 머리가 된다.
@@ -117,6 +132,7 @@ export function Modal({
             {typeof footer === 'function' ? footer(close) : footer}
           </div>
         )}
+      </div>
       </m.div>
     </m.div>
   )

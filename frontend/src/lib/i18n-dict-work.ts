@@ -65,6 +65,7 @@ export const WORK_DICT: Record<string, Entry> = {
   'board.toApprovals': { ko: '결재함으로 →', en: 'To approvals →' },
   'flow.toBoard': { ko: '상태 보드 →', en: 'Status board →' },
   // 처리 직후의 자국 — 연속 처리에서 "안 됐나?" 연타를 막는다 (2026-08-26)
+  'approvals.nextUp': { ko: '다음 ▸', en: 'Next ▸' },
   'approvals.mineLeft': { ko: '내 차례 {n}건', en: '{n} for me' },
   'approvals.justApproved': { ko: '승인 처리됨', en: 'approved' },
   'approvals.justRejected': { ko: '반려 처리됨', en: 'rejected' },
