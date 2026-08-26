@@ -81,8 +81,19 @@ export function Modal({
             key={i}
             aria-hidden
             data-stack-lip
-            className="absolute hidden rounded-b-xl border border-t-0 border-hairline bg-surface pc:block"
-            style={{ left: 14 + i * 12, right: 14 + i * 12, bottom: -7 * (i + 1), height: 14, zIndex: -1 - i, opacity: 1 - i * 0.35 }}
+            /* 잉크를 섞어 패널보다 살짝 밝은 면 + 아래 그림자 — 다크에서 surface 그대로는
+               배경에 묻혀 "겹쳐 있다"가 안 읽혔다(2026-08-26 두 번째 지적). 장수가 줄면
+               transition 으로 한 장이 **접혀 들어가는 것**이 보인다. */
+            className="absolute hidden rounded-b-2xl border border-t-0 border-hairline shadow-[0_10px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 pc:block"
+            style={{
+              left: 18 * (i + 1),
+              right: 18 * (i + 1),
+              bottom: -10 * (i + 1),
+              height: 24,
+              zIndex: -1 - i,
+              opacity: 1 - i * 0.28,
+              backgroundColor: 'color-mix(in oklab, var(--color-ink) 8%, var(--color-surface))',
+            }}
           />
         ))}
       <div
