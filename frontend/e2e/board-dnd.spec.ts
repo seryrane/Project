@@ -35,6 +35,28 @@ test.describe('상태 보드 끌어 놓기', () => {
     await expect(card(page, '차체 구조 안전 기준서').getByText('지금 한동현 차례')).toBeVisible()
   })
 
+  test('초안 → 검토 중: 검토 시작 패널 — 이 전이가 예전엔 아예 없었다', async ({ page }) => {
+    await page.goto('/board')
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+
+    await card(page, '차체 구조 안전 기준서').dragTo(lane(page, '검토 중'))
+    const modal = page.getByRole('dialog')
+    await expect(modal.getByRole('heading', { name: '검토 시작' })).toBeVisible()
+    await modal.getByRole('button', { name: '검토 시작', exact: true }).click()
+    await expect(lane(page, '검토 중').getByText('차체 구조 안전 기준서'), '검토 중으로 옮겨간다').toBeVisible()
+    // 검토 중에서도 상신할 수 있다 — 이어서 승인 대기로
+    await card(page, '차체 구조 안전 기준서').dragTo(lane(page, '승인 대기'))
+    await expect(page.getByRole('dialog').getByText('결재 상신')).toBeVisible()
+  })
+
+  test('빈 레인은 "언제 이 상태가 되는지"를 말한다', async ({ page }) => {
+    await page.goto('/board')
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    // 시드에서 검토 중·승인 완료가 비어 있다 — "없습니다" 대신 오는 길을 말한다
+    await expect(lane(page, '검토 중').getByText('초안 카드를 이 열로 끌면 검토가 시작됩니다')).toBeVisible()
+    await expect(lane(page, '승인 완료').getByText(/결재 마지막 단계가 승인되면/)).toBeVisible()
+  })
+
   test('흐름에 없는 걸음은 토스트가 이유를 말하고 카드는 그대로다', async ({ page }) => {
     await page.goto('/board')
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})

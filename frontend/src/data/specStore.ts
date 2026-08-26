@@ -223,6 +223,15 @@ export function withdrawSpec(id: string): boolean {
   return releaseSpecToDraft(id)
 }
 
+/** 검토 시작 — 초안을 검토 중으로. ⚠ 이 전이가 **없었다**(2026-08-26 사용자 질문 "검토 중은
+ *  언제?"로 드러남): '검토 중'은 시드에만 있고 어떤 조작도 이 상태로 못 들어왔다. 보드
+ *  토스트는 "상세에서 저장하며 도달한다"고 **거짓말**까지 했다. 결재 전 전이라 결재를 안 탄다. */
+export function startSpecReview(id: string): boolean {
+  const spec = specList.find((sp) => sp.id === id)
+  if (!spec || currentVersion(spec).status !== '초안') return false
+  return setStatus(id, '검토 중')
+}
+
 /** 배포까지 끝났다 */
 export function markSpecDeployed(id: string): boolean {
   return setStatus(id, '배포 완료')
