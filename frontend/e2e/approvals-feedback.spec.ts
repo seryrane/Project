@@ -22,6 +22,10 @@ test.describe('결재 연속 처리 피드백', () => {
     const modal = page.getByRole('dialog')
     // 제목 옆 상시 카운터
     await expect(modal.getByText('내 차례 4건')).toBeVisible()
+    // 다음 건의 **실제 제목**이 발에 서 있다 — 수만이 아니라 무엇이 오는지
+    await expect(modal.getByText('다음 ▸')).toBeVisible()
+    // 뒤에 남은 만큼 종이가 겹쳐 보인다 (최대 2장)
+    await expect(page.locator('[data-stack-lip]')).toHaveCount(2)
 
     await modal.getByRole('button', { name: '✓ 승인' }).click()
 

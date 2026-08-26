@@ -591,6 +591,9 @@ function ApprovalsPage() {
             setJustDone(null)
           }}
           wide
+          /* 뒤에 남은 내 차례 수만큼 종이가 겹쳐 보인다 — "이 건 뒤에 더 있다"의 물리적
+             표현(글자 카운터만으로는 약하다, 2026-08-26 사용자 지적) */
+          stack={detail.myTurn ? pending.filter((r) => r.myTurn && r.id !== detail.id).length : 0}
           /* ⚠ 발은 **내 차례일 때만** 선다 — 조작이 없는데 빈 발을 세우면 "여기서 무언가
              해야 하나"로 읽힌다 (규약 §7). 내 차례가 아니면 몸이 그 사실을 말한다. */
           footer={
@@ -599,11 +602,17 @@ function ApprovalsPage() {
                 {/* 연속 처리 중이라는 것을 **처리 전에** 알려 준다 — 처리하고 나서 다음 건이
                     불쑥 서면 "안 닫혔나?"로 읽힌다 (규약 §0 예측 가능성) */}
                 {queueAfter(detail.id) && (
-                  <span className="mr-auto text-xs text-ink-subtle">
-                    {tf(
-                      'approvals.queueRemaining',
-                      { n: pending.filter((r) => r.myTurn && r.id !== detail.id).length },
-                      '처리하면 다음 내 차례 건으로 이어집니다 (남은 {n}건)',
+                  /* "다음에 무엇이 오는지"를 제목으로 보여 준다 — 수만 말하면 추상적이라
+                     약하다. 처리하면 이 칩의 건이 그 자리에 선다(연속 처리 예고). */
+                  <span className="mr-auto flex min-w-0 items-center gap-1.5 text-xs text-ink-subtle">
+                    <span className="shrink-0">{t('approvals.nextUp', '다음 ▸')}</span>
+                    <span className="max-w-52 truncate rounded-full bg-chip px-2.5 py-1 font-medium text-ink-muted">
+                      {queueAfter(detail.id)!.title}
+                    </span>
+                    {pending.filter((r) => r.myTurn && r.id !== detail.id).length > 1 && (
+                      <span className="shrink-0 rounded-full bg-chip px-2 py-1 tabular-nums text-ink-muted">
+                        +{pending.filter((r) => r.myTurn && r.id !== detail.id).length - 1}
+                      </span>
                     )}
                   </span>
                 )}

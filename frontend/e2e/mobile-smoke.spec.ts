@@ -1004,7 +1004,8 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await ready(page, '/approvals')
     await openVn7Request(page)
     const dialog = page.getByRole('dialog')
-    await expect(dialog.getByText(/다음 내 차례 건으로 이어집니다/), '처리 전에 알려 준다').toBeVisible()
+    // 2026-08-26: 글자 안내("...이어집니다")를 **다음 건 제목 칩**으로 강화 — 판도 따라간다
+    await expect(dialog.getByText('다음 ▸'), '처리 전에 다음 건을 예고한다').toBeVisible()
 
     await dialog.getByRole('button', { name: /^✓?\s*승인$/ }).click()
     await expect(dialog, '덮개가 닫히지 않고 다음 건이 선다').toBeVisible()
