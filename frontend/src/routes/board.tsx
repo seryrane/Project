@@ -3,20 +3,29 @@ import { flushSync } from 'react-dom'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { AppShell } from '#/components/portal/AppShell'
+import { FilterAxes, FilterAxis } from '#/components/portal/FilterAxis'
 import { Avatar } from '#/components/portal/Avatar'
-import { ChipSelect } from '#/components/portal/Chips'
+import { ChipSelect, Switch } from '#/components/portal/Chips'
 import { ListFoot } from '#/components/portal/ListFoot'
 import { Modal } from '#/components/portal/Modal'
 import { useToast } from '#/components/portal/toast'
+import { pickOne } from '#/lib/urlState'
 import { useI18n } from '#/lib/i18n'
 import { SPEC_APPROVAL_LINE } from '#/data/approvals'
 import { activeRequestOfSpec, activeRequestsOfSpec, unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
-import { currentVersion } from '#/data/specs'
+import { SPEC_CATEGORIES, currentVersion } from '#/data/specs'
 import { SPEC_STATUS_FILL, startSpecReview, useSpecList } from '#/data/specStore'
 import { requestDeploy, submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { Spec, SpecStatus } from '#/data/specs'
 
-export const Route = createFileRoute('/board')({ component: BoardPage })
+export const Route = createFileRoute('/board')({
+  component: BoardPage,
+  // 반환 타입을 옵셔널로 명시 — 안 하면 라우터가 search 를 필수로 보고 링크마다 요구한다
+  validateSearch: (search: Record<string, unknown>): { cat?: (typeof SPEC_CATEGORIES)[number]; mine?: '1' } => ({
+    cat: pickOne(search.cat, SPEC_CATEGORIES),
+    mine: search.mine === '1' || search.mine === 1 || search.mine === true ? ('1' as const) : undefined,
+  }),
+})
 
 /**
  * 상태 보드 — 사양서 수명주기를 칸반으로 본다 (정의서 밖 제안, 2026-08-26 사용자 요청.
@@ -32,6 +41,12 @@ export const Route = createFileRoute('/board')({ component: BoardPage })
  * 받는다 — 보드가 다시 세면 두 화면이 딴 숫자를 말한다.
  */
 const COLUMNS: Array<SpecStatus> = ['초안', '검토 중', '승인 대기', '승인 완료', '배포 완료']
+
+/** 레인당 보이는 카드 상한 — 종결 상태(배포 완료)는 끝없이 쌓인다(2026-08-26 사용자 질문
+ *  "더보기 등은 준비되어 있는지"). 넘치면 **사양서 관리(상태 필터)로 보낸다** — 검색·발·
+ *  페이징은 목록 화면이 이미 갖고 있으므로 보드에서 재발명하지 않는다(§9). 열 머리의
+ *  수 배지는 계속 **전체 수**를 말한다. */
+const LANE_CAP = 6
 
 /** 상태색은 정본 하나(specStore.SPEC_STATUS_FILL) — 보드가 사본을 들면 화면마다 색이 갈린다(§9) */
 const DOT = SPEC_STATUS_FILL
@@ -92,6 +107,18 @@ function BoardPage() {
   const toast = useToast()
   const specs = useSpecList()
   const approvals = useApprovalList()
+  const { cat, mine } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const setSearch = (patch: Record<string, unknown>) =>
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, ...patch }), replace: true })
+  const catAll = t('specs.allCategories', '전체 카테고리')
+  /* 보드가 커지면(2026-08-26 "필터도 필요") 거른다 — 값은 정본 그대로, 표시만 사전(§4-7).
+     '내 차례만'은 결재자의 눈: 지금 판단을 기다리는 카드만 남긴다. */
+  const filtered = specs.filter((sp) => {
+    if (cat && sp.category !== cat) return false
+    if (mine && !approvals.some((r) => r.specId === sp.id && r.state === '진행 중' && r.myTurn)) return false
+    return true
+  })
 
   /* 끌리는 카드는 **ref 로** 든다 — 빠른 손짓은 state 리렌더를 앞지른다
      (끌기를 state 로 재다 손짓이 통째로 사라지는 버그를 겪은 규칙). 레인 하이라이트만 state. */
@@ -99,7 +126,7 @@ function BoardPage() {
   const [overLane, setOverLane] = useState<SpecStatus | null>(null)
   const [intent, setIntent] = useState<{ kind: IntentKind; spec: Spec } | null>(null)
 
-  const byStatus = (st: SpecStatus) => specs.filter((sp) => currentVersion(sp).status === st)
+  const byStatus = (st: SpecStatus) => filtered.filter((sp) => currentVersion(sp).status === st)
 
   function dropOn(to: SpecStatus) {
     const spec = dragging.current
@@ -225,7 +252,28 @@ function BoardPage() {
         </Link>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-4 pc:grid-cols-5">
+      <FilterAxes className="mt-4">
+        <FilterAxis label={t('specs.filter.category', '카테고리')}>
+          <ChipSelect
+            options={[catAll, ...SPEC_CATEGORIES]}
+            label={(c) => (c === catAll ? c : t(`specCategory.${c}`, c))}
+            value={cat ?? catAll}
+            onChange={(v) => setSearch({ cat: v === catAll ? undefined : v })}
+          />
+        </FilterAxis>
+        <FilterAxis label={t('board.filter.scope', '범위')}>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={mine === '1'}
+              onChange={(v) => setSearch({ mine: v ? '1' : undefined })}
+              label={t('board.filter.mineOnly', '내 차례만 보기')}
+            />
+            <span className="text-xs text-ink-muted">{t('board.filter.mineOnly', '내 차례만 보기')}</span>
+          </div>
+        </FilterAxis>
+      </FilterAxes>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 pc:grid-cols-5">
         {COLUMNS.map((st) => {
           const cards = byStatus(st)
           const isOver = overLane === st
@@ -281,9 +329,20 @@ function BoardPage() {
                 </span>
               </header>
               <ol className="flex-1 space-y-2.5 p-2.5">
-                {cards.map((sp) => (
+                {cards.slice(0, LANE_CAP).map((sp) => (
                   <Card key={sp.id} spec={sp} />
                 ))}
+                {cards.length > LANE_CAP && (
+                  <li>
+                    <Link
+                      to="/specs"
+                      search={{ status: st, view: '표' }}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-ink/20 px-3 py-2.5 text-[12px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                    >
+                      {tf('board.laneOverflow', { n: cards.length - LANE_CAP }, '외 {n}건 — 사양서 관리에서 보기 →')}
+                    </Link>
+                  </li>
+                )}
                 {cards.length === 0 && (
                   /* 빈 열은 **언제 이 상태가 되는지**를 말한다(§17 강화, 2026-08-26 사용자
                      질문 "초안·검토 중·승인 완료는 언제?") — "없습니다"만으로는 흐름이 안 보인다 */
@@ -297,7 +356,7 @@ function BoardPage() {
         })}
       </div>
 
-      <ListFoot total={specs.length} shown={specs.length} unit={t('board.unit', '개')} />
+      <ListFoot total={specs.length} shown={filtered.length} unit={t('board.unit', '개')} />
 
       {intent?.kind === 'review' && (
         <ReviewPanel
