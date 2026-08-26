@@ -124,6 +124,12 @@ function ApprovalsPage() {
   const requests = useApprovalList()
   const [detail, setDetail] = useState<ApprovalRecord | null>(null)
   const [opinion, setOpinion] = useState('')
+  /* 처리 직후의 두 신호(2026-08-26 사용자 지적 "승인 눌렀는데 안 된 줄 알고 계속 누른다"):
+     ① justDone — 방금 무엇이 처리됐는지 배너로 남긴다(다음 건이 같은 모달에 바로 서는
+        연속 처리라, 신호가 없으면 "안 닫혔나?"로 읽히고 **연타가 다음 건을 실수 승인**한다)
+     ② cooldown — 처리 직후 0.7초 버튼을 잠근다: 연타의 두 번째 클릭이 닿을 곳을 없앤다 */
+  const [justDone, setJustDone] = useState<{ title: string; action: '승인' | '반려' } | null>(null)
+  const [cooldown, setCooldown] = useState(false)
   const [lineOpen, setLineOpen] = useState(false)
   /* 겹침 정리 — 취소는 **남의 요청을 내리는 일**이라 사유 없이는 못 누른다 (workflow 가 막지만
      화면이 먼저 말해 준다). 대상 건을 들고 있는 상태 하나로 모달을 연다. */
@@ -192,6 +198,9 @@ function ApprovalsPage() {
       return
     }
     setOpinion('')
+    setJustDone({ title: req.title, action })
+    setCooldown(true)
+    window.setTimeout(() => setCooldown(false), 700)
     /* ── 연속 처리 ─────────────────────────────────────────────────────
        ⚠ 결재는 **한 건씩 오지 않는다**: 내 차례가 넷이면 [상세]→[승인]→닫기→[상세]…
        를 네 번 반복해야 했다(2026-08-18). 처리하고 나면 **다음 내 차례 건을 그 자리에
@@ -565,10 +574,21 @@ function ApprovalsPage() {
       {/* 승인 요청 상세 — 변경 전/후를 갈라 보여 주고, 처리도 여기서 한다 */}
       {detail && (
         <Modal
-          title={t('approvals.detailModalTitle', '승인 요청 상세')}
+          title={
+            <span className="flex items-center gap-2.5">
+              {t('approvals.detailModalTitle', '승인 요청 상세')}
+              {/* 내 차례가 몇 건 남았는지 **항상** 보인다 — 발의 안내만으로는 처리 후 놓친다 */}
+              {pending.filter((r) => r.myTurn).length > 0 && (
+                <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-medium tabular-nums text-primary">
+                  {tf('approvals.mineLeft', { n: pending.filter((r) => r.myTurn).length }, '내 차례 {n}건')}
+                </span>
+              )}
+            </span>
+          }
           onClose={() => {
             setDetail(null)
             setOpinion('')
+            setJustDone(null)
           }}
           wide
           /* ⚠ 발은 **내 차례일 때만** 선다 — 조작이 없는데 빈 발을 세우면 "여기서 무언가
@@ -589,7 +609,7 @@ function ApprovalsPage() {
                 )}
                 <button
                   type="button"
-                  disabled={opinion.trim() === ''}
+                  disabled={cooldown || opinion.trim() === ''}
                   onClick={() => decide(detail, '반려')}
                   className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
@@ -597,8 +617,9 @@ function ApprovalsPage() {
                 </button>
                 <button
                   type="button"
+                  disabled={cooldown}
                   onClick={() => decide(detail, '승인')}
-                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90"
+                  className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   ✓ {t('common.approve', '승인')}
                 </button>
@@ -606,7 +627,25 @@ function ApprovalsPage() {
             ) : undefined
           }
         >
-          <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
+          {justDone && (
+            /* 방금 처리한 것의 자국 — 다음 건이 같은 자리에 서므로, "앞 건이 처리됐고
+               지금 보는 것은 다른 건"임을 화면이 말해야 한다. 지우지 않고 다음 처리 때 갱신 —
+               사람이 제 속도로 읽는다. */
+            <div className="anim-fade-in mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-deployed-ink/30 bg-deployed-bg px-4 py-2.5 text-[13px] text-deployed-ink">
+              <span className="font-semibold">
+                {justDone.action === '승인' ? '✓' : '✕'} {justDone.title}
+              </span>
+              <span>
+                {justDone.action === '승인'
+                  ? t('approvals.justApproved', '승인 처리됨')
+                  : t('approvals.justRejected', '반려 처리됨')}
+              </span>
+              <span className="ml-auto tabular-nums opacity-80">
+                {tf('approvals.remainingMine', { n: pending.filter((r) => r.myTurn).length }, '남은 내 차례 {n}건')}
+              </span>
+            </div>
+          )}
+          <div key={detail.id} className="anim-fade-up rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
             <div className="flex flex-wrap items-center gap-2">
               {detail.urgent && <UrgentChip />}
               <KindChip kind={detail.kind} />
