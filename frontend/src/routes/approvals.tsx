@@ -586,26 +586,35 @@ function ApprovalsPage() {
               {t('approvals.detailModalTitle', '승인 요청 상세')}
               {/* 내 차례가 몇 건 남았는지 **항상** 보인다 — 발의 안내만으로는 처리 후 놓친다 */}
               {pending.filter((r) => r.myTurn).length > 0 && (
-                /* 진행 점 — 처리한 만큼 차오른다(●●○○). 숫자만으로는 약하다는 지적
-                   (2026-08-26) 뒤 두 번째 강화: 점은 세지 않아도 "얼마나 남았나"가 보인다.
-                   9건 이상이면 점이 소음이라 숫자만. */
-                <span className="flex items-center gap-1.5 rounded-full bg-primary/12 px-2.5 py-1 text-[11px] font-medium tabular-nums text-primary">
+                /* 진행 표시 — 세 번 다듬었다(2026-08-26): 숫자만 → 점 1.5px(헤더에서 안
+                   읽힘) → **세그먼트 바**(2×18px, 찬 칸 = 처리·빈 칸 = 남음). 9건 이상이면
+                   바가 소음이라 숫자만 남긴다. */
+                <span className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-[12px] font-semibold tabular-nums text-primary">
                   {doneThisRun + pending.filter((r) => r.myTurn).length <= 8 && (
-                    <span className="flex items-center gap-0.5">
+                    <span className="flex items-center gap-1">
                       {Array.from({ length: doneThisRun + pending.filter((r) => r.myTurn).length }, (_, i) => (
                         <span
                           key={i}
-                          className={`h-1.5 w-1.5 rounded-full ${i < doneThisRun ? 'bg-primary' : 'bg-primary/30'}`}
+                          className={`h-2 w-[18px] rounded-full transition-colors ${
+                            i < doneThisRun ? 'bg-gradient-to-r from-primary to-accent2' : 'bg-primary/20'
+                          }`}
                         />
                       ))}
                     </span>
                   )}
-                  {tf('approvals.mineLeft', { n: pending.filter((r) => r.myTurn).length }, '내 차례 {n}건')}
-                  {doneThisRun > 0 && (
-                    <span className="opacity-70">
-                      {tf('approvals.doneThisRun', { n: doneThisRun }, '· {n} 처리')}
-                    </span>
-                  )}
+                  {/* 바가 무엇인지 글자가 함께 말한다(2026-08-26 "저 점이 뭔지 불분명") —
+                      처리 전에는 남은 수만, 처리 시작 후에는 **분수(m/n 처리)** 로. */}
+                  {doneThisRun === 0
+                    ? tf('approvals.mineLeft', { n: pending.filter((r) => r.myTurn).length }, '내 차례 {n}건')
+                    : tf(
+                        'approvals.progressLabel',
+                        {
+                          done: doneThisRun,
+                          total: doneThisRun + pending.filter((r) => r.myTurn).length,
+                          n: pending.filter((r) => r.myTurn).length,
+                        },
+                        '{done}/{total} 처리 · {n}건 남음',
+                      )}
                 </span>
               )}
             </span>
