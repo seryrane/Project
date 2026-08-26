@@ -273,7 +273,9 @@ function BoardPage() {
                 ))}
                 {cards.length === 0 && (
                   /* 빈 열도 이유를 말한다(§17) — 접으면 흐름의 모양이 사라진다 */
-                  <li className="grid h-full min-h-24 place-items-center rounded-xl border border-dashed border-hairline/70 px-2 text-center text-[11px] text-ink-subtle">
+                  <li /* 점선은 잉크 기반 — hairline/70 은 라이트의 회색 트랙 위에서 묻혀 글자만 떠
+                        보였다(2026-08-26). ink 를 섞으면 두 테마 모두 트랙과 갈라진다. */
+                    className="grid h-full min-h-24 place-items-center rounded-xl border border-dashed border-ink/20 px-2 text-center text-[11px] text-ink-subtle">
                     {t('board.emptyColumn', '이 상태의 사양서가 없습니다')}
                   </li>
                 )}

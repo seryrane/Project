@@ -64,6 +64,11 @@ export const WORK_DICT: Record<string, Entry> = {
   'board.toast.deployBlocked': { ko: '반영이 막혀 있습니다 — 이 사양서에 반영 안 된 요청이 겹쳐 있습니다.', en: 'Deployment blocked — unresolved overlapping requests exist for this spec.' },
   'board.toApprovals': { ko: '결재함으로 →', en: 'To approvals →' },
   'flow.toBoard': { ko: '상태 보드 →', en: 'Status board →' },
+  // 처리 직후의 자국 — 연속 처리에서 "안 됐나?" 연타를 막는다 (2026-08-26)
+  'approvals.mineLeft': { ko: '내 차례 {n}건', en: '{n} for me' },
+  'approvals.justApproved': { ko: '승인 처리됨', en: 'approved' },
+  'approvals.justRejected': { ko: '반려 처리됨', en: 'rejected' },
+  'approvals.remainingMine': { ko: '남은 내 차례 {n}건', en: '{n} remaining for me' },
   'board.myTurn': { ko: '내 차례', en: 'My turn' },
   'board.nowTurn': { ko: '지금 {name} 차례', en: 'Now with {name}' },
   'board.conflict': { ko: '겹침 {n}', en: 'Overlap {n}' },
