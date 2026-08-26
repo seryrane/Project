@@ -38,5 +38,32 @@ test.describe('결재 연속 처리 피드백', () => {
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeDisabled()
     // 잠금은 풀린다 — 다음 판단을 막는 물건이 아니다
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeEnabled({ timeout: 2000 })
+    // 진행이 배지에 쌓인다 — 처리 수가 글자로도 남는다 (점 ●●○○ 은 시각 전용)
+    await expect(modal.getByText('· 1 처리')).toBeVisible()
+  })
+
+  test('롤링 — 다음 칩을 누르면 그 건이 앞으로 오고, 지금 건은 큐에 남는다', async ({ page }) => {
+    await page.goto('/approvals')
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    await page
+      .locator('ol > li')
+      .filter({ hasText: 'VN7 엔진 사양서 v2.3' })
+      .filter({ hasNotText: '출력 재조정' })
+      .getByRole('button', { name: '검토하기' })
+      .click()
+    const modal = page.getByRole('dialog')
+    // 지금 건 = 0115. 다음 칩(출력 재조정)을 누르면 —
+    await modal.getByRole('button', { name: 'VN7 엔진 사양서 v2.3 (출력 재조정)' }).click()
+    // 그 건이 앞으로 온다 (머리의 요청 ID 로 가른다 — 제목은 형제 건에도 걸린다)
+    await expect(modal.getByText(/^APR-\d{4}-\d+$/).first()).toHaveText('APR-2026-0116')
+    // 순환은 목록 순서를 따른다 — 건너뛴 건은 맨 뒤로 돌고, 다음은 그 다음 건이다
+    await modal.getByRole('button', { name: 'Release v3.1.1 운영 배포' }).click()
+    await expect(modal.getByText(/^APR-\d{4}-\d+$/).first()).toHaveText('APR-2026-0114')
+    await modal.getByRole('button', { name: '전기차 배터리 규격서 v1.5' }).click()
+    await expect(modal.getByText(/^APR-\d{4}-\d+$/).first()).toHaveText('APR-2026-0113')
+    // 한 바퀴 — 건너뛴 첫 건(0115)이 다음 칩으로 돌아왔다
+    await expect(modal.getByRole('button', { name: 'VN7 엔진 사양서 v2.3', exact: true })).toBeVisible()
+    // 내 차례 수는 그대로 4 — 롤링은 판단이 아니다
+    await expect(modal.getByText('내 차례 4건')).toBeVisible()
   })
 })

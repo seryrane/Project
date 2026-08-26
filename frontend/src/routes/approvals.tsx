@@ -130,6 +130,8 @@ function ApprovalsPage() {
      ② cooldown — 처리 직후 0.7초 버튼을 잠근다: 연타의 두 번째 클릭이 닿을 곳을 없앤다 */
   const [justDone, setJustDone] = useState<{ title: string; action: '승인' | '반려' } | null>(null)
   const [cooldown, setCooldown] = useState(false)
+  /** 이 자리에서(모달을 연 뒤로) 몇 건을 처리했나 — 진행 점 ●●○○ 의 채움 */
+  const [doneThisRun, setDoneThisRun] = useState(0)
   const [lineOpen, setLineOpen] = useState(false)
   /* 겹침 정리 — 취소는 **남의 요청을 내리는 일**이라 사유 없이는 못 누른다 (workflow 가 막지만
      화면이 먼저 말해 준다). 대상 건을 들고 있는 상태 하나로 모달을 연다. */
@@ -199,6 +201,7 @@ function ApprovalsPage() {
     }
     setOpinion('')
     setJustDone({ title: req.title, action })
+    setDoneThisRun((n) => n + 1)
     setCooldown(true)
     window.setTimeout(() => setCooldown(false), 700)
     /* ── 연속 처리 ─────────────────────────────────────────────────────
@@ -382,7 +385,11 @@ function ApprovalsPage() {
             <li key={r.id} style={{ animationDelay: `${i * 60}ms` }} className="anim-fade-up">
               <button
                 type="button"
-                onClick={() => setDetail(r)}
+                onClick={() => {
+                  setDetail(r)
+                  setDoneThisRun(0) // 새로 연 자리 — 진행 점을 처음부터
+                  setJustDone(null)
+                }}
                 className="card-hover flex w-full flex-col card-spotlight overflow-hidden rounded-2xl border border-hairline bg-surface text-left"
               >
                 {/* 머리 — 종류·ID·상태를 면+선으로 갈라 얹는다(규약 §7). 칩·배지가 있어 py-3 */}
@@ -579,8 +586,26 @@ function ApprovalsPage() {
               {t('approvals.detailModalTitle', '승인 요청 상세')}
               {/* 내 차례가 몇 건 남았는지 **항상** 보인다 — 발의 안내만으로는 처리 후 놓친다 */}
               {pending.filter((r) => r.myTurn).length > 0 && (
-                <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-medium tabular-nums text-primary">
+                /* 진행 점 — 처리한 만큼 차오른다(●●○○). 숫자만으로는 약하다는 지적
+                   (2026-08-26) 뒤 두 번째 강화: 점은 세지 않아도 "얼마나 남았나"가 보인다.
+                   9건 이상이면 점이 소음이라 숫자만. */
+                <span className="flex items-center gap-1.5 rounded-full bg-primary/12 px-2.5 py-1 text-[11px] font-medium tabular-nums text-primary">
+                  {doneThisRun + pending.filter((r) => r.myTurn).length <= 8 && (
+                    <span className="flex items-center gap-0.5">
+                      {Array.from({ length: doneThisRun + pending.filter((r) => r.myTurn).length }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1.5 w-1.5 rounded-full ${i < doneThisRun ? 'bg-primary' : 'bg-primary/30'}`}
+                        />
+                      ))}
+                    </span>
+                  )}
                   {tf('approvals.mineLeft', { n: pending.filter((r) => r.myTurn).length }, '내 차례 {n}건')}
+                  {doneThisRun > 0 && (
+                    <span className="opacity-70">
+                      {tf('approvals.doneThisRun', { n: doneThisRun }, '· {n} 처리')}
+                    </span>
+                  )}
                 </span>
               )}
             </span>
@@ -606,9 +631,19 @@ function ApprovalsPage() {
                      약하다. 처리하면 이 칩의 건이 그 자리에 선다(연속 처리 예고). */
                   <span className="mr-auto flex min-w-0 items-center gap-1.5 text-xs text-ink-subtle">
                     <span className="shrink-0">{t('approvals.nextUp', '다음 ▸')}</span>
-                    <span className="max-w-52 truncate rounded-full bg-chip px-2.5 py-1 font-medium text-ink-muted">
+                    {/* 칩을 누르면 **그 건이 앞으로 온다** — 지금 건은 판단 없이 큐에 남는다
+                        (롤링, 2026-08-26 사용자 요청). 마지막에서 넘기면 처음으로 돈다. */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetail(queueAfter(detail.id))
+                        setOpinion('')
+                      }}
+                      title={t('approvals.skipHint', '지금 건을 건너뛰고 이 건을 먼저 검토합니다')}
+                      className="max-w-52 truncate rounded-full bg-chip px-2.5 py-1 font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
+                    >
                       {queueAfter(detail.id)!.title}
-                    </span>
+                    </button>
                     {pending.filter((r) => r.myTurn && r.id !== detail.id).length > 1 && (
                       <span className="shrink-0 rounded-full bg-chip px-2 py-1 tabular-nums text-ink-muted">
                         +{pending.filter((r) => r.myTurn && r.id !== detail.id).length - 1}
