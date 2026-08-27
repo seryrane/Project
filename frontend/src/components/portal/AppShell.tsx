@@ -490,14 +490,14 @@ function Shell({
               type="button"
               aria-label={t('gnb.search', '검색')}
               onClick={() => setPaletteOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink pc:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-field text-ink-muted transition-colors hover:text-ink pc:hidden"
             >
               <Icon name="search" size="md" />
             </button>
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="hidden h-9 w-52 items-center justify-between rounded-lg border border-hairline bg-field px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
+              className="hidden h-9 w-52 items-center justify-between rounded-lg border border-control bg-field px-3 text-[13px] text-ink-subtle transition-colors hover:border-primary/40 hover:text-ink-muted pc:flex"
             >
               <span className="flex min-w-0 items-center gap-2">
                 <Icon name="search" size="md" />
@@ -516,7 +516,7 @@ function Shell({
               type="button"
               onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
               aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-xs font-bold text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-field text-xs font-bold text-ink-muted transition-colors hover:text-ink"
             >
               {locale === 'ko' ? '한' : 'EN'}
             </button>
@@ -524,7 +524,7 @@ function Shell({
               type="button"
               onClick={(e) => toggle(e)}
               aria-label={t('gnb.toggleTheme', '테마 전환')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-field text-ink-muted transition-colors hover:text-ink"
             >
               {/* 손으로 그리던 해·달이었다 — 관문의 같은 펜으로 그린다 (규약 §22) */}
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
@@ -536,7 +536,7 @@ function Shell({
               aria-expanded={menu === 'bell'}
               aria-haspopup="dialog"
               onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-field text-ink-muted transition-colors hover:text-ink"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-field text-ink-muted transition-colors hover:text-ink"
             >
               <Icon name="bell" size="md" />
               {/* ⚠ 배지에 흰 글자를 박지 않는다 — 다크에서 danger-ink 는 **밝은 빨강**이라

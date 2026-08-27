@@ -193,7 +193,7 @@ function AlertChannelRow({
                 ? t('alerts.rules.channel.emailTarget', '수신 그룹')
                 : t('alerts.rules.channel.webhookTarget', '엔드포인트 URL')
             }
-            className="h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+            className="h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
           />
           {channel.key === 'webhook' && channel.target === '' && (
             <p className="mt-1 text-xs text-review-ink">
@@ -360,7 +360,7 @@ function AlertsPage() {
         <button
           type="button"
           onClick={openRulesModal}
-          className="h-8 shrink-0 rounded-lg border border-hairline bg-surface px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+          className="h-8 shrink-0 rounded-lg border border-control bg-surface px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           {t('alerts.rules.edit', '규칙 편집')}
         </button>
@@ -405,7 +405,7 @@ function AlertsPage() {
         <button
           type="button"
           onClick={openRulesModal}
-          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+          className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           {t('alerts.rules.edit', '규칙 편집')}
         </button>
@@ -650,7 +650,7 @@ function AlertsPage() {
                   close()
                   navigate({ to: '/validation-results' })
                 }}
-                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('alerts.goResults', '검증 결과 조회 →')}
               </button>
@@ -749,7 +749,7 @@ function AlertsPage() {
               <button
                 type="button"
                 onClick={() => setRulesModalOpen(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -781,7 +781,7 @@ function AlertsPage() {
                         const v = Number(e.target.value)
                         setDraftRules((prev) => prev.map((p, i) => (i === idx ? { ...p, warn: v } : p)))
                       }}
-                      className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+                      className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
                     />
                   </label>
                   <label className="block">
@@ -795,7 +795,7 @@ function AlertsPage() {
                         const v = Number(e.target.value)
                         setDraftRules((prev) => prev.map((p, i) => (i === idx ? { ...p, danger: v } : p)))
                       }}
-                      className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+                      className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
                     />
                   </label>
                 </div>

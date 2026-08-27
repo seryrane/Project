@@ -299,7 +299,7 @@ function MembersPage() {
           value={query}
           onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
           placeholder={t('members.searchPlaceholder')}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
+          className="h-10 rounded-lg border border-control bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
         {/* ⚠ 거르는 축이 둘(상태·등급)인데 예전에는 세로선 하나로만 갈랐고, 그 선이
             `hidden pc:block` 이라 **좁은 화면에서는 경계가 아예 없었다**. 축마다 이름표를
@@ -537,14 +537,14 @@ function MembersPage() {
                 <button
                   type="button"
                   onClick={() => toast(tf('members.toast.resetPw', { name: detail.name }))}
-                  className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                  className="mr-auto h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                 >
                   {t('members.resetPw')}
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleLock(detail)}
-                  className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
+                  className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:bg-review-bg hover:text-review-ink"
                 >
                   {st === '잠금' ? t('members.unlock') : t('members.lock')}
                 </button>
@@ -816,7 +816,7 @@ function MembersPage() {
                           <button
                             type="button"
                             onClick={() => setExceptions((xs) => [...xs, { menu: exMenu, action: exAction, mode: exMode }])}
-                            className="h-10 rounded-lg border border-dashed border-hairline px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                            className="h-10 rounded-lg border border-dashed border-control px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                           >
                             + {t('common.add')}
                           </button>
@@ -852,7 +852,7 @@ function MembersPage() {
               <button
                 type="button"
                 onClick={() => setCreating(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -880,17 +880,17 @@ function MembersPage() {
               <span className="text-xs font-medium text-ink-subtle">
                 {t('members.label.name', '이름')} <b className="text-danger-ink">*</b>
               </span>
-              <input placeholder={t('members.ph.name')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+              <input placeholder={t('members.ph.name')} className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">
                 {t('members.label.emailSso', '이메일 (SSO)')} <b className="text-danger-ink">*</b>
               </span>
-              <input placeholder="email@hmg.com" className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+              <input placeholder="email@hmg.com" className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">{t('members.th.dept', '부서')}</span>
-              <input placeholder={t('members.ph.dept')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+              <input placeholder={t('members.ph.dept')} className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
             </label>
             <div>
               <span className="text-xs font-medium text-ink-subtle">{t('members.label.grade', '등급')}</span>

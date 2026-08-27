@@ -251,7 +251,7 @@ export function SpecImportModal({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('import.back', '뒤로')}
             </button>
@@ -377,7 +377,7 @@ export function SpecImportModal({
               <button
                 type="button"
                 onClick={downloadTemplate}
-                className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 <Icon name="download" />
                 {t('import.templateDraft', '우리 표준 양식(초안) 받기')}
@@ -413,7 +413,7 @@ export function SpecImportModal({
               <button
                 type="button"
                 onClick={downloadTemplate}
-                className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                className="mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 <Icon name="download" />
                 {t('import.template', '표준 양식 받기 (xlsx)')}
@@ -511,7 +511,7 @@ export function SpecImportModal({
                     <button
                       type="button"
                       onClick={() => setOpenSheet(open ? '' : p.sheet)}
-                      className="ml-auto inline-flex h-8 items-center gap-1 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                      className="ml-auto inline-flex h-8 items-center gap-1 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
                     >
                       {open ? t('import.collapse', '접기') : t('import.expand', '열 매핑 펼치기')}
                     </button>
@@ -526,7 +526,7 @@ export function SpecImportModal({
                         <input
                           value={p.specName}
                           onChange={(e) => patch(p.sheet, { specName: e.target.value })}
-                          className="mt-1 h-10 w-full rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink outline-none focus:border-primary/60"
+                          className="mt-1 h-10 w-full rounded-lg border border-control bg-surface px-3 text-[13px] text-ink outline-none focus:border-primary/60"
                         />
                       </label>
                       <label className="text-xs text-ink-subtle">
@@ -572,20 +572,20 @@ export function SpecImportModal({
                         value={colQuery[p.sheet] ?? ''}
                         onChange={(e) => setColQuery((m) => ({ ...m, [p.sheet]: e.target.value }))}
                         placeholder={t('import.findColumn', '열 찾기')}
-                        className="h-8 w-40 rounded-lg border border-hairline bg-surface px-2.5 text-xs text-ink outline-none focus:border-primary/60"
+                        className="h-8 w-40 rounded-lg border border-control bg-surface px-2.5 text-xs text-ink outline-none focus:border-primary/60"
                       />
                       {/* 열이 많을수록 하나씩 끄는 것은 일이 된다 — 지금 보이는 것만 한 번에 켜고 끈다 */}
                       <button
                         type="button"
                         onClick={() => setAllColumns(p.sheet, matched, true)}
-                        className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                        className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
                       >
                         {t('import.allOn', '전체 켜기')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setAllColumns(p.sheet, matched, false)}
-                        className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                        className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
                       >
                         {t('import.allOff', '전체 끄기')}
                       </button>
@@ -630,7 +630,7 @@ export function SpecImportModal({
                               <input
                                 value={c.field}
                                 onChange={(e) => patchColumn(p.sheet, c.index, { field: e.target.value })}
-                                className="h-9 w-full min-w-32 rounded-lg border border-hairline bg-surface px-2.5 text-[13px] text-ink outline-none focus:border-primary/60"
+                                className="h-9 w-full min-w-32 rounded-lg border border-control bg-surface px-2.5 text-[13px] text-ink outline-none focus:border-primary/60"
                               />
                             ),
                           },
@@ -849,7 +849,7 @@ export function SpecImportModal({
                   onSeeResult()
                   onClose()
                 }}
-                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('import.seeResult', '들어간 것 보기')}
               </button>
@@ -865,7 +865,7 @@ export function SpecImportModal({
                 setFileName('')
                 setStep(0)
               }}
-              className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('import.again', '다른 파일 올리기')}
             </button>

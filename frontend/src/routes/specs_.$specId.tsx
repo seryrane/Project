@@ -354,7 +354,7 @@ function SpecDetailPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: '/approvals' })}
-                className="h-9 rounded-lg border border-pending-ink/40 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
+                className="h-9 rounded-lg border border-pending-ink/70 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
               >
                 {t('specDetail.viewApproval', '결재 진행 보기 →')}
               </button>
@@ -365,7 +365,7 @@ function SpecDetailPage() {
                 <button
                   type="button"
                   onClick={() => setWithdrawing(true)}
-                  className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                  className="h-9 rounded-lg border border-control bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                 >
                   {t('specDetail.withdraw', '요청 회수')}
                 </button>
@@ -391,7 +391,7 @@ function SpecDetailPage() {
             <button
               type="button"
               onClick={() => setRequesting(true)}
-              className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+              className="h-9 rounded-lg border border-control bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {cur.rejection
                 ? t('specDetail.resubmit', '재요청')
@@ -405,14 +405,14 @@ function SpecDetailPage() {
           <button
             type="button"
             onClick={() => setCompare(true)}
-            className="h-9 rounded-lg border border-transparent px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+            className="h-9 rounded-lg border border-control px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specDetail.compareVersions', '버전 비교')}
           </button>
           <button
             type="button"
             onClick={() => setHistory(true)}
-            className="h-9 rounded-lg border border-transparent px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+            className="h-9 rounded-lg border border-control px-3 text-[13px] font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specDetail.history', '이력')}
           </button>
@@ -421,7 +421,7 @@ function SpecDetailPage() {
             onClick={saveDraft}
             disabled={dirty === 0 || locked}
             title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
-            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
+            className="h-9 rounded-lg border border-control bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
           >
             {t('specDetail.saveDraft', '임시저장')}
             {dirty > 0 && <span className="ml-1 tabular-nums text-primary">{dirty}</span>}
@@ -543,7 +543,7 @@ function SpecDetailPage() {
                   <button
                     type="button"
                     onClick={() => navigate({ to: '/approvals' })}
-                    className="h-9 shrink-0 rounded-lg bg-pending-ink/15 px-3 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-80"
+                    className="h-9 shrink-0 rounded-lg border border-pending-ink/70 bg-pending-ink/15 px-3 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-80"
                   >
                     {t('specDetail.viewApproval', '결재 진행 보기 →')}
                   </button>
@@ -554,7 +554,7 @@ function SpecDetailPage() {
                   <button
                     type="button"
                     onClick={() => setRequesting(true)}
-                    className="h-9 shrink-0 rounded-lg border border-hairline px-3 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                    className="h-9 shrink-0 rounded-lg border border-control px-3 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
                     {t('specDetail.addChangeRequest', '변경 요청 추가')}
                   </button>
@@ -577,7 +577,7 @@ function SpecDetailPage() {
                 <button
                   type="button"
                   onClick={() => navigate({ to: '/approvals' })}
-                  className="h-9 shrink-0 rounded-lg bg-danger-ink/15 px-3 text-[13px] font-semibold text-danger-ink transition-opacity hover:opacity-80"
+                  className="h-9 shrink-0 rounded-lg border border-danger-ink/70 bg-danger-ink/15 px-3 text-[13px] font-semibold text-danger-ink transition-opacity hover:opacity-80"
                 >
                   {t('specDetail.resolveConflict', '겹침 정리하러 가기 →')}
                 </button>
@@ -625,7 +625,7 @@ function SpecDetailPage() {
             <button
               type="button"
               onClick={() => downloadFields()}
-              className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+              className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
             >
               {t('specDetail.excelDownload', 'Excel 다운로드')}
             </button>
@@ -634,7 +634,7 @@ function SpecDetailPage() {
               onClick={() => setImporting(true)}
               disabled={locked}
               title={locked ? t('specDetail.lockedHint', '결재 중에는 고칠 수 없습니다') : undefined}
-              className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
+              className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-40"
             >
               {t('specDetail.excelUpload', '엑셀 업로드')}
             </button>
@@ -675,7 +675,7 @@ function SpecDetailPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('specDetail.searchFields', '필드명·설명 검색...')}
-            className="ml-auto h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-56"
+            className="ml-auto h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-56"
           />
         </div>
 
@@ -839,7 +839,7 @@ function SpecDetailPage() {
                     setHistory(false)
                     if (i > 0) setCompare(true)
                   }}
-                  className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+                  className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
                 >
                   {i === 0 ? t('specDetail.viewing', '보는 중') : t('specDetail.compare', '비교')}
                 </button>
@@ -935,7 +935,7 @@ function SpecDetailPage() {
               <button
                 type="button"
                 onClick={() => setRequesting(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel', '취소')}
               </button>
@@ -1022,7 +1022,7 @@ function SpecDetailPage() {
               <button
                 type="button"
                 onClick={() => setWithdrawing(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel', '취소')}
               </button>
@@ -1100,7 +1100,7 @@ function FieldEditor({
               value={draft.maxLen ?? ''}
               onChange={(e) => set('maxLen', e.target.value === '' ? null : Number(e.target.value))}
               placeholder="—"
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-6 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
@@ -1118,7 +1118,7 @@ function FieldEditor({
             value={draft.desc}
             onChange={(e) => set('desc', e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+            className="mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
           />
         </label>
         <label className="block">
@@ -1129,7 +1129,7 @@ function FieldEditor({
             value={draft.rule ?? ''}
             onChange={(e) => set('rule', e.target.value === '' ? null : e.target.value)}
             placeholder={t('specDetail.rulePlaceholder', '예: ^[A-Z]{2}\\d{4}$')}
-            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none placeholder:font-sans focus:border-primary/60"
+            className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none placeholder:font-sans focus:border-primary/60"
           />
         </label>
         <label className="block">
@@ -1137,7 +1137,7 @@ function FieldEditor({
           <input
             value={draft.owner}
             onChange={(e) => set('owner', e.target.value)}
-            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+            className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
           />
         </label>
       </div>
@@ -1151,7 +1151,7 @@ function FieldEditor({
         <button
           type="button"
           onClick={onCancel}
-          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+          className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
         >
           {t('common.cancel', '취소')}
         </button>

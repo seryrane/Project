@@ -278,7 +278,7 @@ function MenusPage() {
                 <input
                   value={draft.name}
                   onChange={(e) => setDraft((d) => d && { ...d, name: e.target.value })}
-                  className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+                  className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
                 />
               </label>
               <label className="block">
@@ -287,7 +287,7 @@ function MenusPage() {
                   value={draft.nameEn ?? ''}
                   onChange={(e) => setDraft((d) => d && { ...d, nameEn: e.target.value })}
                   placeholder="e.g. Members"
-                  className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+                  className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
                 />
                 <span className="mt-1 block text-xs leading-relaxed text-ink-subtle">
                   {t(
@@ -303,7 +303,7 @@ function MenusPage() {
                 <input
                   value={draft.path}
                   onChange={(e) => setDraft((d) => d && { ...d, path: e.target.value })}
-                  className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                  className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
                 />
               </label>
               <label className="block">
@@ -311,7 +311,7 @@ function MenusPage() {
                 <input
                   value={draft.icon}
                   onChange={(e) => setDraft((d) => d && { ...d, icon: e.target.value })}
-                  className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                  className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
                 />
               </label>
               {/* 화면 템플릿·구성은 **관리자가 만든 메뉴에만** — 시스템 메뉴(코드 화면)에
@@ -401,7 +401,7 @@ function MenusPage() {
                               value={draft.config?.categories ?? ''}
                               onChange={(e) => patchConfig({ categories: e.target.value })}
                               placeholder={t('menus.ph.categories', '예: 공지, 자료, 질문')}
-                              className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-xs outline-none focus:border-primary/60"
+                              className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-xs outline-none focus:border-primary/60"
                             />
                           </label>
                           <div>
@@ -438,7 +438,7 @@ function MenusPage() {
                             value={draft.config?.embedUrl ?? ''}
                             onChange={(e) => patchConfig({ embedUrl: e.target.value })}
                             placeholder="https://..."
-                            className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                            className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
                           />
                         </label>
                       )}
@@ -564,7 +564,7 @@ function MenusPage() {
               <button
                 type="button"
                 onClick={() => setCreating(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -614,7 +614,7 @@ function MenusPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder={t('menus.ph.name', '메뉴 이름 입력')}
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="mt-3 block">
@@ -625,7 +625,7 @@ function MenusPage() {
               value={newPath}
               onChange={(e) => setNewPath(e.target.value)}
               placeholder="/path/to/page"
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
             />
           </label>
           <label className="mt-3 block">

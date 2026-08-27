@@ -107,7 +107,7 @@ function KpiIviPage() {
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="h-8 shrink-0 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+              className="h-8 shrink-0 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
             >
               + {t('kpi-ivi.addWorkbook')}
             </button>
@@ -208,7 +208,7 @@ function KpiIviPage() {
               <button
                 type="button"
                 onClick={() => setAdding(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -248,7 +248,7 @@ function KpiIviPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder={t('kpi-ivi.titlePlaceholder')}
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="mt-3 block">
@@ -260,7 +260,7 @@ function KpiIviPage() {
               onChange={(e) => setNewUrl(e.target.value)}
               placeholder="https://public.tableau.com/views/..."
               className={`mt-1 h-10 w-full rounded-lg border bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60 ${
-                urlHint ? 'border-danger-ink/50' : 'border-hairline'
+                urlHint ? 'border-danger-ink/70' : 'border-control'
               }`}
             />
             {urlHint && <span className="mt-1 block text-xs text-danger-ink">{urlHint}</span>}

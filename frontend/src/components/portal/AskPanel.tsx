@@ -350,7 +350,7 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
                       /* ⚠ 칩이 **누를 수 있는 것으로 안 읽혔다** — `bg-canvas/40` 은 덮개
                          면보다 옅어 글자만 떠 있는 것처럼 보였다(규약 §5: 조작은 면보다
                          한 단계 눌린다). 조작 면 토큰(chip)으로 바꾸고 최소 높이를 준다 */
-                      className="min-h-8 min-w-0 max-w-full truncate rounded-full border border-hairline bg-chip px-3 py-1.5 text-xs text-ink-muted transition-colors hover:border-primary/40 hover:bg-chip-strong hover:text-ink"
+                      className="min-h-8 min-w-0 max-w-full truncate rounded-full border border-control bg-chip px-3 py-1.5 text-xs text-ink-muted transition-colors hover:border-primary/40 hover:bg-chip-strong hover:text-ink"
                     >
                       {q}
                     </button>
@@ -395,7 +395,7 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
             }
           }}
           placeholder={t('ask.placeholder')}
-          className="h-9 min-w-0 flex-1 rounded-lg border border-hairline bg-canvas/40 px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/40"
+          className="h-9 min-w-0 flex-1 rounded-lg border border-control bg-canvas/40 px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/40"
         />
         <CtaButton
           busyLabel={t('ask.sending')}

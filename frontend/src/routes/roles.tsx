@@ -136,7 +136,7 @@ function RolesPage() {
                   <button
                     type="button"
                     onClick={() => openEdit(r)}
-                    className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+                    className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
                   >
                     {t('roles.editPerms')}
                   </button>
@@ -301,7 +301,7 @@ function RolesPage() {
               <button
                 type="button"
                 onClick={() => setEditing(null)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -342,14 +342,14 @@ function RolesPage() {
               </span>
               <input
                 defaultValue={editing.name}
-                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] font-semibold outline-none focus:border-primary/60"
+                className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] font-semibold outline-none focus:border-primary/60"
               />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-ink-subtle">{t('roles.label.desc', '설명')}</span>
               <input
                 defaultValue={editing.desc}
-                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+                className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
               />
             </label>
           </div>
@@ -473,7 +473,7 @@ function RolesPage() {
               <button
                 type="button"
                 onClick={() => setCreating(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -512,11 +512,11 @@ function RolesPage() {
             <span className="text-xs font-medium text-ink-subtle">
               {t('roles.label.roleName', '역할 이름')} <b className="text-danger-ink">*</b>
             </span>
-            <input placeholder={t('roles.namePlaceholder')} className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
+            <input placeholder={t('roles.namePlaceholder')} className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <label className="mt-3 block">
             <span className="text-xs font-medium text-ink-subtle">{t('roles.label.roleDesc', '역할 설명')}</span>
-            <textarea rows={2} placeholder={t('roles.descPlaceholder')} className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
+            <textarea rows={2} placeholder={t('roles.descPlaceholder')} className="mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60" />
           </label>
           <div className="mt-3">
             <span className="text-xs font-medium text-ink-subtle">{t('roles.label.baseRole', '기반 역할 (복사)')}</span>
@@ -550,7 +550,7 @@ function RolesPage() {
               <button
                 type="button"
                 onClick={() => setDeleting(null)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.close')}
               </button>

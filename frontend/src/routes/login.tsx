@@ -147,7 +147,7 @@ function LoginPage() {
               type="button"
               onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
               aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-surface text-xs font-bold text-ink-muted transition-colors hover:text-ink"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-control bg-surface text-xs font-bold text-ink-muted transition-colors hover:text-ink"
             >
               {locale === 'ko' ? '한' : 'EN'}
             </button>
@@ -157,7 +157,7 @@ function LoginPage() {
           <button
             type="button"
             onClick={() => toast(t('login.ssoPending'))}
-            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-surface text-[13px] font-semibold transition-colors hover:border-primary/40"
+            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-control bg-surface text-[13px] font-semibold transition-colors hover:border-primary/40"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded bg-gradient-to-br from-primary to-accent2 text-[10px] font-bold text-white">
               H
@@ -185,7 +185,7 @@ function LoginPage() {
                   autoComplete="username"
                   placeholder={t('login.idPlaceholder')}
                   className={`mt-1 h-11 w-full rounded-xl border bg-surface px-3.5 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
-                    idHint ? 'border-danger-ink/50' : 'border-hairline'
+                    idHint ? 'border-danger-ink/70' : 'border-control'
                   }`}
                 />
                 {idHint && <span className="mt-1 block text-xs text-danger-ink">{idHint}</span>}
@@ -201,7 +201,7 @@ function LoginPage() {
                     autoComplete="current-password"
                     placeholder={t('login.pwPlaceholder')}
                     className={`h-11 w-full rounded-xl border bg-surface px-3.5 pr-11 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
-                      pwHint ? 'border-danger-ink/50' : 'border-hairline'
+                      pwHint ? 'border-danger-ink/70' : 'border-control'
                     }`}
                   />
                   <button
@@ -344,7 +344,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => setForgotOpen(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -372,7 +372,7 @@ function LoginPage() {
               value={forgotEmail}
               onChange={(e) => setForgotEmail(e.target.value)}
               placeholder="name@hmg.com"
-              className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-11 w-full rounded-xl border border-control bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
         </Modal>

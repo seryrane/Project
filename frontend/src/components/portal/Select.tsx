@@ -15,7 +15,7 @@ export function Select({
     <span className={`relative inline-flex ${className}`}>
       <select
         {...props}
-        className="h-10 w-full appearance-none rounded-lg border border-hairline bg-surface py-0 pl-3 pr-8 text-[13px] text-ink-muted outline-none focus:border-primary/60 focus-visible:border-primary"
+        className="h-10 w-full appearance-none rounded-lg border border-control bg-surface py-0 pl-3 pr-8 text-[13px] text-ink-muted outline-none focus:border-primary/60 focus-visible:border-primary"
       >
         {children}
       </select>

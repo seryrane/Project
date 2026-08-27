@@ -112,7 +112,7 @@ function PrivacyPage() {
         <button
           type="button"
           onClick={() => setPolicyOpen(true)}
-          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+          className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           {t('privacy.viewPolicy', '처리방침 전문 보기')}
         </button>
@@ -381,7 +381,7 @@ function PrivacyPage() {
               <button
                 type="button"
                 onClick={close}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.close')}
               </button>

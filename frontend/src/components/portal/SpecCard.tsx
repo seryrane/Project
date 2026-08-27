@@ -99,7 +99,7 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
           <button
             type="button"
             onClick={onDetail}
-            className="h-8 rounded-lg border border-hairline bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
+            className="h-8 rounded-lg border border-control bg-chip px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip-strong hover:text-ink"
           >
             {t('specCard.detail')}
           </button>
@@ -112,7 +112,7 @@ export function SpecCard({ spec, index, onDetail, onCompare, onRequest }: Props)
               e.stopPropagation()
               onCompare()
             }}
-            className="h-8 rounded-lg border border-transparent px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
+            className="h-8 rounded-lg border border-control px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-chip hover:text-ink"
           >
             {t('specCard.compare')}
           </button>
