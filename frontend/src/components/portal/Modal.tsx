@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useId, useRef, useState } from 'react'
 
 import { m } from './motion'
 import { useI18n } from '#/lib/i18n'
@@ -20,7 +20,7 @@ export function Modal({
   wide,
   stack = 0,
   flying = null,
-  dealKey,
+  onDismiss,
 }: {
   title: React.ReactNode
   onClose: () => void
@@ -48,19 +48,42 @@ export function Modal({
    */
   stack?: number
   /**
-   * 처리 연출 — 값이 있으면 **패널 전체**가 그 방향으로 날아간다(승인 → 오른쪽 위,
-   * 반려 → 왼쪽 아래). 연속 처리처럼 판단이 몸에 남아야 하는 자리에서 쓴다.
-   * ⚠ 요약 카드 한 장만 움직이면 "몸이 넘어갔다"로 안 읽힌다(2026-08-26 사용자).
+   * 처리 연출 — 값이 있으면 **덮개가 통째로 제자리에서 꺼진다**(배경막까지 함께).
+   * "이 창은 끝났다"는 말이라, 부르는 쪽은 연출이 끝나는 시점에 덮개를 걷으면 된다.
+   *
+   * ⚠ 요약 카드 한 장만 움직이면 "몸이 끝났다"로 안 읽힌다(2026-08-26 사용자).
+   * ⚠⚠ 옆으로 던져 보내지 않는다 — 그건 "장을 넘긴다"가 되어 뜻이 갈린다
+   * (2026-08-27 사용자 교정, styles.css 4판 주석).
    */
   flying?: '승인' | '반려' | null
-  /** 이 값이 바뀌면 패널이 **새 장으로** 밀려 들어온다(deal-in) */
-  dealKey?: string
+  /**
+   * **닫겠다고 한 순간** 불린다 (퇴장 애니메이션이 끝나기 **전**, `onClose` 보다 앞).
+   * 연출이 끝난 뒤에 무언가 하려고 타이머를 걸어 둔 화면이 그것을 취소하는 자리다 —
+   * `onClose` 만 보고 있으면 그 타이머가 먼저 터져 덮개를 걷어 버려 `onClose` 가 안 온다.
+   */
+  onDismiss?: () => void
 }) {
   const { t } = useI18n()
   const [closing, setClosing] = useState(false)
   const titleId = useId()
 
-  const close = useCallback(() => setClosing(true), [])
+  /* ⚠⚠ 닫기에는 **두 시점**이 있다: 사람이 닫겠다고 한 순간(여기)과 퇴장이 끝난 순간
+     (`onClose`). 부르는 쪽이 "연출이 끝나면 다음을 한다"고 타이머를 걸어 뒀다면 **앞의
+     시점에 알려 줘야** 한다 — `onClose` 만 보고 있으면, 그 타이머가 먼저 터져 덮개를
+     걷어 버리는 바람에 `onClose` 가 영영 안 오고 예약된 걸음이 그대로 실행된다
+     (Esc 로 닫았는데 0.3초 뒤 덮개가 되살아나던 사고, 2026-08-27).
+     ⚠ 이걸 "연출 중엔 Esc 를 안 먹는다"로 막았다가 **닫고 나가는 판 열 개가 깨졌다** —
+     사람의 닫기를 막는 것이 아니라, 예약을 취소할 기회를 주는 것이 맞다.
+     ⚠ ref 로 읽어 `close` 의 신원은 고정한다 — useCover 가 이 함수로 Esc·포커스를 맨다. */
+  const dismissRef = useRef(onDismiss)
+  dismissRef.current = onDismiss
+  const closingRef = useRef(false)
+  const close = useCallback(() => {
+    if (closingRef.current) return // 두 번 눌러도 한 번만 — 배경막 클릭 + Esc 가 겹친다
+    closingRef.current = true
+    dismissRef.current?.()
+    setClosing(true)
+  }, [])
   // Esc · 뒤 화면 잠금 · 포커스 이동/가둠/복귀는 관문 하나가 지킨다 (useCover)
   const panelRef = useCover(close)
 
@@ -70,8 +93,16 @@ export function Modal({
       // (카드에는 안 건다 — styles.css 의 '유리와 깊이' 절 참고)
       className="fixed inset-0 z-modal flex items-end justify-center bg-black/70 backdrop-blur-md pc:items-center pc:p-6"
       initial={{ opacity: 0 }}
-      animate={{ opacity: closing ? 0 : 1 }}
-      transition={{ duration: closing ? 0.16 : 0.2 }}
+      /* ⚠ 배경막은 **패널과 같이 걷힌다.** 패널만 꺼지고 막이 남아 있으면 "창이 사라졌다"가
+         아니라 "안이 비었다"로 읽힌다 — 사라지는 것은 덮개 전체다(2026-08-27 4판).
+         ⚠ 흐려지는 일은 **여기 한 겹만** 한다(패널 키프레임에 opacity 를 안 쓰는 이유 —
+         styles.css 참고). delay 는 부푸는 마디를 보이게 두는 시간이다 — 0 이면 판단이
+         닿은 자국이 페이드에 먹힌다. */
+      animate={{ opacity: closing || flying ? 0 : 1 }}
+      transition={{
+        duration: closing ? 0.16 : flying ? 0.22 : 0.2,
+        delay: flying ? 0.05 : 0,
+      }}
       onClick={close}
     >
       <m.div
@@ -113,11 +144,8 @@ export function Modal({
            그 면이 둥근 모서리를 넘어 **각지게 삐져나온다.** 머리에 `rounded-t-2xl` 을
            따로 붙여 위쪽만 가리고 있었는데, 발에도 면이 생기면서 아래쪽이 드러났다.
            상자 하나가 모서리를 책임지면 안쪽 조각들은 모서리를 몰라도 된다. */
-        /* ⚠ key 는 **연출을 다시 돌리기 위한 것**이다 — 같은 자리에 다음 건이 서면 React 가
-           같은 DOM 을 재사용해서 deal-in 이 안 걸린다(들어온 티가 안 난다). */
-        key={dealKey}
         className={`relative z-10 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
-          flying ? (flying === '승인' ? 'anim-decide-approve' : 'anim-decide-reject') : dealKey ? 'anim-deal-in' : ''
+          flying ? (flying === '승인' ? 'anim-decide-approve' : 'anim-decide-reject') : ''
         }`}
       >
         {/* 머리는 **면 + 아래 선** 둘 다다 (규약 §7 해부 그림). 면만 있으면 스크롤 중에

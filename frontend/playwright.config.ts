@@ -5,6 +5,18 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
+  /* ⚠⚠ **일꾼 수를 묶는다.** 이걸 안 정하면 Playwright 가 코어 수의 절반(이 PC 는 5개)을
+     띄우는데, 판이 무는 것은 **dev 서버 하나**다. 다섯이 동시에 서로 다른 첫 화면을 두드리면
+     그 화면들의 첫 컴파일이 한 번에 몰려 `page.goto` 가 30초를 넘긴다 — 그래서 **맨 처음
+     시작한 5~10개만** 깨지고, 같은 판을 하나씩 돌리면 다 통과한다. 2026-08-27 에 이것을
+     "순서 의존"·"흔들리는 판"으로 잘못 읽고 있었다. 실패 이유는 화면이 아니라 **탐색 타임아웃**
+     이었다(실행 로그의 `page.goto: Test timeout` 9~10건).
+     2개면 이 PC 에서 안정적이고, 전체 시간도 5분대로 같다 — 병목이 CPU 가 아니라 서버라
+     일꾼을 늘려도 안 빨라진다. */
+  workers: 2,
+  /* 판을 돌리기 전에 dev 서버를 데운다 — 첫 컴파일을 판 밖에서 한 번에 치른다.
+     자세한 사연은 `e2e/global-setup.ts`. */
+  globalSetup: './e2e/global-setup.ts',
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
   },

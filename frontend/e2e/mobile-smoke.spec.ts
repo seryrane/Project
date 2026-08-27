@@ -908,8 +908,12 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await dialog.getByPlaceholder(/의견/).fill('안전 시험 근거가 빠졌습니다 — 시험성적서를 붙여 주세요.')
     await expect(reject).toBeEnabled()
     await reject.click()
-    /* ⚠ 처리하면 **다음 내 차례 건**이 그 자리에 선다(연속 처리, 5판) — 덮개가 열려 있으면
-       가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다. */
+    /* ⚠ 처리하면 덮개가 **사라졌다가 다음 내 차례 건이 새 덮개로** 열린다(연출 4판,
+       2026-08-27) — 덮개가 열려 있으면 가리개가 LNB 클릭을 먹는다. 화면을 나가기 전에 닫는다.
+       ⚠⚠ 이 한 줄이 **연출 중 닫기**를 지킨다: 여기서 Esc 는 꺼지는 도중에 눌린다. 덮개가
+       걷힌 뒤에도 예약된 걸음(0.3초 뒤 다음 건)이 살아 있으면 **닫은 덮개가 되살아나고**
+       그 다음 LNB 클릭이 가리개에 막힌다. 관문의 `onDismiss` 가 그 예약을 끊는다 — 이 판이
+       그 사고를 실제로 잡았으니 Esc 를 뒤로 미루지 말 것. */
     await page.keyboard.press('Escape')
     await expect(page.getByRole('dialog')).toHaveCount(0)
 
@@ -1008,7 +1012,10 @@ test.describe('결재 수명주기 (FR-114)', () => {
     await expect(dialog.getByText('다음 ▸'), '처리 전에 다음 건을 예고한다').toBeVisible()
 
     await dialog.getByRole('button', { name: /^✓?\s*승인$/ }).click()
-    await expect(dialog, '덮개가 닫히지 않고 다음 건이 선다').toBeVisible()
+    /* ⚠ 2026-08-27 4판부터 덮개는 **사라졌다가 새로 열린다**("승인된 모달창 자체가 사라지는
+       느낌", 사용자). 그래도 사람이 손을 옮길 필요는 없다 — 다음 건이 스스로 그 자리에 선다.
+       이 판이 지키는 것은 "덮개가 안 닫힌다"가 아니라 **"다음 건이 저절로 선다"** 다. */
+    await expect(dialog, '오가는 걸음 없이 다음 건이 그 자리에 선다').toBeVisible()
     /* ⚠ **제목으로 재면 안 된다** — 다음 건(배포)의 변경 항목 표에 방금 처리한 사양서가
        실려 있어서 "VN7"이 그대로 걸린다(2026-08-18에 이 테스트가 먼저 걸렸다).
        건을 가르는 것은 **요청 ID** 다. */
