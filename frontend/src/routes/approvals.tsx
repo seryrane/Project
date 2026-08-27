@@ -132,14 +132,14 @@ function ApprovalsPage() {
   const [cooldown, setCooldown] = useState(false)
   /** 이 자리에서(모달을 연 뒤로) 몇 건을 처리했나 — 진행 점 ●●○○ 의 채움 */
   const [doneThisRun, setDoneThisRun] = useState(0)
-  /** 처리 순간 **덮개가 제자리에서 꺼지는** 연출 — 판단이 몸에 남는다(2026-08-26 요청).
-   *  덮개가 사라진 뒤, 남은 건이 있으면 **새 덮개로** 열린다. 값은 처리 종류(승인/반려). */
+  /** 처리 순간 **장이 위로 굴러 나가는** 연출 — 다음 장은 곧바로 아래에서 올라온다.
+   *  덮개(배경막)는 내내 서 있다. 값은 처리 종류(승인/반려). */
   const [flying, setFlying] = useState<'승인' | '반려' | null>(null)
-  /** 예약된 걸음(꺼짐 → 언마운트 → 다음 덮개)을 되돌릴 손잡이 — 닫기가 이것을 이긴다 */
+  /** 예약된 걸음(굴림이 끝나면 다음 장을 앉힌다)을 되돌릴 손잡이 — 닫기가 이것을 이긴다 */
   const flyTimer = useRef<number | null>(null)
-  /* ⚠ **예약만 끊고 `flying` 은 안 건드린다.** 여기서 flying 을 지우면 나가던 패널이 꺼지다
-     말고 제자리로 튀어 오른다(연출 클래스가 떨어져 원래 크기로 돌아간다). 꺼지는 그림은
-     끝까지 두고, 값은 덮개가 실제로 걷힐 때(onClose) 함께 지운다. */
+  /* ⚠ **예약만 끊고 `flying` 은 안 건드린다.** 여기서 flying 을 지우면 나가던 장이 굴러
+     나가다 말고 제자리로 튀어 돌아온다(연출 클래스가 떨어진다). 굴러 나가는 그림은 끝까지
+     두고, 값은 덮개가 실제로 걷힐 때(onClose) 함께 지운다. */
   const cancelFly = () => {
     if (flyTimer.current !== null) {
       window.clearTimeout(flyTimer.current)
@@ -202,7 +202,12 @@ function ApprovalsPage() {
     return mine.find((r) => pending.indexOf(r) > at) ?? mine[0]
   }
 
-  const decide = (req: ApprovalRecord, action: '승인' | '반려') => {
+  const decide = (
+    req: ApprovalRecord,
+    action: '승인' | '반려',
+    /** 관문이 준 닫기 — **마지막 건**이면 이것으로 닫아야 배경막이 페이드로 걷힌다 */
+    closeCover?: () => void,
+  ) => {
     // 반려는 사유가 필수 — 스토어가 막지만, 화면이 먼저 말해 준다(누르고 나서 알면 늦다)
     if (action === '반려' && opinion.trim() === '') {
       toast(t('approvals.toast.needOpinion', '반려 사유를 입력해 주세요 — 요청자는 이 글을 보고 고칩니다'))
@@ -226,27 +231,24 @@ function ApprovalsPage() {
        바로 세운다** — 판단은 여전히 한 건씩 하되(승인/반려 버튼은 그대로), 오가는 걸음만
        줄인다. 마지막 건을 처리하면 덮개가 닫힌다(더 세울 것이 없으면 자리를 비운다). */
     const next = queueAfter(req.id)
-    /* 걸음은 셋이다 — **꺼진다 → 빈 화면 → 새로 열린다.**
-       ① 0~280ms: 덮개가 제자리에서 꺼진다(styles.css `.anim-decide-*`, 배경막도 함께).
-       ② 300ms: 언마운트. 연출이 이미 끝났으니 사라지는 순간이 안 보인다.
-          ⚠ 여기서 `setDetail(next)` 로 **바꿔치기하면 안 된다** — 창이 안 사라지고 내용만
-            갈리면 "장을 넘긴다"가 되어, 사용자가 고른 "이 창은 끝났다"와 뜻이 어긋난다
-            (2026-08-27 교정).
-       ③ +160ms: 남은 건이 있으면 **새 덮개**로 연다. 빈 화면을 한 번 거쳐야 앞 창이
-          끝난 것으로 읽힌다 — 곧바로 이어 열면 그냥 깜빡인 것처럼 보인다.
-       ⚠ ①②③ 의 합(약 460ms)은 연타 잠금 cooldown(700ms) 안에 있어야 한다. */
+    /* **한 번의 굴림이다** — 나가는 장(240ms)이 끝나는 그 프레임에 다음 장이 자리를 받는다.
+       ⚠⚠ 사이에 **빈 화면을 두지 않는다.** 4판은 덮개를 걷었다가 0.16초 뒤 다시 열었는데,
+       그게 정확히 "그냥 화면이 켜졌다 꺼졌다"로 읽혔다(2026-08-27 사용자). 이음매가 보이면
+       굴림이 아니라 깜빡임이다. `setFlying(null)` 과 `setDetail(next)` 를 **같은 커밋**에
+       넣어 한 프레임에 갈아 끼운다 — 덮개(배경막)는 내내 서 있다.
+       ⚠ 지연 240 은 styles.css `.anim-decide-*` 길이와 **한 쌍이다.** 짧으면 나가다 잘리고,
+       길면 그만큼 빈 자리가 뜬다. 한쪽을 고치면 다른 쪽을 다시 잰다. */
     flyTimer.current = window.setTimeout(() => {
+      flyTimer.current = null
       setFlying(null)
-      setDetail(null)
-      if (!next) {
-        flyTimer.current = null
+      if (next) {
+        setDetail(next)
         return
       }
-      flyTimer.current = window.setTimeout(() => {
-        flyTimer.current = null
-        setDetail(next)
-      }, 160)
-    }, 300)
+      /* 더 세울 것이 없으면 **덮개를 닫는다** — 여기서만 배경막이 걷힌다(관문의 `close` 로
+         닫아야 퇴장 페이드를 탄다. 부모가 detail 을 지우면 툭 끊긴다). */
+      closeCover?.()
+    }, 240)
     // 마지막 단계가 아니면 **아직 끝난 게 아니다** — 다음 결재자에게 넘어갔다고 말한다
     if (action === '승인' && !res.finished) {
       toast(
@@ -672,13 +674,18 @@ function ApprovalsPage() {
           /* 뒤에 남은 내 차례 수만큼 종이가 겹쳐 보인다 — "이 건 뒤에 더 있다"의 물리적
              표현(글자 카운터만으로는 약하다, 2026-08-26 사용자 지적) */
           stack={detail.myTurn ? pending.filter((r) => r.myTurn && r.id !== detail.id).length : 0}
-          /* 처리 순간 **덮개 전체**가 제자리에서 꺼진다 — 요약 카드 한 장만 움직이던 1판은
-             "느낌이 안 났다", 옆으로 던지던 3판은 "장을 넘기는" 뜻이 됐다(2026-08-27 교정).
-             배경막까지 관문이 함께 걷는다. */
+          /* 처리 순간 **장 전체**가 위로 굴러 나가고 다음 장이 아래에서 올라온다
+             ("뒷장으로 자연스럽게 롤링되는 느낌", 2026-08-27 사용자). 요약 카드 한 장만
+             움직이던 1판은 "켜졌다 꺼졌다"였다. 겹침 lip 은 패널 밖이라 제자리에 남는다 —
+             장만 구르고 덱은 그대로다. */
           flying={flying}
+          dealKey={detail.id}
           /* ⚠ 발은 **내 차례일 때만** 선다 — 조작이 없는데 빈 발을 세우면 "여기서 무언가
              해야 하나"로 읽힌다 (규약 §7). 내 차례가 아니면 몸이 그 사실을 말한다. */
-          footer={
+          /* ⚠ 발을 **함수 꼴로** 받는다 — 마지막 건을 처리하면 덮개를 닫아야 하는데, 부모가
+             `setDetail(null)` 로 지우면 Modal 이 통째로 사라져 **퇴장 페이드를 못 탄다**
+             (관문 주석이 못박은 것). 관문이 주는 `close` 라야 배경막이 제 시간에 걷힌다. */
+          footer={(close) =>
             detail.myTurn ? (
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {/* 연속 처리 중이라는 것을 **처리 전에** 알려 준다 — 처리하고 나서 다음 건이
@@ -714,7 +721,7 @@ function ApprovalsPage() {
                 <button
                   type="button"
                   disabled={cooldown || opinion.trim() === ''}
-                  onClick={() => decide(detail, '반려')}
+                  onClick={() => decide(detail, '반려', close)}
                   className="h-9 rounded-lg bg-danger-ink px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   ✕ {t('common.reject', '반려')}
@@ -722,7 +729,7 @@ function ApprovalsPage() {
                 <button
                   type="button"
                   disabled={cooldown}
-                  onClick={() => decide(detail, '승인')}
+                  onClick={() => decide(detail, '승인', close)}
                   className="h-9 rounded-lg bg-gradient-to-r from-primary to-accent2 px-5 text-[13px] font-semibold text-white shadow-[0_2px_10px_var(--color-glow)] transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   ✓ {t('common.approve', '승인')}
