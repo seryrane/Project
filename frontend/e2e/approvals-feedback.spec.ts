@@ -32,8 +32,11 @@ test.describe('결재 연속 처리 피드백', () => {
     // ① 자국 배너 — 방금 무엇이 처리됐는지 + 남은 수
     await expect(modal.getByText('승인 처리됨')).toBeVisible()
     await expect(modal.getByText('남은 내 차례 3건')).toBeVisible()
-    // ② 모달에는 이미 **다음 건**이 서 있다 (연속 처리)
-    await expect(modal.getByText('VN7 엔진 사양서 v2.3 (출력 재조정)')).toBeVisible()
+    /* ② 모달에는 **다음 건**이 선다 (연속 처리).
+       ⚠ 제목으로 가르면 안 된다 — 교체는 **연출이 끝난 뒤**(0.3초)라, 그 사이에는 아직 앞
+       건이 서 있고 같은 제목이 겹침 목록·다음 칩에도 나와 strict 위반이 난다(2026-08-27).
+       머리의 요청 ID 로 가른다 — 한 건에 하나뿐이고, 롤링 판(아래)이 쓰는 잣대와 같다. */
+    await expect(modal.getByText(/^APR-\d{4}-\d+$/).first()).toHaveText('APR-2026-0116')
     // ③ 연타 잠금 — 처리 직후에는 승인 버튼이 눌리지 않는다 (0.7초)
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeDisabled()
     // 잠금은 풀린다 — 다음 판단을 막는 물건이 아니다

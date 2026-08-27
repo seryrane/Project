@@ -19,6 +19,8 @@ export function Modal({
   footer,
   wide,
   stack = 0,
+  flying = null,
+  dealKey,
 }: {
   title: React.ReactNode
   onClose: () => void
@@ -45,6 +47,14 @@ export function Modal({
    * 비쳐서 탁해진다. 좁은 화면 시트는 바닥에 붙어 보일 자리가 없으므로 pc 에서만.
    */
   stack?: number
+  /**
+   * 처리 연출 — 값이 있으면 **패널 전체**가 그 방향으로 날아간다(승인 → 오른쪽 위,
+   * 반려 → 왼쪽 아래). 연속 처리처럼 판단이 몸에 남아야 하는 자리에서 쓴다.
+   * ⚠ 요약 카드 한 장만 움직이면 "몸이 넘어갔다"로 안 읽힌다(2026-08-26 사용자).
+   */
+  flying?: '승인' | '반려' | null
+  /** 이 값이 바뀌면 패널이 **새 장으로** 밀려 들어온다(deal-in) */
+  dealKey?: string
 }) {
   const { t } = useI18n()
   const [closing, setClosing] = useState(false)
@@ -103,7 +113,12 @@ export function Modal({
            그 면이 둥근 모서리를 넘어 **각지게 삐져나온다.** 머리에 `rounded-t-2xl` 을
            따로 붙여 위쪽만 가리고 있었는데, 발에도 면이 생기면서 아래쪽이 드러났다.
            상자 하나가 모서리를 책임지면 안쪽 조각들은 모서리를 몰라도 된다. */
-        className="relative z-10 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl"
+        /* ⚠ key 는 **연출을 다시 돌리기 위한 것**이다 — 같은 자리에 다음 건이 서면 React 가
+           같은 DOM 을 재사용해서 deal-in 이 안 걸린다(들어온 티가 안 난다). */
+        key={dealKey}
+        className={`relative z-10 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
+          flying ? (flying === '승인' ? 'anim-decide-approve' : 'anim-decide-reject') : dealKey ? 'anim-deal-in' : ''
+        }`}
       >
         {/* 머리는 **면 + 아래 선** 둘 다다 (규약 §7 해부 그림). 면만 있으면 스크롤 중에
             내용 첫 줄처럼 읽히고, 선만 있으면 옛날 관리자 화면의 패널 머리가 된다.
