@@ -73,7 +73,7 @@ function SignupPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('signup.ph.name')}
-              className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-11 w-full rounded-xl border border-control bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="block">
@@ -84,7 +84,7 @@ function SignupPage() {
               autoComplete="email"
               placeholder="name@partner.com"
               className={`mt-1 h-11 w-full rounded-xl border bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60 ${
-                emailHint ? 'border-danger-ink/50' : 'border-hairline'
+                emailHint ? 'border-danger-ink/70' : 'border-control'
               }`}
             />
             {emailHint && <span className="mt-1 block text-xs text-danger-ink">{emailHint}</span>}
@@ -95,7 +95,7 @@ function SignupPage() {
               value={dept}
               onChange={(e) => setDept(e.target.value)}
               placeholder={t('signup.ph.dept')}
-              className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-11 w-full rounded-xl border border-control bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
@@ -108,7 +108,7 @@ function SignupPage() {
                 autoComplete="new-password"
                 placeholder={t('login.pwPlaceholder')}
                 className={`mt-1 h-11 w-full rounded-xl border bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60 ${
-                  pwHint ? 'border-danger-ink/50' : 'border-hairline'
+                  pwHint ? 'border-danger-ink/70' : 'border-control'
                 }`}
               />
               {pwHint && <span className="mt-1 block text-xs text-danger-ink">{pwHint}</span>}
@@ -122,7 +122,7 @@ function SignupPage() {
                 autoComplete="new-password"
                 placeholder={t('signup.ph.pw2')}
                 className={`mt-1 h-11 w-full rounded-xl border bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60 ${
-                  pw2Hint ? 'border-danger-ink/50' : 'border-hairline'
+                  pw2Hint ? 'border-danger-ink/70' : 'border-control'
                 }`}
               />
               {pw2Hint && <span className="mt-1 block text-xs text-danger-ink">{pw2Hint}</span>}

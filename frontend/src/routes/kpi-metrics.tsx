@@ -65,7 +65,7 @@ function KpiMetricsPage() {
         <button
           type="button"
           onClick={() => toast(t('kpi-metrics.toast.addDisabled', '지표 추가는 OPN-008(지표 목록·산식) 확정 후 열립니다'))}
-          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+          className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           + {t('kpi-metrics.addMetric')}
         </button>
@@ -168,7 +168,7 @@ function KpiMetricsPage() {
               <button
                 type="button"
                 onClick={close}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.close')}
               </button>

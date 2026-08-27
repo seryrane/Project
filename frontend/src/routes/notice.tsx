@@ -76,7 +76,7 @@ function NoticePage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('notice.searchPh', '제목 검색...')}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
+          className="h-10 rounded-lg border border-control bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
         {/* '전체'만 UI 어휘라 번역 — 카테고리 이름은 데이터 값이라 그대로 (규약 §4-4) */}
         <ChipSelect
@@ -173,7 +173,7 @@ function NoticePage() {
               <button
                 type="button"
                 onClick={close}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.close')}
               </button>
@@ -222,7 +222,7 @@ function NoticePage() {
               <button
                 type="button"
                 onClick={() => setWriting(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -258,7 +258,7 @@ function NoticePage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder={t('notice.titlePh', '공지 제목')}
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3">
@@ -276,7 +276,7 @@ function NoticePage() {
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
               placeholder={t('notice.bodyPh', '공지 내용을 입력하세요')}
-              className="min-h-28 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              className="min-h-28 mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-chip px-3.5 py-2.5">

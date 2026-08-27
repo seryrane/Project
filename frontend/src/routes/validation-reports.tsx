@@ -180,7 +180,7 @@ function ValidationReportsPage() {
                   <button
                     type="button"
                     onClick={() => setDetail(r)}
-                    className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                    className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
                   >
                     {t('reports.view', '보기')}
                   </button>
@@ -228,14 +228,14 @@ function ValidationReportsPage() {
                   setDetail(null)
                   navigate({ to: '/validation-results' })
                 }}
-                className="mr-auto h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="mr-auto h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('reports.goResults', '실행 상세는 검증 결과 조회 →')}
               </button>
               <button
                 type="button"
                 onClick={() => toast(t('reports.toast.print', '인쇄 — 본개발에서 연결됩니다'))}
-                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Icon name="print" />
@@ -245,7 +245,7 @@ function ValidationReportsPage() {
               <button
                 type="button"
                 onClick={() => toast(t('reports.toast.pdfDownload', 'PDF 다운로드 — 본개발에서 연결됩니다'))}
-                className="h-9 rounded-lg border border-hairline bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Icon name="download" />

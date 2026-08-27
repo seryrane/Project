@@ -438,7 +438,7 @@ function ReviewPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => voi
           <button
             type="button"
             onClick={close}
-            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('common.cancel', '취소')}
           </button>
@@ -478,7 +478,7 @@ function SubmitPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => voi
           <button
             type="button"
             onClick={close}
-            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('common.cancel', '취소')}
           </button>
@@ -534,7 +534,7 @@ function WithdrawPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => v
           <button
             type="button"
             onClick={close}
-            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('common.cancel', '취소')}
           </button>
@@ -583,7 +583,7 @@ function DeployPanel({
           <button
             type="button"
             onClick={close}
-            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-chip px-4 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('common.cancel', '취소')}
           </button>
@@ -611,7 +611,7 @@ function DeployPanel({
         <input
           value={version}
           onChange={(e) => setVersion(e.target.value)}
-          className="mt-1.5 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] text-ink outline-none focus:border-primary/60"
+          className="mt-1.5 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] text-ink outline-none focus:border-primary/60"
         />
       </label>
       <div className="mt-3">

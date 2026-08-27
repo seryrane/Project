@@ -175,7 +175,7 @@ function SpecsPage() {
           <button
             type="button"
             onClick={() => setImporting(true)}
-            className="h-9 rounded-lg border border-hairline bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-surface px-3.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('specs.import', '엑셀 올리기')}
           </button>
@@ -193,7 +193,7 @@ function SpecsPage() {
         value={query}
         onChange={(e) => setSearch({ q: pickText(e.target.value) }, true)}
         placeholder={t('specs.searchPlaceholder', '사양서 명, ID, 태그 검색...')}
-        className="mt-6 h-10 w-full rounded-lg border border-hairline bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
+        className="mt-6 h-10 w-full rounded-lg border border-control bg-surface px-4 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary"
       />
 
       {/* 거르는 축이 둘(카테고리·상태) — 관문 FilterAxes 가 축마다 이름표를 달아
@@ -513,7 +513,7 @@ function RegisterSpecModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+            className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {t('common.cancel', '취소')}
           </button>
@@ -539,7 +539,7 @@ function RegisterSpecModal({
             placeholder={t('specs.form.namePlaceholder', '예: VN9 하이브리드 파워트레인 사양서')}
             autoFocus
             className={`mt-1 h-10 w-full rounded-lg border bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 ${
-              nameError ? 'border-danger-ink/50' : 'border-hairline'
+              nameError ? 'border-danger-ink/70' : 'border-control'
             }`}
           />
           {/* 입력 오류는 반드시 인라인 — 어느 칸이 문제인지 그 자리에서 (규약 §2) */}
@@ -562,7 +562,7 @@ function RegisterSpecModal({
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder={t('specs.form.descPlaceholder', '무엇을 정의하는 문서인지 한두 문장으로')}
-            className="min-h-20 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="min-h-20 mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
         </label>
         <label className="block">
@@ -571,7 +571,7 @@ function RegisterSpecModal({
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder={t('specs.form.tagsPlaceholder', '예: 엔진, 하이브리드')}
-            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
         </label>
         <p className="rounded-xl bg-canvas/50 px-4 py-3 text-xs text-ink-subtle">

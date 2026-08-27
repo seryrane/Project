@@ -58,7 +58,7 @@ function FaqPage() {
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
+          className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:border-primary/40 hover:text-ink"
         >
           + {t('faq.add', 'FAQ 추가')}
         </button>
@@ -69,7 +69,7 @@ function FaqPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('faq.searchPh', '질문·답변 검색...')}
-          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
+          className="h-10 rounded-lg border border-control bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-96"
         />
         {/* '전체'만 UI 어휘라 번역 — 카테고리 이름은 데이터 값이라 그대로 (규약 §4-4) */}
         <ChipSelect
@@ -164,7 +164,7 @@ function FaqPage() {
               <button
                 type="button"
                 onClick={() => setAdding(false)}
-                className="h-9 rounded-lg border border-hairline bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
+                className="h-9 rounded-lg border border-control bg-chip px-4 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
               >
                 {t('common.cancel')}
               </button>
@@ -199,7 +199,7 @@ function FaqPage() {
               value={newQ}
               onChange={(e) => setNewQ(e.target.value)}
               placeholder={t('faq.qPh', '사용자 말로 적습니다 — 예: 로그인이 안 됩니다')}
-              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <label className="mt-3 block">
@@ -211,7 +211,7 @@ function FaqPage() {
               value={newA}
               onChange={(e) => setNewA(e.target.value)}
               placeholder={t('faq.aPh', '해결 순서대로 — 어디를 눌러 무엇을 하는지')}
-              className="min-h-24 mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+              className="min-h-24 mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
         </Modal>
