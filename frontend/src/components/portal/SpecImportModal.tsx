@@ -526,7 +526,7 @@ export function SpecImportModal({
                         <input
                           value={p.specName}
                           onChange={(e) => patch(p.sheet, { specName: e.target.value })}
-                          className="mt-1 h-10 w-full rounded-lg border border-control bg-surface px-3 text-[13px] text-ink outline-none focus:border-primary/60"
+                          className="mt-1 h-10 w-full rounded-lg border border-hairline bg-surface px-3 text-[13px] text-ink outline-none focus:border-primary/60"
                         />
                       </label>
                       <label className="text-xs text-ink-subtle">
@@ -572,7 +572,7 @@ export function SpecImportModal({
                         value={colQuery[p.sheet] ?? ''}
                         onChange={(e) => setColQuery((m) => ({ ...m, [p.sheet]: e.target.value }))}
                         placeholder={t('import.findColumn', '열 찾기')}
-                        className="h-8 w-40 rounded-lg border border-control bg-surface px-2.5 text-xs text-ink outline-none focus:border-primary/60"
+                        className="h-8 w-40 rounded-lg border border-hairline bg-surface px-2.5 text-xs text-ink outline-none focus:border-primary/60"
                       />
                       {/* 열이 많을수록 하나씩 끄는 것은 일이 된다 — 지금 보이는 것만 한 번에 켜고 끈다 */}
                       <button
@@ -630,7 +630,7 @@ export function SpecImportModal({
                               <input
                                 value={c.field}
                                 onChange={(e) => patchColumn(p.sheet, c.index, { field: e.target.value })}
-                                className="h-9 w-full min-w-32 rounded-lg border border-control bg-surface px-2.5 text-[13px] text-ink outline-none focus:border-primary/60"
+                                className="h-9 w-full min-w-32 rounded-lg border border-hairline bg-surface px-2.5 text-[13px] text-ink outline-none focus:border-primary/60"
                               />
                             ),
                           },

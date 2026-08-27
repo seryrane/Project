@@ -413,7 +413,7 @@ function DeploysPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: '/approvals' })}
-                className="mt-2 rounded-lg border border-danger-ink/70 bg-danger-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
+                className="mt-2 rounded-lg border border-danger-ink/45 bg-danger-ink/15 px-3 py-1.5 font-semibold transition-opacity hover:opacity-80"
               >
                 {t('deploys.goResolveConflict', '겹침 정리하러 가기 →')}
               </button>
@@ -424,7 +424,7 @@ function DeploysPage() {
             <input
               value={newVersion}
               onChange={(e) => setNewVersion(e.target.value)}
-              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3">

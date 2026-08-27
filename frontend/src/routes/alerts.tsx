@@ -193,7 +193,7 @@ function AlertChannelRow({
                 ? t('alerts.rules.channel.emailTarget', '수신 그룹')
                 : t('alerts.rules.channel.webhookTarget', '엔드포인트 URL')
             }
-            className="h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+            className="h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
           />
           {channel.key === 'webhook' && channel.target === '' && (
             <p className="mt-1 text-xs text-review-ink">
@@ -781,7 +781,7 @@ function AlertsPage() {
                         const v = Number(e.target.value)
                         setDraftRules((prev) => prev.map((p, i) => (i === idx ? { ...p, warn: v } : p)))
                       }}
-                      className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+                      className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
                     />
                   </label>
                   <label className="block">
@@ -795,7 +795,7 @@ function AlertsPage() {
                         const v = Number(e.target.value)
                         setDraftRules((prev) => prev.map((p, i) => (i === idx ? { ...p, danger: v } : p)))
                       }}
-                      className="mt-1 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+                      className="mt-1 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
                     />
                   </label>
                 </div>

@@ -611,7 +611,7 @@ function DeployPanel({
         <input
           value={version}
           onChange={(e) => setVersion(e.target.value)}
-          className="mt-1.5 h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] text-ink outline-none focus:border-primary/60"
+          className="mt-1.5 h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] text-ink outline-none focus:border-primary/60"
         />
       </label>
       <div className="mt-3">

@@ -395,7 +395,7 @@ export function AskPanel({ onOpenMenu }: { onOpenMenu: (key: string) => void }) 
             }
           }}
           placeholder={t('ask.placeholder')}
-          className="h-9 min-w-0 flex-1 rounded-lg border border-control bg-canvas/40 px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/40"
+          className="h-9 min-w-0 flex-1 rounded-lg border border-hairline bg-canvas/40 px-3 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/40"
         />
         <CtaButton
           busyLabel={t('ask.sending')}

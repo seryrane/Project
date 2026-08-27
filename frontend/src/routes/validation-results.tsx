@@ -238,7 +238,7 @@ function ValidationResultsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('results.searchPlaceholder', '실행 ID, 사양서, Rule 검색...')}
-          className="h-10 rounded-lg border border-control bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
         />
       </div>
 
