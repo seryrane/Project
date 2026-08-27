@@ -682,31 +682,83 @@ select option {
 
 /* 결재 처리 연출 — 판단이 **몸에 남게** 한다(2026-08-26 "느낌있게 처리된 형태로").
    승인: 카드가 오른쪽 위로 날아가며 사라진다(다음 단계로 넘어간다는 은유).
-   반려: 왼쪽 아래로 되돌아간다(요청자에게 돌아간다). 다음 건은 오른쪽에서 밀려 들어온다.
+   반려: 왼쪽 아래로 되돌아간다(요청자에게 돌아간다). 다음 건은 아래 겹침에서 올라온다.
    ⚠ 전역 reduced-motion 스위치(맨 아래 0.01ms)가 이것도 죽인다 — 따로 안 가려도 된다. */
+/* ⚠ 1판은 **느낌이 안 났다**(2026-08-26 사용자). 프레임을 재 보니 원인이 셋이었다:
+   ① 요약 카드 하나(높이 87px)만 움직였다 — 몸 전체가 가야 "장을 넘긴다"로 읽힌다
+   ② 이동량 46px — 눈이 궤적으로 못 읽는 미동
+   ③ 340ms 에 자리에서 사라지는 게 아니라 그 자리에서 흐려졌다
+   그래서 2판: **모달 몸 전체**를, 화면 밖까지, 되당겼다 던지는 두 마디로.
+   ⚠⚠ 그런데 2판도 굼떴다 — 첫 160ms 가 **정지**였다. 범인은 마디 위치가 아니라
+   **이징 하나를 두 마디에 같이 쓴 것**이었다: `cubic-bezier(0.36, 0, 0.66, -0.12)` 의 끝
+   제어점이 **음수(-0.12)** 라 곡선이 시작에서 아래로 파인다. 이징은 키프레임 **구간마다**
+   다시 적용되므로, 되당김(8%) 다음 구간(405ms)의 앞머리에서 진행이 **뒤로 흘렀다.**
+   실측(getAnimations 로 currentTime 을 찍어 transform 을 읽음):
+     40ms tx=-22 · 80ms -25 · 120ms **-27(더 뒤로)** · 160ms -17 · 200ms +16
+   되당김을 키프레임으로 이미 그려 놓고 이징까지 되당기게 해서 **되당김이 두 번** 걸렸다.
+   3판: 이징을 **마디마다 따로** 준다(`animation-timing-function` 을 키프레임 안에).
+   380ms = 되당김 57ms(빨리 붙었다 멎는다) + 던짐 323ms(첫 프레임부터 실제로 움직인다).
+   실측 재확인 — 20ms 간격 이동량이 4·2·19·30·44·56·69·82·94px 로 단조 가속, 역주행 없음.
+   ⚠ 그래서 아래 `animation` 단축 속성의 이징은 반드시 `linear` 다. 여기에 곡선을 쓰면
+   키프레임 안의 함수를 **덮는 게 아니라 겹쳐서** 같은 사고가 그대로 돌아온다. */
 @keyframes decide-approve {
-  to {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+    /* 되당김 — 손목이 뒤로 젖혀지는 마디. 빨리 붙었다 멎는다(ease-out) */
+    animation-timing-function: cubic-bezier(0.2, 0.85, 0.3, 1);
+  }
+  15% {
+    transform: translate3d(-26px, -11px, 0) rotate(-2deg) scale(1.02);
+    opacity: 1;
+    /* 던짐 — 가속하되 **첫 프레임부터 눈에 보이게.** 앞이 납작한 곡선은 정지로 읽힌다 */
+    animation-timing-function: cubic-bezier(0.42, 0.06, 0.62, 0.6);
+  }
+  /* 궤적이 남아야 "날아갔다"가 된다 — 사라지는 것은 마지막 30%(투명도만 찍는 마디) */
+  70% {
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate3d(155%, -34%, 0) rotate(15deg) scale(0.7);
     opacity: 0;
-    transform: translate3d(46px, -34px, 0) rotate(4deg) scale(0.94);
   }
 }
 @keyframes decide-reject {
-  to {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.85, 0.3, 1);
+  }
+  15% {
+    transform: translate3d(26px, -11px, 0) rotate(2deg) scale(1.02);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.42, 0.06, 0.62, 0.6);
+  }
+  70% {
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate3d(-155%, 28%, 0) rotate(-15deg) scale(0.7);
     opacity: 0;
-    transform: translate3d(-46px, 26px, 0) rotate(-4deg) scale(0.94);
   }
 }
+/* 다음 장은 **아래 겹침(Modal 의 stack lip)에서 올라온다** — 겹쳐 보이는 종이가 패널
+   아래에 있으니 다음 장도 거기서 나와야 "한 장 넘겼다"가 한 줄로 읽힌다. 오른쪽에서
+   밀어 넣으면 승인 카드가 **나간 쪽과 같은 방향**이라 둘이 서로 어긋난다. */
 @keyframes deal-in {
   from {
     opacity: 0;
-    transform: translate3d(40px, 0, 0) scale(0.98);
+    transform: translate3d(0, 26px, 0) scale(0.955);
   }
 }
 .anim-decide-approve {
-  animation: decide-approve 340ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
+  animation: decide-approve 380ms linear both;
+  /* 날아가는 동안 아래 내용이 안 밀리게 — 자리는 유지하고 그림만 던진다 */
+  will-change: transform, opacity;
 }
 .anim-decide-reject {
-  animation: decide-reject 340ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
+  animation: decide-reject 380ms linear both;
+  will-change: transform, opacity;
 }
 .anim-deal-in {
   animation: deal-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
