@@ -20,6 +20,7 @@ export function Modal({
   wide,
   stack = 0,
   flying = null,
+  dealKey,
   onDismiss,
 }: {
   title: React.ReactNode
@@ -48,14 +49,20 @@ export function Modal({
    */
   stack?: number
   /**
-   * 처리 연출 — 값이 있으면 **덮개가 통째로 제자리에서 꺼진다**(배경막까지 함께).
-   * "이 창은 끝났다"는 말이라, 부르는 쪽은 연출이 끝나는 시점에 덮개를 걷으면 된다.
+   * 처리 연출 — 값이 있으면 **패널(장)이 위로 굴러 나간다.** 배경막은 그대로 서 있다.
+   * 부르는 쪽은 연출이 끝나는 시점에 `dealKey` 를 바꿔 **다음 장을 곧바로** 앉히면 된다
+   * (사이에 빈 화면을 두면 "굴렀다"가 아니라 "켜졌다 꺼졌다"가 된다).
    *
-   * ⚠ 요약 카드 한 장만 움직이면 "몸이 끝났다"로 안 읽힌다(2026-08-26 사용자).
-   * ⚠⚠ 옆으로 던져 보내지 않는다 — 그건 "장을 넘긴다"가 되어 뜻이 갈린다
-   * (2026-08-27 사용자 교정, styles.css 4판 주석).
+   * ⚠ 요약 카드 한 장만 움직이면 "몸이 넘어갔다"로 안 읽힌다(2026-08-26 사용자).
+   * ⚠⚠ 옆으로 멀리 던지지도, 제자리에서 꺼지지도 않는다 — 사용자가 줄곧 말한 것은
+   * **"뒷장으로 자연스럽게 롤링되는 느낌"** 이다(styles.css 5판 주석).
    */
   flying?: '승인' | '반려' | null
+  /**
+   * 이 값이 바뀌면 패널이 **새 장으로** 갈린다 — React 가 같은 DOM 을 재사용하면 들어오는
+   * 연출(deal-in)이 아예 안 걸려서, 내용만 슬쩍 바뀐 것처럼 보인다.
+   */
+  dealKey?: string
   /**
    * **닫겠다고 한 순간** 불린다 (퇴장 애니메이션이 끝나기 **전**, `onClose` 보다 앞).
    * 연출이 끝난 뒤에 무언가 하려고 타이머를 걸어 둔 화면이 그것을 취소하는 자리다 —
@@ -93,16 +100,11 @@ export function Modal({
       // (카드에는 안 건다 — styles.css 의 '유리와 깊이' 절 참고)
       className="fixed inset-0 z-modal flex items-end justify-center bg-black/70 backdrop-blur-md pc:items-center pc:p-6"
       initial={{ opacity: 0 }}
-      /* ⚠ 배경막은 **패널과 같이 걷힌다.** 패널만 꺼지고 막이 남아 있으면 "창이 사라졌다"가
-         아니라 "안이 비었다"로 읽힌다 — 사라지는 것은 덮개 전체다(2026-08-27 4판).
-         ⚠ 흐려지는 일은 **여기 한 겹만** 한다(패널 키프레임에 opacity 를 안 쓰는 이유 —
-         styles.css 참고). delay 는 부푸는 마디를 보이게 두는 시간이다 — 0 이면 판단이
-         닿은 자국이 페이드에 먹힌다. */
-      animate={{ opacity: closing || flying ? 0 : 1 }}
-      transition={{
-        duration: closing ? 0.16 : flying ? 0.22 : 0.2,
-        delay: flying ? 0.05 : 0,
-      }}
+      /* ⚠⚠ **처리 연출 중에도 배경막은 그대로 둔다.** 막까지 걷으면 창이 **닫힌** 것이지
+         다음 장으로 **넘어간** 것이 아니다 — 걷었다가 다시 여는 4판이 정확히 "켜졌다
+         꺼졌다"로 읽혔다(2026-08-27 사용자). 막은 서 있고, 장만 굴린다. */
+      animate={{ opacity: closing ? 0 : 1 }}
+      transition={{ duration: closing ? 0.16 : 0.2 }}
       onClick={close}
     >
       <m.div
@@ -144,8 +146,15 @@ export function Modal({
            그 면이 둥근 모서리를 넘어 **각지게 삐져나온다.** 머리에 `rounded-t-2xl` 을
            따로 붙여 위쪽만 가리고 있었는데, 발에도 면이 생기면서 아래쪽이 드러났다.
            상자 하나가 모서리를 책임지면 안쪽 조각들은 모서리를 몰라도 된다. */
+        key={dealKey}
         className={`relative z-10 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-hairline bg-cover-glass shadow-[var(--shadow-cover)] backdrop-blur-2xl pc:max-h-[85vh] pc:rounded-2xl ${
-          flying ? (flying === '승인' ? 'anim-decide-approve' : 'anim-decide-reject') : ''
+          flying
+            ? flying === '승인'
+              ? 'anim-decide-approve'
+              : 'anim-decide-reject'
+            : dealKey
+              ? 'anim-deal-in'
+              : ''
         }`}
       >
         {/* 머리는 **면 + 아래 선** 둘 다다 (규약 §7 해부 그림). 면만 있으면 스크롤 중에

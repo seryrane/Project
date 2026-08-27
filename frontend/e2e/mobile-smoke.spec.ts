@@ -152,12 +152,20 @@ test('모달 — 하단 시트로 뜨고 Esc 로 닫힌다', async ({ page }) =>
   // ⚠ 열림 애니메이션이 끝난 뒤에 잰다 — 도중에 재면 3~12px 작게 나온다.
   //   getAnimations() 는 WAAPI 만 잡아서 motion(rAF 구동) 전환에는 헛대기다 —
   //   구현에 매이지 않게 "치수가 맞을 때까지" 폴링한다
-  // 컨테이너(배경막)는 덮개의 부모다 — 여기도 층 클래스 대신 관계로 집는다
-  const cont = (await page.locator('[role="dialog"]').locator('xpath=..').boundingBox())!
+  /* 컨테이너(배경막)는 덮개의 부모다 — 여기도 층 클래스 대신 관계로 집는다.
+     ⚠⚠ **둘을 같은 순간에 잰다.** 예전에는 컨테이너를 폴링 **밖에서 한 번만** 재고 시트만
+     다시 쟀는데, 그 한 번이 열림 스프링(scale 0.97→1) 도중에 잡히면 기준 자체가 작게
+     박혀서 **끝까지 안 맞는다**(2026-08-27 실측: 19.04px 차이로 3번 중 2번 실패).
+     같이 재면 배율이 서로 나눠져 사라지므로, 애니메이션 **어느 시점에 재도** 참인
+     불변식이 된다 — 이 판이 원래 말하려던 것이 그것이다("자기 컨테이너를 채운다"). */
   await expect
     .poll(async () => {
-      const b = await sheet.boundingBox()
-      if (!b) return 999
+      const dialog = page.locator('[role="dialog"]')
+      const [b, cont] = await Promise.all([
+        dialog.boundingBox(),
+        dialog.locator('xpath=..').boundingBox(),
+      ])
+      if (!b || !cont) return 999
       return Math.max(Math.abs(b.width - cont.width), Math.abs(b.y + b.height - (cont.y + cont.height)))
     }, { message: '시트가 컨테이너를 가로로 채우고 바닥에 붙는다' })
     .toBeLessThan(2)

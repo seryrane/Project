@@ -681,7 +681,7 @@ select option {
 }
 
 /* 결재 처리 연출 — 판단이 **몸에 남게** 한다(2026-08-26 "느낌있게 처리된 형태로").
-   승인·반려 모두 **덮개가 제자리에서 꺼진다** — 이 창은 끝났다는 말이다(4판).
+   **덮개 안의 장이 굴러 넘어간다** — 나가는 장은 위로, 다음 장은 아래에서(5판).
    ⚠ 전역 reduced-motion 스위치(맨 아래 0.01ms)가 이것도 죽인다 — 따로 안 가려도 된다. */
 /* ⚠ 1판은 **느낌이 안 났다**(2026-08-26 사용자). 프레임을 재 보니 원인이 셋이었다:
    ① 요약 카드 하나(높이 87px)만 움직였다 — 몸 전체가 가야 "장을 넘긴다"로 읽힌다
@@ -707,45 +707,63 @@ select option {
    닿은 자국) 축소·페이드로 사라지고, 배경막도 함께 걷힌다. 남은 건은 **빈 화면을 한 번
    거친 뒤 새 덮개로** 열린다(approvals.tsx). 이동은 6px 뿐이다 — 승인은 살짝 위(다음
    단계로), 반려는 살짝 아래(요청자에게). 그 이상 움직이면 다시 "넘어감"으로 읽힌다. */
-/* ⚠ 여기서는 **투명도를 건드리지 않는다.** 흐려지는 일은 배경막(Modal 의 m.div)이 통째로
-   맡는다 — 패널도 같이 페이드하면 부모·자식 두 투명도가 **곱해져서** 반쯤에 이미 안 보이고,
-   축소가 눈에 안 남는다(꺼지는 게 아니라 그냥 흐려진 것으로 읽힌다). 한 겹은 모양, 한 겹은
-   사라짐 — 각자 하나씩만 맡는다. */
+/* ⚠⚠⚠ **5판. 앞의 네 판을 사용자가 본 적이 없다** — 리뷰용 :3010 은 `dist` 를 보는데
+   마지막 빌드가 2026-08-26 18:06(1판)이었다. 그래서 "카드만 날아간다"·"켜졌다 꺼졌다"는
+   전부 **1판** 이야기였고, 나는 보이지도 않는 2·3·4판을 고치고 있었다.
+   ⚠ **연출을 고쳤으면 사람이 보는 자리에 올려 놓고 묻는다.** 안 그러면 판을 헛돈다.
+
+   사용자가 줄곧 말한 하나: **"뒷장으로 자연스럽게 롤링되는 느낌."**
+   그래서 이 판이 지키는 것은 셋이다.
+   ① **끊기지 않는다** — 나가는 장과 들어오는 장 사이에 **빈 화면이 없다.** 4판은 덮개를
+      통째로 걷었다가 0.16초 뒤 다시 열어서 정확히 "켜졌다 꺼졌다"가 됐다.
+   ② **배경막은 안 깜빡인다** — 막은 그대로 두고 **장만 굴린다.** 막까지 걷히면 창이 닫힌
+      것이지 넘어간 것이 아니다.
+   ③ **한 방향으로 흐른다** — 나가는 장은 **위로** 넘어가고, 다음 장은 **아래(겹쳐 있는
+      종이 쪽)에서 올라온다.** 둘이 같은 축을 반대로 지나가야 눈이 "굴렀다"로 읽는다.
+      승인·반려는 가로로 6px 만 갈라 둔다 — 그 이상 벌리면 롤링이 깨지고 "던졌다"가 된다.
+      (뜻은 자국 배너와 토스트가 이미 말한다.)
+   ⚠ 나가는 240ms + 들어오는 280ms = 520ms 는 연타 잠금(700ms) 안이다. */
 @keyframes decide-approve {
-  0% {
+  from {
     transform: translate3d(0, 0, 0) scale(1);
-    /* 부푸는 마디 — 누른 것이 몸에 닿았다는 자국. 빨리 붙었다 멎는다(ease-out) */
-    animation-timing-function: cubic-bezier(0.3, 0.55, 0.5, 1);
+    opacity: 1;
   }
-  16% {
-    transform: translate3d(0, -2px, 0) scale(1.025);
-    /* 꺼지는 마디 — 가속해서 **쑥** 들어간다 */
-    animation-timing-function: cubic-bezier(0.35, 0.06, 0.7, 0.48);
-  }
-  100% {
-    transform: translate3d(0, -8px, 0) scale(0.84);
+  to {
+    transform: translate3d(6px, -44px, 0) scale(0.965);
+    opacity: 0;
   }
 }
 @keyframes decide-reject {
-  0% {
+  from {
     transform: translate3d(0, 0, 0) scale(1);
-    animation-timing-function: cubic-bezier(0.3, 0.55, 0.5, 1);
+    opacity: 1;
   }
-  16% {
-    transform: translate3d(0, 2px, 0) scale(1.025);
-    animation-timing-function: cubic-bezier(0.35, 0.06, 0.7, 0.48);
+  to {
+    transform: translate3d(-6px, -44px, 0) scale(0.965);
+    opacity: 0;
   }
-  100% {
-    transform: translate3d(0, 8px, 0) scale(0.84);
+}
+/* 뒷장이 **겹쳐 있는 종이 쪽(아래)에서 올라와** 자리에 앉는다 — Modal 의 stack lip 이
+   패널 아래에 있으니, 다음 장도 거기서 나와야 "한 장 굴렀다"가 한 줄로 읽힌다. */
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 46px, 0) scale(0.975);
   }
 }
 .anim-decide-approve {
-  animation: decide-approve 280ms linear both;
-  will-change: transform;
+  /* 나가는 장은 **가속**한다(ease-in) — 끝에서 빨라야 "넘어갔다"가 되고, 마침 그 순간
+     다음 장이 자리를 받는다. 감속으로 끝나면 멈춘 것처럼 보여 이음매가 드러난다. */
+  animation: decide-approve 240ms cubic-bezier(0.4, 0, 0.75, 0.35) both;
+  will-change: transform, opacity;
 }
 .anim-decide-reject {
-  animation: decide-reject 280ms linear both;
-  will-change: transform;
+  animation: decide-reject 240ms cubic-bezier(0.4, 0, 0.75, 0.35) both;
+  will-change: transform, opacity;
+}
+.anim-deal-in {
+  /* 들어오는 장은 **감속**한다 — 자리에 앉는 손맛. 나가는 가속과 이어져 한 번의 굴림이 된다 */
+  animation: deal-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fade-up {

@@ -27,8 +27,9 @@ test.describe('결재 연속 처리 피드백', () => {
     // 뒤에 남은 만큼 종이가 겹쳐 보인다 (최대 2장)
     await expect(page.locator('[data-stack-lip]')).toHaveCount(2)
 
-    /* 지금 서 있는 덮개에 표를 붙여 둔다 — 아래에서 **이 덮개가 없어졌는지**를 가리는 데 쓴다.
-       빈 화면이 뜨는 순간(약 160ms)을 toHaveCount(0) 으로 잡으려 하면 폴링이 놓쳐 흔들린다. */
+    /* 지금 선 **장**에 표를 붙여 둔다 — 아래에서 "이 장이 물러났는지"를 가리는 데 쓴다.
+       ⚠ 제목·내용으로 재면 흔들린다(같은 제목이 겹침 목록·다음 칩에도 있다). 장이 굴러
+       나가면 그 DOM 이 통째로 갈리므로, 표가 사라진 것이 곧 "넘어갔다"의 증거다. */
     await modal.evaluate((el) => el.setAttribute('data-run', 'first'))
 
     await modal.getByRole('button', { name: '✓ 승인' }).click()
@@ -38,10 +39,10 @@ test.describe('결재 연속 처리 피드백', () => {
        동안 잠금이 풀려 버려, 순서가 뒤면 "안 잠긴다"고 잘못 말한다(2026-08-27). */
     await expect(modal.getByRole('button', { name: '✓ 승인' })).toBeDisabled()
 
-    /* ② **처리한 덮개는 사라진다** — 창 안에서 내용만 갈리는 게 아니라 창이 자리를 비운다
-       (2026-08-27 사용자가 고른 연출: "승인된 모달창 자체가 사라지는 느낌"). */
+    /* ② **처리한 장은 물러난다** ("뒷장으로 롤링", 2026-08-27 사용자) */
     await expect(page.locator('[role="dialog"][data-run="first"]')).toHaveCount(0)
-    // ③ 그리고 남은 건이 **새 덮개**로 열린다
+    /* ③ 그리고 **덮개는 그대로 서 있다** — 막까지 걷혔다가 다시 열리면 넘어간 게 아니라
+       "켜졌다 꺼졌다"가 된다. 장 하나가 늘 자리에 있다는 것이 그 판이다. */
     const nextCover = page.getByRole('dialog')
     await expect(nextCover).toHaveCount(1)
 
