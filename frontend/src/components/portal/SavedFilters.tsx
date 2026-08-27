@@ -114,7 +114,7 @@ export function SavedFilters<T extends object>({
               if (e.key === 'Escape') setNaming(false)
             }}
             placeholder={t('savedFilters.namePlaceholder', '조건 이름 (예: 내 팀 승인 대기)')}
-            className="h-8 w-52 rounded-lg border border-control bg-canvas/60 px-3 text-xs outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="h-8 w-52 rounded-lg border border-hairline bg-canvas/60 px-3 text-xs outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
           <button
             type="button"

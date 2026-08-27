@@ -413,7 +413,7 @@ function ApprovalsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('approvals.searchPlaceholder', '제목, ID, 요청자 검색...')}
-          className="h-10 rounded-lg border border-control bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
+          className="h-10 rounded-lg border border-hairline bg-surface px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:ml-auto pc:w-64"
         />
       </div>
 
@@ -823,7 +823,7 @@ function ApprovalsPage() {
                         setCanceling(o)
                         setCancelReason('')
                       }}
-                      className="rounded-lg border border-danger-ink/70 bg-danger-ink/15 px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                      className="rounded-lg border border-danger-ink/45 bg-danger-ink/15 px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-80"
                     >
                       {t('approvals.cancelRequest', '이 건 취소')}
                     </button>
@@ -918,7 +918,7 @@ function ApprovalsPage() {
                   onChange={(e) => setOpinion(e.target.value)}
                   rows={3}
                   placeholder={t('approvals.opinionPlaceholder', '승인/반려 의견을 입력하세요...')}
-                  className="min-h-20 mt-1.5 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
+                  className="min-h-20 mt-1.5 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-subtle focus:border-primary/60"
                 />
               </div>
             </div>
@@ -1000,7 +1000,7 @@ function ApprovalsPage() {
             onChange={(e) => setCancelReason(e.target.value)}
             rows={3}
             placeholder={t('approvals.cancelReasonPlaceholder', '예: APR-2026-0012 로 통합해 반영합니다')}
-            className="min-h-20 mt-1.5 w-full rounded-lg border border-control bg-surface px-3 py-2 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
+            className="min-h-20 mt-1.5 w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60"
           />
         </Modal>
       )}

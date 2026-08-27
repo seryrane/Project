@@ -354,7 +354,7 @@ function SpecDetailPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: '/approvals' })}
-                className="h-9 rounded-lg border border-pending-ink/70 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
+                className="h-9 rounded-lg border border-pending-ink/45 bg-pending-bg px-3.5 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-85"
               >
                 {t('specDetail.viewApproval', '결재 진행 보기 →')}
               </button>
@@ -543,7 +543,7 @@ function SpecDetailPage() {
                   <button
                     type="button"
                     onClick={() => navigate({ to: '/approvals' })}
-                    className="h-9 shrink-0 rounded-lg border border-pending-ink/70 bg-pending-ink/15 px-3 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-80"
+                    className="h-9 shrink-0 rounded-lg border border-pending-ink/45 bg-pending-ink/15 px-3 text-[13px] font-semibold text-pending-ink transition-opacity hover:opacity-80"
                   >
                     {t('specDetail.viewApproval', '결재 진행 보기 →')}
                   </button>
@@ -577,7 +577,7 @@ function SpecDetailPage() {
                 <button
                   type="button"
                   onClick={() => navigate({ to: '/approvals' })}
-                  className="h-9 shrink-0 rounded-lg border border-danger-ink/70 bg-danger-ink/15 px-3 text-[13px] font-semibold text-danger-ink transition-opacity hover:opacity-80"
+                  className="h-9 shrink-0 rounded-lg border border-danger-ink/45 bg-danger-ink/15 px-3 text-[13px] font-semibold text-danger-ink transition-opacity hover:opacity-80"
                 >
                   {t('specDetail.resolveConflict', '겹침 정리하러 가기 →')}
                 </button>
@@ -675,7 +675,7 @@ function SpecDetailPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('specDetail.searchFields', '필드명·설명 검색...')}
-            className="ml-auto h-9 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-56"
+            className="ml-auto h-9 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none placeholder:text-ink-subtle focus:border-primary/60 pc:w-56"
           />
         </div>
 
@@ -1100,7 +1100,7 @@ function FieldEditor({
               value={draft.maxLen ?? ''}
               onChange={(e) => set('maxLen', e.target.value === '' ? null : Number(e.target.value))}
               placeholder="—"
-              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-6 flex items-center justify-between gap-2.5 rounded-xl bg-chip px-3.5 py-2.5">
@@ -1118,7 +1118,7 @@ function FieldEditor({
             value={draft.desc}
             onChange={(e) => set('desc', e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-lg border border-control bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
+            className="mt-1 w-full rounded-lg border border-hairline bg-canvas/60 px-3 py-2.5 text-[13px] outline-none focus:border-primary/60"
           />
         </label>
         <label className="block">
@@ -1129,7 +1129,7 @@ function FieldEditor({
             value={draft.rule ?? ''}
             onChange={(e) => set('rule', e.target.value === '' ? null : e.target.value)}
             placeholder={t('specDetail.rulePlaceholder', '예: ^[A-Z]{2}\\d{4}$')}
-            className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none placeholder:font-sans focus:border-primary/60"
+            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none placeholder:font-sans focus:border-primary/60"
           />
         </label>
         <label className="block">
@@ -1137,7 +1137,7 @@ function FieldEditor({
           <input
             value={draft.owner}
             onChange={(e) => set('owner', e.target.value)}
-            className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+            className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
           />
         </label>
       </div>

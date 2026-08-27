@@ -450,7 +450,7 @@ function ValidationEnginePage() {
               <input
                 defaultValue={editing === 'new' ? '' : editing.name}
                 placeholder={t('engine.namePlaceholder', '예: NULL 값 검증 엔진')}
-                className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
               />
             </label>
             <div>
@@ -472,7 +472,7 @@ function ValidationEnginePage() {
             <input
               defaultValue={editing === 'new' ? '' : editing.desc}
               placeholder={t('engine.descPlaceholder', '엔진 설명')}
-              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-3 grid grid-cols-1 gap-3 pc:grid-cols-2">
@@ -482,7 +482,7 @@ function ValidationEnginePage() {
               </span>
               <input
                 defaultValue={editing === 'new' ? 'spec_fields' : editing.targetTable}
-                className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
               />
             </label>
             <label className="block">
@@ -492,7 +492,7 @@ function ValidationEnginePage() {
               <input
                 defaultValue={editing === 'new' ? '' : editing.targetFields}
                 placeholder={t('engine.fieldsPlaceholder', 'item_code, item_name (쉼표 구분)')}
-                className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
+                className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 font-mono text-xs outline-none focus:border-primary/60"
               />
             </label>
           </div>
@@ -509,7 +509,7 @@ function ValidationEnginePage() {
               defaultValue={editing === 'new' ? ENGINE_TEMPLATE : editing.code}
               rows={12}
               spellCheck={false}
-              className="mt-1 w-full rounded-lg border border-control bg-sidebar px-3 py-2.5 font-mono text-xs leading-relaxed text-sidebar-ink outline-none focus:border-primary/60"
+              className="mt-1 w-full rounded-lg border border-hairline bg-sidebar px-3 py-2.5 font-mono text-xs leading-relaxed text-sidebar-ink outline-none focus:border-primary/60"
             />
           </label>
           <p className="mt-2 rounded-lg border border-review-ink/30 bg-review-bg px-3 py-2 text-xs text-review-ink">
@@ -583,7 +583,7 @@ function ValidationEnginePage() {
             <input
               type="time"
               defaultValue="02:00"
-              className="mt-1 h-10 w-full rounded-lg border border-control bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
+              className="mt-1 h-10 w-full rounded-lg border border-hairline bg-canvas/60 px-3 text-[13px] tabular-nums outline-none focus:border-primary/60"
             />
           </label>
           <div className="mt-4 flex items-center justify-between rounded-xl bg-chip px-3.5 py-3">

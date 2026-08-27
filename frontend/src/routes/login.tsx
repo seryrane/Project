@@ -117,7 +117,7 @@ function LoginPage() {
           <h2 className="whitespace-pre-line text-2xl font-bold leading-snug text-white">
             {t('login.brand.title')}
           </h2>
-          <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/70">
+          <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/45">
             {t('login.brand.desc')}
           </p>
         </m.div>
@@ -185,7 +185,7 @@ function LoginPage() {
                   autoComplete="username"
                   placeholder={t('login.idPlaceholder')}
                   className={`mt-1 h-11 w-full rounded-xl border bg-surface px-3.5 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
-                    idHint ? 'border-danger-ink/70' : 'border-control'
+                    idHint ? 'border-danger-ink/50' : 'border-hairline'
                   }`}
                 />
                 {idHint && <span className="mt-1 block text-xs text-danger-ink">{idHint}</span>}
@@ -201,7 +201,7 @@ function LoginPage() {
                     autoComplete="current-password"
                     placeholder={t('login.pwPlaceholder')}
                     className={`h-11 w-full rounded-xl border bg-surface px-3.5 pr-11 text-[13px] outline-none transition-colors placeholder:text-ink-subtle focus:border-primary/60 ${
-                      pwHint ? 'border-danger-ink/70' : 'border-control'
+                      pwHint ? 'border-danger-ink/50' : 'border-hairline'
                     }`}
                   />
                   <button
@@ -372,7 +372,7 @@ function LoginPage() {
               value={forgotEmail}
               onChange={(e) => setForgotEmail(e.target.value)}
               placeholder="name@hmg.com"
-              className="mt-1 h-11 w-full rounded-xl border border-control bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
+              className="mt-1 h-11 w-full rounded-xl border border-hairline bg-canvas/60 px-3.5 text-[13px] outline-none focus:border-primary/60"
             />
           </label>
         </Modal>
