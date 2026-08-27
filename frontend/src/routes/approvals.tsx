@@ -132,17 +132,19 @@ function ApprovalsPage() {
   const [cooldown, setCooldown] = useState(false)
   /** 이 자리에서(모달을 연 뒤로) 몇 건을 처리했나 — 진행 점 ●●○○ 의 채움 */
   const [doneThisRun, setDoneThisRun] = useState(0)
-  /** 처리 순간 **모달 몸이 날아가는** 연출 — 판단이 몸에 남는다(2026-08-26 요청).
-   *  다음 건은 아래 겹침에서 올라온다(deal-in). 값은 처리 종류(승인/반려). */
+  /** 처리 순간 **덮개가 제자리에서 꺼지는** 연출 — 판단이 몸에 남는다(2026-08-26 요청).
+   *  덮개가 사라진 뒤, 남은 건이 있으면 **새 덮개로** 열린다. 값은 처리 종류(승인/반려). */
   const [flying, setFlying] = useState<'승인' | '반려' | null>(null)
-  /** 예약된 교체(연출이 끝나면 다음 건을 세운다)를 되돌릴 손잡이 — 닫기가 이것을 이긴다 */
+  /** 예약된 걸음(꺼짐 → 언마운트 → 다음 덮개)을 되돌릴 손잡이 — 닫기가 이것을 이긴다 */
   const flyTimer = useRef<number | null>(null)
+  /* ⚠ **예약만 끊고 `flying` 은 안 건드린다.** 여기서 flying 을 지우면 나가던 패널이 꺼지다
+     말고 제자리로 튀어 오른다(연출 클래스가 떨어져 원래 크기로 돌아간다). 꺼지는 그림은
+     끝까지 두고, 값은 덮개가 실제로 걷힐 때(onClose) 함께 지운다. */
   const cancelFly = () => {
     if (flyTimer.current !== null) {
       window.clearTimeout(flyTimer.current)
       flyTimer.current = null
     }
-    setFlying(null)
   }
   const [lineOpen, setLineOpen] = useState(false)
   /* 겹침 정리 — 취소는 **남의 요청을 내리는 일**이라 사유 없이는 못 누른다 (workflow 가 막지만
@@ -224,15 +226,26 @@ function ApprovalsPage() {
        바로 세운다** — 판단은 여전히 한 건씩 하되(승인/반려 버튼은 그대로), 오가는 걸음만
        줄인다. 마지막 건을 처리하면 덮개가 닫힌다(더 세울 것이 없으면 자리를 비운다). */
     const next = queueAfter(req.id)
-    /* ⚠ **다음 건 교체를 연출 뒤로 미룬다.** 바로 바꾸면 dealKey 가 갈려 날아가던 패널이
-       한 프레임 만에 언마운트된다 — 궤적이 안 남아 "아무 일도 안 났다"로 읽힌다.
-       ⚠ 그렇다고 연출 끝(380ms)까지 기다리지도 않는다: 실측상 패널 왼쪽 모서리가 280ms 에
-       이미 화면 밖이고 뒤 100ms 는 안 보이는 데서 투명해지는 시간이라, 380 을 쓰면 빈 무대가
-       100ms 뜬다. 300ms — 연출 길이(styles.css `.anim-decide-*`)를 고치면 이 값도 다시 잰다. */
+    /* 걸음은 셋이다 — **꺼진다 → 빈 화면 → 새로 열린다.**
+       ① 0~280ms: 덮개가 제자리에서 꺼진다(styles.css `.anim-decide-*`, 배경막도 함께).
+       ② 300ms: 언마운트. 연출이 이미 끝났으니 사라지는 순간이 안 보인다.
+          ⚠ 여기서 `setDetail(next)` 로 **바꿔치기하면 안 된다** — 창이 안 사라지고 내용만
+            갈리면 "장을 넘긴다"가 되어, 사용자가 고른 "이 창은 끝났다"와 뜻이 어긋난다
+            (2026-08-27 교정).
+       ③ +160ms: 남은 건이 있으면 **새 덮개**로 연다. 빈 화면을 한 번 거쳐야 앞 창이
+          끝난 것으로 읽힌다 — 곧바로 이어 열면 그냥 깜빡인 것처럼 보인다.
+       ⚠ ①②③ 의 합(약 460ms)은 연타 잠금 cooldown(700ms) 안에 있어야 한다. */
     flyTimer.current = window.setTimeout(() => {
-      flyTimer.current = null
       setFlying(null)
-      setDetail(next)
+      setDetail(null)
+      if (!next) {
+        flyTimer.current = null
+        return
+      }
+      flyTimer.current = window.setTimeout(() => {
+        flyTimer.current = null
+        setDetail(next)
+      }, 160)
     }, 300)
     // 마지막 단계가 아니면 **아직 끝난 게 아니다** — 다음 결재자에게 넘어갔다고 말한다
     if (action === '승인' && !res.finished) {
@@ -642,11 +655,15 @@ function ApprovalsPage() {
               )}
             </span>
           }
+          /* ⚠⚠ **연출 중에 닫으면 덮개가 되살아났다** (2026-08-27 e2e 가 잡음: 반려 →
+             곧바로 Esc → 0.3초 뒤 예약된 걸음이 다음 건을 다시 세운다). 사람이 닫겠다고 한
+             것이 예약보다 뒤에 오면 안 되는데, `onClose` 는 퇴장이 **끝난 뒤**라 늦다 —
+             그 사이 예약이 먼저 터져 덮개를 걷어 버리면 `onClose` 는 아예 안 온다.
+             그래서 **닫겠다고 한 순간**(onDismiss)에 예약을 끊는다. */
+          onDismiss={cancelFly}
           onClose={() => {
-            /* ⚠⚠ **날아가는 중에 닫으면 덮개가 되살아났다** (2026-08-27 e2e 가 잡음:
-               반려 → 곧바로 Esc → 0.3초 뒤 예약된 교체가 다음 건을 다시 세운다).
-               사람이 닫겠다고 한 것이 예약된 연출보다 뒤에 오면 안 된다 — 먼저 취소한다. */
             cancelFly()
+            setFlying(null)
             setDetail(null)
             setOpinion('')
             setJustDone(null)
@@ -655,11 +672,10 @@ function ApprovalsPage() {
           /* 뒤에 남은 내 차례 수만큼 종이가 겹쳐 보인다 — "이 건 뒤에 더 있다"의 물리적
              표현(글자 카운터만으로는 약하다, 2026-08-26 사용자 지적) */
           stack={detail.myTurn ? pending.filter((r) => r.myTurn && r.id !== detail.id).length : 0}
-          /* 처리 순간 **패널 전체**가 날아간다 — 요약 카드 한 장(높이 87px)만 움직이던
-             1판은 "느낌이 안 났다"(2026-08-26 사용자). 겹침 lip 은 패널 밖에 있어서
-             제자리에 남는다 — 위 한 장만 날아가고 덱은 그대로다. */
+          /* 처리 순간 **덮개 전체**가 제자리에서 꺼진다 — 요약 카드 한 장만 움직이던 1판은
+             "느낌이 안 났다", 옆으로 던지던 3판은 "장을 넘기는" 뜻이 됐다(2026-08-27 교정).
+             배경막까지 관문이 함께 걷는다. */
           flying={flying}
-          dealKey={detail.id}
           /* ⚠ 발은 **내 차례일 때만** 선다 — 조작이 없는데 빈 발을 세우면 "여기서 무언가
              해야 하나"로 읽힌다 (규약 §7). 내 차례가 아니면 몸이 그 사실을 말한다. */
           footer={
@@ -677,8 +693,9 @@ function ApprovalsPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        // 닫기와 같은 이유 — 손이 고른 건이 예약된 교체에 덮이면 안 된다
+                        // 닫기와 같은 이유 — 손이 고른 건이 예약된 걸음에 덮이면 안 된다
                         cancelFly()
+                        setFlying(null)
                         setDetail(queueAfter(detail.id))
                         setOpinion('')
                       }}
@@ -732,8 +749,8 @@ function ApprovalsPage() {
               </span>
             </div>
           )}
-          {/* ⚠ 연출은 여기서 **뺐다** — 이 요약 카드만 날아가던 것이 1판이었다. 몸 전체를
-              던지는 일은 Modal 관문이 한다(flying·dealKey). 두 곳이 같이 날면 겹쳐 보인다. */}
+          {/* ⚠ 연출은 여기서 **뺐다** — 이 요약 카드만 날아가던 것이 1판이었다. 덮개가
+              꺼지는 일은 Modal 관문이 한다(flying). 두 곳이 같이 움직이면 겹쳐 보인다. */}
           <div className="rounded-xl border border-hairline bg-canvas/50 px-4 py-3.5">
             <div className="flex flex-wrap items-center gap-2">
               {detail.urgent && <UrgentChip />}
