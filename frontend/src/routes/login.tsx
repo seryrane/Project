@@ -9,6 +9,7 @@ import { ToastProvider, useToast } from '#/components/portal/toast'
 import { apiPost, setToken } from '#/lib/api'
 import { OFFLINE } from '#/lib/offline'
 import { useI18n } from '#/lib/i18n'
+import { useTheme } from '#/lib/useTheme'
 
 export const Route = createFileRoute('/login')({ component: LoginShell })
 
@@ -42,6 +43,7 @@ function LoginPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const { locale, setLocale, t, tf } = useI18n()
+  const { theme, toggle } = useTheme()
   const [id, setId] = useState('')
   const [pw, setPw] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -101,18 +103,23 @@ function LoginPage() {
   return (
     <div className="flex min-h-dvh bg-canvas text-ink">
       {/* 좌: 브랜드 패널 — 좁은 화면에서는 접는다 */}
-      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-sidebar p-10 pc:flex">
+      {/* ⚠⚠ 이 패널은 **두 테마 모두** 산다 — 사이드바 면(`--color-sidebar`)은 다크에서 검고
+          라이트에서 **희다**. 그래서 여기에 `text-white` 를 박으면 라이트에서 글자가 통째로
+          사라진다(2026-09-01 사용자 지적: "라이트모드 왼쪽 영역"). 글자는 반드시
+          `sidebar-strong`/`sidebar-ink` 토큰으로 — 그 짝이 면을 따라 뒤집힌다(규약: 콘텐츠에
+          white/* 금지와 같은 병). 경계선도 라이트에서 캔버스와 갈라 주려면 필요하다. */}
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden border-r border-sidebar-line bg-sidebar p-10 pc:flex">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 top-1/4 h-96 w-96 rounded-full bg-primary/20 blur-[120px]"
+          className="pointer-events-none absolute -right-24 top-1/4 h-96 w-96 rounded-full bg-[var(--color-brand-blob)] blur-[120px]"
         />
         <div className="flex items-center gap-2.5">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent2 text-sm font-bold text-white">
             H
           </span>
           <span className="leading-tight">
-            <span className="block text-sm font-semibold text-white">HMG Admin</span>
-            <span className="block text-xs text-sidebar-ink/60">{t('brand.tagline')}</span>
+            <span className="block text-sm font-semibold text-sidebar-strong">HMG Admin</span>
+            <span className="block text-xs text-sidebar-ink">{t('brand.tagline')}</span>
           </span>
         </div>
         <m.div
@@ -122,14 +129,14 @@ function LoginPage() {
           className="relative"
         >
           {/* 두 프로젝트(센터 KPI 품질 + IBD 사양서)가 한 포털 — 어느 한쪽으로 기울지 않는다 */}
-          <h2 className="whitespace-pre-line text-2xl font-bold leading-snug text-white">
+          <h2 className="whitespace-pre-line text-2xl font-bold leading-snug text-sidebar-strong">
             {t('login.brand.title')}
           </h2>
-          <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink/45">
+          <p className="mt-3 max-w-sm text-[13px] leading-relaxed text-sidebar-ink">
             {t('login.brand.desc')}
           </p>
         </m.div>
-        <p className="text-xs text-sidebar-ink/50">{t('brand.loginFooter')}</p>
+        <p className="text-xs text-sidebar-ink/80">{t('brand.loginFooter')}</p>
       </div>
 
       {/* 우: 로그인 카드 */}
@@ -150,15 +157,28 @@ function LoginPage() {
               <h1 className="text-2xl font-bold">{t('login.title')}</h1>
               <p className="mt-1 text-[13px] text-ink-subtle">{t('login.subtitle')}</p>
             </div>
-            {/* 언어는 로그인 전에도 고른다 — 협력사 사용자에게 첫 화면부터 */}
-            <button
-              type="button"
-              onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
-              aria-label="언어 전환 / Switch language"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-control bg-surface text-xs font-bold text-ink-muted transition-colors hover:text-ink"
-            >
-              {locale === 'ko' ? '한' : 'EN'}
-            </button>
+            {/* 언어와 명암은 로그인 **전에도** 고른다 — 협력사 사용자에게 첫 화면부터.
+                순서는 GNB 와 같다(언어 → 명암) — 같은 두 단추가 화면마다 자리를 바꾸면
+                손이 헤맨다(규약 §15 이름·자리 어긋남). */}
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLocale(locale === 'ko' ? 'en' : 'ko')}
+                aria-label="언어 전환 / Switch language"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-surface text-xs font-bold text-ink-muted transition-colors hover:text-ink"
+              >
+                {locale === 'ko' ? '한' : 'EN'}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => toggle(e)}
+                aria-label={t('gnb.toggleTheme', '테마 전환')}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-control bg-surface text-ink-muted transition-colors hover:text-ink"
+              >
+                {/* 해·달은 관문의 같은 펜으로 (규약 §22) — 누른 자리에서 원이 퍼진다 */}
+                <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+              </button>
+            </div>
           </div>
 
           {/* SSO — 프로토콜 미정(요구사항)이라 자리만. 협력사는 아래 일반 로그인 */}
