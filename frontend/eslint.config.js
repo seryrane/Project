@@ -15,6 +15,7 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js'],
+    // dist-offline 은 전달본 빌드 산출물(한 파일로 접기 전의 번들) — 소스가 아니다
+    ignores: ['eslint.config.js', 'prettier.config.js', 'dist-offline/'],
   },
 ]

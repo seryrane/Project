@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import type { Page } from '@playwright/test'
+
 /**
  * 상태 보드 끌어 놓기 — **끌기 = 의도, 패널 = 관문** (2026-08-26 사용자 제안).
  * 끌어 놓아도 상태는 바뀌지 않는다: 그 걸음의 결재 패널이 열리고, 확정해야
@@ -10,9 +12,9 @@ import { expect, test } from '@playwright/test'
 test.describe('상태 보드 끌어 놓기', () => {
   test.use({ viewport: { width: 1600, height: 1000 }, isMobile: false })
 
-  const card = (page: import('@playwright/test').Page, name: string) =>
+  const card = (page: Page, name: string) =>
     page.locator('a').filter({ hasText: name }).first()
-  const lane = (page: import('@playwright/test').Page, status: string) =>
+  const lane = (page: Page, status: string) =>
     page.locator('section').filter({ has: page.getByRole('heading', { name: status, exact: true }) }).first()
 
   test('초안 → 승인 대기: 상신 패널이 열리고, 상신해야 카드가 옮겨간다', async ({ page }) => {

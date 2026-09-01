@@ -10,6 +10,7 @@ import { layoutSpring, m } from '#/components/portal/motion'
 import { WidgetSkeleton } from '#/components/portal/Skeleton'
 import { apiGet, apiSend, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
+import { menuVisible } from '#/lib/offline'
 import {
   ActivityHeatmap,
   ChartCard,
@@ -36,6 +37,7 @@ import { specStatusDistribution, useSpecList } from '#/data/specStore'
 import { notices } from '#/data/community'
 import {
   ROLE_PRESETS,
+  WIDGET_IDS,
   WIDGET_META,
   loadLayout,
   saveLayout,
@@ -124,6 +126,14 @@ function DashboardPage() {
   const goResults = () => navigate({ to: '/validation-results' })
   const goReports = () => navigate({ to: '/validation-reports' })
   const goApprovals = () => navigate({ to: '/approvals' })
+  /* ⚠ 오프라인 전달본은 검증엔진 메뉴를 걷는다 — 카드 우상단 다리도 함께 걷지 않으면
+     "검증 결과 →" 를 눌렀을 때 LNB 에 없는 화면으로 떨어진다(규약 §17). 평소엔 그대로. */
+  const linkResults = menuVisible('/validation-results')
+    ? { label: t('dash.action.results'), onClick: goResults }
+    : undefined
+  const linkReports = menuVisible('/validation-reports')
+    ? { label: t('nav.reports'), onClick: goReports }
+    : undefined
   const openSpec = (id: string) => navigate({ to: '/specs', search: { open: id } })
 
   /* ── 숫자는 정본에서 센다 (규약 §10 "같은 이름의 숫자는 한 곳에서") ──
@@ -170,7 +180,12 @@ function DashboardPage() {
     void apiGet<{ layout: Array<WidgetSlot> | null }>('/me/dashboard-layout').then((res) => {
       const server = res?.layout
       if (server && server.length > 0) {
-        setLayout(server.filter((s) => s.id in WIDGET_META && [1, 2, 3].includes(s.size)))
+        setLayout(
+          server.filter(
+            (s) =>
+              s.id in WIDGET_META && [1, 2, 3].includes(s.size) && menuVisible(WIDGET_META[s.id].to),
+          ),
+        )
       }
     })
     if (sessionStorage.getItem('dashboard.booted') === '1') {
@@ -206,7 +221,7 @@ function DashboardPage() {
   const hide = (idx: number) => apply(layout.filter((_, i) => i !== idx))
   const show = (id: WidgetId) => apply([...layout, { id, size: 1 }])
 
-  const hiddenWidgets = (Object.keys(WIDGET_META) as Array<WidgetId>).filter(
+  const hiddenWidgets = WIDGET_IDS.filter(
     (id) => !layout.some((s) => s.id === id),
   )
 
@@ -276,7 +291,7 @@ function DashboardPage() {
           { range: rangeLabel },
           '{range} · 단위: 천 건 · 점선은 이전 동일 기간',
         )}
-        action={{ label: t('dash.action.results'), onClick: goResults }}
+        action={linkResults}
       >
         <TrendLineChart data={slice} compare={prevSlice.length === slice.length ? prevSlice : undefined} />
       </ChartCard>
@@ -315,7 +330,7 @@ function DashboardPage() {
       <ChartCard
         title={t('widget.heatmap', '검증 실행 히트맵')}
         subtitle={t('dash.heatmap.subtitle', '최근 25주 · 일별 처리량 (짙을수록 많음)')}
-        action={{ label: t('nav.reports'), onClick: goReports }}
+        action={linkReports}
       >
         <ActivityHeatmap days={heatmapDays} />
       </ChartCard>
@@ -385,7 +400,7 @@ function DashboardPage() {
           { range: rangeLabel },
           '{range} 누적 · 증감은 이전 동일 기간 대비',
         )}
-        action={{ label: t('dash.action.results'), onClick: goResults }}
+        action={linkResults}
       >
         <ErrorBarChart data={scaledErrors} />
       </ChartCard>
@@ -418,7 +433,7 @@ function DashboardPage() {
       <ChartCard
         title={t('widget.pipeline', '데이터 파이프라인')}
         subtitle={t('dash.pipeline.subtitle', 'CDO 수신 · 마트 적재 배치')}
-        action={{ label: t('dash.action.results'), onClick: goResults }}
+        action={linkResults}
       >
         <ol className="space-y-2">
           {pipelines.map((p) => (

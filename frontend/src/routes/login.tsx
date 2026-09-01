@@ -7,6 +7,7 @@ import { MotionRoot, m } from '#/components/portal/motion'
 import { CtaButton } from '#/components/portal/Skeleton'
 import { ToastProvider, useToast } from '#/components/portal/toast'
 import { apiPost, setToken } from '#/lib/api'
+import { OFFLINE } from '#/lib/offline'
 import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/login')({ component: LoginShell })
@@ -76,6 +77,13 @@ function LoginPage() {
 
   const login = async () => {
     setError('')
+    /* 오프라인 전달본에는 서버가 없다 — 로그아웃하고 나면 다시 들어올 길이 막힌다.
+       ⚠ 인증을 무르게 만든 게 아니다: 이 가지는 `VITE_OFFLINE` 빌드에만 존재하고,
+       평소 빌드에서는 컴파일 시점에 죽은 가지라 서버 판정 그대로다. */
+    if (OFFLINE) {
+      finish('offline-demo', '김현대')
+      return
+    }
     const res = await apiPost<
       { step: 'done'; token: string; user: { name: string } } | { step: 'fido'; ticket: string; name: string }
     >('/auth/login', { id: id.trim(), password: pw })

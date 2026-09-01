@@ -27,3 +27,6 @@ backend-python/data/
 backend/data/
 backend/boot.log
 backend/boot-err.log
+
+# 오프라인 전달본 빌드 산출물 (파일 하나로 접어 밖으로 내보낸다)
+frontend/dist-offline/

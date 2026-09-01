@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
 
 import { ToastProvider } from '#/components/portal/toast'
 import { applySavedAccent } from '#/lib/accent'
+import { OFFLINE } from '#/lib/offline'
 import { I18nProvider } from '#/lib/i18n'
 
 import appCss from '../styles.css?url'
@@ -28,8 +29,24 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  shellComponent: RootDocument,
+  /* ⚠ 문서 뼈대는 **누가 그리느냐가 빌드마다 다르다.**
+     평소(서버 렌더)에는 이 셸이 `<html>` 부터 그린다.
+     오프라인 전달본은 서버가 없어 `offline/index.html` 이 뼈대를 들고 있으므로,
+     여기서 또 `<html>` 을 그리면 문서 안에 문서가 겹친다 — 껍데기만 남긴다. */
+  ...(OFFLINE ? { component: RootBody } : { shellComponent: RootDocument }),
 })
+
+/** 오프라인 전달본의 뿌리 — 뼈대는 index.html, 여기는 공용 Provider 만 */
+function RootBody() {
+  useEffect(() => applySavedAccent(), [])
+  return (
+    <I18nProvider>
+      <ToastProvider>
+        <Outlet />
+      </ToastProvider>
+    </I18nProvider>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   // 포인트 색상은 계정 설정 — 수화 직후 저장값을 입힌다 (테마 초기화와 같은 시점)

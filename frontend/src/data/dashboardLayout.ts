@@ -9,6 +9,8 @@
  * (서버 RBAC) 응답으로 갈아끼우면 이 파일의 파생 로직은 그대로 산다.
  */
 
+import { menuVisible } from '#/lib/offline'
+
 export type WidgetId =
   | 'kpi'
   | 'trend'
@@ -32,7 +34,7 @@ export interface WidgetSlot {
 /** 위젯이 요구하는 기능 키 — 서버 RBAC 기능 코드와 1:1 로 맞춘다 */
 export const WIDGET_META: Record<
   WidgetId,
-  { title: string; feature: string; defaultSize: WidgetSize }
+  { title: string; feature: string; defaultSize: WidgetSize; to?: string }
 > = {
   kpi: { title: 'KPI 요약', feature: 'dashboard.read', defaultSize: 3 },
   trend: { title: '일별 검증 처리량', feature: 'validation.stats', defaultSize: 2 },
@@ -43,13 +45,15 @@ export const WIDGET_META: Record<
   activity: { title: '최근 활동', feature: 'activity.read', defaultSize: 1 },
   system: { title: '시스템 현황', feature: 'monitoring.read', defaultSize: 2 },
   pipeline: { title: '데이터 파이프라인', feature: 'pipeline.read', defaultSize: 1 },
-  members: { title: '권한별 회원 분포', feature: 'member.read', defaultSize: 1 },
+  members: { title: '권한별 회원 분포', feature: 'member.read', defaultSize: 1, to: '/members' },
   // 커뮤니티는 최소 메뉴 — 아래 모든 역할이 이 기능을 가져 전 프리셋에 파생 편입된다
-  notice: { title: '최근 공지', feature: 'community.read', defaultSize: 1 },
+  notice: { title: '최근 공지', feature: 'community.read', defaultSize: 1, to: '/notice' },
 }
 
-/** 파생 순서의 정본 — 역할과 무관하게 같은 위젯은 같은 자리 감각을 유지한다 */
-const CANONICAL_ORDER: Array<WidgetId> = [
+/** 파생 순서의 정본 — 역할과 무관하게 같은 위젯은 같은 자리 감각을 유지한다.
+ *  ⚠ 위젯이 **가리키는 화면이 없으면 위젯도 없다** — 오프라인 전달본에서 LNB 만 걷고
+ *  위젯을 두면 "전체 보기"가 사라진 화면으로 간다(규약 §17). 관문 하나가 둘을 함께 건다. */
+const ALL_WIDGETS: Array<WidgetId> = [
   'kpi',
   'trend',
   'status',
@@ -62,6 +66,11 @@ const CANONICAL_ORDER: Array<WidgetId> = [
   'members',
   'notice',
 ]
+
+const CANONICAL_ORDER: Array<WidgetId> = ALL_WIDGETS.filter((id) => menuVisible(WIDGET_META[id].to))
+
+/** 위젯 추가 목록이 보는 정본 — 배치에서 뺀 것만 고를 수 있다(없는 화면의 위젯은 애초에 없다) */
+export const WIDGET_IDS: Array<WidgetId> = CANONICAL_ORDER
 
 interface RoleDef {
   key: string
@@ -165,7 +174,13 @@ export function loadLayout(): Array<WidgetSlot> {
     if (!raw) return DEFAULT_LAYOUT
     const parsed = JSON.parse(raw) as Array<WidgetSlot>
     // 저장본에 모르는 위젯이 있으면 버리고, 새 위젯이 생겼으면 그대로 둔다(추가는 편집에서)
-    const valid = parsed.filter((s) => s.id in WIDGET_META && [1, 2, 3].includes(s.size))
+    const valid = parsed.filter(
+      (s) =>
+        s.id in WIDGET_META &&
+        [1, 2, 3].includes(s.size) &&
+        // 저장본에 전달본이 안 가진 위젯이 있으면 버린다 (같은 브라우저로 두 벌을 볼 때)
+        menuVisible(WIDGET_META[s.id].to),
+    )
     return valid.length > 0 ? valid : DEFAULT_LAYOUT
   } catch {
     return DEFAULT_LAYOUT
