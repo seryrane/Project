@@ -9,6 +9,7 @@ import { TableauEmbed } from '#/components/portal/TableauEmbed'
 import { useToast } from '#/components/portal/toast'
 import { iviTrend } from '#/data/kpi'
 import { apiSend, useApi } from '#/lib/api'
+import { OFFLINE } from '#/lib/offline'
 import { useI18n } from '#/lib/i18n'
 
 export const Route = createFileRoute('/kpi-ivi')({ component: KpiIviPage })
@@ -26,17 +27,32 @@ interface EmbedItem {
  * 워크북은 관리자가 URL 로 등록한다(코드 배포 없이 편입 — 회의록: "임베드 링크
  * 따서 아이프레임으로"). ⚠ SSO 확정 전에는 공개/티켓 링크만 표출된다.
  */
+/** 오프라인 전달본용 등록부 시드 — 서버 시드와 같은 값(backend-python/app/seeds.py EMBEDS) */
+const DEMO_EMBEDS: Array<EmbedItem> = [
+  {
+    id: 'E-01',
+    title: 'IVI KPI 샘플 워크북 (Tableau Public 데모)',
+    url: 'https://public.tableau.com/views/RegionalSampleWorkbook/Storms',
+    area: 'IVI',
+  },
+]
+
 function KpiIviPage() {
   const { t, tf } = useI18n()
   const toast = useToast()
-  const [mode, setMode] = useState<'tableau' | 'native'>('tableau')
+  /* 오프라인 전달본은 **자체 UI 부터** 연다 — Tableau 는 바깥 서버라 파일로만 보는 자리에서는
+     그림이 안 뜬다(임베딩 탭에는 그 이유가 적힌 자리가 대신 선다). 평소엔 임베딩이 먼저다. */
+  const [mode, setMode] = useState<'tableau' | 'native'>(OFFLINE ? 'native' : 'tableau')
   const [current, setCurrent] = useState(0)
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newUrl, setNewUrl] = useState('')
 
-  // 워크북 등록부 정본은 서버 — 서버가 없으면 빈 목록(등록 안내가 뜬다)
-  const { data: workbooks, reload } = useApi<Array<EmbedItem>>('/embeds', [])
+  /* 워크북 등록부 정본은 서버 — 서버가 없으면 빈 목록(등록 안내가 뜬다).
+     ⚠ 오프라인 전달본은 서버를 아예 안 부르므로 그 안내가 **늘** 뜬다 — 등록부라는 구조를
+     못 보여 준 채 "빈 화면"으로 읽힌다. 서버 시드(backend-python seeds.EMBEDS)와 같은 한 건을
+     들려 보내, 등록 목록·선택 칩·주소 줄까지 그대로 보이게 한다. */
+  const { data: workbooks, reload } = useApi<Array<EmbedItem>>('/embeds', OFFLINE ? DEMO_EMBEDS : [])
 
   const urlHint =
     newUrl !== '' && !newUrl.startsWith('https://')

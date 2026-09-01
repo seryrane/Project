@@ -8,6 +8,8 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 
+import { OFFLINE } from './offline'
+
 const TOKEN_KEY = 'auth.token'
 
 /** 약식 세션 토큰 (SSO·JWT 정책 확정 전) — 관문만 알고, 화면은 모른다 */
@@ -30,7 +32,11 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+/* 오프라인 전달본에는 서버가 없다 — `file://` 에서 fetch 는 **주소를 파일 경로로 읽어**
+   `file:///C:/api/me` 를 찾다 실패하고, 콘솔에 붉은 줄만 남긴다(화면은 mock 으로 잘 돈다).
+   리뷰어가 개발자 도구를 열어 보고 "오류가 잔뜩"이라 읽는 자리라, 아예 묻지 않는다. */
 export async function apiGet<T>(path: string): Promise<T | null> {
+  if (OFFLINE) return null
   try {
     const res = await fetch(`/api${path}`, { headers: authHeaders() })
     if (!res.ok) return null
@@ -45,6 +51,7 @@ export async function apiSend(
   path: string,
   body?: unknown,
 ): Promise<boolean> {
+  if (OFFLINE) return false
   try {
     const res = await fetch(`/api${path}`, {
       method,
@@ -62,6 +69,9 @@ export async function apiPost<T>(
   path: string,
   body: unknown,
 ): Promise<{ ok: boolean; status: number; data: T | null; detail: string }> {
+  if (OFFLINE) {
+    return { ok: false, status: 0, data: null, detail: '오프라인 전달본에서는 서버 기능이 동작하지 않습니다.' }
+  }
   try {
     const res = await fetch(`/api${path}`, {
       method: 'POST',

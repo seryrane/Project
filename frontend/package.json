@@ -9,6 +9,7 @@
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build",
+    "build:offline": "vite build --config vite.config.offline.ts && node scripts/pack-offline.mjs",
     "preview": "vite preview",
     "lint": "eslint",
     "e2e": "playwright test",

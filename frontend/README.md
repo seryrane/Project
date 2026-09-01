@@ -17,6 +17,18 @@ To build this application for production:
 npm run build
 ```
 
+## 오프라인 전달본 (파일 하나)
+
+주소 대신 **파일로** 시안을 건넬 때. 받는 쪽은 더블클릭만 하면 된다(서버·인터넷·설치 불필요).
+
+```bash
+npm run build:offline
+# → dist-offline/HMG_포털_시안.html  (약 4.8MB · 핵심 메뉴만)
+```
+
+보일 메뉴와 전달본 전용 동작은 `src/lib/offline.ts` 한 곳에서 정한다.
+자세한 배경과 밟은 함정은 `docs/오프라인_전달본.md`.
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.

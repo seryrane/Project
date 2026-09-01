@@ -9,6 +9,7 @@ import { unseenCount } from '#/data/whatsnew'
 import { apiSend, clearToken, useApi } from '#/lib/api'
 import { useI18n } from '#/lib/i18n'
 import { useTheme } from '#/lib/useTheme'
+import { menuVisible } from '#/lib/offline'
 
 import { AskPanel } from './AskPanel'
 import { Avatar } from './Avatar'
@@ -86,7 +87,7 @@ function NavRow({
 
 /* GNB 알림 — 나를 기다리는 일은 종 하나에 모인다 (규약 §2). 배지 숫자는 "안 본 것".
    누르면 그 일이 있는 화면으로 간다 — 눌렀는데 아무 데도 안 가는 알림이 제일 나쁘다 */
-const NOTIFICATIONS: Array<{
+const ALL_NOTIFICATIONS: Array<{
   icon: IconName
   text: string
   time: string
@@ -100,6 +101,10 @@ const NOTIFICATIONS: Array<{
   { icon: 'deploy', text: '자율주행 센서 통합 규격 v3.1 배포 완료', time: '3시간 전', todo: false, to: '/specs', search: { open: 'SP-003' } },
   { icon: 'bell', text: '[공지] 8월 정기 점검 — 8/9(토) 02:00~06:00', time: '어제', todo: false, to: '/notice' },
 ]
+
+/* ⚠ 알림도 **갈 곳이 있는 것만** 남긴다 — 오프라인 전달본에서 커뮤니티·검증엔진 메뉴를
+   걷으면 그 알림은 누를 데가 없어진다(규약 §17, 위 주석의 "아무 데도 안 가는 알림"). */
+const NOTIFICATIONS = ALL_NOTIFICATIONS.filter((n) => menuVisible(n.to))
 
 /** 본문 폭 — 표·대시보드는 1440, 글을 읽는 화면은 읽기 폭(960).
  *  ⚠ 1680(설계서 폭)이었는데 1920 에서 사이드바 240 을 빼면 딱 1680 이라 좌우에 남는 것이

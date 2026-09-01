@@ -2,6 +2,8 @@
  *  팔레트에 페이지를 손으로 다시 적으면 새 화면이 생길 때마다 어긋난다.
  *  ⚠ 본개발에서는 서버 `GET /api/me/menu` 응답으로 교체 — 소비처는 이 모양만 안다. */
 
+import { menuVisible } from '#/lib/offline'
+
 /** 그림 이름 — 무엇으로 그릴지는 AppShell 의 iconPaths 가 정한다 */
 export type IconName =
   | 'board'
@@ -71,7 +73,7 @@ export interface NavSection {
 /** ⚠ 이 포털은 두 프로젝트(센터 KPI 품질 ICDAP + IBD 사양서 IDMS)의 합본이다 —
  *  프로젝트는 하나지만 **메뉴가 두 프로젝트를 가른다**. 어느 한쪽 낱말로 전체를
  *  부르지 않는다 (2026-08-06 사용자 교정). */
-export const nav: Array<NavSection> = [
+const navAll: Array<NavSection> = [
   {
     id: 'main',
     items: [
@@ -139,3 +141,10 @@ export const nav: Array<NavSection> = [
     ],
   },
 ]
+
+/** LNB·팔레트가 보는 정본.
+ *  오프라인 전달본에서는 **핵심 메뉴만** 남긴다 — 항목이 다 빠진 섹션은 제목도 걷는다(§17).
+ *  평소 빌드에서는 `menuVisible()` 이 늘 true 라 `navAll` 그대로다. */
+export const nav: Array<NavSection> = navAll
+  .map((s) => ({ ...s, items: s.items.filter((it) => menuVisible(it.to)) }))
+  .filter((s) => s.items.length > 0)

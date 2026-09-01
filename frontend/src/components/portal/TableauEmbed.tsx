@@ -9,6 +9,8 @@
  */
 import { useState } from 'react'
 
+import { OFFLINE } from '#/lib/offline'
+
 function withEmbedParams(url: string): string {
   try {
     const u = new URL(url)
@@ -23,6 +25,24 @@ function withEmbedParams(url: string): string {
 
 export function TableauEmbed({ url, title }: { url: string; title: string }) {
   const [loaded, setLoaded] = useState(false)
+
+  /* 오프라인 전달본(파일 하나로 보는 시안)에는 바깥으로 나가는 길이 없다.
+     ⚠ 빈 iframe 을 두면 **로딩이 끝난 흰 판**으로 보인다 — 만들다 만 화면처럼 읽힌다.
+     자리와 이유를 대신 말한다(규약 §17 빈 자리에는 이유를). */
+  if (OFFLINE) {
+    return (
+      <div className="flex h-[52vh] min-h-[360px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-hairline bg-chip/40 px-6 text-center">
+        <span className="text-sm font-semibold text-ink">{title}</span>
+        <span className="max-w-md text-[13px] leading-relaxed text-ink-subtle">
+          Tableau 워크북은 외부 서버에서 불러옵니다 — 오프라인 전달본에서는 이 자리에 뜨지
+          않습니다. 실제 화면에서는 여기에 워크북이 그대로 들어갑니다.
+        </span>
+        <span className="mt-1 max-w-full truncate rounded-md bg-chip px-2 py-1 font-mono text-xs text-ink-subtle">
+          {url}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className={`relative overflow-hidden rounded-xl border border-hairline ${loaded ? '' : 'card-loading'}`}>
