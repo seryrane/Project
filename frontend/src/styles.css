@@ -1227,10 +1227,8 @@ h1, h2, h3 {
   animation: donut-fill 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 45rem = --breakpoint-pc. @theme 토큰은 미디어 쿼리 안에서 못 쓰므로 값을 적는다 */
-@media (min-width: 45rem) {
-  .anim-toast-in { animation-name: toast-in-top; }
-}
+/* ⚠ 토스트는 **두 화면 모두 아래**에서 뜬다(2026-09-02 — toast.tsx 주석의 겹침 사고).
+   위에서 내려오던 pc 분기(toast-in-top)는 자리와 함께 걷었다. */
 
 /* Cross-page View Transitions (TanStack Router defaultViewTransition)
 

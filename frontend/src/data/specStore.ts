@@ -260,6 +260,19 @@ export const SPEC_STATUS_FILL: Record<SpecStatus, string> = {
   '배포 완료': 'var(--color-fill-deployed)',
 }
 
+/** 같은 상태의 **글자색** — 면(fill)과 짝이지만 값이 다르다.
+ *  ⚠⚠ `SPEC_STATUS_FILL` 은 **차트가 면을 칠하는 색**이다(밝기 사다리로 고른 값 ·
+ *  validate-palette 가 지킨다). 그것을 10~11px 글자에 그대로 쓰면 라이트에서 **2.06:1**
+ *  까지 떨어진다 — 보드의 수 배지·카테고리 칩이 그랬다(2026-09-02 전 화면 점검에서 검출).
+ *  글자는 대비를 보고 고른 `*-ink` 를 쓴다. 면은 fill, 글자는 ink — 섞지 않는다. */
+export const SPEC_STATUS_INK: Record<SpecStatus, string> = {
+  초안: 'var(--color-draft-ink)',
+  '검토 중': 'var(--color-review-ink)',
+  '승인 대기': 'var(--color-pending-ink)',
+  '승인 완료': 'var(--color-approved-ink)',
+  '배포 완료': 'var(--color-deployed-ink)',
+}
+
 export function specStatusDistribution(list: Array<Spec>) {
   const counts = countByStatus(list)
   return SPEC_STATUSES.map((label) => ({

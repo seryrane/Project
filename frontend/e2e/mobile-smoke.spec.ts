@@ -507,19 +507,37 @@ test.describe('넓은 화면', () => {
     await expect(bell).toBeFocused()
   })
 
-  test('토스트 — 헤더 바로 아래 우측 상단에 서고, 헤더를 가리지 않는다', async ({ page }) => {
+  /* ⚠⚠ **자리가 아니라 성질을 잰다.** 예전 이 판은 "우측 상단(y<160)"이라는 **좌표**를
+     못 박고 헤더(h-14)만 비교했다 — 그래서 토스트가 그 아래 **화면 머리의 주 버튼**을
+     덮는 것은 못 잡았다. 실제로 PC 에서 [+ 사양서 등록]과 103×26px 겹쳐 3.2초 동안
+     클릭이 먹혔고(2026-09-02 실측), e2e board-dnd '레인 상한'이 전체 판에서만 붉던
+     원인도 그것이었다. 지켜야 하는 것은 좌표가 아니라 "방금 누른 조작을 가리지 않는다"
+     이므로, 겹침 넓이를 직접 잰다 — 자리를 옮겨도 이 판은 계속 옳다. */
+  test('토스트 — 방금 누른 조작을 가리지 않는다 (우측에 붙어 선다)', async ({ page }) => {
     await ready(page, '/kpi-metrics')
-    await page.getByRole('button', { name: '+ 지표 추가' }).click()
+    const trigger = page.getByRole('button', { name: '+ 지표 추가' })
+    const btn = (await trigger.boundingBox())!
+    await trigger.click()
 
     const toast = page.locator('[role="status"] > div')
     await expect(toast).toBeVisible()
     const box = (await toast.boundingBox())!
     const header = (await page.locator('header').boundingBox())!
 
-    expect(box.y, '헤더(h-14)를 덮지 않는다 — 방금 누른 조작이 가려지면 안 된다')
-      .toBeGreaterThanOrEqual(header.y + header.height - 1)
-    expect(box.y, '그래도 시선이 있는 위쪽이다').toBeLessThan(160)
+    const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+      Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
+      Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
+
+    expect(overlap(box, btn), '방금 누른 버튼을 덮지 않는다').toBe(0)
+    expect(overlap(box, header), 'GNB 도 덮지 않는다').toBe(0)
     expect(1280 - (box.x + box.width), '우측에 붙는다').toBeLessThan(48)
+
+    // 덮지 않는다는 말은 **정말로 눌린다**는 뜻이다 — 좌표만 보지 말고 집어 본다
+    const hit = await page.evaluate(({ x, y }) => {
+      const el = document.elementFromPoint(x, y)
+      return el ? (el.closest('button')?.textContent.trim() ?? el.tagName) : '(없음)'
+    }, { x: btn.x + btn.width / 2, y: btn.y + btn.height / 2 })
+    expect(hit, '토스트가 떠 있어도 버튼이 집힌다').toContain('지표 추가')
   })
 })
 
