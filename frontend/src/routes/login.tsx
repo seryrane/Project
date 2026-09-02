@@ -136,7 +136,8 @@ function LoginPage() {
             {t('login.brand.desc')}
           </p>
         </m.div>
-        <p className="text-xs text-sidebar-ink/80">{t('brand.loginFooter')}</p>
+        {/* ⚠ 어제 넣은 /80 이 라이트에서 3.71 로 떨어졌다(2026-09-02 점검) — 알파를 걷는다 */}
+        <p className="text-xs text-sidebar-ink">{t('brand.loginFooter')}</p>
       </div>
 
       {/* 우: 로그인 카드 */}

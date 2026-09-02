@@ -14,7 +14,7 @@ import { useI18n } from '#/lib/i18n'
 import { SPEC_APPROVAL_LINE } from '#/data/approvals'
 import { activeRequestOfSpec, activeRequestsOfSpec, unsettledRequestsOfSpec, useApprovalList } from '#/data/approvalStore'
 import { SPEC_CATEGORIES, currentVersion } from '#/data/specs'
-import { SPEC_STATUS_FILL, startSpecReview, useSpecList } from '#/data/specStore'
+import { SPEC_STATUS_FILL, SPEC_STATUS_INK, startSpecReview, useSpecList } from '#/data/specStore'
 import { requestDeploy, submitSpec, withdrawSpecRequest } from '#/data/workflow'
 import type { Spec, SpecStatus } from '#/data/specs'
 
@@ -50,6 +50,8 @@ const LANE_CAP = 6
 
 /** 상태색은 정본 하나(specStore.SPEC_STATUS_FILL) — 보드가 사본을 들면 화면마다 색이 갈린다(§9) */
 const DOT = SPEC_STATUS_FILL
+/** 같은 상태라도 **글자는 ink** — 면을 칠하는 색으로 글자를 쓰면 작은 글자가 사라진다 */
+const INK = SPEC_STATUS_INK
 
 /** 빈 레인이 말하는 "언제 이 상태가 되나" — 흐름의 문을 자리에서 가르쳐 준다 */
 const EMPTY_HINT: Record<SpecStatus, string> = {
@@ -156,6 +158,7 @@ function BoardPage() {
     const active = approvals.find((r) => r.specId === spec.id && r.state === '진행 중')
     const unsettled = unsettledRequestsOfSpec(spec.id)
     const tone = DOT[cur.status]
+    const ink = INK[cur.status]
     return (
       <li>
         <Link
@@ -191,7 +194,7 @@ function BoardPage() {
           </div>
           <span
             className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
-            style={{ backgroundColor: `color-mix(in oklab, ${tone} 14%, transparent)`, color: tone }}
+            style={{ backgroundColor: `color-mix(in oklab, ${tone} 14%, transparent)`, color: ink }}
           >
             {t(`specCategory.${spec.category}`, spec.category)}
           </span>
@@ -214,7 +217,7 @@ function BoardPage() {
                 </span>
               )}
               {unsettled.length > 1 && (
-                <span className="rounded-full bg-[var(--color-fill-pending)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-fill-pending)]">
+                <span className="rounded-full bg-[var(--color-fill-pending)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-pending-ink)]">
                   {tf('board.conflict', { n: unsettled.length }, '겹침 {n}')}
                 </span>
               )}
@@ -322,7 +325,7 @@ function BoardPage() {
                   className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
                   style={{
                     backgroundColor: `color-mix(in oklab, ${DOT[st]} 14%, var(--color-surface))`,
-                    color: DOT[st],
+                    color: INK[st],
                   }}
                 >
                   {cards.length}
@@ -514,7 +517,7 @@ function SubmitPanel({ spec, onClose, onDone }: { spec: Spec; onClose: () => voi
         ))}
       </ol>
       {overlapped > 0 && (
-        <p className="mt-3 rounded-lg bg-[var(--color-fill-pending)]/10 px-3 py-2 text-xs text-[var(--color-fill-pending)]">
+        <p className="mt-3 rounded-lg bg-[var(--color-fill-pending)]/10 px-3 py-2 text-xs text-[var(--color-pending-ink)]">
           {tf('board.panel.overlapWarn', { n: overlapped }, '⚠ 이 사양서에 이미 심사 중인 요청이 {n}건 있습니다 — 신청은 막지 않지만, 반영은 하나로 정리될 때까지 막힙니다.')}
         </p>
       )}

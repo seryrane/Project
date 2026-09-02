@@ -155,12 +155,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           ⚠ **좁은 화면: 하단 유지.** 상단은 모바일 주소창에 가리고 엄지에서 멀다(규약 표).
           그 자리에는 떠 있는 [물어보기] 버튼이 사니 **그 위로** 쌓는다 — 겹치면 토스트가
           버튼을 먹어 못 누르게 된다. 치수는 styles.css 의 --fab-size 하나가 정한다.
-          ⚠ 등장 방향도 자리를 따라간다(styles.css .anim-toast-in 의 pc 분기).
+          ⚠⚠ **넓은 화면도 아래다** (2026-09-02 실측으로 되돌림). 예전에는 PC 에서
+          우상단(top 68px)에 떴는데, 그 자리는 화면 머리의 **주 버튼이 사는 자리**다 —
+          [+ 사양서 등록]과 **103×26px 겹쳐** 3.2초 동안 클릭이 그냥 먹혔다(누른 사람은
+          "버튼이 안 눌린다"고만 느낀다). 이 파일이 모바일에서 이미 적어 둔 규칙
+          — "겹치면 토스트가 버튼을 먹어 못 누르게 된다" — 을 넓은 화면에도 적용한다.
+          아래 오른쪽은 떠 있는 [물어보기] 버튼 하나뿐이고, 그것은 --fab-size 로 피한다.
+          (e2e board-dnd '레인 상한'이 전체 판에서만 붉던 원인도 이 겹침이었다.)
           aria-live: 화면을 안 보고 있어도 읽어 준다 — 눈에 안 띄는 문제의 나머지 절반. */}
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed bottom-[calc(1.5rem+var(--fab-size)+0.5rem+env(safe-area-inset-bottom,0px))] right-6 z-toast flex flex-col gap-2 pc:bottom-auto pc:top-[calc(3.5rem+0.75rem)]"
+        className="pointer-events-none fixed bottom-[calc(1.5rem+var(--fab-size)+0.5rem+env(safe-area-inset-bottom,0px))] right-6 z-toast flex flex-col gap-2"
       >
         {toasts.map((t) => {
           const k = KIND[t.kind]

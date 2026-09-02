@@ -54,8 +54,11 @@ test.describe('상태 보드 끌어 놓기', () => {
   test('레인 상한 — 넘치면 카드 대신 "외 N건" 링크가 목록으로 보낸다', async ({ page }) => {
     await page.goto('/specs')
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
-    // 초안을 7건으로 만든다(시드 1 + 등록 6) — ⚠ goto 는 스토어를 초기화하므로 등록 후
-    // 보드는 **앱 안 링크**로 간다
+    /* 초안을 7건으로 만든다(시드 1 + 등록 6) — ⚠ goto 는 스토어를 초기화하므로 등록 후
+       보드는 **앱 안 링크**로 간다.
+       ⚠ 이 판이 전체 실행에서만 붉던 원인은 순서 의존이 아니라 **토스트가 [+ 사양서 등록]을
+       덮은 것**이었다(2026-09-02 실측 103×26px). 토스트 자리를 옮겨 고쳤다 — 여기서
+       등록 수를 늘려 우회하지 않는다(증상 가리기다). */
     for (let i = 1; i <= 6; i++) {
       await page.getByRole('button', { name: '+ 사양서 등록' }).click()
       const modal = page.getByRole('dialog')
