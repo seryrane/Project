@@ -48,6 +48,10 @@ FastAPI 벌이 정본이고, 스프링 벌은 같은 검사를 통과하도록 �
 필요한 것: Node.js 20+ (권장 22) · Python 3.11+ · JDK 21(스프링 벌을 볼 때만)
 
 ```bash
+# 0) 받기
+git clone https://github.com/seryrane/hmg-portal.git
+cd hmg-portal
+
 # 1) 백엔드 (정본) — http://localhost:8080
 cd backend-python
 python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"   # Windows
